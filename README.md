@@ -30,9 +30,12 @@ First research domain: **automatic discovery of mathematical formulas from data*
 
 ## Status
 
-`P0` foundation. No performance numbers are claimed until measured on the
-reference hardware (RTX 4060 Laptop, 8 GB VRAM). Every phase produces an
-executable, measurable artifact — no false positives, no aspirational claims.
+P00–P12 have implementation and experiment records. The next planned work
+is P15–P20: repair evidence accounting and establish a genuinely parallel,
+resident GPU search before resuming P13. P14 scientific evaluation remains
+locked behind P13 evidence and P21 reproduction. Million-candidate throughput
+is an experimental target, not an achieved result. See the binding dependency
+order in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Quickstart
 
@@ -59,7 +62,7 @@ tests/            deterministic unit tests, no network, no GPU required
 benchmarks/       synthetic datasets, hardware probe, CVPS harness
 experiments/      per-experiment configs + logs (large artifacts git-ignored)
 docs/             research specification (source of truth)
-docs/phases/      P00-P14 incremental plan, one file per phase
+docs/phases/      P00-P22 dependency-gated plan, one file per phase
 .github/          minimal CI (fast checks only)
 ```
 
