@@ -132,5 +132,9 @@ def test_oracle_max_qubits_guard():
 
 def test_scoring_only_isolation_audit():
     # Audit: search modules must NOT import exact or psi_exact
-    search_file = Path(__file__).resolve().parents[1] / "src" / "evobyte" / "quantum" / "search.py"
-    assert_scoring_only_isolation([search_file])
+    quantum_dir = Path(__file__).resolve().parents[1] / "src" / "evobyte" / "quantum"
+    assert_scoring_only_isolation([
+        quantum_dir / "search.py",
+        quantum_dir / "ground.py",
+        quantum_dir / "evolution_q.py",
+    ])

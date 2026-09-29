@@ -76,6 +76,22 @@ def fidelity(a: np.ndarray, b: np.ndarray) -> float:
     return float(abs(overlap) ** 2)
 
 
+def ground_state_fidelity(
+    psi: np.ndarray, oracle_truth: dict[str, Any], tol: float = 1e-6
+) -> float:
+    """Fidelity to ground eigenspace, properly handling degenerate ground states."""
+    norm = np.linalg.norm(psi)
+    if norm < 1e-14:
+        return 0.0
+    psi_norm = psi / norm
+    evals = oracle_truth["energies"]
+    evecs = oracle_truth["eigenvectors"]
+    e0 = float(oracle_truth["E_exact"])
+    deg_indices = [i for i, ev in enumerate(evals) if abs(ev - e0) <= tol]
+    fid = sum(abs(np.vdot(evecs[:, i], psi_norm)) ** 2 for i in deg_indices)
+    return float(np.clip(fid, 0.0, 1.0))
+
+
 def energy_and_fidelity(
     h_terms: Any, n: int, psi_candidate: np.ndarray, oracle_truth: dict[str, Any] | None = None
 ) -> dict[str, float]:
@@ -83,7 +99,7 @@ def energy_and_fidelity(
     truth = exact(h_terms, n) if oracle_truth is None else oracle_truth
     e_cand = energy(h_terms, n, psi_candidate)
     e_exact = float(truth["E_exact"])
-    fid = fidelity(psi_candidate, truth["psi_exact"])
+    fid = ground_state_fidelity(psi_candidate, truth)
     return {
         "energy_candidate": e_cand,
         "energy_exact": e_exact,
