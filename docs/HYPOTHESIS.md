@@ -44,3 +44,22 @@ generator cannot beat genetic search per wall-clock second.
 
 No claim passes without 5+ seeds, hidden + extrapolation numbers, and a
 reproduction command.
+
+## Evidence status and speed target (D012)
+
+H1 has no accepted full-matrix verdict until P15 audits the records and P13
+executes its revised protocol after P20. Historical rediscoveries and the
+single-target P12 DROP ruling remain scoped evidence, not proof of all five
+criteria. Missing or simulated baselines and preset ablations are unverified.
+
+Keep every criterion above unchanged. Report pilot >= 4/5 for BOTH primary
+targets and confirmation >= 80% on each over at least 20 independent seeds,
+with intervals and all failed/time-limited runs. Statistical superiority must
+follow the preregistered comparison, not a post-hoc favorable mean.
+
+The additional engineering goal is >= 1,000,000 distinct S0-valid candidates
+completing scored S1 at 32 training points per second, with <= 16 v0 slots,
+a disclosed nontrivial opcode/length distribution and an explicit uniqueness
+window. P20 also reports full-cascade and end-to-end throughput plus quality.
+This target is not a promise, a point-evaluation count, or a replacement for
+H1 rediscovery/generalization. A missed goal must be reported as such.
