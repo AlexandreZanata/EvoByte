@@ -118,6 +118,7 @@ def execute_batch_torch(
     xs: np.ndarray | torch.Tensor,
     x1s: np.ndarray | torch.Tensor | None = None,
     device: torch.device | str | None = None,
+    const_bank: torch.Tensor | np.ndarray | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Execute one program over a batch of input points fully in PyTorch."""
     if device is None:
@@ -125,7 +126,11 @@ def execute_batch_torch(
     else:
         device = torch.device(device)
 
-    const_bank = get_const_bank_tensor(device)
+    if const_bank is not None:
+        cb = torch.as_tensor(const_bank, dtype=torch.float32, device=device)
+    else:
+        cb = get_const_bank_tensor(device)
+    const_bank = cb
 
     if isinstance(xs, np.ndarray):
         xs_t = torch.from_numpy(xs.astype(np.float32)).to(device)
@@ -205,6 +210,7 @@ def execute_population_torch(
     xs: np.ndarray | torch.Tensor,
     x1s: np.ndarray | torch.Tensor | None = None,
     device: torch.device | str | None = None,
+    const_bank: torch.Tensor | np.ndarray | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Execute a population of P programs across B data points in parallel on device."""
     if device is None:
@@ -212,7 +218,11 @@ def execute_population_torch(
     else:
         device = torch.device(device)
 
-    const_bank = get_const_bank_tensor(device)
+    if const_bank is not None:
+        cb = torch.as_tensor(const_bank, dtype=torch.float32, device=device)
+    else:
+        cb = get_const_bank_tensor(device)
+    const_bank = cb
 
     if isinstance(programs, torch.Tensor):
         progs_np = programs.cpu().numpy().astype(np.uint32)
