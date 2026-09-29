@@ -12,7 +12,6 @@ import pytest
 from evobyte.archive import (
     EliteArchive,
     compute_program_hash,
-    is_memorizer,
     load_checkpoint,
     run_resume_selftest,
     save_checkpoint,

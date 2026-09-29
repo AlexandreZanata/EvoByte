@@ -222,7 +222,7 @@ def test_archive_and_checkpoint_hooks(tmp_path):
     )
     rng = np.random.default_rng(999)
 
-    res = run_evolution(xs, ys, config, rng, archive=archive)
+    run_evolution(xs, ys, config, rng, archive=archive)
     assert archive.count() >= 1
     archive.close()
 

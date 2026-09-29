@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as np
 
-from evobyte.bytecode import OPCODE_VERSION, decode_human, encode_instr, nop_program
+from evobyte.bytecode import OPCODE_VERSION, decode_human
 
 DB_SCHEMA = """
 CREATE TABLE IF NOT EXISTS elites (
@@ -129,7 +129,11 @@ class EliteArchive:
 
     def get_elites(self, limit: int | None = 10, order_by: str = "fitness") -> list[dict[str, Any]]:
         cur = self.conn.cursor()
-        valid_orders = {"fitness": "fitness ASC", "novelty": "novelty_score DESC", "generation": "generation DESC"}
+        valid_orders = {
+            "fitness": "fitness ASC",
+            "novelty": "novelty_score DESC",
+            "generation": "generation DESC",
+        }
         order_clause = valid_orders.get(order_by, "fitness ASC")
         if limit is not None:
             cur.execute(f"SELECT * FROM elites ORDER BY {order_clause} LIMIT ?", (limit,))
@@ -223,7 +227,9 @@ def write_hall_of_fame_entry(fame_path: str | Path, entry: dict[str, Any]) -> bo
     return True
 
 
-def run_resume_selftest(seed: int = 42, checkpoint_dir: str | Path = "/tmp/evobyte_selftest") -> bool:
+def run_resume_selftest(
+    seed: int = 42, checkpoint_dir: str | Path = "/tmp/evobyte_selftest"
+) -> bool:
     """Prove resume equivalence: uninterrupted execution == checkpoint-resumed execution."""
     from evobyte.evolution import crossover_single_point, mutate_point, sample_structured
     from evobyte.verifier import evaluate
@@ -306,14 +312,23 @@ def run_resume_selftest(seed: int = 42, checkpoint_dir: str | Path = "/tmp/evoby
         pop_resumed = np.stack(next_pop)
 
     # Assert 100% bitwise equivalence between uninterrupted and resumed runs
-    assert np.array_equal(pop_unbroken, pop_resumed), "Resumed population diverges from uninterrupted run!"
-    print(f"Resume equivalence test PASSED: seed={seed}, 6 generations, bit-identical final population.")
+    assert np.array_equal(pop_unbroken, pop_resumed), (
+        "Resumed population diverges from uninterrupted run!"
+    )
+    print(
+        f"Resume equivalence test PASSED: seed={seed}, 6 generations, bit-identical final population."
+    )
     return True
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Archive and Checkpointing Self-Test")
-    ap.add_argument("--selftest-resume", dest="selftest_resume", action="store_true", help="Run resume equivalence self-test")
+    ap.add_argument(
+        "--selftest-resume",
+        dest="selftest_resume",
+        action="store_true",
+        help="Run resume equivalence self-test",
+    )
     args = ap.parse_args()
 
     if args.selftest_resume:

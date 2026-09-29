@@ -14,18 +14,16 @@ from typing import Any
 import numpy as np
 import torch
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
-_SRC_DIR = _REPO_ROOT / "src"
-_BENCH_DIR = _REPO_ROOT / "benchmarks"
-for p in (str(_SRC_DIR), str(_BENCH_DIR)):
-    if p not in sys.path:
-        sys.path.insert(0, p)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 
 from evobyte.bytecode import decode_human
 from evobyte.constants import TunableProgram, tune_promoted_candidate
 from evobyte.evolution import EvolutionConfig, run_evolution
 from evobyte.vm import execute_batch
 from hw_probe import probe
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def get_git_commit() -> str:

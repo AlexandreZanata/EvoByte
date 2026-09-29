@@ -7,12 +7,8 @@ from pathlib import Path
 
 import numpy as np
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
-_SRC_DIR = _REPO_ROOT / "src"
-_BENCH_DIR = _REPO_ROOT / "benchmarks"
-for p in (str(_SRC_DIR), str(_BENCH_DIR)):
-    if p not in sys.path:
-        sys.path.insert(0, p)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 
 from benchmarks.science_matrix import (
     PREREGISTERED_SCIENCE_SPECS,

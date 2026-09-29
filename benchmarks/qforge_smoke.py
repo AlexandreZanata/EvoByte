@@ -41,9 +41,7 @@ def main() -> int:
 
     for seed in range(args.seeds):
         out = random_conserved_search(h, n, budget=args.budget, n_terms=1, seed=seed)
-        terms = ", ".join(
-            decode_human(Pauli(t.x_mask, t.z_mask, 0, n)) for t in out["candidate"]
-        )
+        terms = ", ".join(decode_human(Pauli(t.x_mask, t.z_mask, 0, n)) for t in out["candidate"])
         print(
             f"seed={seed} best_norm={out['commutator_error']:.3e} "
             f"candidate=[{terms}] qps={out['qps']:.0f} budget={out['budget']}"

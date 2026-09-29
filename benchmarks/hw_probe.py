@@ -35,14 +35,21 @@ def probe() -> dict:
         if is_avail:
             for i in range(torch.cuda.device_count()):
                 p = torch.cuda.get_device_properties(i)
-                info[f"gpu{i}"] = {"name": p.name, "total_memory_MB": p.total_memory // (1024 * 1024)}
+                info[f"gpu{i}"] = {
+                    "name": p.name,
+                    "total_memory_MB": p.total_memory // (1024 * 1024),
+                }
         else:
             info["gpu"] = "none (CPU-only machine)"
     except ImportError:
         info["torch"] = "missing"
     try:
-        out = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version,memory.total",
-                              "--format=csv,noheader"], capture_output=True, text=True, timeout=10)
+        out = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,driver_version,memory.total", "--format=csv,noheader"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
         if out.returncode == 0 and out.stdout.strip():
             info["nvidia_smi"] = out.stdout.strip()
     except (FileNotFoundError, subprocess.SubprocessError):

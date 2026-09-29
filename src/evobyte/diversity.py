@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Callable
 
 import numpy as np
 import torch
 
 from evobyte.batching import execute_chunked
-from evobyte.bytecode import N_INSTR, decode_human
+from evobyte.bytecode import decode_human
 from evobyte.evolution import (
     EvolutionConfig,
     crossover_single_point,
@@ -130,7 +129,9 @@ class MapElitesGrid:
         size_idx = min(self.size_bins - 1, max(0, size - 1))
 
         trend = compute_trend_feature(xs, preds)
-        behav_idx = min(self.behavior_bins - 1, max(0, int((trend + 1.0) / 2.0 * self.behavior_bins)))
+        behav_idx = min(
+            self.behavior_bins - 1, max(0, int((trend + 1.0) / 2.0 * self.behavior_bins))
+        )
 
         cell_key = (size_idx, behav_idx)
         if cell_key not in self.cells or fitness < self.cells[cell_key]["fitness"]:
@@ -210,7 +211,7 @@ def run_evolution_qd(
         # 1. Batch evaluation
         preds, flags = execute_chunked(pop, xs_train)
         diff = preds - ys_t.unsqueeze(0).to(preds.device)
-        raw_mse_t = (diff ** 2).mean(dim=1)
+        raw_mse_t = (diff**2).mean(dim=1)
         raw_mse_t[flags.any(dim=1)] += 1e6
         raw_mse = raw_mse_t.cpu().numpy()
 
@@ -239,10 +240,10 @@ def run_evolution_qd(
             norm_novelty = np.zeros(pop_size, dtype=np.float32)
 
         # 4. Selection fitness combines Quality (MSE + complexity) with Novelty bonus
-        complexity = np.array(
-            [sum((int(w) & 0xFF) != 0 for w in p) for p in pop], dtype=np.float32
+        complexity = np.array([sum((int(w) & 0xFF) != 0 for w in p) for p in pop], dtype=np.float32)
+        combined_fitness = (
+            raw_mse + config.complexity_weight * complexity - config.novelty_weight * norm_novelty
         )
-        combined_fitness = raw_mse + config.complexity_weight * complexity - config.novelty_weight * norm_novelty
 
         # Track absolute best quality candidate
         best_quality_idx = int(np.argmin(raw_mse))
@@ -253,7 +254,7 @@ def run_evolution_qd(
 
         # Update novelty archive with high-novelty individuals
         if config.novelty_weight > 0.0:
-            top_novel_idx = np.argsort(novelty_scores)[-max(1, pop_size // 50):]
+            top_novel_idx = np.argsort(novelty_scores)[-max(1, pop_size // 50) :]
             for idx in top_novel_idx:
                 novelty_arch.add(descriptors[idx])
 
@@ -300,8 +301,12 @@ def run_evolution_qd(
         grid_elites_list = grid.get_elites()
         if len(grid_elites_list) > 0:
             grid_sample_size = min(config.elite_k - k_direct, len(grid_elites_list))
-            grid_sample_indices = rng.choice(len(grid_elites_list), size=grid_sample_size, replace=False)
-            grid_elites = np.stack([grid_elites_list[idx]["program"] for idx in grid_sample_indices])
+            grid_sample_indices = rng.choice(
+                len(grid_elites_list), size=grid_sample_size, replace=False
+            )
+            grid_elites = np.stack(
+                [grid_elites_list[idx]["program"] for idx in grid_sample_indices]
+            )
             elites = np.concatenate([direct_elites, grid_elites], axis=0)
         else:
             elites = direct_elites
@@ -329,14 +334,18 @@ def run_evolution_qd(
                 g_idx = rng.integers(0, len(grid_elites_list))
                 p1 = grid_elites_list[g_idx]["program"]
             else:
-                idx1 = select_tournament(sorted_fit, config.tournament_size, rng, sample_pool_size=pool_size)
+                idx1 = select_tournament(
+                    sorted_fit, config.tournament_size, rng, sample_pool_size=pool_size
+                )
                 p1 = sorted_pop[idx1]
 
             if len(grid_elites_list) > 0 and rng.random() < config.qd_selection_ratio:
                 g_idx = rng.integers(0, len(grid_elites_list))
                 p2 = grid_elites_list[g_idx]["program"]
             else:
-                idx2 = select_tournament(sorted_fit, config.tournament_size, rng, sample_pool_size=pool_size)
+                idx2 = select_tournament(
+                    sorted_fit, config.tournament_size, rng, sample_pool_size=pool_size
+                )
                 p2 = sorted_pop[idx2]
 
             if rng.random() < config.crossover_p:

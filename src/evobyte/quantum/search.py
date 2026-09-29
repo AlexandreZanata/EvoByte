@@ -46,8 +46,9 @@ def fitness(h_terms: list[PauliTerm], cand: list[PauliTerm], n: int) -> dict:
     return {"fitness": err + COMPLEXITY_W * comp, "commutator_error": err, "complexity": comp}
 
 
-def random_conserved_search(h_terms: list[PauliTerm], n: int, budget: int,
-                            n_terms: int, seed: int) -> dict:
+def random_conserved_search(
+    h_terms: list[PauliTerm], n: int, budget: int, n_terms: int, seed: int
+) -> dict:
     """Seeded pure-random baseline: return best candidate + throughput."""
     rng = np.random.default_rng(seed)
     best: dict | None = None
@@ -64,5 +65,10 @@ def random_conserved_search(h_terms: list[PauliTerm], n: int, budget: int,
             best = {"candidate": cand, **out}
     dt = max(time.perf_counter() - t0, 1e-9)
     assert best is not None
-    return {**best, "budget": budget, "qps": budget / dt,
-            "hamiltonian_hash": hamiltonian_hash(h_terms), "seed": seed}
+    return {
+        **best,
+        "budget": budget,
+        "qps": budget / dt,
+        "hamiltonian_hash": hamiltonian_hash(h_terms),
+        "seed": seed,
+    }

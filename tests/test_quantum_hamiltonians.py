@@ -18,7 +18,6 @@ from evobyte.quantum.hamiltonians import (
     to_hamiltonian_matrix,
     total_sz,
 )
-from evobyte.quantum.pauli import Pauli
 from evobyte.quantum.search import random_conserved_search
 import pytest
 
@@ -201,6 +200,7 @@ def test_known_symmetries_isolated_from_search():
 
     # 2. Review checklist: search code paths must NOT import or leak known symmetries
     import evobyte.quantum.search as search_mod
+
     with open(search_mod.__file__, "r", encoding="utf-8") as f:
         src = f.read()
     assert "total_sz" not in src

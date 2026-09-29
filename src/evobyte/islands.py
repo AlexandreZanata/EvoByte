@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
@@ -167,7 +167,7 @@ class IslandModel:
         # Vectorized batch evaluation across all islands simultaneously
         preds, flags = execute_chunked(all_pops, xs_train)
         diff = preds - ys_t.unsqueeze(0).to(preds.device)
-        raw_mse = (diff ** 2).mean(dim=1)
+        raw_mse = (diff**2).mean(dim=1)
         raw_mse[flags.any(dim=1)] += 1e6
         raw_mse_np = raw_mse.cpu().numpy()
 
@@ -175,7 +175,6 @@ class IslandModel:
         descriptors = compute_behavior_descriptor(preds_np)
 
         # Slice results per island
-        preds_slices = np.split(preds_np, self.n_islands)
         mse_slices = np.split(raw_mse_np, self.n_islands)
         desc_slices = np.split(descriptors, self.n_islands)
 
@@ -204,7 +203,11 @@ class IslandModel:
                 norm_novelty = np.zeros(self.pop_per_island, dtype=np.float32)
 
             # Island-specific fitness
-            fit_i = mse_i + isl_cfg.complexity_weight * complexity - isl_cfg.novelty_weight * norm_novelty
+            fit_i = (
+                mse_i
+                + isl_cfg.complexity_weight * complexity
+                - isl_cfg.novelty_weight * norm_novelty
+            )
 
             # Sort population by fitness
             order_i = np.argsort(fit_i)
