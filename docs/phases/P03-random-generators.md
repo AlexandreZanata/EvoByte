@@ -1,6 +1,8 @@
 # P03 — Random generators
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29 — gate green: 11/11 evolution tests, 53/53 full suite;
+Pure A: ~227k gen/s, S0: 0.00%; Structured B: ~13.5k gen/s, S0: 99.98%;
+see commit `feat(evolution)` below).
 **Goal:** baselines A (pure) and B (structured) with measured validity rates.
 
 ## Objective

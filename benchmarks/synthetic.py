@@ -23,7 +23,9 @@ def gen_dataset(formula: str, n: int, lo: float, hi: float, seed: int):
         ys = (xs + 1).astype(np.float32)
     else:
         raise ValueError(f"unknown formula: {formula}")
-    h = hashlib.sha256(np.ascontiguousarray(xs).tobytes() + np.ascontiguousarray(ys).tobytes()).hexdigest()[:16]
+    h = hashlib.sha256(
+        np.ascontiguousarray(xs).tobytes() + np.ascontiguousarray(ys).tobytes()
+    ).hexdigest()[:16]
     return xs, ys, h
 
 
@@ -41,14 +43,40 @@ def main() -> int:
         print(f"smoke ok: n=256 formula=x^2+3x+7 seed=0 hash={h}")
 
     if args.generators:
-        from evobyte.evolution import sample_pure, sample_structured
+        import time
         from evobyte.bytecode import is_valid
+        from evobyte.evolution import sample_pure, sample_structured
 
-        rng = np.random.default_rng(0)
-        for name, fn in [("pure", sample_pure), ("structured", sample_structured)]:
-            progs = [fn(rng) for _ in range(200)]
-            rate = sum(is_valid(p) for p in progs) / len(progs)
-            print(f"generator {name}: S0 pass rate={rate:.2f} (n=200, seed=0)")
+        seed = 0
+        n_samples = 5000
+        rng = np.random.default_rng(seed)
+
+        print(
+            f"\nGenerator Benchmark (P03): Pure (A) vs Structured (B) [seed={seed}, n={n_samples}]"
+        )
+        print("-" * 75)
+        print(
+            f"{'Generator':<18} | {'Throughput (gen/s)':<20} | {'S0 Pass Rate':<12} | {'Valid / Total'}"
+        )
+        print("-" * 75)
+
+        for name, label, fn in [
+            ("pure", "Pure (A)", sample_pure),
+            ("structured", "Structured (B)", sample_structured),
+        ]:
+            t0 = time.perf_counter()
+            progs = [fn(rng) for _ in range(n_samples)]
+            dt = time.perf_counter() - t0
+            throughput = n_samples / dt if dt > 0 else float("inf")
+            valid_count = sum(is_valid(p) for p in progs)
+            rate = valid_count / len(progs)
+            print(
+                f"{label:<18} | {throughput:>18.1f} | {rate:>10.2%} | {valid_count} / {n_samples}"
+            )
+            print(
+                f"generator {name}: S0 pass rate={rate:.2f} ({throughput:.1f} gen/s, n={n_samples}, seed={seed})"
+            )
+        print("-" * 75)
 
     if args.cascade:
         from evobyte.bytecode import encode_instr, nop_program
