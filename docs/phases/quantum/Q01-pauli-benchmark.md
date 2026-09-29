@@ -1,6 +1,6 @@
 # Q01 — Pauli algebra benchmark
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29; 1M pairs benchmarked: 4.42M commutes/s obj, 6.85M raw; parity rate 0.499715 vs 0.500000 theoretical; 11/11 tests green).
 **Goal:** first trusted bit-op throughput number (XOR/AND/POPCOUNT path).
 
 ## Objective
