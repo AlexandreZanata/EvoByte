@@ -11,6 +11,9 @@ build/
 dist/
 *.whl
 
+# Machine-local notes (never commit: paths, versions, measurements)
+.local/
+
 # Test / coverage
 .pytest_cache/
 .coverage
