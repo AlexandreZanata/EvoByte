@@ -80,12 +80,55 @@ def main() -> int:
 
     if args.cascade:
         from evobyte.bytecode import encode_instr, nop_program
-        from evobyte.verifier import cascade_evaluate
+        from evobyte.evolution import sample_pure, sample_structured
+        from evobyte.verifier import cascade_evaluate, cascade_evaluate_population
 
+        # Demo single bad program
         bad = nop_program()
         bad[0] = encode_instr(0x05, dst=7, a=0, b=0)
         out = cascade_evaluate(bad, xs, ys, elite_err=1e-6)
         print(f"cascade demo: killed={out['killed']} stage={out['stage']} mse={out['mse']:.4g}")
+
+        # Cascade population benchmark (200 candidates)
+        rng = np.random.default_rng(0)
+        # Exact elite program
+        p_elite = nop_program()
+        p_elite[0] = encode_instr(0x0F, dst=3, a=1, b=11)  # r3 = 3.0
+        p_elite[1] = encode_instr(0x03, dst=3, a=3, b=0)  # r3 = 3x
+        p_elite[2] = encode_instr(0x03, dst=2, a=0, b=0)  # r2 = x^2
+        p_elite[3] = encode_instr(0x01, dst=4, a=2, b=3)  # r4 = x^2 + 3x
+        p_elite[4] = encode_instr(0x0F, dst=7, a=4, b=10)  # r7 = x^2 + 3x + 7
+
+        pop = []
+        # 50 pure random (mostly S0 invalid)
+        pop.extend([sample_pure(rng) for _ in range(50)])
+        # 140 structured random (S0 valid, mostly killed in S1/S2)
+        pop.extend([sample_structured(rng) for _ in range(140)])
+        # 10 elite instances
+        pop.extend([p_elite.copy() for _ in range(10)])
+
+        xs_casc, ys_casc, _ = gen_dataset("x2_3x_7", 1024, -10.0, 10.0, seed=0)
+        stats = cascade_evaluate_population(pop, xs_casc, ys_casc, elite_err=1e-6, k=4.0)
+
+        stage_points = {0: "0 (validity)", 1: "32 pts", 2: "256 pts", 3: "1024 pts (S3)"}
+        print(f"\nCascade Benchmark (P04): Population Evaluation [n={stats['total']}, seed=0]")
+        print("-" * 75)
+        print(
+            f"{'Stage':<18} | {'Points':<14} | {'Candidates':<11} | {'Killed':<8} | {'Survivors'}"
+        )
+        print("-" * 75)
+        for s in range(4):
+            candidates = stats["stage_survivors"][s]
+            killed = stats["stage_kills"][s]
+            survivors = max(0, candidates - killed)
+            kill_pct = (killed / candidates * 100) if candidates else 0.0
+            print(
+                f"Stage {s:<12} | {stage_points[s]:<14} | {candidates:<11} | {killed:<4} ({kill_pct:>5.1f}%) | {survivors}"
+            )
+        print("-" * 75)
+        print(
+            f"Final Survivors (S3): {stats['survivors']} / {stats['total']} ({stats['survival_rate']:.1%})\n"
+        )
     return 0
 
 

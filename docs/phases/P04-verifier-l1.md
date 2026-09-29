@@ -1,6 +1,8 @@
 # P04 — Level-1 verifier + cascade + early stop
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29 — gate green: 8/8 verifier tests, 58/58 full suite;
+cascade table: S0 25.0% killed, S1 93.3% killed, S3 10/200 survived (5.0%);
+hidden audit clean (0 hits in src/); see commit `feat(verifier)` below).
 **Goal:** vectorized scoring that never wastes full-data compute on junk.
 
 ## Objective
