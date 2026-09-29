@@ -33,4 +33,5 @@ Example:
 ```
 
 Memorizers (poor hidden/extrapolation) are ineligible even with good train
-fitness. Every entry links its reproduction command (commit + config + seed).
+fitness (gated by `is_memorizer` and `write_hall_of_fame_entry` in `evobyte.archive`).
+Every entry links its reproduction command (commit + config + seed).

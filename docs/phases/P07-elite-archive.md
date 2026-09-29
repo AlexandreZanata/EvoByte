@@ -1,6 +1,6 @@
 # P07 — Elite archive + checkpoints + resume
 
-**Status:** Proposed.
+**Status:** Done.
 **Goal:** progress is never lost; restarts continue exactly.
 
 ## Objective
@@ -31,6 +31,16 @@ python3 -m evobyte.archive --selftest-resume
 
 Artifact: resume-equivalence log (same seed, continued == uninterrupted)
 + sample Hall of Fame entry.
+
+### Results
+- `tests/test_archive.py`: 9 passed in 0.87s.
+- `python3 -m evobyte.archive --selftest-resume`:
+  ```
+  Resume equivalence test PASSED: seed=42, 6 generations, bit-identical final population.
+  ```
+- Sample Hall of Fame entry created in `hall_of_fame/fame.jsonl`:
+  Rank 1, fitness 0.0075, expression `CSEL r2, r7, 0x0b ; CSEL r3, r7, 0x0a ; MUL r4, r0, 0x00 ; MUL r5, r0, 0x02 ; ADD r6, r4, 0x05 ; ADD r7, r6, 0x03` ($x^2 + 3x + 7$).
+  Zero train/val/extrapolation error, passed anti-memorizer gate.
 
 ## Risks
 

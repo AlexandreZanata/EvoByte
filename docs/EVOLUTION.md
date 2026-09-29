@@ -37,8 +37,9 @@ fitness, train_error, validation_error, test_error (L2 only),
 complexity, parents, mutation_history, timestamp, sha256, novelty_score
 ```
 
-Archive lives on host (SQLite/Parquet in v0), checkpoints every N
-generations, resumable. VRAM holds only the working population.
+Archive lives on host (implemented in `evobyte.archive.EliteArchive` via SQLite),
+checkpoints every N generations with atomic swap, resumable with 100% bitwise equivalence.
+VRAM holds only the working population.
 
 ## Islands
 
