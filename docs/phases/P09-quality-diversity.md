@@ -1,6 +1,6 @@
 # P09 — Quality diversity (MAP-Elites + novelty)
 
-**Status:** Proposed.
+**Status:** Done.
 **Goal:** keep structurally different winners alive; beat P08 diversity.
 
 ## Objective
@@ -30,6 +30,19 @@ python3 experiments/p09_qd_ab.py --budget 10min --seeds 5
 
 Artifact: A/B table proving diversity gain without time-to-quality regression
 (or honest negative result recorded).
+
+### Results
+- `tests/test_diversity.py`: 6 passed in 2.94s.
+- Full test suite: 89 passed in 3.65s (`python3 -m pytest tests/ -q`).
+- `python3 experiments/p09_qd_ab.py --budget 10min --seeds 5`:
+  - Diversity gain: **PASS** (Coverage: 78.6% vs 0.6%; Unique families: 5.4 vs 1.0).
+  - Quality maintenance: **PASS** (100.0% 5/5 successes for P09 vs 80.0% 4/5 for P08).
+  - Mean time: 27.7s vs 22.3s (no regression; P09 solved 5/5 seeds while P08 timed out on seed 404).
+
+| Condition | Success Rate | Mean Time (s) | Mean CVPS | Grid Coverage (%) | Mean Unique Families |
+|---|---|---|---|---|---|
+| **P08 (Baseline)** | 80.0% (4/5) | 22.3s | 2032.0 | 0.6% | 1.0 |
+| **P09 (MAP-Elites + Novelty)** | **100.0%** (5/5) | 27.7s | 1564.3 | **78.6%** | **5.4** |
 
 ## Risks
 
