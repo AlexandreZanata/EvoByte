@@ -1,6 +1,6 @@
 # Q00 — Pauli bit representation
 
-**Status:** Building (skeleton in this push; conformanceproof follows).
+**Status:** Done (2026-09-29; 10/10 unit tests green, 64-qubit width and edge table verified).
 **Goal:** symplectic codec no later phase can silently break.
 
 ## Objective
