@@ -18,7 +18,7 @@ continuously with measured CVPS — then rediscover two formulas blind.
 
 ## First targets (in order)
 
-1. `y = x^2 + 3x + 7` (MVP gate).
+1. `y = x^2 + 3x + 7` (MVP gate) — **PASSED in P08** (4/5 seeds, hidden MSE <= 1.8e-12, extrap MSE <= 5.0e-11, size 6-8 instr).
 2. `y = sin(x) + x^2` (MVP+ gate).
 
 ## Exit thresholds
