@@ -39,15 +39,19 @@ def main() -> int:
     h2 = ising(n)
     print(f"oracle: ising-{n} E_exact={exact(h2, n)['E_exact']:.6f} hash={hamiltonian_hash(h2)}")
 
-    for seed in range(args.seeds):
-        out = random_conserved_search(h, n, budget=args.budget, n_terms=1, seed=seed)
-        terms = ", ".join(
-            decode_human(Pauli(t.x_mask, t.z_mask, 0, n)) for t in out["candidate"]
-        )
-        print(
-            f"seed={seed} best_norm={out['commutator_error']:.3e} "
-            f"candidate=[{terms}] qps={out['qps']:.0f} budget={out['budget']}"
-        )
+    for sampler_name, is_struct in (("pure", False), ("structured", True)):
+        print(f"\n--- Baseline: {sampler_name.upper()} (N={n}, Heisenberg) ---")
+        for seed in range(args.seeds):
+            out = random_conserved_search(
+                h, n, budget=args.budget, n_terms=1, seed=seed, structured=is_struct
+            )
+            terms = ", ".join(
+                decode_human(Pauli(t.x_mask, t.z_mask, t.phase, n)) for t in out["candidate"]
+            )
+            print(
+                f"seed={seed} sampler={sampler_name:<10} best_norm={out['commutator_error']:.3e} "
+                f"candidate=[{terms}] qps={out['qps']:.0f} budget={out['budget']}"
+            )
     return 0
 
 

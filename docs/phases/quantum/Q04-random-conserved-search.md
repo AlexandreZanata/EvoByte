@@ -1,6 +1,6 @@
 # Q04 — Random conserved-operator search
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29; 7/7 search tests green; pure vs structured baselines measured; QVPS ~11k-68k).
 **Goal:** baselines (pure + structured) for the commutator objective.
 
 ## Objective
