@@ -44,6 +44,12 @@ valid and recorded.
 
 **Ruling:** DROP from main loop (documented in `docs/adr/ADR-0010-neural-generator.md` and Decision D010). Genetic search remains superior in wall-clock throughput (1006 CVPS vs 762-852 CVPS) and solution error (5.31 vs 13.47-58.98 MSE).
 
+**Independent verification (2026-09-29, RTX 4060 Laptop GPU, commit `1e3603e`):**
+re-ran the full exit gate (`--budget 10min --seeds 5`). Deterministic methods
+reproduced bit-identically (random 49.55071, genetic 5.31195/5.09780/817.64567);
+neural/hybrid varied within the same conclusion (neural 0/5, hybrid 1/5,
+genetic still best at 2/5 with ~1004 CVPS). DROP ruling confirmed.
+
 ## Risks
 
 - VRAM theft — cap enforced; CI asserts param count + resident size.
