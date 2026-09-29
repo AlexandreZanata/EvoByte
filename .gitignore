@@ -11,6 +11,9 @@ build/
 dist/
 *.whl
 
+# Machine-local notes
+.local/
+
 # Test / coverage
 .pytest_cache/
 .coverage
