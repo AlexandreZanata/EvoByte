@@ -103,53 +103,21 @@ def hamiltonian_hash(terms: list[PauliTerm]) -> str:
     return hashlib.sha256(repr(canon).encode()).hexdigest()[:16]
 
 
-def to_hamiltonian_matrix(terms: list[PauliTerm], n: int) -> np.ndarray:
-    """Dense Hermitian (oracle/strict only)."""
-    if n > ORACLE_MAX_QUBITS:
-        raise ValueError(f"oracle refused for n={n} > {ORACLE_MAX_QUBITS}")
-    dim = 2**n
-    h = np.zeros((dim, dim), dtype=np.complex128)
-    for t in terms:
-        h += t.coeff * to_matrix(Pauli(t.x_mask, t.z_mask, t.phase, n))
-    return h
-
-
-def operator_matrix(terms: list[PauliTerm], n: int) -> np.ndarray:
-    """Dense candidate-operator matrix (strict checks only)."""
-    return to_hamiltonian_matrix(terms, n)
-
-
-def exact(terms: list[PauliTerm], n: int) -> dict:
-    """Exact diagonalization oracle -> E_exact, psi_exact (scoring only)."""
-    h = to_hamiltonian_matrix(terms, n)
-    if not np.allclose(h, h.conj().T):
-        raise ValueError("hamiltonian matrix is not hermitian")
-    evals, evecs = np.linalg.eigh(h)
-    return {"energies": evals, "E_exact": float(evals[0]), "psi_exact": evecs[:, 0]}
-
-
-def commutator_norm(h_terms: list[PauliTerm], o_terms: list[PauliTerm], n: int) -> float:
-    """||H·O - O·H||_F (strict verification; bit-algebra prefilter lives in pauli)."""
-    h = to_hamiltonian_matrix(h_terms, n)
-    o = operator_matrix(o_terms, n)
-    return float(np.linalg.norm(h @ o - o @ h, ord="fro"))
+from evobyte.quantum.oracle import (
+    ORACLE_MAX_QUBITS,
+    commutator_norm,
+    energy,
+    exact,
+    fidelity,
+    operator_matrix,
+    to_hamiltonian_matrix,
+)
 
 
 def commutes_bitwise(h_terms: list[PauliTerm], o: Pauli) -> bool:
     """Cheap necessary check: candidate commutes with every H term bitwise."""
     n = o.n_qubits
     return all(commutes_with(Pauli(t.x_mask, t.z_mask, 0, n), o) for t in h_terms)
-
-
-def energy(h_terms: list[PauliTerm], n: int, psi: np.ndarray) -> float:
-    """Expectation <ψ|H|ψ> (assumes normalized psi)."""
-    h = to_hamiltonian_matrix(h_terms, n)
-    return float(np.real(np.vdot(psi, h @ psi)))
-
-
-def fidelity(a: np.ndarray, b: np.ndarray) -> float:
-    """|<a|b>|^2 (post-hoc scoring only, never selection)."""
-    return float(abs(np.vdot(a, b)) ** 2)
 
 
 def phase_of(p: Pauli) -> complex:
