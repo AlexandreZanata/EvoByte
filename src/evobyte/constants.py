@@ -10,7 +10,6 @@ import numpy as np
 from evobyte.bytecode import CONST_BANK, N_INSTR, decode_instr, encode_instr
 from evobyte.vm import execute_batch
 
-
 MAX_TUNABLE_SLOTS = 4
 ABSURD_CONSTANT_THRESHOLD = 1e6
 
@@ -19,7 +18,7 @@ def extract_csel_slots(program: np.ndarray) -> list[tuple[int, int]]:
     """Extract up to MAX_TUNABLE_SLOTS (instr_idx, bank_idx) for CSEL instructions."""
     slots = []
     for idx in range(N_INSTR):
-        op, dst, a, b = decode_instr(program[idx])
+        op, _dst, _a, b = decode_instr(program[idx])
         if op == 0x0F:  # CSEL
             bank_idx = int(b) & 0x0F
             slots.append((idx, bank_idx))
@@ -157,12 +156,12 @@ def fit_linear_head(
     # Design matrix [preds, 1]
     X = np.stack([preds, np.ones_like(preds)], axis=1)
     try:
-        w, residuals, rank, s = np.linalg.lstsq(X, ys, rcond=None)
+        w, _residuals, _rank, _s = np.linalg.lstsq(X, ys, rcond=None)
         w1, w0 = float(w[0]), float(w[1])
         fitted_preds = w1 * preds + w0
         mse = float(np.mean((fitted_preds - ys) ** 2))
         return w1, w0, mse, 1
-    except Exception:
+    except (np.linalg.LinAlgError, ValueError, TypeError):
         mse_base = float(np.mean((preds - ys) ** 2))
         return 1.0, 0.0, mse_base, 1
 
@@ -295,7 +294,7 @@ def tune_promoted_candidate(
             w1_comb, w0_comb = float(w_comb[0]), float(w_comb[1])
             fitted_comb = w1_comb * preds_tuned + w0_comb
             mse_comb = float(np.mean((fitted_comb - ys) ** 2))
-        except Exception:
+        except (np.linalg.LinAlgError, ValueError, TypeError):
             mse_comb = float("inf")
             w1_comb, w0_comb = 1.0, 0.0
     else:

@@ -89,13 +89,13 @@ def _safe_apply(
 def execute(
     program: np.ndarray,
     x0: np.float32,
-    x1: np.float32 = np.float32(0.0),
+    x1: np.float32 | None = None,
     const_bank: np.ndarray | None = None,
 ) -> tuple[np.float32, bool]:
     """Execute one program on one input point. Returns (output, invalid_flag)."""
     regs = np.zeros((N_REGS,), dtype=np.float32)
     regs[0] = np.float32(x0)
-    regs[1] = np.float32(x1)
+    regs[1] = np.float32(0.0) if x1 is None else np.float32(x1)
     invalid = False
     if not np.isfinite(regs[0]):
         regs[0] = np.float32(0.0)

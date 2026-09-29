@@ -1,6 +1,7 @@
 """Hamiltonian builders + oracle + conserved-operator tests (Q02/Q03 gate)."""
 
 import numpy as np
+import pytest
 
 from evobyte.quantum.hamiltonians import (
     PauliTerm,
@@ -19,7 +20,6 @@ from evobyte.quantum.hamiltonians import (
     total_sz,
 )
 from evobyte.quantum.search import random_conserved_search
-import pytest
 
 
 def test_ising_two_qubit_golden_energies():

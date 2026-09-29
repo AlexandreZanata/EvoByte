@@ -7,6 +7,7 @@ across millions of random mask pairs on CPU, validating parity-rate sanity.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime
 import json
 import subprocess
@@ -19,32 +20,34 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import numpy as np
+from hw_probe import probe
 
 from evobyte.quantum.pauli import Pauli, commutes_with, multiply
-from hw_probe import probe
 
 
 def get_git_info() -> dict[str, str]:
     """Capture current git provenance."""
     info = {"commit": "unknown", "branch": "unknown", "clean": "unknown"}
-    try:
+    with contextlib.suppress(OSError, subprocess.SubprocessError):
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, check=False
         )
         if out.returncode == 0:
             info["commit"] = out.stdout.strip()[:12]
         out_branch = subprocess.run(
-            ["git", "branch", "--show-current"], capture_output=True, text=True, timeout=5
+            ["git", "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
         )
         if out_branch.returncode == 0:
             info["branch"] = out_branch.stdout.strip()
         out_status = subprocess.run(
-            ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5
+            ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5, check=False
         )
         if out_status.returncode == 0:
             info["clean"] = "true" if not out_status.stdout.strip() else "false"
-    except Exception:
-        pass
     return info
 
 
@@ -170,7 +173,7 @@ def print_provenance_header(hw: dict, git: dict, n: int, n_qubits: int, seed: in
     print(
         f"  Git Commit          : {git.get('commit', 'unknown')} (branch: {git.get('branch', 'unknown')}, clean: {git.get('clean', 'unknown')})"
     )
-    print(f"  Timestamp           : {datetime.datetime.now(datetime.timezone.utc).isoformat()}")
+    print(f"  Timestamp           : {datetime.datetime.now(datetime.UTC).isoformat()}")
     print(f"  CPU                 : {hw.get('cpu', 'unknown')}")
     print(f"  OS                  : {hw.get('os', 'unknown')}")
     print(f"  Python              : {hw.get('python', sys.version.split()[0])}")
@@ -246,7 +249,7 @@ def main() -> int:
     res["telemetry"] = {
         "hardware": hw,
         "git": git,
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
     }
 
     if args.json:

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import torch
@@ -23,7 +24,7 @@ from evobyte.evolution import (
 
 def classify_family(program: np.ndarray) -> str:
     """Classify program into mathematical family based on active opcodes."""
-    active_ops = set((int(w) & 0xFF) for w in program if (int(w) & 0xFF) != 0)
+    active_ops = {(int(w) & 0xFF) for w in program if (int(w) & 0xFF) != 0}
     if active_ops & {0x05, 0x06}:  # SIN, COS
         return "trig"
     if active_ops & {0x07, 0x08}:  # EXP, LOG

@@ -8,8 +8,9 @@ import json
 import pickle
 import sqlite3
 import time
+import types
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 
@@ -108,10 +109,15 @@ class EliteArchive:
             # Duplicate sha256
             return False
 
-    def __enter__(self) -> EliteArchive:
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
+    ) -> None:
         self.close()
 
     def count(self) -> int:
@@ -180,13 +186,11 @@ def is_memorizer(
     extrapolation_error: float | None = None,
 ) -> bool:
     """Check if candidate exhibits overfitting/memorization signatures."""
-    if val_error > 2.0 * train_error + 0.05:
-        return True
-    if val_gap > 0.05:
-        return True
-    if extrapolation_error is not None and extrapolation_error > 2.0 * train_error + 0.1:
-        return True
-    return False
+    return (
+        val_error > 2.0 * train_error + 0.05
+        or val_gap > 0.05
+        or (extrapolation_error is not None and extrapolation_error > 2.0 * train_error + 0.1)
+    )
 
 
 def write_hall_of_fame_entry(fame_path: str | Path, entry: dict[str, Any]) -> bool:

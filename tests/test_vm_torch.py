@@ -113,7 +113,7 @@ def test_quadratic_conformance():
     p = _exact_quadratic_program()
     xs = np.linspace(-10.0, 10.0, 128, dtype=np.float32)
 
-    cpu_preds, cpu_flags = execute_batch(p, xs)
+    cpu_preds, _cpu_flags = execute_batch(p, xs)
     t_preds, t_flags = execute_batch_torch(p, xs)
 
     expected = xs**2 + 3 * xs + 7

@@ -164,7 +164,7 @@ def test_mutate_block():
     mut = mutate_block(base, rng, p_block=1.0, max_block_len=4)
     assert not np.array_equal(base, mut)
     for word in mut:
-        op, dst, a, b = decode_instr(word)
+        op, dst, a, _b = decode_instr(word)
         assert op in OPCODES
         assert dst < N_REGS
         assert a < N_REGS

@@ -8,7 +8,7 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 
 from evobyte.bytecode import (
     MAX_RISKY_CHAIN,
@@ -394,7 +394,7 @@ class MicroGenerator:
         temp = temperature if temperature is not None else self.config.temperature
 
         if elites is not None and len(elites) > 0 and p_prefix_condition > 0.0:
-            n_cond = int(round(n * p_prefix_condition))
+            n_cond = round(n * p_prefix_condition)
             n_uncond = n - n_cond
 
             batches = []

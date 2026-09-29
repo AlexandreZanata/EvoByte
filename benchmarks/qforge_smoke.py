@@ -16,7 +16,7 @@ from evobyte.quantum.hamiltonians import (
     ising,
     total_sz,
 )
-from evobyte.quantum.pauli import decode_human, Pauli
+from evobyte.quantum.pauli import Pauli, decode_human
 from evobyte.quantum.search import random_conserved_search
 
 

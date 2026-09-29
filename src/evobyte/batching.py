@@ -78,10 +78,7 @@ def execute_chunked(
             all_preds.append(p_preds)
             all_flags.append(p_flags)
             idx = end
-        except (
-            torch.cuda.OutOfMemoryError if hasattr(torch.cuda, "OutOfMemoryError") else Exception,
-            MemoryError,
-        ):
+        except (torch.cuda.OutOfMemoryError, MemoryError):
             if current_chunk > 1:
                 if torch.cuda.is_available():
                     torch.cuda.empty_cache()
