@@ -12,7 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from evobyte.quantum.pauli import PHASES, Pauli, commutes_with, to_matrix
+from evobyte.quantum.pauli import PHASES, Pauli, commutes_with, decode_human, to_matrix
 
 ORACLE_MAX_QUBITS = 12
 
@@ -31,6 +31,20 @@ class PauliTerm:
     phase: int = 0
 
 
+def decode_term(term: PauliTerm, n_qubits: int) -> str:
+    """Human-readable representation of a single Hamiltonian term for logs."""
+    p = Pauli(term.x_mask, term.z_mask, term.phase, n_qubits)
+    pauli_str = decode_human(p)
+    return f"{term.coeff:+.4f}*{pauli_str}"
+
+
+def decode_hamiltonian(terms: list[PauliTerm], n_qubits: int) -> str:
+    """Human-readable representation of a full Hamiltonian for logs."""
+    if not terms:
+        return "0"
+    return " + ".join(decode_term(t, n_qubits) for t in terms)
+
+
 def _bond(i: int, j: int, kinds: str, coeff: float) -> list[PauliTerm]:
     """Two-qubit Pauli words on qubits i, j, one term per kind in `kinds`."""
     terms = []
@@ -38,7 +52,7 @@ def _bond(i: int, j: int, kinds: str, coeff: float) -> list[PauliTerm]:
         xm = ((1 << i) | (1 << j)) if k in ("X", "Y") else 0
         zm = ((1 << i) | (1 << j)) if k in ("Z", "Y") else 0
         # Each Y single contributes phase 1 (Y = iXZ); a YY bond has two.
-        phase = bin(xm & zm).count("1") % 4
+        phase = (xm & zm).bit_count() % 4
         terms.append(PauliTerm(coeff, xm, zm, phase))
     return terms
 
