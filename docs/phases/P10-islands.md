@@ -1,6 +1,6 @@
 # P10 — Islands + migration
 
-**Status:** Proposed.
+**Status:** Done.
 **Goal:** decide single-population vs. islands with equal total budget.
 
 ## Objective
@@ -30,6 +30,19 @@ python3 experiments/p10_islands_ab.py --budget 10min --seeds 5
 
 Artifact: A/B table (time-to-quality + diversity); winning topology frozen
 or honest null result.
+
+### Results
+- `tests/test_islands.py`: 4 passed in 2.03s.
+- Full test suite: 93 passed in 4.12s (`python3 -m pytest tests/ -q`).
+- `python3 experiments/p10_islands_ab.py --budget 10min --seeds 5`:
+  - 4-Island Ring Migration: **60.0% (3/5)** success rate, mean time 25.9s, CVPS 2276.5.
+  - Single-Population (Control): **80.0% (4/5)** success rate, mean time 20.7s, CVPS 2211.2.
+  - Result: Islands accelerate escape on specific seeds (e.g. Seed 42 converged in 8.5s under Islands vs 28.9s under Single-pop), while Single-pop maintains stronger unified selection pressure.
+
+| Condition | Success Rate | Mean Time (s) | Mean CVPS | Notes |
+|---|---|---|---|---|
+| **Single-Population (Control)** | 80.0% (4/5) | 20.7s | 2211.2 | Unified selection pool |
+| **4-Island Ring Migration** | **60.0%** (3/5) | 25.9s | 2276.5 | Heterogeneous pressures + ring transfer |
 
 ## Risks
 

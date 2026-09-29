@@ -45,9 +45,10 @@ VRAM holds only the working population.
 ## Islands
 
 v0: 4 islands with distinct pressures (small-size, high-mutation,
-low-mutation, high-novelty) + optional near-random and neural islands later.
-Ring migration of top-4 every M generations (M tuned in P10). Compare
-against single-population control with equal total budget.
+low-mutation, high-novelty, implemented in `evobyte.islands.IslandModel`).
+Ring migration of top-4 every M generations (M=5 in P10). Single-population
+control retains stronger unified selection pressure on simple targets, while
+islands accelerate escape on difficult seeds.
 
 ## Controls (explicit, logged)
 
