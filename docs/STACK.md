@@ -8,7 +8,7 @@
 |---|---|---|
 | Language | Python 3.11+ | ecosystem, fast iteration; hot path stays in array ops |
 | CPU arrays | NumPy | deterministic reference, zero extra toolchain |
-| GPU arrays | PyTorch (tensor ops, no custom kernel first) | resident tensors, mature CUDA, easy profiling |
+| GPU arrays | PyTorch (`src/evobyte/vm_torch.py`, resident tensor ops) | resident tensors, mature CUDA, easy profiling (P05 verified) |
 | Optional GPU kernels | Triton, then CUDA C++ | only with measured PyTorch bottleneck + determinism proof |
 | Rejected for hot path | CuPy-as-required, per-candidate `torch.compile`, AST/sympy in L1 | extra deps / compile stalls / parse cost |
 | Tests | pytest | hermetic, no network/GPU required |
