@@ -83,8 +83,18 @@ def test_baseline_pysr_adapter():
     target = generate_target_dataset("x_plus_1", n_points=32, seed=0)
     rec = run_baseline_pysr_adapter(target, max_time_sec=0.2, seed=42)
     assert rec["method"] == "PySR-Adapter"
-    assert rec["success"] is True
-    assert rec["cvps"] == 250.0
+    # P15: missing PySR must be explicit not_run, never a win or zero error.
+    import importlib.util
+
+    has_pysr = importlib.util.find_spec("pysr") is not None
+    if not has_pysr:
+        assert rec["status"] == "not_run"
+        assert rec["hidden_mse"] is None
+        assert rec["success"] is None
+        assert "missing_dependency" in rec["reason"]
+    else:
+        assert rec["status"] == "completed"
+        assert rec["success"] is not None
 
 
 def test_baseline_evobyte():
