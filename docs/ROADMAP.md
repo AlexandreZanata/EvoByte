@@ -5,7 +5,7 @@
 
 Each phase is one file in [phases/](phases/README.md), with objective,
 scope, tasks, exit gate (executable artifact + measurement), and a
-**Commit & Push** block. No phase starts with the previous exit gate red.
+**Commit & Push** block. No phase starts with a declared prerequisite gate red.
 
 ```text
 P00 foundation + hardware probe + reproducibility harness
@@ -21,22 +21,60 @@ P09 quality diversity (MAP-Elites + novelty)
 P10 islands + migration vs. single-population control
 P11 constant optimization (slots + local search + least squares)
 P12 micro neural generator (<= 5M params, must-beat-genetic gate)
-P13 full benchmark (suites + baselines + ablations, wall-clock)
-P14 scientific datasets (gated entry to real science)
+P13 full benchmark (retained ID; blocked until P20)
+P14 scientific datasets (retained ID; blocked until P13 + P21)
+P15 measurement integrity + reproducible harness
+P16 population-parallel GPU interpreter
+P17 GPU-resident evolutionary cycle
+P18 streaming cascade + measured memory + rejection audit
+P19 strict float64 verification + frozen hidden evaluation
+P20 sustained speed/quality experiment + million-S1 verdict
+P21 clean-environment reproduction + usable learned model
+P22 optional cross-task learning with fully billed cost
 ```
+
+## Revised execution order (D012)
+
+The phase numbers are stable identifiers, not execution order. P00–P12
+remain historical milestones; their implementation is not proof that the
+GPU-residency, cascade or scientific-evidence goals are already satisfied.
+New corrective phases explicitly validate those gaps without rewriting old
+experiment history. Execute one phase at a time in this dependency order:
+
+```text
+P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
+                                                       P21 -> P22 (optional)
+```
+
+P15 is next. P13 completion must be re-evaluated against raw executed runs;
+provisional P13 reports cannot unlock P14. P13 is a valid experiment even
+if H1 is weakened, but P14 requires support of the unchanged H1 criteria
+and P21 reproduction. P22 is optional and does not block scientific entry.
+A missed million-S1 target remains a negative speed result, never a reason
+to manufacture numbers or silently relax the workload.
+
+The reference system is RTX 4060 Laptop (8 GB), i7-13620H and approximately
+32 GB system RAM. Optimize measured software bottlenecks before considering
+hardware changes. The output is a verified symbolic predictor, not a claim
+of general intelligence. See [ABLATIONS.md](ABLATIONS.md) for the added
+stages immediately after the P13–P14 ablation list.
 
 Movement rule: a phase moves Proposed -> Building when it has problem,
 scope, owner, exit gate, and risks. It moves to Done only when its gate
 artifact runs, is measured, is committed, and is pushed to GitHub.
 
-The reviewed order above differs slightly from the initial sketch by moving
-the hardware probe and reproducibility harness to P00 (before any bytecode
-freezes) and placing batching (P06) before the archive (P07), so the first
-rediscovery (P08) already runs at scale.
+The original sequence put the hardware probe before bytecode freezing and
+batching before the archive. D012 adds explicit corrective gates because
+those earlier milestones alone do not demonstrate resident massive search.
 
-## Quantum track (experimental, parallel)
+## Quantum track (experimental, deferred expansion)
 
-The Q-Forge laboratory runs on its own phase line
+Existing quantum artifacts are preserved. New quantum development is
+scheduled only after P21; Q13 still requires its own rediscovery gates.
+Quantum operation throughput cannot substitute for symbolic-search CVPS.
+This supersedes the earlier parallel-expansion priority (D012).
+
+The Q-Forge laboratory retains its own phase line
 ([phases/quantum/](phases/quantum/README.md), Q00–Q13) and never blocks the
 main track: Q0 Pauli representation -> Q1 algebra benchmark -> Q2 known
 Hamiltonians -> Q3 exact oracle -> Q4 random conserved search -> Q5
