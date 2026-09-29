@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evobyte"
+version = "0.0.0"
+description = "Massively parallel evolutionary discovery of symbolic programs via ultra-compact bytecode and deterministic verification."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "EvoByte Contributors" }]
+keywords = ["symbolic-regression", "evolutionary-computation", "gpu", "program-synthesis"]
+dependencies = [
+  "numpy>=1.26",
+  "torch>=2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.4",
+]
+bench = [
+  "pysr>=0.4",
+  "scikit-learn>=1.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

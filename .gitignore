@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Build / dist
+build/
+dist/
+*.whl
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Experiments (large artifacts, never commit)
+checkpoints/
+runs/
+data/raw/
+data/processed/
+*.pt
+*.safetensors
+*.onnx
+*.parquet
+*.h5
+*.zarr
+
+# Hall of fame is curated; generated copies stay local
+hall_of_fame/generated/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Secrets (never commit)
+.env
+*.pem
+*.key
+secrets.yaml
