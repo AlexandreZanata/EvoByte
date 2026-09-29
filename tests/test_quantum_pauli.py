@@ -186,3 +186,51 @@ def test_zero_qubit_system():
     mat = to_matrix(i0)
     assert mat.shape == (1, 1)
     assert mat[0, 0] == 1.0 + 0.0j
+
+
+def test_parity_rate_sanity_bounds():
+    rng = np.random.default_rng(12345)
+    n_samples = 10_000
+
+    # 1. 64-qubit system: theoretical rate is 0.5 + 4^(-64) ~= 0.5
+    n_qubits = 64
+    x1 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
+    z1 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
+    x2 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
+    z2 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
+
+    c64 = sum(
+        1 for i in range(n_samples)
+        if commutes_with(Pauli(int(x1[i]), int(z1[i]), 0, n_qubits),
+                         Pauli(int(x2[i]), int(z2[i]), 0, n_qubits))
+    )
+    rate64 = c64 / n_samples
+    assert 0.48 <= rate64 <= 0.52, f"Rate {rate64} outside sanity bounds [0.48, 0.52]"
+
+    # 2. 1-qubit system: theoretical rate is exactly 5/8 = 0.625
+    x1_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
+    z1_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
+    x2_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
+    z2_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
+
+    c1 = sum(
+        1 for i in range(n_samples)
+        if commutes_with(Pauli(int(x1_1[i]), int(z1_1[i]), 0, 1),
+                         Pauli(int(x2_1[i]), int(z2_1[i]), 0, 1))
+    )
+    rate1 = c1 / n_samples
+    assert abs(rate1 - 0.625) < 0.02, f"1-qubit rate {rate1} deviates from 5/8 (0.625)"
+
+    # 3. 2-qubit system: theoretical rate is exactly 17/32 = 0.53125
+    x1_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
+    z1_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
+    x2_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
+    z2_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
+
+    c2 = sum(
+        1 for i in range(n_samples)
+        if commutes_with(Pauli(int(x1_2[i]), int(z1_2[i]), 0, 2),
+                         Pauli(int(x2_2[i]), int(z2_2[i]), 0, 2))
+    )
+    rate2 = c2 / n_samples
+    assert abs(rate2 - 0.53125) < 0.02, f"2-qubit rate {rate2} deviates from 17/32 (0.53125)"
