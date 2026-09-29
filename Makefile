@@ -7,8 +7,8 @@ test:
 	python3 -m pytest tests -q
 
 lint:
-	python3 -m ruff check src tests benchmarks || true
-	python3 -m ruff format --check src tests benchmarks || true
+	python3 -m ruff check src tests benchmarks
+	python3 -m ruff format --check src tests benchmarks
 	git diff --check
 
 verify: lint test

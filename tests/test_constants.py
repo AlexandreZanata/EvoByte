@@ -174,4 +174,3 @@ def test_evaluate_tunable() -> None:
     assert ev["mse"] < 1e-6
     assert ev["mae"] < 1e-6
     assert ev["invalid_rate"] == 0.0
-
