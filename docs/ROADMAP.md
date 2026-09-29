@@ -33,3 +33,15 @@ The reviewed order above differs slightly from the initial sketch by moving
 the hardware probe and reproducibility harness to P00 (before any bytecode
 freezes) and placing batching (P06) before the archive (P07), so the first
 rediscovery (P08) already runs at scale.
+
+## Quantum track (experimental, parallel)
+
+The Q-Forge laboratory runs on its own phase line
+([phases/quantum/](phases/quantum/README.md), Q00–Q13) and never blocks the
+main track: Q0 Pauli representation -> Q1 algebra benchmark -> Q2 known
+Hamiltonians -> Q3 exact oracle -> Q4 random conserved search -> Q5
+evolutionary conserved search -> Q6 ground states -> Q7 circuit bytecode ->
+Q8 circuit evolution/superoptimization -> Q9 observable formulas -> Q10
+Schrodinger residuals -> Q11 Hamiltonian rediscovery -> Q12 vault/fame/monkey
+-> Q13 harder systems (gated on consistent rediscovery). Details and gates:
+[quantum/ROADMAP.md](quantum/ROADMAP.md).

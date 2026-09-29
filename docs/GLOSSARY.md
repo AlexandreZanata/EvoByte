@@ -16,3 +16,12 @@
   (L2 only), extrapolation (out-of-range generalization).
 - **Time-to-quality:** wall-clock seconds to reach an error threshold.
 - **Autoevolution:** archive + checkpoints + resume carrying progress forward.
+- **Q-Forge:** experimental EvoByte laboratory for quantum problems.
+- **Symplectic Pauli representation:** `(x_mask, z_mask)` bitmask encoding
+  with `I = 00, X = 10, Z = 01, Y = 11` per qubit.
+- **QVPS:** Quantum Candidates Verified Per Second.
+- **TTS / TTE:** Time To Solution / Time To Exactness (wall-clock).
+- **Exact oracle:** small-`N` diagonalization ground truth, scoring-only.
+- **Anomaly Vault:** extra-verification store for strange elite candidates.
+- **Infinite Monkey Quantum:** cheap-generator benchmark measuring candidates
+  to first valid quantum structure.

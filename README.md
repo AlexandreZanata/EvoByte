@@ -24,6 +24,7 @@ First research domain: **automatic discovery of mathematical formulas from data*
 - Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md).
 - MVP definition: [docs/MVP.md](docs/MVP.md).
 - Technical architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+- Quantum track: [docs/quantum/README.md](docs/quantum/README.md) (Q-Forge lab).
 - Contribute: [CONTRIBUTING.md](CONTRIBUTING.md).
 - Wiki mirror: https://github.com/AlexandreZanata/EvoByte/wiki (mirror of `docs/`).
 

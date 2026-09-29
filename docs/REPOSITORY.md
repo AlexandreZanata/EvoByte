@@ -23,10 +23,14 @@ tests/               hermetic unit tests (no GPU/network)
 benchmarks/
   synthetic.py       dataset generator + smoke/bench harness
   hw_probe.py        hardware/driver reporter
+  qforge_smoke.py    quantum conserved-operator baseline + oracle demo
 experiments/
   README.md          per-experiment log convention (artifacts git-ignored)
 docs/                specification (source of truth)
 docs/phases/         P00-P14 executable plans
+docs/quantum/        Q-Forge experimental track specification
+docs/phases/quantum/ Q00-Q13 executable plans
+src/evobyte/quantum/ Q-Forge reference implementation (pauli, hamiltonians, search)
 .github/workflows/
   quick.yml          fast CI: ruff + pytest + smoke (no GPU)
 ```

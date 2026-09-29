@@ -12,3 +12,4 @@ rewritten. A reversal adds a new entry superseding the old one.
 | 2026-09-29 | D005 | Hidden + extrapolation splits mandatory; leak = integrity failure | anti-memorization | L2-only access enforced by review + audit |
 | 2026-09-29 | D006 | P00 hardware probe + reproducibility harness before bytecode freeze | no invented numbers | phases cannot claim speed without provenance |
 | 2026-09-29 | D007 | Neural generator deferred to P12 with must-beat-genetic gate | VRAM protection | no LLM-scale models without ADR |
+| 2026-09-29 | D008 | Q-Forge quantum track: symplectic Pauli bits, exact oracle scoring-only, Q00–Q13 gated line | finding-hard/verifying-cheap quantum problems fit H1 | dense matrices forbidden in L1; Q13 locked until consistent rediscovery |

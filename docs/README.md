@@ -25,6 +25,19 @@ Newcomers start at the root [README.md](../README.md), then:
 - [ROADMAP.md](ROADMAP.md) — validated phase sequence.
 - [phases/](phases/README.md) — one executable file per phase (P00–P14).
 
+## Quantum track (experimental)
+
+- [quantum/](quantum/README.md) — Q-Forge laboratory index.
+- [quantum/VISION.md](quantum/VISION.md) — target problem class and questions.
+- [quantum/REPRESENTATION.md](quantum/REPRESENTATION.md) — Pauli bits, search
+  engine, Hamiltonian layout, circuit bytecode.
+- [quantum/EXPERIMENTS.md](quantum/EXPERIMENTS.md) — experiments Q-E1..Q-E7.
+- [quantum/VERIFIER.md](quantum/VERIFIER.md) — cascade, exact oracle, scaling.
+- [quantum/METRICS.md](quantum/METRICS.md) — QVPS, TTS, TTE, chaos quota.
+- [quantum/ANOMALY.md](quantum/ANOMALY.md) — Hall of Fame, labels, vault, monkey.
+- [quantum/ROADMAP.md](quantum/ROADMAP.md) — Q0–Q13 order and gate.
+- [phases/quantum/](phases/quantum/README.md) — one executable file per phase.
+
 ## Technical specification
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — system overview and memory map.
