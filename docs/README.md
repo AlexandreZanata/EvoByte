@@ -23,7 +23,7 @@ Newcomers start at the root [README.md](../README.md), then:
 - [HYPOTHESIS.md](HYPOTHESIS.md) — falsifiable success criteria.
 - [MVP.md](MVP.md) — minimal scope and exit thresholds.
 - [ROADMAP.md](ROADMAP.md) — validated phase sequence.
-- [phases/](phases/README.md) — one executable file per phase (P00–P14).
+- [phases/](phases/README.md) — one executable file per phase (P00–P22; dependency order in ROADMAP.md).
 
 ## Quantum track (experimental)
 
