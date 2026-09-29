@@ -17,6 +17,9 @@ verify: lint test
 bench:
 	python3 benchmarks/synthetic.py --benchmark
 
+qforge-smoke:
+	python3 benchmarks/qforge_smoke.py --seeds 3
+
 mvp-demo:
 	python3 benchmarks/synthetic.py --smoke
 
