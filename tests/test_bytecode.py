@@ -51,3 +51,33 @@ def test_unknown_opcode_rejected():
 
 def test_decode_human_never_empty():
     assert decode_human(nop_program()) == "NOP"
+
+
+def _chain_prog(ops):
+    prog = nop_program()
+    for i, op in enumerate(ops):
+        prog[i] = encode_instr(op, dst=7, a=0, b=1)
+    return prog
+
+
+def test_risky_chain_of_four_passes():
+    assert is_valid(_chain_prog([0x04, 0x08, 0x09, 0x07]))
+
+
+def test_risky_chain_of_five_rejected():
+    assert not is_valid(_chain_prog([0x04, 0x08, 0x09, 0x07, 0x0B]))
+
+
+def test_bounded_op_resets_risky_chain():
+    assert is_valid(_chain_prog([0x04, 0x04, 0x04, 0x04, 0x01, 0x04, 0x04]))
+
+
+def test_nop_skipped_in_risky_chain():
+    prog = nop_program()
+    prog[0] = encode_instr(0x04, dst=7, a=0, b=1)
+    prog[1] = encode_instr(0x04, dst=7, a=0, b=1)
+    # slot 2 stays NOP: skipped, run continues
+    prog[3] = encode_instr(0x04, dst=7, a=0, b=1)
+    prog[4] = encode_instr(0x04, dst=7, a=0, b=1)
+    prog[5] = encode_instr(0x04, dst=7, a=0, b=1)
+    assert not is_valid(prog)

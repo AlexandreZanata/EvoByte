@@ -36,6 +36,11 @@ CONST_BANK = np.array(
     dtype=np.float32,
 )
 
+# Domain-risky ops for S0 rule 4: chains longer than MAX_RISKY_CHAIN with no
+# intervening bounded op are rejected before data evaluation.
+RISKY_OPS = frozenset({0x04, 0x07, 0x08, 0x09, 0x0B})  # DIV, EXP, LOG, POW, SQRT
+MAX_RISKY_CHAIN = 4
+
 
 def encode_instr(op: int, dst: int = 7, a: int = 0, b: int = 0) -> np.uint32:
     """Pack [OP, DST, A, B] bytes into one uint32 (little-endian view)."""
@@ -60,11 +65,19 @@ def nop_program() -> np.ndarray:
 
 
 def is_valid(program: np.ndarray) -> bool:
-    """S0 validity: shapes, ranges, one write to output, one non-NOP."""
+    """S0 validity: shapes, ranges, one write to output, one non-NOP.
+
+    Rule 4 (risky chains): more than MAX_RISKY_CHAIN consecutive domain-risky
+    ops (DIV/EXP/LOG/POW/SQRT) with no intervening bounded op is rejected.
+    NOPs are skipped: they neither extend nor reset a run. Execution still
+    guards every op; this static rule only cheaply discards stacks of
+    unguarded-domain ops before any data evaluation.
+    """
     if program.shape != (N_INSTR,) or program.dtype != np.uint32:
         return False
     seen_non_nop = False
     output_written = False
+    risky_run = 0
     for word in program:
         op, dst, a, b = decode_instr(word)
         if op not in OPCODES:
@@ -73,10 +86,17 @@ def is_valid(program: np.ndarray) -> bool:
             return False
         if op == 0x0F and (b & 0x0F) >= len(CONST_BANK):
             return False
-        if op != 0x00:
-            seen_non_nop = True
-        if op != 0x00 and dst == 7:
+        if op == 0x00:
+            continue
+        seen_non_nop = True
+        if dst == 7:
             output_written = True
+        if op in RISKY_OPS:
+            risky_run += 1
+            if risky_run > MAX_RISKY_CHAIN:
+                return False
+        else:
+            risky_run = 0
     return seen_non_nop and output_written
 
 

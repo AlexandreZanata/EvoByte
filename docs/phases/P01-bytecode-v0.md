@@ -1,6 +1,7 @@
 # P01 — Bytecode v0 frozen
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29 — gate green: 34/34 tests, OPCODE_VERSION=0,
+spec-vs-code table match; see commit `feat(bytecode)` below).
 **Goal:** freeze `OPCODE_VERSION = 0` with codec + validity tests. No execution yet.
 
 ## Objective

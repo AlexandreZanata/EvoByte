@@ -13,3 +13,4 @@ rewritten. A reversal adds a new entry superseding the old one.
 | 2026-09-29 | D006 | P00 hardware probe + reproducibility harness before bytecode freeze | no invented numbers | phases cannot claim speed without provenance |
 | 2026-09-29 | D007 | Neural generator deferred to P12 with must-beat-genetic gate | VRAM protection | no LLM-scale models without ADR |
 | 2026-09-29 | D008 | Q-Forge quantum track: symplectic Pauli bits, exact oracle scoring-only, Q00–Q13 gated line | finding-hard/verifying-cheap quantum problems fit H1 | dense matrices forbidden in L1; Q13 locked until consistent rediscovery |
+| 2026-09-29 | D009 | S0 rule-4 semantics: risky ops {DIV,EXP,LOG,POW,SQRT}, reject runs > 4, NOPs skipped, bounded ops reset | cheap static discard of unguarded-domain stacks; execution still guards | threshold tuned by measurement in later phases, principle fixed |
