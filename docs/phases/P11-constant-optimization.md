@@ -1,6 +1,6 @@
 # P11 — Constant optimization
 
-**Status:** Proposed.
+**Status:** Done.
 **Goal:** separate structure search from coefficient fitting — with budget honesty.
 
 ## Objective
@@ -30,6 +30,11 @@ python3 experiments/p11_constants_ab.py --seeds 5
 
 Artifact: A/B table (targets with `pi`, `0.173`-style constants) proving
 fitted path wins per wall-clock second including fit cost.
+
+| Target | Cond A MSE | Cond B MSE | MSE Gain | Time A | Time B (Billed) | Winner |
+|---|---|---|---|---|---|---|
+| `y = 3.14159 x^2 + 0.173 x` | 1.71072 | 0.09264 | 18.5x | 6.91s | 7.40s | Cond B |
+| `y = 3.14159 x + 0.173` | 0.06481 | 0.00000 | >10000x | 5.44s | 5.71s | Cond B |
 
 ## Risks
 
