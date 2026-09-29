@@ -1,6 +1,8 @@
 # P05 — GPU interpreter + CVPS benchmark
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29 — gate green: 5/5 vm_torch tests, 63/63 full suite;
+CPU/CUDA conformance <= 1e-5 / bitwise flags; CVPS grid measured up to 3,170.8 progs/s and 2.95M evals/s;
+provenance header verified; see commit `feat(vm)` below).
 **Goal:** first trusted **CVPS** number with conformance proof.
 
 ## Objective
