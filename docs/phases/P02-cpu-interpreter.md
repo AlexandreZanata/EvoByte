@@ -1,6 +1,8 @@
 # P02 — CPU reference interpreter
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29 — gate green: 12/12 VM tests, 42/42 full suite,
+oracle vectors green, fuzz run 1k random programs x edge inputs = 0 NaN/Inf;
+see commit `feat(vm)` below).
 **Goal:** deterministic oracle all future backends must match.
 
 ## Objective
