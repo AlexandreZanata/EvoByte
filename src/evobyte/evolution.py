@@ -7,7 +7,24 @@ import numpy as np
 from evobyte.bytecode import N_INSTR, N_REGS, OPCODES, encode_instr, is_valid
 
 STRUCTURED_OP_RATIOS = np.array(
-    [0.25, 0.12, 0.12, 0.10, 0.06, 0.03, 0.03, 0.03, 0.02, 0.02, 0.03, 0.02, 0.03, 0.03, 0.03, 0.08],
+    [
+        0.25,
+        0.12,
+        0.12,
+        0.10,
+        0.06,
+        0.03,
+        0.03,
+        0.03,
+        0.02,
+        0.02,
+        0.03,
+        0.02,
+        0.03,
+        0.03,
+        0.03,
+        0.08,
+    ],
     dtype=np.float64,
 )
 STRUCTURED_OP_RATIOS /= STRUCTURED_OP_RATIOS.sum()
@@ -32,18 +49,19 @@ def sample_structured(rng: np.random.Generator, p_nop: float = 0.35) -> np.ndarr
             continue
         dst = int(rng.integers(0, N_REGS))
         a = int(rng.integers(0, N_REGS))
-        b = int(rng.integers(0, 256))
-        if op == 0x0F:
-            b = int(rng.integers(0, 16))
+        b = int(rng.integers(0, 16)) if op == 0x0F else int(rng.integers(0, N_REGS))
         prog[i] = encode_instr(op, dst, a, b)
     # Guarantee at least one write to r7 so S0 has a chance.
     if not any((int(w) >> 8) & 0xFF == 7 and (int(w) & 0xFF) != 0 for w in prog):
         op = int(rng.choice([0x01, 0x02, 0x03, 0x0F]))
-        prog[n_active - 1] = encode_instr(op, 7, int(rng.integers(0, N_REGS)), int(rng.integers(0, 16)))
+        b = int(rng.integers(0, 16)) if op == 0x0F else int(rng.integers(0, N_REGS))
+        prog[n_active - 1] = encode_instr(op, 7, int(rng.integers(0, N_REGS)), b)
     return prog
 
 
-def sample_valid(rng: np.random.Generator, structured: bool = True, max_tries: int = 100) -> np.ndarray:
+def sample_valid(
+    rng: np.random.Generator, structured: bool = True, max_tries: int = 100
+) -> np.ndarray:
     """Rejection-sample until S0-valid (bounded tries; raises on failure)."""
     sampler = sample_structured if structured else sample_pure
     for _ in range(max_tries):
@@ -67,7 +85,9 @@ def mutate_point(program: np.ndarray, rng: np.random.Generator, p_byte: float = 
     return out
 
 
-def crossover_single_point(a: np.ndarray, b: np.ndarray, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
+def crossover_single_point(
+    a: np.ndarray, b: np.ndarray, rng: np.random.Generator
+) -> tuple[np.ndarray, np.ndarray]:
     """Single-point crossover over 16 slots."""
     pt = int(rng.integers(1, N_INSTR))
     c1 = np.concatenate([a[:pt], b[pt:]]).astype(np.uint32)
