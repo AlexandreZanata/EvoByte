@@ -42,13 +42,13 @@ class Pauli:
             raise ValueError("n_qubits must be >= 0")
         if self.x_mask < 0 or self.z_mask < 0:
             raise ValueError("masks must be >= 0")
-        if self.n_qubits and (self.x_mask >> self.n_qubits or self.z_mask >> self.n_qubits):
+        if (self.x_mask >> self.n_qubits) or (self.z_mask >> self.n_qubits):
             raise ValueError("mask exceeds n_qubits width")
         object.__setattr__(self, "phase", self.phase % 4)
 
     def weight(self) -> int:
         """Number of non-identity qubits."""
-        return bin(self.x_mask | self.z_mask).count("1")
+        return (self.x_mask | self.z_mask).bit_count()
 
 
 def single(qubit: int, kind: str, n_qubits: int) -> Pauli:
@@ -73,7 +73,7 @@ def multiply(a: Pauli, b: Pauli) -> Pauli:
     """
     if a.n_qubits != b.n_qubits:
         raise ValueError("width mismatch in multiply")
-    sign = bin(a.z_mask & b.x_mask).count("1") % 2
+    sign = (a.z_mask & b.x_mask).bit_count() % 2
     return Pauli(a.x_mask ^ b.x_mask, a.z_mask ^ b.z_mask,
                  (a.phase + b.phase + 2 * sign) % 4, a.n_qubits)
 
@@ -82,7 +82,7 @@ def commutes_with(a: Pauli, b: Pauli) -> bool:
     """True iff the symplectic inner product is even (parity rule)."""
     if a.n_qubits != b.n_qubits:
         raise ValueError("width mismatch in commutes_with")
-    parity = (bin(a.x_mask & b.z_mask).count("1") + bin(a.z_mask & b.x_mask).count("1")) % 2
+    parity = ((a.x_mask & b.z_mask).bit_count() + (a.z_mask & b.x_mask).bit_count()) % 2
     return parity == 0
 
 
