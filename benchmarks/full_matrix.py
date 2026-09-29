@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import subprocess
 import sys
@@ -15,30 +16,32 @@ import numpy as np
 import torch
 
 # Ensure repo root and src/benchmarks are in sys.path
-_REPO_ROOT = Path(__file__).resolve().parents[1]
-_SRC_DIR = _REPO_ROOT / "src"
-_BENCH_DIR = _REPO_ROOT / "benchmarks"
-for p in (str(_SRC_DIR), str(_BENCH_DIR)):
-    if p not in sys.path:
-        sys.path.insert(0, p)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
+
+from hw_probe import probe
 
 from evobyte.batching import execute_chunked
 from evobyte.bytecode import decode_human
 from evobyte.constants import evaluate_tunable, tune_promoted_candidate
 from evobyte.evolution import EvolutionConfig, run_evolution, sample_structured
 from evobyte.verifier import evaluate
-from hw_probe import probe
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def get_git_commit() -> str:
-    try:
+    with contextlib.suppress(OSError, subprocess.SubprocessError):
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, cwd=_REPO_ROOT
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+            cwd=_REPO_ROOT,
         )
         if out.returncode == 0:
             return out.stdout.strip()[:12]
-    except Exception:
-        pass
     return "unknown"
 
 
@@ -46,7 +49,7 @@ def parse_budget_str(budget_str: str) -> float:
     s = budget_str.strip().lower()
     if s.endswith("h"):
         return float(s[:-1]) * 3600.0
-    if s.endswith("m") or s.endswith("min"):
+    if s.endswith(("m", "min")):
         num = s.replace("min", "").replace("m", "")
         return float(num) * 60.0
     if s.endswith("s"):
@@ -339,11 +342,8 @@ def run_baseline_gp(
         for ind in pop:
             try:
                 pred = ind.eval(xs_tr)
-                if not np.all(np.isfinite(pred)):
-                    mse = 1e6
-                else:
-                    mse = float(np.mean((pred - ys_tr) ** 2))
-            except Exception:
+                mse = 1e6 if not np.all(np.isfinite(pred)) else float(np.mean((pred - ys_tr) ** 2))
+            except (ArithmeticError, ValueError, TypeError, IndexError):
                 mse = 1e6
             mses.append(mse)
             total_eval += 1
@@ -372,7 +372,7 @@ def run_baseline_gp(
             if np.all(np.isfinite(pred_hid))
             else float("inf")
         )
-    except Exception:
+    except (ArithmeticError, ValueError, TypeError, IndexError):
         hid_mse = float("inf")
 
     try:
@@ -382,7 +382,7 @@ def run_baseline_gp(
             if np.all(np.isfinite(pred_ext))
             else float("inf")
         )
-    except Exception:
+    except (ArithmeticError, ValueError, TypeError, IndexError):
         ext_mse = float("inf")
 
     success = (hid_mse <= 1e-3) and (ext_mse <= 1e-3)
@@ -417,7 +417,7 @@ def run_baseline_classical(
 
     # Polynomial search degree 1 to 5
     for deg in range(1, 6):
-        try:
+        with contextlib.suppress(np.linalg.LinAlgError, ValueError, TypeError):
             coeffs = np.polyfit(xs_tr, ys_tr, deg)
             pred = np.polyval(coeffs, xs_tr)
             mse = float(np.mean((pred - ys_tr) ** 2))
@@ -425,8 +425,6 @@ def run_baseline_classical(
                 best_mse = mse
                 best_poly = coeffs
                 best_deg = deg
-        except Exception:
-            pass
 
     elapsed = max(1e-4, time.perf_counter() - t0)
     if best_poly is not None:
@@ -815,7 +813,7 @@ def compute_pareto_front(
 ) -> list[dict[str, Any]]:
     """Compute non-dominated Pareto front for (program_size, hidden_mse) per target."""
     pareto_all = []
-    targets = sorted(list(set(r.get("target", "default") for r in records)))
+    targets = sorted({r.get("target", "default") for r in records})
     for t in targets:
         t_recs = [r for r in records if r.get("target", "default") == t]
         sorted_recs = sorted(t_recs, key=lambda r: (r["program_size"], r["hidden_mse"]))
@@ -1052,7 +1050,7 @@ def print_benchmark_tables(
     print("-" * 92)
 
     methods = ["Random", "Classic-GP", "Classical-SR", "PySR-Adapter", "EvoByte"]
-    targets = sorted(list(set(r["target"] for r in all_records)))
+    targets = sorted({r["target"] for r in all_records})
 
     for m in methods:
         for t in targets:

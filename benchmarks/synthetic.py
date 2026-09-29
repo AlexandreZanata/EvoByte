@@ -44,6 +44,7 @@ def main() -> int:
 
     if args.generators:
         import time
+
         from evobyte.bytecode import is_valid
         from evobyte.evolution import sample_pure, sample_structured
 

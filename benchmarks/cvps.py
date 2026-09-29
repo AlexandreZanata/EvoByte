@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import subprocess
 import sys
@@ -14,21 +15,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import numpy as np
 import torch
+from hw_probe import probe
 
 from evobyte.evolution import sample_structured
 from evobyte.vm_torch import execute_population_torch, get_default_device
-from hw_probe import probe
 
 
 def get_git_commit() -> str:
-    try:
+    with contextlib.suppress(OSError, subprocess.SubprocessError):
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, check=False
         )
         if out.returncode == 0:
             return out.stdout.strip()[:12]
-    except Exception:
-        pass
     return "unknown"
 
 
