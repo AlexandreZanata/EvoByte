@@ -1,6 +1,6 @@
 # P12 — Micro neural generator
 
-**Status:** Proposed.
+**Status:** Done.
 **Goal:** test whether a tiny bytecode model adds anything per wall-clock second.
 
 ## Objective
@@ -34,6 +34,15 @@ python3 experiments/p12_generator_ab.py --budget 10min --seeds 5
 Artifact: 4-way table; generator stays only if it beats genetic per
 wall-clock second without hurting CVPS beyond its cap. Negative results are
 valid and recorded.
+
+| Method | Success Rate | Mean Train MSE | Mean Hidden MSE | Mean Extrap MSE | Mean CVPS |
+|---|---|---|---|---|---|
+| **Random Search** | 0.0% (0/5) | 49.55071 | 49.16120 | 245.06421 | 1011.6 |
+| **Genetic Evolution** | **40.0% (2/5)** | **5.31195** | **5.09780** | **817.64567** | **1006.0** |
+| **Neural Standalone** | 0.0% (0/5) | 58.97506 | 57.05634 | 6704.95076 | 851.7 |
+| **Neural + Genetic Hybrid** | 40.0% (2/5) | 13.47213 | 12.98033 | 1337.87829 | 762.4 |
+
+**Ruling:** DROP from main loop (documented in `docs/adr/ADR-0010-neural-generator.md` and Decision D010). Genetic search remains superior in wall-clock throughput (1006 CVPS vs 762-852 CVPS) and solution error (5.31 vs 13.47-58.98 MSE).
 
 ## Risks
 
