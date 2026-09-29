@@ -1,6 +1,8 @@
 # P06 — Massive batching at scale
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29 — gate green: 5/5 batching tests, 68/68 full suite;
+cascade tuned under 7500 MB VRAM budget: S1 100k x 256 @ 3,106.1 CVPS / 117MB, S2 1k x 4096 @ 1,296.3 CVPS / 188MB, S3 10 x 10000 @ 654.5 CVPS / 4.6MB;
+OOM-safe dynamic fallback verified; see commit `perf(bench)` below).
 **Goal:** tune `N programs x points` without exploding 8 GB VRAM.
 
 ## Objective
