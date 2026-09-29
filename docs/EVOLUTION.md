@@ -25,8 +25,9 @@ know whether it adds anything.
 ## Elite archive (never only "one best")
 
 Keep best by: fitness, size class, structure hash, behavior cluster, math
-family, novelty. Concepts used: MAP-Elites grid (size x error bins),
-novelty search (k-NN behavioral distance on normalized prediction vectors),
+family, novelty. Concepts used: MAP-Elites grid (size x behavior bins, implemented
+in `evobyte.diversity.MapElitesGrid`), novelty search (k-NN behavioral distance on
+normalized prediction vectors, implemented in `evobyte.diversity.NoveltyArchive`),
 island models.
 
 Each elite row records:
