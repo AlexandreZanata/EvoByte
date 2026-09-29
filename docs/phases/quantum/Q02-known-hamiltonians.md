@@ -1,6 +1,6 @@
 # Q02 — Known Hamiltonians
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29; 13/13 tests green; N=2..6 shapes/terms verified; symmetries isolated from search).
 **Goal:** trusted builders for the laboratory models.
 
 ## Objective

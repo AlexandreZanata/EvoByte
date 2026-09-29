@@ -42,6 +42,20 @@ H -> exact diagonalization -> E_exact, ψ_exact
 EvoByte never uses `ψ_exact` to produce candidates; it is used afterwards to
 measure closeness. This creates a controlled scientific laboratory.
 
+### Scoring-only discipline (binding rule)
+1. `src/evobyte/quantum/oracle.py` produces `E_exact`, `psi_exact`, and full
+   spectral decompositions.
+2. These outputs are strictly forbidden from entering candidate generation,
+   mutation, crossover, or generation-loop selection paths.
+3. Automated audit (`assert_scoring_only_isolation`) enforces zero leakage of
+   oracle symbols into search implementations.
+
+### Golden reference spectra (2-qubit laboratory models)
+- **Ising (J=1, h=0)**: `E = [-1.0, -1.0, 1.0, 1.0]`, `E_exact = -1.0`.
+- **Ising (J=0, h=1)**: `E = [-2.0, 0.0, 0.0, 2.0]`, `E_exact = -2.0`.
+- **Ising (J=1, h=1)**: `E = [-√5, -1.0, 1.0, √5]`, `E_exact = -√5 ≈ -2.236068`.
+- **Heisenberg XXX (J=1)**: `E = [-3.0, 1.0, 1.0, 1.0]`, `E_exact = -3.0` (singlet state).
+
 ## Progressive difficulty (binding order)
 
 Scale `2 -> 4 -> 6 -> 8 -> 10 -> 12 ...` qubits while reasonable. Record the

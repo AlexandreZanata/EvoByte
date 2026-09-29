@@ -65,3 +65,172 @@ def test_single_y_matrix_is_true_y():
 def test_decode_human_smoke():
     assert decode_human(identity(2)) == "I"
     assert decode_human(single(1, "Y", 2)) == "i*Y1"
+
+
+def test_64_qubit_algebra():
+    n = 64
+    x63 = single(63, "X", n)
+    z63 = single(63, "Z", n)
+    y63 = single(63, "Y", n)
+    x62 = single(62, "X", n)
+
+    assert x63.x_mask == (1 << 63)
+    assert z63.z_mask == (1 << 63)
+    assert y63.weight() == 1
+
+    # Same qubit anticommutes, different qubits commute
+    assert not commutes_with(x63, z63)
+    assert commutes_with(x63, x62)
+    assert commutes_with(x63, single(62, "Z", n))
+
+    # Multiplication on bit 63
+    assert multiply(x63, x63) == identity(n)
+    assert multiply(x63, z63) == Pauli(1 << 63, 1 << 63, 0, n)
+    assert multiply(z63, x63) == Pauli(1 << 63, 1 << 63, 2, n)
+
+    # Full 64-qubit strings
+    all_ones = (1 << 64) - 1
+    all_x = Pauli(all_ones, 0, 0, n)
+    all_z = Pauli(0, all_ones, 0, n)
+    assert all_x.weight() == 64
+    assert all_z.weight() == 64
+    # 64 anticommuting pairs -> even parity (0) -> commutes!
+    assert commutes_with(all_x, all_z)
+
+    # 63-qubit strings: 63 anticommuting pairs -> odd parity (1) -> anticommutes!
+    n63 = 63
+    all_x_63 = Pauli((1 << 63) - 1, 0, 0, n63)
+    all_z_63 = Pauli(0, (1 << 63) - 1, 0, n63)
+    assert not commutes_with(all_x_63, all_z_63)
+
+
+def test_pauli_validation_errors():
+    import pytest
+
+    with pytest.raises(ValueError, match="n_qubits must be >= 0"):
+        Pauli(0, 0, 0, -1)
+
+    with pytest.raises(ValueError, match="masks must be >= 0"):
+        Pauli(-1, 0, 0, 2)
+    with pytest.raises(ValueError, match="masks must be >= 0"):
+        Pauli(0, -1, 0, 2)
+
+    with pytest.raises(ValueError, match="mask exceeds n_qubits width"):
+        Pauli(4, 0, 0, 2)
+    with pytest.raises(ValueError, match="mask exceeds n_qubits width"):
+        Pauli(0, 4, 0, 2)
+    with pytest.raises(ValueError, match="mask exceeds n_qubits width"):
+        Pauli(1, 0, 0, 0)
+    with pytest.raises(ValueError, match="mask exceeds n_qubits width"):
+        Pauli(0, 1, 0, 0)
+
+    # 64-qubit overflow
+    with pytest.raises(ValueError, match="mask exceeds n_qubits width"):
+        Pauli(1 << 64, 0, 0, 64)
+
+    # Single invalid inputs
+    with pytest.raises(ValueError, match="unknown pauli kind"):
+        single(0, "W", 2)
+    with pytest.raises(ValueError, match="qubit -1 out of range"):
+        single(-1, "X", 2)
+    with pytest.raises(ValueError, match="qubit 2 out of range"):
+        single(2, "X", 2)
+
+    # Width mismatches
+    with pytest.raises(ValueError, match="width mismatch in multiply"):
+        multiply(Pauli(0, 0, 0, 2), Pauli(0, 0, 0, 3))
+    with pytest.raises(ValueError, match="width mismatch in commutes_with"):
+        commutes_with(Pauli(0, 0, 0, 2), Pauli(0, 0, 0, 3))
+
+    # Dense matrix refusal for n > 12
+    with pytest.raises(ValueError, match="dense matrix refused"):
+        to_matrix(Pauli(0, 0, 0, 13))
+
+
+def test_algebraic_identities():
+    rng = np.random.default_rng(42)
+    n = 4
+    for _ in range(30):
+        masks = [int(rng.integers(0, 1 << n)) for _ in range(6)]
+        phases = [int(rng.integers(0, 4)) for _ in range(3)]
+        a = Pauli(masks[0], masks[1], phases[0], n)
+        b = Pauli(masks[2], masks[3], phases[1], n)
+        c = Pauli(masks[4], masks[5], phases[2], n)
+
+        # Associativity: (A * B) * C == A * (B * C)
+        ab_c = multiply(multiply(a, b), c)
+        a_bc = multiply(a, multiply(b, c))
+        assert ab_c == a_bc
+
+        # Identity: A * I == A and I * A == A
+        i = identity(n)
+        assert multiply(a, i) == a
+        assert multiply(i, a) == a
+
+        # Self-commutation: A always commutes with A
+        assert commutes_with(a, a)
+
+    # Phase modulo wrapping
+    p_wrapped = Pauli(1, 0, 5, 2)
+    assert p_wrapped.phase == 1
+    p_neg = Pauli(1, 0, -1, 2)
+    assert p_neg.phase == 3
+
+
+def test_zero_qubit_system():
+    i0 = identity(0)
+    assert i0.n_qubits == 0
+    assert i0.weight() == 0
+    assert multiply(i0, i0) == i0
+    assert commutes_with(i0, i0)
+    mat = to_matrix(i0)
+    assert mat.shape == (1, 1)
+    assert mat[0, 0] == 1.0 + 0.0j
+
+
+def test_parity_rate_sanity_bounds():
+    rng = np.random.default_rng(12345)
+    n_samples = 10_000
+
+    # 1. 64-qubit system: theoretical rate is 0.5 + 4^(-64) ~= 0.5
+    n_qubits = 64
+    x1 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
+    z1 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
+    x2 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
+    z2 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
+
+    c64 = sum(
+        1 for i in range(n_samples)
+        if commutes_with(Pauli(int(x1[i]), int(z1[i]), 0, n_qubits),
+                         Pauli(int(x2[i]), int(z2[i]), 0, n_qubits))
+    )
+    rate64 = c64 / n_samples
+    assert 0.48 <= rate64 <= 0.52, f"Rate {rate64} outside sanity bounds [0.48, 0.52]"
+
+    # 2. 1-qubit system: theoretical rate is exactly 5/8 = 0.625
+    x1_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
+    z1_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
+    x2_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
+    z2_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
+
+    c1 = sum(
+        1 for i in range(n_samples)
+        if commutes_with(Pauli(int(x1_1[i]), int(z1_1[i]), 0, 1),
+                         Pauli(int(x2_1[i]), int(z2_1[i]), 0, 1))
+    )
+    rate1 = c1 / n_samples
+    assert abs(rate1 - 0.625) < 0.02, f"1-qubit rate {rate1} deviates from 5/8 (0.625)"
+
+    # 3. 2-qubit system: theoretical rate is exactly 17/32 = 0.53125
+    x1_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
+    z1_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
+    x2_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
+    z2_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
+
+    c2 = sum(
+        1 for i in range(n_samples)
+        if commutes_with(Pauli(int(x1_2[i]), int(z1_2[i]), 0, 2),
+                         Pauli(int(x2_2[i]), int(z2_2[i]), 0, 2))
+    )
+    rate2 = c2 / n_samples
+    assert abs(rate2 - 0.53125) < 0.02, f"2-qubit rate {rate2} deviates from 17/32 (0.53125)"

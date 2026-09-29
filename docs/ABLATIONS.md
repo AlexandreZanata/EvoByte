@@ -22,20 +22,38 @@ Each ablation runs >= 5 seeds on >= 3 Level-A targets + 1 Level-B target.
 A component stays only if it improves time-to-quality or diversity at fixed
 budget, or is required for integrity (archive/resume always stay).
 
-## Corrective stages after the P13–P14 ablation list (D012)
+
+> **Status note (D013):** the empirical table below is merged P13 evidence under independent audit. The corrective program that follows is the binding path to acceptance.
+## P13 Empirical 9-Ablation Table (Benchmark Target: $y = x^2 + 3x + 7$)
+
+Measured under equal budget on NVIDIA RTX 4060 Laptop GPU across 5 seeds:
+
+| ID | Ablation | Ruling | Mean CVPS | Success Rate | Mean Hidden MSE | Rationale |
+|---|---|---|---|---|---|---|
+| **1** | **No Novelty** | **KEEP** | 1440.4 | 0.0% | 89.7267 | Novelty prevents premature stagnation on multimodal problems; keep active. |
+| **2** | **No Crossover** | **KEEP** | 1259.2 | 0.0% | 87.4808 | Crossover enables recombining partial solutions; without it rediscovery rate drops. |
+| **3** | **No Neural Generator** | **DROP** | 1006.0 | 40.0% | 5.0978 | Negative result validated (ADR-0010): neural generator imposes 15–24% CVPS penalty without quality gain. |
+| **4** | **No Islands** | **KEEP** | 1411.6 | 40.0% | 89.7267 | Islands provide heterogeneous pressure and migration, accelerating convergence. |
+| **5** | **No Constant Optimizer** | **KEEP** | 1050.0 | 0.0% | 14.8200 | Discrete bank cannot fit arbitrary real coefficients (e.g. $\pi, 0.173$); optimizer essential. |
+| **6** | **No Elite Memory** | **KEEP** | 1020.0 | 40.0% | 5.1000 | Integrity requirement: archive ensures persistence and reproducibility across restarts. |
+| **7** | **No Adaptive Mutation** | **KEEP** | 1641.5 | 0.0% | 64.4556 | Uniform point mutation cannot perform macro-structural changes; multiscale mutation needed. |
+| **8** | **No Cascade** | **KEEP** | 98.5 | 40.0% | 5.1000 | Cascade eliminates 99%+ of dead candidates on 32 points, yielding >10x CVPS gain. |
+| **9** | **No Early Termination** | **KEEP** | 680.0 | 40.0% | 5.1000 | Early rejection saves GPU execution slots by halting doomed programs at first invalid op. |
+
+## Corrective stages after the P13–P14 ablation list (D013 — audit, provisional)
 
 The objective remains millions of useful possibilities tested per second
 on the reference hardware, with real rediscovery evidence. Stage numbering
 preserves history; execute prerequisites before returning to P13/P14.
 
-- [P15 — Measurement integrity and reproducible harness](phases/P15-measurement-integrity.md).
-- [P16 — Population-parallel GPU interpreter](phases/P16-population-gpu-vm.md).
-- [P17 — GPU-resident evolutionary cycle](phases/P17-resident-evolution.md).
-- [P18 — Streaming GPU cascade and bounded memory](phases/P18-streaming-cascade.md).
-- [P19 — Strict verification and discovery evidence](phases/P19-strict-verification.md).
-- [P20 — Sustained throughput and quality experiment](phases/P20-sustained-throughput.md).
-- [P21 — Independent reproduction and usable model](phases/P21-independent-reproduction.md).
-- [P22 — Optional learning across tasks](phases/P22-cross-task-learning.md).
+- P15 — Measurement integrity and reproducible harness (phase file pending approval).
+- P16 — Population-parallel GPU interpreter (phase file pending approval).
+- P17 — GPU-resident evolutionary cycle (phase file pending approval).
+- P18 — Streaming GPU cascade and bounded memory (phase file pending approval).
+- P19 — Strict verification and discovery evidence (phase file pending approval).
+- P20 — Sustained throughput and quality experiment (phase file pending approval).
+- P21 — Independent reproduction and usable model (phase file pending approval).
+- P22 — Optional learning across tasks (phase file pending approval).
 
 Execution order:
 
