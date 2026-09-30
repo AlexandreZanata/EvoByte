@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import datetime
 import hashlib
+import json
 import subprocess
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -18,6 +21,7 @@ import torch
 from hw_probe import probe
 
 from evobyte.evolution import sample_structured
+from evobyte.vm import execute_batch
 from evobyte.vm_torch import execute_population_torch, get_default_device
 
 
@@ -56,18 +60,19 @@ def print_provenance_header(device: torch.device, seed: int, data_hash: str) -> 
     print("=" * 85)
 
 
-def run_cvps_grid(device: torch.device, seed: int) -> list[dict]:
+def run_cvps_grid(device: torch.device, seed: int) -> dict[str, Any]:
     rng = np.random.default_rng(seed)
     grid_p = [100, 500, 1000, 2000]
     grid_b = [32, 256, 1024]
 
     results = []
     print("\nCVPS Grid Benchmark: Candidates Verified Per Second")
-    print("-" * 85)
+    print("-" * 125)
     print(
-        f"{'Candidates (P)':<15} | {'Batch (B)':<10} | {'Latency (ms)':<14} | {'CVPS (progs/s)':<18} | {'Evals/sec'}"
+        f"{'Candidates (P)':<15} | {'Batch (B)':<10} | {'Latency (ms)':<14} | {'CVPS (progs/s)':<16} | "
+        f"{'Evals/sec':<14} | {'Alloc VRAM':<12} | {'Res VRAM':<12} | {'Conformance'}"
     )
-    print("-" * 85)
+    print("-" * 125)
 
     for b in grid_b:
         xs = torch.linspace(-10.0, 10.0, b, dtype=torch.float32, device=device)
@@ -77,19 +82,52 @@ def run_cvps_grid(device: torch.device, seed: int) -> list[dict]:
             # Warmup
             execute_population_torch(progs, xs, device=device)
             if device.type == "cuda":
-                torch.cuda.synchronize()
+                torch.cuda.synchronize(device)
+
+            if device.type == "cuda":
+                torch.cuda.reset_peak_memory_stats(device)
+                torch.cuda.synchronize(device)
 
             repeats = 5
             t0 = time.perf_counter()
             for _ in range(repeats):
-                execute_population_torch(progs, xs, device=device)
+                out_t, flags_t = execute_population_torch(progs, xs, device=device)
                 if device.type == "cuda":
-                    torch.cuda.synchronize()
+                    torch.cuda.synchronize(device)
             elapsed = (time.perf_counter() - t0) / repeats
 
             latency_ms = elapsed * 1000.0
             cvps = p / elapsed if elapsed > 0 else float("inf")
             evals_per_sec = (p * b) / elapsed if elapsed > 0 else float("inf")
+
+            peak_alloc_mb = (
+                torch.cuda.max_memory_allocated(device) / (1024 * 1024)
+                if device.type == "cuda"
+                else 0.0
+            )
+            peak_res_mb = (
+                torch.cuda.max_memory_reserved(device) / (1024 * 1024)
+                if device.type == "cuda"
+                else 0.0
+            )
+
+            # Conformance check against CPU oracle on first 5 candidates
+            conf_ok = True
+            xs_np = xs.cpu().numpy()
+            for check_i in range(min(5, p)):
+                pred_cpu, flag_cpu = execute_batch(progs[check_i], xs_np)
+                pred_gpu = out_t[check_i].cpu().numpy()
+                flag_gpu = flags_t[check_i].cpu().numpy()
+                if not np.allclose(pred_cpu, pred_gpu, rtol=1e-5, atol=1e-5):
+                    conf_ok = False
+                    break
+                if not np.array_equal(flag_cpu, flag_gpu):
+                    conf_ok = False
+                    break
+
+            conf_str = "PASS" if conf_ok else "FAIL"
+            alloc_str = f"{peak_alloc_mb:.2f} MB"
+            res_str = f"{peak_res_mb:.2f} MB"
 
             results.append(
                 {
@@ -98,14 +136,60 @@ def run_cvps_grid(device: torch.device, seed: int) -> list[dict]:
                     "latency_ms": latency_ms,
                     "cvps": cvps,
                     "evals_sec": evals_per_sec,
+                    "peak_alloc_vram_mb": peak_alloc_mb,
+                    "peak_res_vram_mb": peak_res_mb,
+                    "conformance": conf_ok,
                 }
             )
             print(
-                f"{p:<15} | {b:<10} | {latency_ms:>10.2f} ms | {cvps:>16.1f} | {evals_per_sec:>14.1f}"
+                f"{p:<15} | {b:<10} | {latency_ms:>10.2f} ms | {cvps:>14.1f} | {evals_per_sec:>14.1f} | "
+                f"{alloc_str:>12} | {res_str:>12} | {conf_str}"
             )
 
-    print("-" * 85)
-    return results
+    print("-" * 125)
+
+    # CPU Baseline Comparison on P=500, B=256
+    p_comp = 500
+    b_comp = 256
+    progs_comp = np.stack([sample_structured(rng) for _ in range(p_comp)])
+    xs_comp_np = np.linspace(-10.0, 10.0, b_comp, dtype=np.float32)
+
+    t0 = time.perf_counter()
+    for pi in range(p_comp):
+        execute_batch(progs_comp[pi], xs_comp_np)
+    cpu_time = time.perf_counter() - t0
+    cpu_cvps = p_comp / cpu_time if cpu_time > 0 else float("inf")
+
+    # GPU comparison on same P=500, B=256
+    xs_comp_t = torch.from_numpy(xs_comp_np).to(device)
+    execute_population_torch(progs_comp, xs_comp_t, device=device)
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+
+    t0 = time.perf_counter()
+    repeats = 5
+    for _ in range(repeats):
+        execute_population_torch(progs_comp, xs_comp_t, device=device)
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+    gpu_time = (time.perf_counter() - t0) / repeats
+    gpu_cvps = p_comp / gpu_time if gpu_time > 0 else float("inf")
+    speedup = gpu_cvps / cpu_cvps if cpu_cvps > 0 else float("inf")
+
+    print("\nCPU vs GPU Representative Comparison (P=500, B=256):")
+    print(f"  CPU Sequential Throughput : {cpu_cvps:,.1f} CVPS ({cpu_time * 1000:.2f} ms)")
+    print(f"  GPU Vectorized Throughput : {gpu_cvps:,.1f} CVPS ({gpu_time * 1000:.2f} ms)")
+    print(f"  GPU Speedup Ratio         : {speedup:.1f}x")
+    print("-" * 125)
+
+    return {
+        "grid": results,
+        "comparison_p500_b256": {
+            "cpu_cvps": cpu_cvps,
+            "gpu_cvps": gpu_cvps,
+            "speedup_ratio": speedup,
+        },
+    }
 
 
 def main() -> int:
@@ -118,6 +202,7 @@ def main() -> int:
     ap.add_argument("--provenance", action="store_true", help="Print provenance telemetry")
     ap.add_argument("--seed", type=int, default=42, help="RNG seed")
     ap.add_argument("--device", type=str, default=None, help="Target device (cpu/cuda)")
+    ap.add_argument("--output", type=str, default=None, help="Output path for JSON report")
     args = ap.parse_args()
 
     dev = torch.device(args.device) if args.device else get_default_device()
@@ -191,7 +276,26 @@ def main() -> int:
         print("-" * 95)
 
     elif args.grid:
-        run_cvps_grid(dev, args.seed)
+        grid_data = run_cvps_grid(dev, args.seed)
+        if args.output:
+            report = {
+                "benchmark": "cvps_grid",
+                "git_commit": get_git_commit(),
+                "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+                "device": str(dev),
+                "hardware": probe(),
+                "seed": args.seed,
+                "grid_results": grid_data["grid"],
+                "comparison": grid_data["comparison_p500_b256"],
+                "verdict": "PASS"
+                if all(r.get("conformance", True) for r in grid_data["grid"])
+                else "FAIL",
+            }
+            out_p = Path(args.output)
+            out_p.parent.mkdir(parents=True, exist_ok=True)
+            with open(out_p, "w", encoding="utf-8") as f:
+                json.dump(report, f, indent=2)
+            print(f"Artifact written to {out_p}")
     else:
         # Quick smoke run
         rng = np.random.default_rng(args.seed)
