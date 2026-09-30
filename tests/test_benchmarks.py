@@ -23,6 +23,7 @@ from benchmarks.full_matrix import (
     run_baseline_random,
     run_evobyte_full,
     run_full_benchmark_matrix,
+    run_reproduce_manifest,
 )
 
 
@@ -156,7 +157,31 @@ def test_full_matrix_smoke():
         seeds=[42],
         target_keys=["x_plus_1"],
         max_trial_sec=0.5,
+        output_manifest_path=None,
     )
     assert res["status"] == "PASS"
     assert len(res["records"]) > 0
     assert len(res["ablations"]) == 9
+
+
+def test_full_matrix_manifest_and_reproduction(tmp_path: Path):
+    manifest_file = tmp_path / "p13-manifest.json"
+    reproduce_file = tmp_path / "p21-reproduction.json"
+
+    res = run_full_benchmark_matrix(
+        budget_strings=["10s"],
+        seeds=[42],
+        target_keys=["x_plus_1"],
+        max_trial_sec=0.5,
+        output_manifest_path=manifest_file,
+    )
+    assert res["status"] == "PASS"
+    assert manifest_file.exists()
+    raw_file = tmp_path / "p13-raw.json"
+    assert raw_file.exists()
+
+    repro = run_reproduce_manifest(manifest_file, output_path=reproduce_file)
+    assert repro["status"] == "PASS"
+    assert reproduce_file.exists()
+    assert len(repro["raw_artifacts_verified"]) > 0
+    assert repro["p14_eligible"] == (repro["h1_verdict"] == "SUPPORTED")
