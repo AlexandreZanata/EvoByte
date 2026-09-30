@@ -114,3 +114,55 @@ def test_fitness_and_complexity():
     assert f1["complexity"] < f2["complexity"]
     assert "fitness" in f1
     assert "commutator_error" in f1
+
+
+def test_evolution_genetic_operators():
+    from evobyte.quantum.evolution_q import (
+        crossover_candidates,
+        mutate_candidate,
+        mutate_term,
+        tournament_select,
+    )
+
+    rng = np.random.default_rng(100)
+    term = PauliTerm(1.0, 0b01, 0b00, 0)
+    mutated = mutate_term(term, n_qubits=2, rng=rng, p_bit=1.0)
+    assert isinstance(mutated, PauliTerm)
+
+    parent_a = [PauliTerm(1.0, 1, 0, 0), PauliTerm(1.0, 2, 0, 0)]
+    parent_b = [PauliTerm(-1.0, 0, 1, 0), PauliTerm(-1.0, 0, 2, 0)]
+    mut_cand = mutate_candidate(parent_a, n_qubits=2, rng=rng)
+    assert len(mut_cand) == len(parent_a)
+
+    child_a, child_b = crossover_candidates(parent_a, parent_b, rng)
+    assert len(child_a) == 2
+    assert len(child_b) == 2
+
+    # Tournament selection chooses lowest fitness
+    pop = [parent_a, parent_b]
+    scores = [10.0, 1.0]
+    winner = tournament_select(pop, scores, rng, k=2)
+    assert winner == parent_b
+
+
+def test_evolution_random_injection_and_repeatability():
+    from evobyte.quantum.evolution_q import evolve_conserved_operator
+
+    h = heisenberg(2)
+
+    # 1. Seeded repeatability
+    run1 = evolve_conserved_operator(h, n_qubits=2, pop_size=20, generations=10, n_terms=2, seed=42)
+    run2 = evolve_conserved_operator(h, n_qubits=2, pop_size=20, generations=10, n_terms=2, seed=42)
+
+    assert run1["commutator_error"] == run2["commutator_error"]
+    assert run1["fitness"] == run2["fitness"]
+    assert run1["generations_run"] == run2["generations_run"]
+    assert run1["best_candidate"] == run2["best_candidate"]
+
+    # 2. Random injection floor
+    # Running with injection_ratio=0.3 injects fresh candidates
+    run_inj = evolve_conserved_operator(
+        h, n_qubits=2, pop_size=30, generations=5, n_terms=2, seed=1, injection_ratio=0.3
+    )
+    assert run_inj["archive_size"] >= 1
+    assert run_inj["evaluations"] >= 30

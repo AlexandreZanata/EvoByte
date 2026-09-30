@@ -1,6 +1,6 @@
 # Q05 — Evolutionary conserved-operator search
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29; 5/5 rediscovery successes; 100% rate >= 3/5 gate; hidden generalization norm 0.00e+00; 154/154 tests green).
 **Goal:** first rediscovery — a known conserved operator, found blind.
 
 ## Objective
