@@ -24,3 +24,11 @@ Executable files: [../phases/quantum/README.md](../phases/quantum/README.md).
 Each phase states objective, scope, tasks, exit gate, and a Commit & Push
 block. Movement rule (same as main track): a phase is Done only when its
 gate artifact runs, is measured, is committed, and is pushed to GitHub.
+
+## Scheduling revision (D012)
+
+Preserve existing quantum artifacts, but defer new quantum development until
+main-track P21 reproduction. This changes scheduling only: Q0–Q13 retain
+their representation, correctness and rediscovery gates. Pauli bit-op or
+quantum-candidate throughput is a separate metric and cannot substantiate
+symbolic-search CVPS or the main-track million-S1 target.

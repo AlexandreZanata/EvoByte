@@ -40,7 +40,9 @@ def test_algebra_matches_matrices():
         n = 3
         a = Pauli(int(rng.integers(0, 8)), int(rng.integers(0, 8)), int(rng.integers(0, 4)), n)
         b = Pauli(int(rng.integers(0, 8)), int(rng.integers(0, 8)), int(rng.integers(0, 4)), n)
-        np.testing.assert_allclose(to_matrix(multiply(a, b)), to_matrix(a) @ to_matrix(b), atol=1e-12)
+        np.testing.assert_allclose(
+            to_matrix(multiply(a, b)), to_matrix(a) @ to_matrix(b), atol=1e-12
+        )
 
 
 def test_commutation_parity():
@@ -200,9 +202,11 @@ def test_parity_rate_sanity_bounds():
     z2 = rng.integers(0, 2**64, size=n_samples, dtype=np.uint64)
 
     c64 = sum(
-        1 for i in range(n_samples)
-        if commutes_with(Pauli(int(x1[i]), int(z1[i]), 0, n_qubits),
-                         Pauli(int(x2[i]), int(z2[i]), 0, n_qubits))
+        1
+        for i in range(n_samples)
+        if commutes_with(
+            Pauli(int(x1[i]), int(z1[i]), 0, n_qubits), Pauli(int(x2[i]), int(z2[i]), 0, n_qubits)
+        )
     )
     rate64 = c64 / n_samples
     assert 0.48 <= rate64 <= 0.52, f"Rate {rate64} outside sanity bounds [0.48, 0.52]"
@@ -214,9 +218,11 @@ def test_parity_rate_sanity_bounds():
     z2_1 = rng.integers(0, 2, size=n_samples, dtype=np.uint64)
 
     c1 = sum(
-        1 for i in range(n_samples)
-        if commutes_with(Pauli(int(x1_1[i]), int(z1_1[i]), 0, 1),
-                         Pauli(int(x2_1[i]), int(z2_1[i]), 0, 1))
+        1
+        for i in range(n_samples)
+        if commutes_with(
+            Pauli(int(x1_1[i]), int(z1_1[i]), 0, 1), Pauli(int(x2_1[i]), int(z2_1[i]), 0, 1)
+        )
     )
     rate1 = c1 / n_samples
     assert abs(rate1 - 0.625) < 0.02, f"1-qubit rate {rate1} deviates from 5/8 (0.625)"
@@ -228,9 +234,11 @@ def test_parity_rate_sanity_bounds():
     z2_2 = rng.integers(0, 4, size=n_samples, dtype=np.uint64)
 
     c2 = sum(
-        1 for i in range(n_samples)
-        if commutes_with(Pauli(int(x1_2[i]), int(z1_2[i]), 0, 2),
-                         Pauli(int(x2_2[i]), int(z2_2[i]), 0, 2))
+        1
+        for i in range(n_samples)
+        if commutes_with(
+            Pauli(int(x1_2[i]), int(z1_2[i]), 0, 2), Pauli(int(x2_2[i]), int(z2_2[i]), 0, 2)
+        )
     )
     rate2 = c2 / n_samples
     assert abs(rate2 - 0.53125) < 0.02, f"2-qubit rate {rate2} deviates from 17/32 (0.53125)"

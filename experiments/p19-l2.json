@@ -1,0 +1,299 @@
+{
+  "metadata": {
+    "suite": "P19 Strict Verification & Discovery Evidence",
+    "timestamp": "2026-09-30 12:09:57 UTC",
+    "seeds": 5,
+    "platform": "Linux-7.1.5-76070105-generic-x86_64-with-glibc2.39",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "summary": {
+    "all_known_correct_passed": true,
+    "all_overfits_rejected": true,
+    "all_exploits_rejected": true,
+    "all_rounding_rejected": true,
+    "all_reproduced": true,
+    "all_archive_null_ok": true,
+    "all_hof_strict_ok": true,
+    "verdict": "PASS"
+  },
+  "seeds_data": [
+    {
+      "seed": 0,
+      "audit": {
+        "seed": 0,
+        "train_hash": "7f12e0c7298f9066",
+        "val_hash": "3ba784d27251af04",
+        "hidden_test_hash": "f9a9a11cc905508a",
+        "extrapolation_hash": "67f272ef294e09ba",
+        "search_data_accessed": [
+          "train",
+          "val"
+        ],
+        "hidden_test_accessed_during_search": false
+      },
+      "known_correct": {
+        "passed": true,
+        "decision": "VERIFIED_DISCOVERY",
+        "f64_test_mse": 0.0,
+        "f32_test_mse": 1.4025225425484678e-11,
+        "extrap_mse": 0.0,
+        "symbolic_equivalent": true,
+        "proof_type": "symbolic_simplification",
+        "reproduction_max_diff": 0.0
+      },
+      "deliberate_overfit": {
+        "passed": false,
+        "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+        "reasons": [
+          "test_error_exceeds_threshold",
+          "extrapolation_divergence"
+        ],
+        "train_mse": 2059.315261009668,
+        "f64_test_mse": 2512.681987627924
+      },
+      "protected_domain_exploit": {
+        "passed": false,
+        "decision": "REJECTED: protected_domain_exploit, test_error_exceeds_threshold, overfit_memorization",
+        "reasons": [
+          "protected_domain_exploit",
+          "test_error_exceeds_threshold",
+          "overfit_memorization"
+        ],
+        "ordinary_math_valid": false,
+        "ordinary_math_error": "Singularity: division by near-zero (0.000e+00) near x=2"
+      },
+      "rounding_sensitive": {
+        "passed": false,
+        "decision": "REJECTED: float_precision_divergence",
+        "reasons": [
+          "float_precision_divergence"
+        ],
+        "f32_test_mse": 2.2737367883136385e-14,
+        "f64_test_mse": 0.005841881692923824,
+        "divergence": 0.005841881692901087
+      }
+    },
+    {
+      "seed": 1,
+      "audit": {
+        "seed": 1,
+        "train_hash": "97014cb386147c1b",
+        "val_hash": "7e9820143bda9fd9",
+        "hidden_test_hash": "349cc29ada79b1d0",
+        "extrapolation_hash": "03e16989679fc11e",
+        "search_data_accessed": [
+          "train",
+          "val"
+        ],
+        "hidden_test_accessed_during_search": false
+      },
+      "known_correct": {
+        "passed": true,
+        "decision": "VERIFIED_DISCOVERY",
+        "f64_test_mse": 0.0,
+        "f32_test_mse": 1.2331469179116539e-11,
+        "extrap_mse": 0.0,
+        "symbolic_equivalent": true,
+        "proof_type": "symbolic_simplification",
+        "reproduction_max_diff": 0.0
+      },
+      "deliberate_overfit": {
+        "passed": false,
+        "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+        "reasons": [
+          "test_error_exceeds_threshold",
+          "extrapolation_divergence"
+        ],
+        "train_mse": 397.256089014138,
+        "f64_test_mse": 2304.685357245791
+      },
+      "protected_domain_exploit": {
+        "passed": false,
+        "decision": "REJECTED: protected_domain_exploit, test_error_exceeds_threshold",
+        "reasons": [
+          "protected_domain_exploit",
+          "test_error_exceeds_threshold"
+        ],
+        "ordinary_math_valid": false,
+        "ordinary_math_error": "Singularity: division by near-zero (0.000e+00) near x=2"
+      },
+      "rounding_sensitive": {
+        "passed": false,
+        "decision": "REJECTED: float_precision_divergence",
+        "reasons": [
+          "float_precision_divergence"
+        ],
+        "f32_test_mse": 2.2737367883136385e-14,
+        "f64_test_mse": 0.005841881692923824,
+        "divergence": 0.005841881692901087
+      }
+    },
+    {
+      "seed": 2,
+      "audit": {
+        "seed": 2,
+        "train_hash": "5d5d370447b18098",
+        "val_hash": "90d5e119b82af86d",
+        "hidden_test_hash": "be3ec0c564cd52d7",
+        "extrapolation_hash": "ef302de066f97341",
+        "search_data_accessed": [
+          "train",
+          "val"
+        ],
+        "hidden_test_accessed_during_search": false
+      },
+      "known_correct": {
+        "passed": true,
+        "decision": "VERIFIED_DISCOVERY",
+        "f64_test_mse": 0.0,
+        "f32_test_mse": 1.4850343177386094e-11,
+        "extrap_mse": 0.0,
+        "symbolic_equivalent": true,
+        "proof_type": "symbolic_simplification",
+        "reproduction_max_diff": 0.0
+      },
+      "deliberate_overfit": {
+        "passed": false,
+        "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+        "reasons": [
+          "test_error_exceeds_threshold",
+          "extrapolation_divergence"
+        ],
+        "train_mse": 1366.9304081095784,
+        "f64_test_mse": 2358.270450922765
+      },
+      "protected_domain_exploit": {
+        "passed": false,
+        "decision": "REJECTED: protected_domain_exploit, test_error_exceeds_threshold",
+        "reasons": [
+          "protected_domain_exploit",
+          "test_error_exceeds_threshold"
+        ],
+        "ordinary_math_valid": false,
+        "ordinary_math_error": "Singularity: division by near-zero (0.000e+00) near x=2"
+      },
+      "rounding_sensitive": {
+        "passed": false,
+        "decision": "REJECTED: float_precision_divergence",
+        "reasons": [
+          "float_precision_divergence"
+        ],
+        "f32_test_mse": 2.2737367883136385e-14,
+        "f64_test_mse": 0.005841881692923824,
+        "divergence": 0.005841881692901087
+      }
+    },
+    {
+      "seed": 3,
+      "audit": {
+        "seed": 3,
+        "train_hash": "188b9b497465d952",
+        "val_hash": "5c650d82a86c766d",
+        "hidden_test_hash": "abbd342f6c89a711",
+        "extrapolation_hash": "2a55abcd3ca2a3ed",
+        "search_data_accessed": [
+          "train",
+          "val"
+        ],
+        "hidden_test_accessed_during_search": false
+      },
+      "known_correct": {
+        "passed": true,
+        "decision": "VERIFIED_DISCOVERY",
+        "f64_test_mse": 0.0,
+        "f32_test_mse": 1.2467360477330658e-11,
+        "extrap_mse": 0.0,
+        "symbolic_equivalent": true,
+        "proof_type": "symbolic_simplification",
+        "reproduction_max_diff": 0.0
+      },
+      "deliberate_overfit": {
+        "passed": false,
+        "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+        "reasons": [
+          "test_error_exceeds_threshold",
+          "extrapolation_divergence"
+        ],
+        "train_mse": 7399.046236260643,
+        "f64_test_mse": 2425.3110506877756
+      },
+      "protected_domain_exploit": {
+        "passed": false,
+        "decision": "REJECTED: protected_domain_exploit, test_error_exceeds_threshold, overfit_memorization",
+        "reasons": [
+          "protected_domain_exploit",
+          "test_error_exceeds_threshold",
+          "overfit_memorization"
+        ],
+        "ordinary_math_valid": false,
+        "ordinary_math_error": "Singularity: division by near-zero (0.000e+00) near x=2"
+      },
+      "rounding_sensitive": {
+        "passed": false,
+        "decision": "REJECTED: float_precision_divergence",
+        "reasons": [
+          "float_precision_divergence"
+        ],
+        "f32_test_mse": 2.2737367883136385e-14,
+        "f64_test_mse": 0.005841881692923824,
+        "divergence": 0.005841881692901087
+      }
+    },
+    {
+      "seed": 4,
+      "audit": {
+        "seed": 4,
+        "train_hash": "a0307d4d89a55ca4",
+        "val_hash": "c0c20f272d92a07f",
+        "hidden_test_hash": "7dff8df37df58417",
+        "extrapolation_hash": "fc061026082476b0",
+        "search_data_accessed": [
+          "train",
+          "val"
+        ],
+        "hidden_test_accessed_during_search": false
+      },
+      "known_correct": {
+        "passed": true,
+        "decision": "VERIFIED_DISCOVERY",
+        "f64_test_mse": 0.0,
+        "f32_test_mse": 1.226929668973753e-11,
+        "extrap_mse": 0.0,
+        "symbolic_equivalent": true,
+        "proof_type": "symbolic_simplification",
+        "reproduction_max_diff": 0.0
+      },
+      "deliberate_overfit": {
+        "passed": false,
+        "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+        "reasons": [
+          "test_error_exceeds_threshold",
+          "extrapolation_divergence"
+        ],
+        "train_mse": 629.6134725775605,
+        "f64_test_mse": 2407.922536837716
+      },
+      "protected_domain_exploit": {
+        "passed": false,
+        "decision": "REJECTED: protected_domain_exploit, test_error_exceeds_threshold",
+        "reasons": [
+          "protected_domain_exploit",
+          "test_error_exceeds_threshold"
+        ],
+        "ordinary_math_valid": false,
+        "ordinary_math_error": "Singularity: division by near-zero (0.000e+00) near x=2"
+      },
+      "rounding_sensitive": {
+        "passed": false,
+        "decision": "REJECTED: float_precision_divergence",
+        "reasons": [
+          "float_precision_divergence"
+        ],
+        "f32_test_mse": 2.2737367883136385e-14,
+        "f64_test_mse": 0.005841881692923824,
+        "divergence": 0.005841881692901087
+      }
+    }
+  ]
+}

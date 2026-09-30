@@ -5,9 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 import torch
-import torch.nn as nn
 
-from evobyte.bytecode import N_INSTR, decode_instr, encode_instr, is_valid
+from evobyte.bytecode import N_INSTR, decode_instr, is_valid
 from evobyte.evolution import sample_structured
 from evobyte.generator import (
     MAX_GENERATOR_PARAMS,
@@ -16,7 +15,6 @@ from evobyte.generator import (
     GeneratorConfig,
     MicroGenerator,
     assert_generator_resource_cap,
-    decode_sampled_tokens_to_programs,
     encode_programs_to_tensors,
 )
 

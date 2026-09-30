@@ -5,6 +5,7 @@ hermiticity enforcement, energy/fidelity metrics, and scoring-only isolation.
 """
 
 from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -12,7 +13,6 @@ from evobyte.quantum.hamiltonians import PauliTerm, heisenberg, ising, j1j2
 from evobyte.quantum.oracle import (
     ORACLE_MAX_QUBITS,
     assert_scoring_only_isolation,
-    commutator_norm,
     energy,
     energy_and_fidelity,
     exact,
@@ -25,17 +25,13 @@ def test_ising_two_qubit_golden_values():
     # 1. Pure coupling (J=1, h=0): H = -ZZ
     # Eigenvalues: -1 (doublet: |00>, |11>), +1 (doublet: |01>, |10>)
     out_coupling = exact(ising(2, j=1.0, h=0.0), 2)
-    np.testing.assert_allclose(
-        sorted(out_coupling["energies"]), [-1.0, -1.0, 1.0, 1.0], atol=1e-12
-    )
+    np.testing.assert_allclose(sorted(out_coupling["energies"]), [-1.0, -1.0, 1.0, 1.0], atol=1e-12)
     assert abs(out_coupling["E_exact"] - (-1.0)) < 1e-12
 
     # 2. Pure transverse field (J=0, h=1): H = -X0 - X1
     # Eigenvalues: -2 (singlet |++>), 0 (doublet |+->, |-+>), +2 (singlet |--->)
     out_field = exact(ising(2, j=0.0, h=1.0), 2)
-    np.testing.assert_allclose(
-        sorted(out_field["energies"]), [-2.0, 0.0, 0.0, 2.0], atol=1e-12
-    )
+    np.testing.assert_allclose(sorted(out_field["energies"]), [-2.0, 0.0, 0.0, 2.0], atol=1e-12)
     assert abs(out_field["E_exact"] - (-2.0)) < 1e-12
 
     # 3. Transverse Ising at critical point (J=1, h=1): H = -ZZ - X0 - X1

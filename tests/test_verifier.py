@@ -130,5 +130,6 @@ def test_hidden_never_imported_in_src():
         ["grep", "-rn", "hidden", "src/"],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 1, f"Found forbidden 'hidden' reference in src/:\n{result.stdout}"

@@ -14,7 +14,6 @@ import numpy as np
 
 from evobyte.quantum.hamiltonians import (
     PauliTerm,
-    commutator_norm,
     commutes_bitwise,
     hamiltonian_hash,
 )
@@ -24,7 +23,6 @@ from evobyte.quantum.search import (
     COMPLEXITY_W,
     fitness,
     sample_candidate,
-    sample_pure_term,
     sample_structured_term,
 )
 
@@ -212,7 +210,10 @@ def evolve_conserved_operator(
         # 2. Reproduction
         # Elitism: carry over top 2 individuals
         sorted_indices = sorted(range(pop_size), key=lambda i: fitness_scores[i])
-        new_pop: list[list[PauliTerm]] = [population[sorted_indices[0]], population[sorted_indices[1]]]
+        new_pop: list[list[PauliTerm]] = [
+            population[sorted_indices[0]],
+            population[sorted_indices[1]],
+        ]
 
         # Random injection floor
         n_injected = max(1, int(pop_size * injection_ratio))
