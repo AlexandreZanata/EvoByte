@@ -39,12 +39,13 @@ measurement)`.
 - [P20 — Sustained throughput and quality experiment](P20-sustained-throughput.md).
 - [P21 — Independent reproduction and usable model](P21-independent-reproduction.md).
 - [P22 — Optional learning across tasks](P22-cross-task-learning.md).
+- [P23 — Math specialist pilot (GSM8K chains, ≤5M, billed)](P23-math-specialist-pilot.md).
 
 ## Execution and acceptance contract
 
 ```text
 P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
-                                                       P21 -> P22 (optional)
+                                                        P21 -> P14(mathdb) -> P23 -> P22 (optional)
 ```
 
 P15 is the next task. Numbers preserve historical references; the dependency
