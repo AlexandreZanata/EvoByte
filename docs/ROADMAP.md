@@ -31,6 +31,13 @@ P19 strict float64 verification + frozen hidden evaluation
 P20 sustained speed/quality experiment + million-S1 verdict
 P21 clean-environment reproduction + usable learned model
 P22 optional cross-task learning with fully billed cost
+P23 math specialist pilot (GSM8K chains, <=5M, billed; DROP recorded)
+P24 stable RTX 4060 limits with real budgets and reconciled counters
+P25 leak-free math corpus (GSM8K audit + NuminaMath + symbolic tasks)
+P26 reproducible tracing + exploration map
+P27 quantum-inspired randomness, one falsifiable hypothesis per cycle
+P28 new narrow-family specialist with its own hypothesis
+P29 open problems with verifiable certificates (binding discovery criterion)
 ```
 
 ## Revised execution order (D012)
@@ -44,10 +51,17 @@ experiment history. Execute one phase at a time in this dependency order:
 ```text
 P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
                                                         P21 -> P14(mathdb) -> P23 -> P22 (optional)
+                                                        P23 -> P24 -> P25 -> P26 -> P27 -> P28 -> P29
 ```
 
 P23 (math specialist pilot on GSM8K chains, <= 5M, billed cost) runs after
 the math-DB benchmark; only a KEEP with ADR unlocks P22 confirmation.
+P24–P29 consolidate the hypothesis-byte-generator program: stable GPU
+limits (P24), leak-free corpus (P25), lineage + exploration map (P26),
+one-falsifiable-hypothesis-per-cycle quantum-inspired sampling (P27), a new
+narrow-family specialist with its own hypothesis (P28), and certified open
+problems (P29). No validated novel mathematical discovery exists to date;
+P29 defines the binding discovery criterion.
 
 P15 is next. P13 completion must be re-evaluated against raw executed runs;
 provisional P13 reports cannot unlock P14. P13 is a valid experiment even
