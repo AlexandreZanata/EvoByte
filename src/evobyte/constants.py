@@ -8,7 +8,7 @@ from typing import Any
 import numpy as np
 
 from evobyte.bytecode import CONST_BANK, N_INSTR, decode_instr, encode_instr
-from evobyte.vm import execute_batch
+from evobyte.vm import execute_batch, execute_batch_f64
 
 MAX_TUNABLE_SLOTS = 4
 ABSURD_CONSTANT_THRESHOLD = 1e6
@@ -101,6 +101,14 @@ class TunableProgram:
         preds, flags = execute_batch(self.program, xs, const_bank=self.custom_bank)
         if self.linear_head != (1.0, 0.0):
             preds = self.linear_head[0] * preds + self.linear_head[1]
+        return preds, flags
+
+    def execute_f64(self, xs: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Execute program with current tunable constant slots and linear head in pure float64."""
+        bank_f64 = self.custom_bank.astype(np.float64)
+        preds, flags = execute_batch_f64(self.program, xs, const_bank=bank_f64)
+        if self.linear_head != (1.0, 0.0):
+            preds = np.float64(self.linear_head[0]) * preds + np.float64(self.linear_head[1])
         return preds, flags
 
     def decode_expression(self) -> str:
