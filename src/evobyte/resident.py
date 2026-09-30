@@ -199,9 +199,11 @@ class GPUResidentEvolution:
         x1s: np.ndarray | torch.Tensor | None = None,
         device: torch.device | str | None = None,
         initial_population: np.ndarray | torch.Tensor | None = None,
+        cascade: Any | None = None,
     ) -> None:
         self.device = torch.device(device) if device is not None else get_default_device()
         self.config = config if config is not None else EvolutionConfig()
+        self.cascade = cascade
 
         if isinstance(xs, np.ndarray):
             self.xs = torch.from_numpy(xs.astype(np.float32)).to(self.device)
@@ -261,24 +263,36 @@ class GPUResidentEvolution:
 
         # 1. EVALUATION on GPU
         t_eval_0 = time.perf_counter()
-        preds, flags = execute_population_torch(
-            self.population,
-            self.xs,
-            x1s=self.x1s,
-            device=self.device,
-            buffer=self.vm_buffer,
-        )
-        diff = preds - self.ys.unsqueeze(0)
-        mse = (diff**2).mean(dim=1)
+        if self.cascade is not None:
+            elite_sc = self.best_fitness if self.best_fitness < 1e5 else None
+            fitness, mse, counters = self.cascade.evaluate(
+                self.population,
+                self.xs,
+                self.ys,
+                elite_score=elite_sc,
+                x1s=self.x1s,
+            )
+            invalid = fitness >= 1e5
+        else:
+            preds, flags = execute_population_torch(
+                self.population,
+                self.xs,
+                x1s=self.x1s,
+                device=self.device,
+                buffer=self.vm_buffer,
+            )
+            diff = preds - self.ys.unsqueeze(0)
+            mse = (diff**2).mean(dim=1)
 
-        # Invalidity penalty
-        invalid = flags.any(dim=1)
-        penalized_mse = torch.where(invalid, mse + 1e6, mse)
+            # Invalidity penalty
+            invalid = flags.any(dim=1)
+            penalized_mse = torch.where(invalid, mse + 1e6, mse)
 
-        # Complexity penalty
-        ops = self.population & 0xFF
-        complexity = (ops != 0).sum(dim=1).to(dtype=torch.float32)
-        fitness = penalized_mse + self.config.complexity_weight * complexity
+            # Complexity penalty
+            ops = self.population & 0xFF
+            complexity = (ops != 0).sum(dim=1).to(dtype=torch.float32)
+            fitness = penalized_mse + self.config.complexity_weight * complexity
+            counters = None
 
         self._sync()
         t_eval = time.perf_counter() - t_eval_0
@@ -366,7 +380,7 @@ class GPUResidentEvolution:
         unique_count = int(torch.unique(sorted_pop[: min(pop_size, 500)], dim=0).shape[0])
         dup_rate = float(1.0 - (unique_count / min(pop_size, 500)))
 
-        return {
+        stat_dict = {
             "generation": self.generation,
             "best_fitness": self.best_fitness,
             "best_mse": self.best_mse,
@@ -381,6 +395,9 @@ class GPUResidentEvolution:
             "step_time_s": t_step,
             "candidates_per_sec": pop_size / max(t_step, 1e-6),
         }
+        if counters is not None:
+            stat_dict["cascade_counters"] = counters.to_dict()
+        return stat_dict
 
     def run(
         self,
