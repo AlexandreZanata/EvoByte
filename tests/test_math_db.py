@@ -63,3 +63,19 @@ def test_smoke_benchmark_max_gpu_safe() -> None:
     assert rep["n_hidden_sealed"] > 0
     assert rep["problems_per_sec"] > 0
     assert rep["chains_total"] >= 0
+
+
+def test_full_benchmark_all_visible_match_hidden_sealed() -> None:
+    from math_db import RAW_PATH, run_smoke_benchmark
+
+    if not RAW_PATH.exists():
+        import pytest
+
+        pytest.skip("gsm8k raw not downloaded (run math_db.py --download)")
+    rep = run_smoke_benchmark(limit=1319)
+    assert rep["n_visible"] == 1120
+    assert rep["n_hidden_sealed"] == 199
+    assert rep["parse_ok"] == 1120
+    assert rep["chains_total"] == 3614
+    assert rep["chains_match"] == 3614
+    assert rep["hidden_touched"] is False

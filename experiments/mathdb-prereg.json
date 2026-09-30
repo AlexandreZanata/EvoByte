@@ -1,22 +1,43 @@
 {
-    "accepted_predecessor": "codex/p21-independent-reproduction",
-    "dataset": {
-        "expected_n": 1319,
-        "expected_sha256": "3730d312f6e3440559ace48831e51066acaca737f6eabec99bccb9e4b3c39d14",
-        "hf_config": "main",
-        "hf_id": "openai/gsm8k",
-        "hf_split": "test",
-        "license": "MIT (OpenAI GSM8K)",
-        "local_path": "data/raw/gsm8k-test.jsonl (gitignored, re-download via benchmarks/math_db.py --download)",
-    },
-    "future_micro_model_gate": {
-        "budget_rule": "equal wall-clock genetic vs learned vs neural(<=5M) vs hybrid, training cost billed",
-        "default": "genetic (D010); KEEP needs ADR with held-out-family evidence",
-        "max_params": 5000000,
-    },
-    "max_gpu_rule": "ALL new phases use max 4060 without crashing: VRAM budget 7000MB, chunk cap 20000, 8 CPU threads, 2 CUDA streams, empty_cache+synchronize, OOM halving",
-    "phase": "p14-mathdb-gsm8k (micro-task 1)",
-    "seed_discipline": "splits seeded (default 0); 5+ seeds for pilot, 20-seed confirmation for claims",
-    "smoke": {"chains_match": 332, "chains_total": 332, "problems_per_sec": 746.4332671120695},
-    "splits": {"hidden": "15% sealed, never touched by search", "train": "70%", "val": "15%"},
+  "phase": "p14-mathdb-gsm8k (micro-tasks 1-2)",
+  "accepted_predecessor": "codex/p21-independent-reproduction",
+  "dataset": {
+    "hf_id": "openai/gsm8k",
+    "hf_config": "main",
+    "hf_split": "test",
+    "license": "MIT (OpenAI GSM8K)",
+    "expected_n": 1319,
+    "expected_sha256": "3730d312f6e3440559ace48831e51066acaca737f6eabec99bccb9e4b3c39d14",
+    "local_path": "data/raw/gsm8k-test.jsonl (gitignored, re-download via benchmarks/math_db.py --download)"
+  },
+  "splits": {
+    "train": "70%",
+    "val": "15%",
+    "hidden": "15% sealed (199 problems), never touched by search"
+  },
+  "seed_discipline": "splits seeded (default 0); 5+ seeds for pilot, 20-seed confirmation for claims",
+  "max_gpu_rule": "ALL new phases use max 4060 without crashing: VRAM budget 7000MB, chunk cap 20000, 8 CPU threads, 2 CUDA streams, empty_cache+synchronize, OOM halving",
+  "smoke": {
+    "chains_match": 332,
+    "chains_total": 332,
+    "problems_per_sec": 746.4332671120695
+  },
+  "full_benchmark": {
+    "n_visible": 1120,
+    "n_hidden_sealed": 199,
+    "parse_ok": 1120,
+    "chains_total": 3614,
+    "chains_computed": 3614,
+    "chains_match": 3614,
+    "match_rate": 1.0,
+    "problems_per_sec": 5177.364081657467,
+    "device": "cuda",
+    "manifest": "experiments/mathdb-full.json",
+    "hidden_touched": false
+  },
+  "future_micro_model_gate": {
+    "max_params": 5000000,
+    "budget_rule": "equal wall-clock genetic vs learned vs neural(<=5M) vs hybrid, training cost billed",
+    "default": "genetic (D010); KEEP needs ADR with held-out-family evidence"
+  }
 }
