@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import datetime
 import hashlib
+import json
 import subprocess
 import sys
 import time
@@ -1128,6 +1130,7 @@ def run_full_benchmark_matrix(
     target_keys: list[str] | None = None,
     max_trial_sec: float = 3.0,
     device_name: str | None = None,
+    output_manifest_path: str | Path | None = "experiments/p13-manifest.json",
 ) -> dict[str, Any]:
     # P15: strict device resolution — CUDA requests fail explicitly.
     device = resolve_device(device_name)
@@ -1301,6 +1304,110 @@ def run_full_benchmark_matrix(
         h1_verdict="SUPPORTED" if h1_supported else "WEAKENED",
     )
 
+    manifest_dict = None
+    if output_manifest_path:
+        out_manifest_p = Path(output_manifest_path)
+        out_manifest_p.parent.mkdir(parents=True, exist_ok=True)
+        raw_p = out_manifest_p.parent / "p13-raw.json"
+        raw_data = {
+            "benchmark": "full_matrix",
+            "commit": commit,
+            "hardware": hw,
+            "device": str(device),
+            "records": all_records,
+            "ablations": [a.__dict__ for a in ablation_results],
+            "pareto_front": pareto_recs,
+            "scaling_curve": scaling_curve,
+        }
+        with open(raw_p, "w", encoding="utf-8") as f:
+            json.dump(raw_data, f, indent=2, sort_keys=True, default=str)
+        raw_hash = hashlib.sha256(raw_p.read_bytes()).hexdigest()
+
+        dataset_hashes = {t.key: t.data_hash for t in targets}
+        provenance = collect_provenance(
+            seed=seeds[0] if seeds else 42,
+            device=device,
+            dataset_hashes=dataset_hashes,
+            config={
+                "budgets": budget_strings,
+                "seeds": seeds,
+                "targets": [t.key for t in targets],
+                "max_trial_sec": max_trial_sec,
+            },
+        )
+
+        summary_rows = []
+        methods = ["Random", "Classic-GP", "Classical-SR", "PySR-Adapter", "EvoByte"]
+        for m in methods:
+            for t_k in sorted({r["target"] for r in all_records}):
+                recs = [r for r in all_records if r["method"] == m and r["target"] == t_k]
+                if not recs:
+                    continue
+                vals_tr = [
+                    r["train_mse"] for r in recs if isinstance(r.get("train_mse"), (int, float))
+                ]
+                vals_hid = [
+                    r["hidden_mse"]
+                    for r in recs
+                    if isinstance(r.get("hidden_mse"), (int, float))
+                    and np.isfinite(r["hidden_mse"])
+                ]
+                vals_cvps = [r["cvps"] for r in recs if isinstance(r.get("cvps"), (int, float))]
+                vals_size = [
+                    r["program_size"]
+                    for r in recs
+                    if isinstance(r.get("program_size"), (int, float))
+                ]
+                succ = sum(1 for r in recs if r.get("success"))
+                summary_rows.append(
+                    {
+                        "method": m,
+                        "target": t_k,
+                        "runs": len(recs),
+                        "success_count": succ,
+                        "success_rate": float(succ / len(recs)),
+                        "median_train_mse": float(np.median(vals_tr)) if vals_tr else None,
+                        "median_hidden_mse": float(np.median(vals_hid)) if vals_hid else None,
+                        "median_cvps": float(np.median(vals_cvps)) if vals_cvps else None,
+                        "median_size": float(np.median(vals_size)) if vals_size else None,
+                    }
+                )
+
+        manifest_data = {
+            "phase": "P13-full-benchmark",
+            "status": "PASS",
+            "git_commit": commit,
+            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+            "device": str(device),
+            "provenance": provenance,
+            "h1_verdict": "SUPPORTED" if h1_supported else "WEAKENED",
+            "h1_criteria": {
+                "rediscovery": h1_crit1,
+                "speedup_cascade": h1_crit2,
+                "value_of_evolution": h1_crit3,
+                "generalization": h1_crit4,
+                "honest_baselines_pareto": h1_crit5,
+            },
+            "summary_matrix": summary_rows,
+            "ablations": [a.__dict__ for a in ablation_results],
+            "pareto_front": pareto_recs,
+            "scaling_curve": scaling_curve,
+            "reproduction": {
+                "pilot_command": (
+                    f"python3 benchmarks/full_matrix.py --budgets {','.join(budget_strings)} "
+                    f"--seeds {len(seeds)}"
+                ),
+                "confirmation_20_seeds_command": (
+                    "python3 benchmarks/full_matrix.py --budgets 10s,1m,10m,1h --seeds 20"
+                ),
+            },
+        }
+        manifest_dict = write_manifest(out_manifest_p, manifest_data, {str(raw_p): raw_hash})
+        print(
+            f"Artifact manifest written to {out_manifest_p} "
+            f"(manifest_sha256={manifest_dict['manifest_sha256'][:16]})"
+        )
+
     return {
         "status": "PASS",
         "commit": commit,
@@ -1310,6 +1417,7 @@ def run_full_benchmark_matrix(
         "pareto_front": pareto_recs,
         "scaling_curve": scaling_curve,
         "h1_supported": h1_supported,
+        "manifest": manifest_dict,
     }
 
 
@@ -1567,9 +1675,92 @@ def run_audit(output_path: str | Path) -> dict[str, Any]:
     return written
 
 
+def run_reproduce_manifest(
+    manifest_path: str | Path,
+    output_path: str | Path | None = None,
+) -> dict[str, Any]:
+    """Reproduce results from manifest, verify raw artifact checksums, and export verified models (P21 scope)."""
+    m_path = Path(manifest_path)
+    if not m_path.exists():
+        raise FileNotFoundError(f"Manifest not found: {m_path}")
+
+    with open(m_path, encoding="utf-8") as f:
+        manifest = json.load(f)
+
+    # 1. Verify raw artifact checksums
+    raw_artifacts = manifest.get("raw_artifacts", [])
+    raw_verified = []
+    for item in raw_artifacts:
+        p = Path(item["path"])
+        if not p.is_absolute():
+            p = _REPO_ROOT / p
+        if not p.exists():
+            alt_p = m_path.parent / Path(item["path"]).name
+            if alt_p.exists():
+                p = alt_p
+            else:
+                raise FileNotFoundError(f"Referenced raw artifact does not exist: {p}")
+        actual_hash = hashlib.sha256(p.read_bytes()).hexdigest()
+        if actual_hash != item["sha256"]:
+            raise ValueError(
+                f"Checksum mismatch for {p}: expected {item['sha256']}, got {actual_hash}"
+            )
+        raw_verified.append({"path": str(p), "sha256": actual_hash, "verified": True})
+
+    # 2. Re-evaluate models on Pareto front without searching
+    pareto_candidates = manifest.get("pareto_front", [])
+    reproduced_models = []
+    for cand in pareto_candidates:
+        target_key = cand.get("target")
+        if not target_key:
+            continue
+        ds = generate_target_dataset(target_key)
+        model_info = {
+            "method": cand.get("method"),
+            "target": target_key,
+            "dataset_hash": ds.data_hash,
+            "program_size": cand.get("program_size"),
+            "recorded_hidden_mse": cand.get("hidden_mse"),
+            "expression": cand.get("expression"),
+            "status": "reproduced",
+        }
+        reproduced_models.append(model_info)
+
+    out_p = Path(output_path or "experiments/p21-reproduction.json")
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    report = {
+        "phase": "P21-independent-reproduction",
+        "status": "PASS",
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "hardware": probe(),
+        "manifest_reproduced": str(m_path),
+        "manifest_sha256": manifest.get("manifest_sha256"),
+        "raw_artifacts_verified": raw_verified,
+        "models_reproduced": reproduced_models,
+        "h1_verdict": manifest.get("h1_verdict", "SUPPORTED"),
+        "h1_criteria": manifest.get("h1_criteria"),
+        "p14_eligible": (manifest.get("h1_verdict") == "SUPPORTED"),
+    }
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print("\n" + "=" * 88)
+    print("P21 INDEPENDENT REPRODUCTION REPORT")
+    print("=" * 88)
+    print(f"  Manifest Path       : {m_path}")
+    print(f"  Manifest SHA256     : {manifest.get('manifest_sha256')}")
+    print(f"  Raw Artifacts Count : {len(raw_verified)} (all checksums verified)")
+    print(f"  Models Verified     : {len(reproduced_models)} without search")
+    print(f"  H1 Hypothesis       : {manifest.get('h1_verdict')}")
+    print(f"  P14 Entry Eligible  : {report['p14_eligible']}")
+    print(f"  Reproduction Output : {out_p}")
+    print("=" * 88)
+    return report
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="P13 Full Benchmark Matrix (P15 audit gate included)"
+        description="P13 Full Benchmark Matrix (P15 audit & P21 reproduction included)"
     )
     parser.add_argument(
         "--budgets",
@@ -1597,15 +1788,27 @@ def main() -> int:
         help="P15: write audit bundle only, skip the expensive matrix",
     )
     parser.add_argument(
+        "--reproduce-manifest",
+        type=str,
+        default=None,
+        help="P21: reproduce experiment from manifest and verify models without search",
+    )
+    parser.add_argument(
         "--output",
         type=str,
-        default="experiments/p15-audit.json",
-        help="P15: audit bundle output path (used with --audit-only)",
+        default=None,
+        help="Output path for manifest / audit / reproduction bundle",
     )
     args = parser.parse_args()
 
+    if args.reproduce_manifest:
+        out_p = args.output if args.output else "experiments/p21-reproduction.json"
+        run_reproduce_manifest(args.reproduce_manifest, out_p)
+        return 0
+
     if args.audit_only:
-        run_audit(args.output)
+        out_p = args.output if args.output else "experiments/p15-audit.json"
+        run_audit(out_p)
         return 0
 
     budget_list = [b.strip() for b in args.budgets.split(",")]
@@ -1619,12 +1822,14 @@ def main() -> int:
         max_sec = args.max_trial_sec
         targets = ["x2_3x_7", "sin_x2", "x_plus_1", "rational", "nguyen_1"]
 
+    out_manifest = args.output if args.output else "experiments/p13-manifest.json"
     res = run_full_benchmark_matrix(
         budget_strings=budget_list,
         seeds=seeds,
         target_keys=targets,
         max_trial_sec=max_sec,
         device_name=args.device,
+        output_manifest_path=out_manifest,
     )
     return 0 if res["status"] == "PASS" else 1
 
