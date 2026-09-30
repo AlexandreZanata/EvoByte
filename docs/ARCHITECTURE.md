@@ -47,15 +47,18 @@ Budget priority: population > data > execution buffers > results > elites.
 | 128 B | 128 MB | 512 MB | 2048 MB |
 
 v0 choice: **64 bytes per candidate** (16 instructions x 4 bytes). That is
-64 MB per 1M candidates — leaving headroom for data, buffers, and results
-on 8 GB. Smaller (32 B) is an explicit P05 ablation; larger (128 B) needs
+64 MB per 1M candidates for bytecode only. This does not establish runtime
+headroom on 8 GB: `[1M, 8, 256]` float32 registers alone need 8.192 GB
+(decimal), before predictions, flags, temporaries and CUDA overhead. P18
+uses measured streaming chunks, not a bytecode-only population budget. Smaller (32 B) is an explicit P05 ablation; larger (128 B) needs
 measured justification.
 
 VRAM layout (logical):
 
 - `POP`: `[N, 16]` uint32 instructions (N = population).
 - `DATA`: `[D, F+1]` float32 inputs + target (stays resident).
-- `REGS`: `[N, R]` float32 per-candidate registers (R = 8 in v0).
+- `REGS`: current materialized layout `[chunk_N, R, points]` float32
+  (R = 8 in v0); a fused implementation may keep point-local registers on chip.
 - `PRED`: `[N]` or `[N, batch]` float32 predictions.
 - `SCORE`: `[N]` float32 fitness + `[N]` uint8 validity flags.
 - `ELITE`: small pinned ring (<= 10k) + host-side archive.

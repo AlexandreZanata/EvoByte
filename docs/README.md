@@ -23,7 +23,7 @@ Newcomers start at the root [README.md](../README.md), then:
 - [HYPOTHESIS.md](HYPOTHESIS.md) — falsifiable success criteria.
 - [MVP.md](MVP.md) — minimal scope and exit thresholds.
 - [ROADMAP.md](ROADMAP.md) — validated phase sequence.
-- [phases/](phases/README.md) — one executable file per phase (P00–P14).
+- [phases/](phases/README.md) — one executable file per phase (P00–P22; dependency order in ROADMAP.md).
 
 ## Quantum track (experimental)
 
@@ -48,6 +48,8 @@ Newcomers start at the root [README.md](../README.md), then:
 - [EVOLUTION.md](EVOLUTION.md) — selection, QD, islands, autoevolution.
 - [CONSTANTS.md](CONSTANTS.md) — structure vs. coefficient strategy.
 - [STACK.md](STACK.md) — technology choices and why.
+- [GPU_ACCESS.md](GPU_ACCESS.md) — RTX 4060 access runbook: detection steps,
+  wake-up, troubleshooting, measured baseline (read before any GPU task).
 - [REPOSITORY.md](REPOSITORY.md) — repo layout contract.
 
 ## Measurement

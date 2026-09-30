@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import subprocess
 import sys
@@ -14,29 +15,31 @@ from typing import Any
 import numpy as np
 import torch
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
-_SRC_DIR = _REPO_ROOT / "src"
-_BENCH_DIR = _REPO_ROOT / "benchmarks"
-for p in (str(_SRC_DIR), str(_BENCH_DIR)):
-    if p not in sys.path:
-        sys.path.insert(0, p)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
+
+from hw_probe import probe
 
 from evobyte.bytecode import decode_human
 from evobyte.constants import TunableProgram, tune_promoted_candidate
 from evobyte.evolution import EvolutionConfig, run_evolution
 from evobyte.vm import execute_batch
-from hw_probe import probe
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def get_git_commit() -> str:
-    try:
+    with contextlib.suppress(OSError, subprocess.SubprocessError):
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, cwd=_REPO_ROOT
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+            cwd=_REPO_ROOT,
         )
         if out.returncode == 0:
             return out.stdout.strip()[:12]
-    except Exception:
-        pass
     return "unknown"
 
 
@@ -261,11 +264,14 @@ def verify_scientific_candidate_l2(
         elif spec.monotonicity_sign < 0 and not np.all(diffs <= 1e-4):
             failure_reasons.append("Violated required negative monotonicity dY/dX <= 0")
 
-    if ext_valid and spec.asymptote_bound is not None:
-        if np.any(p_ext > spec.asymptote_bound * 1.25):
-            failure_reasons.append(
-                f"Extrapolation exceeded physical asymptote bound {spec.asymptote_bound:.2f}"
-            )
+    if (
+        ext_valid
+        and spec.asymptote_bound is not None
+        and np.any(p_ext > spec.asymptote_bound * 1.25)
+    ):
+        failure_reasons.append(
+            f"Extrapolation exceeded physical asymptote bound {spec.asymptote_bound:.2f}"
+        )
 
     # 5. Units / Scaling verification
     base_x = float(np.median(xs_tr))
