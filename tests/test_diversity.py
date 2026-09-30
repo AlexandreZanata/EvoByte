@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
-import torch
 
 from evobyte.bytecode import N_INSTR, encode_instr
 from evobyte.diversity import (

@@ -1,6 +1,6 @@
 # Q03 — Exact-diagonalization oracle
 
-**Status:** Done (2026-09-29; 7/7 oracle tests green; golden spectra verified; scoring-only isolation audited).
+**Status:** Proposed.
 **Goal:** controlled laboratory ground truth with scoring-only discipline.
 
 ## Objective
