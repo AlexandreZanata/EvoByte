@@ -11,6 +11,7 @@ import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import torch
@@ -278,3 +279,74 @@ def write_manifest(path: str | Path, manifest: dict, raw_artifacts: dict[str, st
     with open(path, "w", encoding="utf-8") as f:
         json.dump(checksummed, f, indent=2, sort_keys=True, default=str)
     return checksummed
+
+
+def parse_budget_duration(budget_str: str) -> float:
+    """Parse budget string like '10s', '1m', '10m', '1h', '30' into float seconds."""
+    s = str(budget_str).strip().lower()
+    if s.endswith("s"):
+        return float(s[:-1])
+    if s.endswith("m"):
+        return float(s[:-1]) * 60.0
+    if s.endswith("h"):
+        return float(s[:-1]) * 3600.0
+    return float(s)
+
+
+def query_gpu_telemetry(device: torch.device | None = None) -> dict[str, Any]:
+    """Query live GPU telemetry (temperature, clocks, power, utilization, VRAM)."""
+    telemetry: dict[str, Any] = {
+        "temperature_c": None,
+        "graphics_clock_mhz": None,
+        "power_draw_w": None,
+        "power_limit_w": None,
+        "gpu_utilization_pct": None,
+        "vram_used_mb": None,
+        "vram_total_mb": None,
+        "telemetry_available": False,
+    }
+    if not torch.cuda.is_available():
+        return telemetry
+
+    dev = device if device is not None else torch.device("cuda:0")
+    if dev.type != "cuda":
+        return telemetry
+
+    try:
+        res = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=temperature.gpu,clocks.current.graphics,power.draw,power.limit,utilization.gpu,memory.used,memory.total",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=3,
+            check=False,
+        )
+        if res.returncode == 0 and res.stdout.strip():
+            parts = [p.strip() for p in res.stdout.strip().split(",")]
+            if len(parts) >= 7:
+                telemetry["temperature_c"] = float(parts[0]) if parts[0] != "[N/A]" else None
+                telemetry["graphics_clock_mhz"] = float(parts[1]) if parts[1] != "[N/A]" else None
+                telemetry["power_draw_w"] = float(parts[2]) if parts[2] != "[N/A]" else None
+                telemetry["power_limit_w"] = float(parts[3]) if parts[3] != "[N/A]" else None
+                telemetry["gpu_utilization_pct"] = float(parts[4]) if parts[4] != "[N/A]" else None
+                telemetry["vram_used_mb"] = float(parts[5]) if parts[5] != "[N/A]" else None
+                telemetry["vram_total_mb"] = float(parts[6]) if parts[6] != "[N/A]" else None
+                telemetry["telemetry_available"] = True
+    except (OSError, subprocess.SubprocessError, ValueError):
+        pass
+
+    try:
+        telemetry["torch_vram_allocated_mb"] = float(
+            torch.cuda.memory_allocated(dev) / (1024 * 1024)
+        )
+        telemetry["torch_vram_reserved_mb"] = float(torch.cuda.memory_reserved(dev) / (1024 * 1024))
+        telemetry["torch_max_vram_allocated_mb"] = float(
+            torch.cuda.max_memory_allocated(dev) / (1024 * 1024)
+        )
+    except (RuntimeError, AssertionError, TypeError, AttributeError):
+        pass
+
+    return telemetry
