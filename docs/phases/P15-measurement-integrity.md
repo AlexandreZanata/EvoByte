@@ -1,8 +1,8 @@
 # P15 — Measurement integrity and reproducible harness
 
-**Status:** Proposed.
+**Status:** Done (2026-09-29; audit manifest `0a42178c423cd120`; `make verify` + `pytest` green; short real run + not_run fixture validate counters/manifest).
 **Prerequisite:** P12; evidence review takes priority over any provisional P13 verdict.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** codex/p15-measurement-integrity.
 
 ## Objective
 

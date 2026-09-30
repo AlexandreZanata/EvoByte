@@ -43,8 +43,11 @@ experiment history. Execute one phase at a time in this dependency order:
 
 ```text
 P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
-                                                       P21 -> P22 (optional)
+                                                        P21 -> P14(mathdb) -> P23 -> P22 (optional)
 ```
+
+P23 (math specialist pilot on GSM8K chains, <= 5M, billed cost) runs after
+the math-DB benchmark; only a KEEP with ADR unlocks P22 confirmation.
 
 P15 is next. P13 completion must be re-evaluated against raw executed runs;
 provisional P13 reports cannot unlock P14. P13 is a valid experiment even
