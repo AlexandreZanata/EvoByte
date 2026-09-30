@@ -400,6 +400,265 @@ def run_search_loop_benchmark(device: torch.device, seeds: list[int]) -> dict[st
     }
 
 
+def run_cascade_audit_benchmark(device: torch.device, seeds: list[int]) -> dict[str, Any]:
+    """Run streaming GPU cascade audit comparing no-cascade vs cascade vs cascade+early_stop (P18)."""
+    from evobyte.cascade import CascadeConfig, StreamingGPUCascade, audit_cascade_accuracy
+    from evobyte.evolution import EvolutionConfig
+    from evobyte.resident import GPUResidentEvolution
+
+    print("\n" + "=" * 135)
+    print("STREAMING GPU CASCADE & MEMORY AUDIT BENCHMARK (P18)")
+    print("=" * 135)
+
+    n_points = 1024
+    xs_np = np.linspace(-5.0, 5.0, n_points, dtype=np.float32)
+    ys_np = xs_np**2 + 3.0 * xs_np + 7.0
+
+    pop_size = 1000
+    max_gens = 25
+    evo_cfg = EvolutionConfig(
+        pop_size=pop_size,
+        elite_k=32,
+        tournament_size=4,
+        crossover_p=0.3,
+        point_mut_p=0.02,
+        large_mut_p=0.05,
+        gene_mut_p=0.08,
+        random_inject_p=0.10,
+        max_generations=max_gens,
+        early_stop_fitness=1e-5,
+    )
+
+    print(f"Target Problem        : y = x^2 + 3x + 7 (B={n_points} training points)")
+    print(f"Population Size (P)   : {pop_size} candidates resident in VRAM")
+    print(f"Max Generations (G)   : {max_gens}")
+    print(f"Active Device         : {device}")
+    print(f"Seeds Evaluated       : {seeds}")
+    print("=" * 135)
+
+    seed_runs = []
+    audits_all = []
+
+    cum_s0_entries = 0
+    cum_s0_survivors = 0
+    cum_s0_rejected_invalid = 0
+    cum_s1_entries = 0
+    cum_s1_survivors = 0
+    cum_s1_rejected_error = 0
+    cum_s1_rejected_invalid = 0
+    cum_s2_entries = 0
+    cum_s2_survivors = 0
+    cum_s2_rejected_error = 0
+    cum_s2_rejected_invalid = 0
+    cum_s3_entries = 0
+    cum_s3_survivors = 0
+
+    no_casc_times = []
+    casc_times = []
+    early_stop_times = []
+
+    for s in seeds:
+        print(f"\n--- Running Seed {s} Comparison ---")
+
+        # 1. No-Cascade Reference
+        torch.manual_seed(s)
+        if device.type == "cuda":
+            torch.cuda.manual_seed_all(s)
+            torch.cuda.reset_peak_memory_stats(device)
+            torch.cuda.synchronize(device)
+
+        no_casc_cfg = CascadeConfig(enable_cascade=False, vram_budget_mb=7500.0)
+        casc_engine_no = StreamingGPUCascade(config=no_casc_cfg, device=device)
+        evo_no = GPUResidentEvolution(
+            xs_np, ys_np, config=evo_cfg, device=device, cascade=casc_engine_no
+        )
+
+        t0 = time.perf_counter()
+        res_no = evo_no.run(max_generations=max_gens)
+        no_time = time.perf_counter() - t0
+        no_casc_times.append(no_time)
+
+        peak_alloc_no = (
+            torch.cuda.max_memory_allocated(device) / (1024 * 1024)
+            if device.type == "cuda"
+            else 0.0
+        )
+
+        # 2. Cascade-Only
+        torch.manual_seed(s)
+        if device.type == "cuda":
+            torch.cuda.manual_seed_all(s)
+            torch.cuda.reset_peak_memory_stats(device)
+            torch.cuda.synchronize(device)
+
+        casc_cfg = CascadeConfig(
+            s1_points=32,
+            s2_points=256,
+            k_cutoff=10.0,
+            elite_margin=5.0,
+            enable_cascade=True,
+            vram_budget_mb=7500.0,
+        )
+        casc_engine = StreamingGPUCascade(config=casc_cfg, device=device)
+        evo_casc = GPUResidentEvolution(
+            xs_np, ys_np, config=evo_cfg, device=device, cascade=casc_engine
+        )
+
+        t0 = time.perf_counter()
+        res_casc = evo_casc.run(max_generations=max_gens)
+        casc_time = time.perf_counter() - t0
+        casc_times.append(casc_time)
+
+        peak_alloc_casc = (
+            torch.cuda.max_memory_allocated(device) / (1024 * 1024)
+            if device.type == "cuda"
+            else 0.0
+        )
+        peak_res_casc = (
+            torch.cuda.max_memory_reserved(device) / (1024 * 1024) if device.type == "cuda" else 0.0
+        )
+
+        # Accumulate stage accounting across generations
+        for h in res_casc["history"]:
+            c = h.get("cascade_counters", {})
+            cum_s0_entries += c.get("s0_entries", 0)
+            cum_s0_survivors += c.get("s0_survivors", 0)
+            cum_s0_rejected_invalid += c.get("s0_rejected_invalid", 0)
+            cum_s1_entries += c.get("s1_entries", 0)
+            cum_s1_survivors += c.get("s1_survivors", 0)
+            cum_s1_rejected_error += c.get("s1_rejected_error", 0)
+            cum_s1_rejected_invalid += c.get("s1_rejected_invalid", 0)
+            cum_s2_entries += c.get("s2_entries", 0)
+            cum_s2_survivors += c.get("s2_survivors", 0)
+            cum_s2_rejected_error += c.get("s2_rejected_error", 0)
+            cum_s2_rejected_invalid += c.get("s2_rejected_invalid", 0)
+            cum_s3_entries += c.get("s3_entries", 0)
+            cum_s3_survivors += c.get("s3_survivors", 0)
+
+        # 3. Cascade-Plus-Early-Stop
+        torch.manual_seed(s)
+        if device.type == "cuda":
+            torch.cuda.manual_seed_all(s)
+            torch.cuda.synchronize(device)
+
+        casc_engine_es = StreamingGPUCascade(config=casc_cfg, device=device)
+        evo_es = GPUResidentEvolution(
+            xs_np, ys_np, config=evo_cfg, device=device, cascade=casc_engine_es
+        )
+
+        t0 = time.perf_counter()
+        res_es = evo_es.run(max_generations=max_gens, early_stop_mse=1e-5)
+        es_time = time.perf_counter() - t0
+        early_stop_times.append(es_time)
+
+        # 4. Accuracy Audit on final population
+        xs_t = torch.from_numpy(xs_np).to(device)
+        ys_t = torch.from_numpy(ys_np).to(device)
+        audit_res = audit_cascade_accuracy(evo_casc.population, xs_t, ys_t, casc_engine, top_k=16)
+        audits_all.append(audit_res)
+
+        speedup_vs_no = no_time / max(casc_time, 1e-6)
+
+        print(
+            f"  [No-Cascade]       Time: {no_time:.2f}s | CVPS: {(pop_size * max_gens) / no_time:,.1f} | Best MSE: {res_no['best_mse']:.4e} | VRAM: {peak_alloc_no:.2f} MB"
+        )
+        print(
+            f"  [Cascade-Only]     Time: {casc_time:.2f}s | CVPS: {(pop_size * max_gens) / casc_time:,.1f} | Best MSE: {res_casc['best_mse']:.4e} | Speedup: {speedup_vs_no:.2f}x | VRAM: {peak_alloc_casc:.2f} MB"
+        )
+        print(
+            f"  [Cascade+EarlyStp] Time: {es_time:.2f}s | Gens: {res_es['generations']} | Best MSE: {res_es['best_mse']:.4e}"
+        )
+        print(
+            f"  [Accuracy Audit]   False Rejections: {audit_res['false_rejections']}/16 ({audit_res['false_rejection_rate'] * 100:.1f}%) | Quality Loss: {audit_res['quality_loss']:.4e} | Pass: {audit_res['passed_predeclared_audit']}"
+        )
+
+        seed_runs.append(
+            {
+                "seed": s,
+                "no_cascade": {
+                    "time_sec": no_time,
+                    "search_cvps": (pop_size * max_gens) / max(no_time, 1e-6),
+                    "best_mse": res_no["best_mse"],
+                    "peak_alloc_vram_mb": peak_alloc_no,
+                },
+                "cascade_only": {
+                    "time_sec": casc_time,
+                    "search_cvps": (pop_size * max_gens) / max(casc_time, 1e-6),
+                    "best_mse": res_casc["best_mse"],
+                    "speedup_ratio": speedup_vs_no,
+                    "peak_alloc_vram_mb": peak_alloc_casc,
+                    "peak_res_vram_mb": peak_res_casc,
+                },
+                "cascade_plus_early_stop": {
+                    "time_sec": es_time,
+                    "generations": res_es["generations"],
+                    "best_mse": res_es["best_mse"],
+                    "converged": res_es["converged"],
+                },
+                "audit": audit_res,
+            }
+        )
+
+    # Summary table
+    mean_no_time = float(np.mean(no_casc_times))
+    mean_casc_time = float(np.mean(casc_times))
+    mean_es_time = float(np.mean(early_stop_times))
+    mean_speedup = mean_no_time / max(mean_casc_time, 1e-6)
+    mean_false_rej = float(np.mean([a["false_rejection_rate"] for a in audits_all]))
+
+    print("\n" + "=" * 135)
+    print("STAGE ACCOUNTING TOTALS (RECONCILED ACROSS RUNS)")
+    print("=" * 135)
+    print(
+        f"  S0 Bytecode Check : Entries: {cum_s0_entries:,} | Survivors: {cum_s0_survivors:,} ({(cum_s0_survivors / max(cum_s0_entries, 1)) * 100:.1f}%) | Invalid Rejected: {cum_s0_rejected_invalid:,}"
+    )
+    print(
+        f"  S1 Screening (32) : Entries: {cum_s1_entries:,} | Survivors: {cum_s1_survivors:,} ({(cum_s1_survivors / max(cum_s1_entries, 1)) * 100:.1f}%) | Error Kills: {cum_s1_rejected_error:,} | Invalid Kills: {cum_s1_rejected_invalid:,}"
+    )
+    print(
+        f"  S2 Fine (256)     : Entries: {cum_s2_entries:,} | Survivors: {cum_s2_survivors:,} ({(cum_s2_survivors / max(cum_s2_entries, 1)) * 100:.1f}%) | Error Kills: {cum_s2_rejected_error:,} | Invalid Kills: {cum_s2_rejected_invalid:,}"
+    )
+    print(
+        f"  S3 Full (1024)    : Entries: {cum_s3_entries:,} | Survivors: {cum_s3_survivors:,} ({(cum_s3_survivors / max(cum_s3_entries, 1)) * 100:.1f}%)"
+    )
+    print("-" * 135)
+    print("COMPARATIVE WORKLOAD SUMMARY:")
+    print(f"  Mean No-Cascade Time    : {mean_no_time:.2f} s")
+    print(f"  Mean Cascade-Only Time  : {mean_casc_time:.2f} s ({mean_speedup:.2f}x speedup)")
+    print(f"  Mean Early-Stop Time    : {mean_es_time:.2f} s")
+    print(f"  Mean False-Rejection %  : {mean_false_rej * 100:.2f}% (threshold <= 5.0%)")
+    print(f"  Audit Status            : {'PASS' if mean_false_rej <= 0.05 else 'FAIL'}")
+    print("=" * 135)
+
+    return {
+        "seeds": seeds,
+        "runs": seed_runs,
+        "summary": {
+            "mean_no_cascade_time_s": mean_no_time,
+            "mean_cascade_time_s": mean_casc_time,
+            "mean_early_stop_time_s": mean_es_time,
+            "mean_cascade_speedup": mean_speedup,
+            "mean_false_rejection_rate": mean_false_rej,
+        },
+        "stage_accounting": {
+            "s0_entries": cum_s0_entries,
+            "s0_survivors": cum_s0_survivors,
+            "s0_rejected_invalid": cum_s0_rejected_invalid,
+            "s1_entries": cum_s1_entries,
+            "s1_survivors": cum_s1_survivors,
+            "s1_rejected_error": cum_s1_rejected_error,
+            "s1_rejected_invalid": cum_s1_rejected_invalid,
+            "s2_entries": cum_s2_entries,
+            "s2_survivors": cum_s2_survivors,
+            "s2_rejected_error": cum_s2_rejected_error,
+            "s2_rejected_invalid": cum_s2_rejected_invalid,
+            "s3_entries": cum_s3_entries,
+            "s3_survivors": cum_s3_survivors,
+        },
+        "verdict": "PASS" if mean_false_rej <= 0.05 else "FAIL",
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="CVPS Benchmark Harness")
     ap.add_argument("--grid", action="store_true", help="Run full (P x B) grid")
@@ -408,6 +667,11 @@ def main() -> int:
         "--search-loop",
         action="store_true",
         help="Run GPU-resident evolutionary search benchmark across seeds (P17)",
+    )
+    ap.add_argument(
+        "--cascade-audit",
+        action="store_true",
+        help="Run streaming GPU cascade audit benchmark across seeds (P18)",
     )
     ap.add_argument(
         "--seeds",
@@ -430,10 +694,27 @@ def main() -> int:
     ys_dummy = xs_dummy**2 + 3 * xs_dummy + 7
     data_hash = hashlib.sha256(xs_dummy.tobytes() + ys_dummy.tobytes()).hexdigest()[:16]
 
-    if args.provenance or args.grid or args.tune or args.search_loop:
+    if args.provenance or args.grid or args.tune or args.search_loop or args.cascade_audit:
         print_provenance_header(dev, args.seed, data_hash)
 
-    if args.search_loop:
+    if args.cascade_audit:
+        seeds = [42, 101, 202, 303, 404] if args.seeds == 5 else [42 + i for i in range(args.seeds)]
+        report_data = run_cascade_audit_benchmark(dev, seeds)
+        if args.output:
+            full_report = {
+                "benchmark": "streaming_gpu_cascade",
+                "git_commit": get_git_commit(),
+                "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+                "device": str(dev),
+                "hardware": probe(),
+                **report_data,
+            }
+            out_p = Path(args.output)
+            out_p.parent.mkdir(parents=True, exist_ok=True)
+            with open(out_p, "w", encoding="utf-8") as f:
+                json.dump(full_report, f, indent=2)
+            print(f"\nArtifact written to {out_p}")
+    elif args.search_loop:
         seeds = [42, 101, 202, 303, 404] if args.seeds == 5 else [42 + i for i in range(args.seeds)]
         report_data = run_search_loop_benchmark(dev, seeds)
         if args.output:
