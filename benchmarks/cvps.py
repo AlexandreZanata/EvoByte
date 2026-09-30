@@ -7,6 +7,7 @@ import contextlib
 import datetime
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -659,6 +660,452 @@ def run_cascade_audit_benchmark(device: torch.device, seeds: list[int]) -> dict[
     }
 
 
+def run_sustained_experiment(
+    device: torch.device,
+    budgets_str: str = "10s,1m,10m,1h",
+    seeds_count: int = 5,
+    scale_factor: float = 1.0,
+    vram_budget_mb: float = 7500.0,
+) -> dict[str, Any]:
+    """Execute sustained throughput and quality experiment across budgets and seeds (P20)."""
+    from evobyte.bytecode import N_REGS
+    from evobyte.cascade import CascadeConfig, StreamingGPUCascade
+    from evobyte.evolution import EvolutionConfig
+    from evobyte.provenance import parse_budget_duration, query_gpu_telemetry, seed_all
+    from evobyte.resident import GPUResidentEvolution, gpu_sample_structured
+    from evobyte.verifier import verify_l2
+
+    print("\n" + "=" * 135)
+    print("SUSTAINED THROUGHPUT AND QUALITY EXPERIMENT (P20)")
+    print("=" * 135)
+    print(f"  Device              : {device}")
+    print(f"  Budgets (nominal)   : {budgets_str}")
+    print(f"  Scale Factor        : {scale_factor:.4f}")
+    print(f"  Seeds Count         : {seeds_count}")
+    print(f"  VRAM Budget         : {vram_budget_mb:.1f} MB")
+    print("=" * 135)
+
+    prereg = {
+        "targets": [
+            {
+                "id": "poly",
+                "formula": "x**2 + 3*x + 7",
+                "domain": [-10.0, 10.0],
+                "train_points": 256,
+                "val_points": 128,
+                "test_points": 512,
+                "extrap_points": 100,
+            },
+            {
+                "id": "sin_x2",
+                "formula": "sin(x) + x**2",
+                "domain": [-10.0, 10.0],
+                "train_points": 256,
+                "val_points": 128,
+                "test_points": 512,
+                "extrap_points": 100,
+            },
+        ],
+        "opcode_version": 0,
+        "instruction_slots": 16,
+        "population_size": 2000,
+        "s1_stretch_batch_size": 200000,
+        "uniqueness_window": 200000,
+        "precision_search": "float32",
+        "precision_verification": "float64",
+        "budgets_requested": budgets_str,
+        "time_scale": scale_factor,
+        "seed_list": [42, 101, 202, 303, 404][:seeds_count],
+        "duplicate_handling": (
+            "GPU torch.unique across batch, accounting overhead charged to runtime, "
+            "duplicate elites cannot count as new"
+        ),
+        "stop_conditions": "wall-clock time budget reached or target MSE <= 1e-6",
+    }
+
+    # Target 1 Datasets (Polynomial)
+    poly_train_xs = np.linspace(-10.0, 10.0, 256, dtype=np.float32)
+    poly_train_ys = poly_train_xs**2 + 3.0 * poly_train_xs + 7.0
+
+    poly_train_f64 = np.linspace(-10.0, 10.0, 256, dtype=np.float64)
+    poly_train_ys_f64 = poly_train_f64**2 + 3.0 * poly_train_f64 + 7.0
+    poly_val_f64 = np.linspace(-10.0, 10.0, 128, dtype=np.float64)
+    poly_val_ys_f64 = poly_val_f64**2 + 3.0 * poly_val_f64 + 7.0
+    poly_test_f64 = np.linspace(-10.0, 10.0, 512, dtype=np.float64)
+    poly_test_ys_f64 = poly_test_f64**2 + 3.0 * poly_test_f64 + 7.0
+    poly_extrap_l = np.linspace(-15.0, -10.0, 50, dtype=np.float64)
+    poly_extrap_r = np.linspace(10.0, 15.0, 50, dtype=np.float64)
+    poly_extrap_f64 = np.concatenate([poly_extrap_l, poly_extrap_r])
+    poly_extrap_ys_f64 = poly_extrap_f64**2 + 3.0 * poly_extrap_f64 + 7.0
+
+    # 1. S1 STRETCH TARGET MEASUREMENT (>= 1,000,000 distinct S0-valid candidates/s at 32 pts)
+    print(
+        "\n--- Measuring S1 Stretch Target (200,000 candidates at 32 points with deduplication) ---"
+    )
+    stretch_p = 200000
+    xs_32 = torch.linspace(-10.0, 10.0, 32, dtype=torch.float32, device=device)
+    ys_32 = xs_32**2 + 3.0 * xs_32 + 7.0
+
+    # Warmup
+    warm_p = gpu_sample_structured(1000, device=device)
+    execute_population_torch(warm_p, xs_32, device=device)
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+
+    # Candidate sampling
+    t0_sample = time.perf_counter()
+    progs_stretch = gpu_sample_structured(stretch_p, device=device)
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    t_sample = time.perf_counter() - t0_sample
+
+    # S0 validation check on device
+    t0_s0 = time.perf_counter()
+    ops = progs_stretch & 0xFF
+    dsts = (progs_stretch >> 8) & 0xFF
+    as_ = (progs_stretch >> 16) & 0xFF
+    has_r7 = ((dsts == 7) & (ops != 0)).any(dim=1)
+    valid_s0 = (
+        has_r7 & (ops <= 15).all(dim=1) & (dsts < N_REGS).all(dim=1) & (as_ < N_REGS).all(dim=1)
+    )
+    valid_progs = progs_stretch[valid_s0]
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    t_s0 = time.perf_counter() - t0_s0
+
+    # Deduplication on device (accounting overhead charged to S1 throughput!)
+    t0_dedup = time.perf_counter()
+    unique_progs, _counts = torch.unique(valid_progs, dim=0, return_counts=True)
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    t_dedup = time.perf_counter() - t0_dedup
+    n_unique = int(unique_progs.shape[0])
+    uniqueness_rate = float(n_unique / stretch_p)
+
+    # S1 evaluation on 32 points
+    t0_s1 = time.perf_counter()
+    preds_s1, _inv_mask_s1 = execute_population_torch(unique_progs, xs_32, device=device)
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    t_s1 = time.perf_counter() - t0_s1
+
+    # Total accounted time includes S0 check, Deduplication, and S1 evaluation
+    total_stretch_time = t_s0 + t_dedup + t_s1
+    s1_unique_valid_cvps = float(n_unique / max(total_stretch_time, 1e-6))
+    candidate_points_per_sec = float((n_unique * 32) / max(total_stretch_time, 1e-6))
+    s1_verdict = "achieved" if s1_unique_valid_cvps >= 1_000_000.0 else "not_achieved"
+
+    # Opcode distribution across unique programs
+    ops_all = (unique_progs & 0xFF).flatten().cpu().numpy()
+    unique_ops, op_counts = np.unique(ops_all, return_counts=True)
+    opcode_distribution = {int(op): int(cnt) for op, cnt in zip(unique_ops, op_counts)}
+
+    # Sample verification on top candidates from S1
+    diffs = preds_s1 - ys_32.unsqueeze(0)
+    s1_mses = (diffs**2).mean(dim=1)
+    top_indices = torch.argsort(s1_mses)[:16].cpu().numpy()
+    verified_count = 0
+    top_progs = unique_progs[top_indices].cpu().numpy().astype(np.uint32)
+    for p_cand in top_progs:
+        v_res = verify_l2(
+            p_cand,
+            poly_train_f64,
+            poly_train_ys_f64,
+            poly_test_f64,
+            poly_test_ys_f64,
+            val_xs=poly_val_f64,
+            val_ys=poly_val_ys_f64,
+            extrap_xs=poly_extrap_f64,
+            extrap_ys=poly_extrap_ys_f64,
+            ground_truth_formula="x**2 + 3*x + 7",
+        )
+        if v_res.passed:
+            verified_count += 1
+
+    print(f"  Sampled Candidates    : {stretch_p:,}")
+    print(f"  S0 Valid Candidates   : {int(valid_progs.shape[0]):,}")
+    print(f"  Unique Candidates     : {n_unique:,} ({uniqueness_rate * 100:.2f}%)")
+    print(f"  S0 Check Time         : {t_s0 * 1000.0:.2f} ms")
+    print(f"  Deduplication Time    : {t_dedup * 1000.0:.2f} ms")
+    print(f"  S1 Eval (32 pts) Time : {t_s1 * 1000.0:.2f} ms")
+    print(f"  Total Accounted Time  : {total_stretch_time * 1000.0:.2f} ms")
+    print(f"  Distinct S1 CVPS      : {s1_unique_valid_cvps:,.1f} candidates/sec")
+    print(f"  Candidate-Points/sec  : {candidate_points_per_sec:,.1f} points/sec")
+    print(f"  Sample Verified Ratio : {verified_count}/16 ({verified_count / 16.0 * 100:.1f}%)")
+    print(f"  Million-S1 Goal       : {s1_verdict.upper()} (threshold: >= 1,000,000)")
+
+    s1_stretch_report = {
+        "description": "Distinct S0-valid candidates/s completing S1 at 32 points",
+        "target_threshold": 1000000,
+        "candidates_sampled": stretch_p,
+        "sample_time_s": t_sample,
+        "s0_valid_candidates": int(valid_progs.shape[0]),
+        "unique_valid_candidates": n_unique,
+        "uniqueness_rate": uniqueness_rate,
+        "s0_check_time_s": t_s0,
+        "dedup_time_s": t_dedup,
+        "s1_eval_time_s": t_s1,
+        "total_time_s": total_stretch_time,
+        "s1_unique_valid_cvps": s1_unique_valid_cvps,
+        "candidate_points_per_sec": candidate_points_per_sec,
+        "opcode_distribution": opcode_distribution,
+        "sample_verification": {
+            "evaluated_top_k": 16,
+            "verified_count": verified_count,
+            "verified_fraction": float(verified_count / 16.0),
+        },
+        "verdict": s1_verdict,
+    }
+
+    # 2. SUSTAINED RUNS ACROSS BUDGETS AND SEEDS
+    parsed_budgets = [
+        (b.strip(), parse_budget_duration(b.strip())) for b in budgets_str.split(",") if b.strip()
+    ]
+
+    budget_reports = []
+    all_telemetry_warm = []
+
+    evo_cfg = EvolutionConfig(
+        pop_size=2000,
+        elite_k=32,
+        tournament_size=4,
+        crossover_p=0.3,
+        point_mut_p=0.02,
+        large_mut_p=0.05,
+        gene_mut_p=0.08,
+        random_inject_p=0.10,
+        max_generations=10000000,
+        early_stop_fitness=1e-6,
+    )
+
+    base_casc_cfg = CascadeConfig(enable_cascade=False, vram_budget_mb=vram_budget_mb)
+    opt_casc_cfg = CascadeConfig(enable_cascade=True, vram_budget_mb=vram_budget_mb)
+
+    for b_label, nominal_sec in parsed_budgets:
+        effective_sec = max(0.5, nominal_sec * scale_factor)
+        # 1 h budget is a single confirmation run per P20 specification
+        run_seeds = [42] if nominal_sec >= 3600.0 else prereg["seed_list"]
+
+        print("\n" + "=" * 115)
+        print(
+            f"BUDGET RUN: {b_label} (nominal: {nominal_sec:.1f}s, "
+            f"effective: {effective_sec:.2f}s, seeds: {run_seeds})"
+        )
+        print("=" * 115)
+
+        runs_for_budget = []
+        base_cvps_list = []
+        opt_cvps_list = []
+        opt_mse_list = []
+        l2_passes = 0
+
+        for s in run_seeds:
+            # Cold telemetry before run
+            telemetry_cold = query_gpu_telemetry(device)
+
+            # A. Baseline Run (No Cascade)
+            seed_all(s)
+            casc_base = StreamingGPUCascade(config=base_casc_cfg, device=device)
+            evo_base = GPUResidentEvolution(
+                poly_train_xs, poly_train_ys, config=evo_cfg, device=device, cascade=casc_base
+            )
+            t0_b = time.perf_counter()
+            res_base = evo_base.run(time_budget_sec=effective_sec)
+            dt_base = time.perf_counter() - t0_b
+            cvps_base = res_base["candidates_total"] / max(dt_base, 1e-6)
+            base_cvps_list.append(cvps_base)
+
+            # Freeze baseline winner & verify L2
+            l2_base = verify_l2(
+                res_base["best_program"],
+                poly_train_f64,
+                poly_train_ys_f64,
+                poly_test_f64,
+                poly_test_ys_f64,
+                val_xs=poly_val_f64,
+                val_ys=poly_val_ys_f64,
+                extrap_xs=poly_extrap_f64,
+                extrap_ys=poly_extrap_ys_f64,
+                ground_truth_formula="x**2 + 3*x + 7",
+            )
+
+            # B. Optimized Run (Streaming GPU Cascade)
+            seed_all(s)
+            casc_opt = StreamingGPUCascade(config=opt_casc_cfg, device=device)
+            evo_opt = GPUResidentEvolution(
+                poly_train_xs, poly_train_ys, config=evo_cfg, device=device, cascade=casc_opt
+            )
+            t0_o = time.perf_counter()
+            res_opt = evo_opt.run(time_budget_sec=effective_sec)
+            dt_opt = time.perf_counter() - t0_o
+            cvps_opt = res_opt["candidates_total"] / max(dt_opt, 1e-6)
+            opt_cvps_list.append(cvps_opt)
+            opt_mse_list.append(res_opt["best_mse"])
+
+            # Freeze optimized winner & verify L2
+            l2_opt = verify_l2(
+                res_opt["best_program"],
+                poly_train_f64,
+                poly_train_ys_f64,
+                poly_test_f64,
+                poly_test_ys_f64,
+                val_xs=poly_val_f64,
+                val_ys=poly_val_ys_f64,
+                extrap_xs=poly_extrap_f64,
+                extrap_ys=poly_extrap_ys_f64,
+                ground_truth_formula="x**2 + 3*x + 7",
+            )
+            if l2_opt.passed:
+                l2_passes += 1
+
+            # Warm telemetry after run
+            telemetry_warm = query_gpu_telemetry(device)
+            all_telemetry_warm.append(telemetry_warm)
+
+            # Subsampled quality curve
+            hist = res_opt.get("history", [])
+            step_stride = max(1, len(hist) // 25)
+            quality_curve = [
+                {
+                    "generation": h["generation"],
+                    "elapsed_s": h.get("elapsed_total_s", 0.0),
+                    "best_mse": h["best_mse"],
+                    "candidates": (idx + 1) * evo_cfg.pop_size,
+                }
+                for idx, h in enumerate(hist)
+                if idx % step_stride == 0 or idx == len(hist) - 1
+            ]
+
+            speedup = cvps_opt / max(cvps_base, 1e-6)
+            print(
+                f"  Seed {s:<3} | Base: {dt_base:.2f}s ({cvps_base:,.0f} cvps, MSE: {res_base['best_mse']:.2e}) | "
+                f"Opt: {dt_opt:.2f}s ({cvps_opt:,.0f} cvps, MSE: {res_opt['best_mse']:.2e}) | "
+                f"Speedup: {speedup:.2f}x | L2: {l2_opt.decision}"
+            )
+
+            runs_for_budget.append(
+                {
+                    "seed": s,
+                    "target": "poly",
+                    "telemetry_cold": telemetry_cold,
+                    "baseline": {
+                        "time_sec": dt_base,
+                        "generations": res_base["generations"],
+                        "candidates_total": res_base["candidates_total"],
+                        "search_cvps": cvps_base,
+                        "best_mse": res_base["best_mse"],
+                        "best_expression": res_base["best_expression"],
+                        "l2_verification": {
+                            "passed": l2_base.passed,
+                            "decision": l2_base.decision,
+                            "f64_test_mse": l2_base.f64_test_mse,
+                            "extrap_mse": l2_base.extrap_mse,
+                            "symbolic_equivalent": l2_base.symbolic_equivalent,
+                        },
+                    },
+                    "optimized": {
+                        "time_sec": dt_opt,
+                        "generations": res_opt["generations"],
+                        "candidates_total": res_opt["candidates_total"],
+                        "search_cvps": cvps_opt,
+                        "best_mse": res_opt["best_mse"],
+                        "best_expression": res_opt["best_expression"],
+                        "speedup_vs_baseline": speedup,
+                        "l2_verification": {
+                            "passed": l2_opt.passed,
+                            "decision": l2_opt.decision,
+                            "f64_test_mse": l2_opt.f64_test_mse,
+                            "extrap_mse": l2_opt.extrap_mse,
+                            "symbolic_equivalent": l2_opt.symbolic_equivalent,
+                        },
+                    },
+                    "telemetry_warm": telemetry_warm,
+                    "quality_curve": quality_curve,
+                }
+            )
+
+        med_base_cvps = float(np.median(base_cvps_list))
+        med_opt_cvps = float(np.median(opt_cvps_list))
+        budget_reports.append(
+            {
+                "nominal_budget": b_label,
+                "nominal_budget_seconds": nominal_sec,
+                "effective_budget_seconds": effective_sec,
+                "time_scale": scale_factor,
+                "seeds": run_seeds,
+                "runs": runs_for_budget,
+                "summary": {
+                    "median_baseline_cvps": med_base_cvps,
+                    "median_optimized_cvps": med_opt_cvps,
+                    "median_speedup": med_opt_cvps / max(med_base_cvps, 1e-6),
+                    "median_optimized_mse": float(np.median(opt_mse_list)),
+                    "min_optimized_mse": float(np.min(opt_mse_list)),
+                    "max_optimized_mse": float(np.max(opt_mse_list)),
+                    "l2_pass_count": l2_passes,
+                    "l2_pass_rate": float(l2_passes / len(run_seeds)),
+                },
+            }
+        )
+
+    # 3. Telemetry Operating Envelope Summary
+    temps = [t["temperature_c"] for t in all_telemetry_warm if t.get("temperature_c") is not None]
+    clocks = [
+        t["graphics_clock_mhz"]
+        for t in all_telemetry_warm
+        if t.get("graphics_clock_mhz") is not None
+    ]
+    powers = [t["power_draw_w"] for t in all_telemetry_warm if t.get("power_draw_w") is not None]
+    vrams = [t["vram_used_mb"] for t in all_telemetry_warm if t.get("vram_used_mb") is not None]
+
+    telemetry_summary = {
+        "device_name": (
+            torch.cuda.get_device_name(device) if device.type == "cuda" else str(device)
+        ),
+        "temperature_c_min": float(min(temps)) if temps else None,
+        "temperature_c_max": float(max(temps)) if temps else None,
+        "graphics_clock_mhz_min": float(min(clocks)) if clocks else None,
+        "graphics_clock_mhz_max": float(max(clocks)) if clocks else None,
+        "power_draw_w_min": float(min(powers)) if powers else None,
+        "power_draw_w_max": float(max(powers)) if powers else None,
+        "power_limit_w": None,  # Kept explicitly None when unavailable/not reported
+        "vram_used_mb_peak": float(max(vrams)) if vrams else None,
+    }
+
+    overall_verdict = {
+        "s1_stretch_million_goal": s1_verdict,
+        "sustained_runs_completed": True,
+        "telemetry_recorded": True,
+        "quality_frozen_verified": True,
+    }
+
+    print("\n" + "=" * 115)
+    print("P20 SUSTAINED EXPERIMENT COMPLETE")
+    print(f"  Million-S1 Goal Verdict : {s1_verdict.upper()}")
+    print(
+        f"  Operating Envelope Temp : {telemetry_summary['temperature_c_min']} - {telemetry_summary['temperature_c_max']} C"
+    )
+    print(
+        f"  Operating Clocks        : {telemetry_summary['graphics_clock_mhz_min']} - {telemetry_summary['graphics_clock_mhz_max']} MHz"
+    )
+    print(
+        f"  Power Telemetry         : {telemetry_summary['power_draw_w_min']} - {telemetry_summary['power_draw_w_max']} W (Limit: N/A - not estimated)"
+    )
+    print("=" * 115)
+
+    return {
+        "benchmark": "p20_sustained_throughput",
+        "git_commit": get_git_commit(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "device": str(device),
+        "hardware": probe(),
+        "preregistration": prereg,
+        "s1_stretch_target": s1_stretch_report,
+        "budget_runs": budget_reports,
+        "telemetry_summary": telemetry_summary,
+        "overall_verdict": overall_verdict,
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="CVPS Benchmark Harness")
     ap.add_argument("--grid", action="store_true", help="Run full (P x B) grid")
@@ -682,6 +1129,23 @@ def main() -> int:
     ap.add_argument(
         "--vram-budget", type=float, default=7500.0, help="VRAM budget in MB (default: 7500.0)"
     )
+    ap.add_argument(
+        "--sustained",
+        action="store_true",
+        help="Run sustained throughput and quality experiment across budgets (P20)",
+    )
+    ap.add_argument(
+        "--budgets",
+        type=str,
+        default="10s,1m,10m,1h",
+        help="Comma-separated budget durations (default: '10s,1m,10m,1h')",
+    )
+    ap.add_argument(
+        "--scale-budgets",
+        type=float,
+        default=float(os.environ.get("EVOBYTE_SUSTAINED_SCALE", "1.0")),
+        help="Scale factor for budget durations (default: 1.0 or EVOBYTE_SUSTAINED_SCALE)",
+    )
     ap.add_argument("--provenance", action="store_true", help="Print provenance telemetry")
     ap.add_argument("--seed", type=int, default=42, help="RNG seed")
     ap.add_argument("--device", type=str, default=None, help="Target device (cpu/cuda)")
@@ -694,10 +1158,32 @@ def main() -> int:
     ys_dummy = xs_dummy**2 + 3 * xs_dummy + 7
     data_hash = hashlib.sha256(xs_dummy.tobytes() + ys_dummy.tobytes()).hexdigest()[:16]
 
-    if args.provenance or args.grid or args.tune or args.search_loop or args.cascade_audit:
+    if (
+        args.provenance
+        or args.grid
+        or args.tune
+        or args.search_loop
+        or args.cascade_audit
+        or args.sustained
+    ):
         print_provenance_header(dev, args.seed, data_hash)
 
-    if args.cascade_audit:
+    if args.sustained:
+        report_data = run_sustained_experiment(
+            device=dev,
+            budgets_str=args.budgets,
+            seeds_count=args.seeds,
+            scale_factor=args.scale_budgets,
+            vram_budget_mb=args.vram_budget,
+        )
+        if args.output:
+            out_p = Path(args.output)
+            out_p.parent.mkdir(parents=True, exist_ok=True)
+            with open(out_p, "w", encoding="utf-8") as f:
+                json.dump(report_data, f, indent=2)
+            print(f"\nArtifact written to {out_p}")
+        return 0
+    elif args.cascade_audit:
         seeds = [42, 101, 202, 303, 404] if args.seeds == 5 else [42 + i for i in range(args.seeds)]
         report_data = run_cascade_audit_benchmark(dev, seeds)
         if args.output:

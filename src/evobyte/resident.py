@@ -404,9 +404,15 @@ class GPUResidentEvolution:
         max_generations: int | None = None,
         early_stop_mse: float | None = None,
         on_generation: Callable[[dict[str, Any]], None] | None = None,
+        time_budget_sec: float | None = None,
     ) -> dict[str, Any]:
         """Run evolutionary loop resident on GPU."""
-        max_gen = max_generations if max_generations is not None else self.config.max_generations
+        if time_budget_sec is not None and max_generations is None:
+            max_gen = None
+        else:
+            max_gen = (
+                max_generations if max_generations is not None else self.config.max_generations
+            )
         target_mse = (
             early_stop_mse if early_stop_mse is not None else self.config.early_stop_fitness
         )
@@ -415,9 +421,17 @@ class GPUResidentEvolution:
         history = []
         converged = False
 
-        for _ in range(max_gen):
+        gen_counter = 0
+        while True:
+            if max_gen is not None and gen_counter >= max_gen:
+                break
+            if time_budget_sec is not None and (time.perf_counter() - t_total_0) >= time_budget_sec:
+                break
+
             stats = self.step()
+            stats["elapsed_total_s"] = time.perf_counter() - t_total_0
             history.append(stats)
+            gen_counter += 1
 
             if on_generation is not None:
                 on_generation(stats)
