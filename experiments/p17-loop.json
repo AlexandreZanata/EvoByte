@@ -1,0 +1,133 @@
+{
+  "benchmark": "gpu_resident_evolution",
+  "git_commit": "c8c892930761",
+  "timestamp": "2026-09-30T11:27:13.217184+00:00",
+  "device": "cuda",
+  "hardware": {
+    "cpu": "x86_64",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "numpy": "2.4.6",
+    "torch": "2.14.0+cu130",
+    "cuda_version": "13.0",
+    "cuda_available": true,
+    "gpu0": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "total_memory_MB": 7805
+    },
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB"
+  },
+  "seeds": [
+    42,
+    101,
+    202,
+    303,
+    404
+  ],
+  "runs": [
+    {
+      "seed": 42,
+      "generations": 40,
+      "candidates": 40000,
+      "time_sec": 5.790267194999615,
+      "search_cvps": 6908.144072270686,
+      "eval_pct": 97.99113603374869,
+      "select_pct": 0.5725501033079285,
+      "reproduce_pct": 1.4363138629433816,
+      "mean_valid_rate": 0.790775,
+      "mean_duplicate_rate": 0.11309999999999999,
+      "best_fitness": 17.400693893432617,
+      "best_mse": 17.398693084716797,
+      "best_expression": "CSEL r1, r0, 0x03 ; MUL r7, r1, 0x01",
+      "converged": false,
+      "peak_alloc_vram_mb": 17.38671875,
+      "peak_res_vram_mb": 32.0
+    },
+    {
+      "seed": 101,
+      "generations": 40,
+      "candidates": 40000,
+      "time_sec": 5.545494699999836,
+      "search_cvps": 7213.062524431082,
+      "eval_pct": 98.46822501520369,
+      "select_pct": 0.17259407273703073,
+      "reproduce_pct": 1.3591809120592926,
+      "mean_valid_rate": 0.7349,
+      "mean_duplicate_rate": 0.10925000000000001,
+      "best_fitness": 31.107704162597656,
+      "best_mse": 31.100704193115234,
+      "best_expression": "CSEL r7, r0, 0x07 ; ADD r7, r0, 0x07 ; CSEL r7, r7, 0xb8 ; CSEL r7, r7, 0x08 ; ABS r0, r0, 0x02 ; ADD r0, r0, 0x00 ; ADD r7, r0, 0x07",
+      "converged": false,
+      "peak_alloc_vram_mb": 18.43359375,
+      "peak_res_vram_mb": 34.0
+    },
+    {
+      "seed": 202,
+      "generations": 16,
+      "candidates": 16000,
+      "time_sec": 2.2691545840025356,
+      "search_cvps": 7051.084184744163,
+      "eval_pct": 98.25516918890345,
+      "select_pct": 0.19296135065641729,
+      "reproduce_pct": 1.5518694604401273,
+      "mean_valid_rate": 0.774375,
+      "mean_duplicate_rate": 0.142375,
+      "best_fitness": 0.005000000353902578,
+      "best_mse": 9.583445148564351e-13,
+      "best_expression": "MUL r7, r0, 0x00 ; ADD r7, r7, 0x00 ; ADD r7, r0, 0x07 ; ADD r7, r7, 0x00 ; CSEL r7, r7, 0x0a",
+      "converged": true,
+      "peak_alloc_vram_mb": 17.59228515625,
+      "peak_res_vram_mb": 34.0
+    },
+    {
+      "seed": 303,
+      "generations": 40,
+      "candidates": 40000,
+      "time_sec": 5.7394823739996355,
+      "search_cvps": 6969.269594973155,
+      "eval_pct": 98.39181469323353,
+      "select_pct": 0.18141643373135252,
+      "reproduce_pct": 1.4267688730351233,
+      "mean_valid_rate": 0.6992,
+      "mean_duplicate_rate": 0.11709999999999997,
+      "best_fitness": 0.06849998235702515,
+      "best_mse": 0.062499985098838806,
+      "best_expression": "CSEL r0, r0, 0x04 ; MUL r7, r0, 0x00 ; ADD r2, r0, 0x07 ; CSEL r5, r0, 0x62 ; ADD r6, r2, 0x05 ; CSEL r7, r6, 0x3a",
+      "converged": false,
+      "peak_alloc_vram_mb": 17.59228515625,
+      "peak_res_vram_mb": 34.0
+    },
+    {
+      "seed": 404,
+      "generations": 14,
+      "candidates": 14000,
+      "time_sec": 1.9517437430004065,
+      "search_cvps": 7173.072822807089,
+      "eval_pct": 98.40978803773335,
+      "select_pct": 0.18357032825582015,
+      "reproduce_pct": 1.4066416340108348,
+      "mean_valid_rate": 0.7582857142857143,
+      "mean_duplicate_rate": 0.14285714285714282,
+      "best_fitness": 0.005000000353902578,
+      "best_mse": 1.8980372828991676e-12,
+      "best_expression": "MUL r6, r0, 0x00 ; CSEL r7, r6, 0x0a ; ADD r7, r0, 0x07 ; ADD r7, r7, 0x00 ; ADD r7, r7, 0x00",
+      "converged": true,
+      "peak_alloc_vram_mb": 17.59228515625,
+      "peak_res_vram_mb": 34.0
+    }
+  ],
+  "mean_search_cvps": 7043.5290956475765,
+  "resume_verification": {
+    "seed": 42,
+    "uninterrupted_best_mse": 0.9999999403953552,
+    "resumed_best_mse": 0.9999999403953552,
+    "population_equal": true,
+    "status": "PASS"
+  },
+  "comparison": {
+    "cpu_search_cvps": 3760.8695844035497,
+    "gpu_search_cvps": 5442.894663401378,
+    "speedup_ratio": 1.4472436603420769
+  },
+  "verdict": "PASS"
+}
