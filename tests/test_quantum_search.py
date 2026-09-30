@@ -131,6 +131,9 @@ def test_evolution_genetic_operators():
 
     parent_a = [PauliTerm(1.0, 1, 0, 0), PauliTerm(1.0, 2, 0, 0)]
     parent_b = [PauliTerm(-1.0, 0, 1, 0), PauliTerm(-1.0, 0, 2, 0)]
+    mut_cand = mutate_candidate(parent_a, n_qubits=2, rng=rng)
+    assert len(mut_cand) == len(parent_a)
+
     child_a, child_b = crossover_candidates(parent_a, parent_b, rng)
     assert len(child_a) == 2
     assert len(child_b) == 2
