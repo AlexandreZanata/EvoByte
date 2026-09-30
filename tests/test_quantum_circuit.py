@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 
 from evobyte.quantum.circuit import (
-    ANGLE_BANK,
     CIRCUIT_BYTECODE_VERSION,
     OPCODE_CNOT,
     OPCODE_CZ,
