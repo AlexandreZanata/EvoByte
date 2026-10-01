@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -18,12 +20,20 @@ from benchmarks.evo_trace import (
     classify_structure,
     compute_behavioral_signature,
     extract_candidate_metrics,
+    generate_claims_audit,
     measure_tracing_overhead,
+    run_acceptance_audit,
     run_evo_trace_pipeline,
     run_lineage_evolution,
+    validate_parent_ordering,
+    verify_config_sensitivity,
+    verify_honest_counters,
+    verify_manifest_integrity,
     verify_replay_bit_exact,
+    verify_resume_bit_exact,
 )
 from evobyte.bytecode import encode_instr
+from evobyte.provenance import write_manifest
 
 
 def test_extract_candidate_metrics() -> None:
@@ -161,3 +171,224 @@ def test_full_pipeline(tmp_path: Path) -> None:
     assert "exploration_map" in manifest
     assert "overhead_benchmark" in manifest
     assert "manifest_sha256" in manifest
+
+
+def test_checkpoint_resume_bit_exact(tmp_path: Path) -> None:
+    res = verify_resume_bit_exact(
+        seed=101,
+        pop_size=40,
+        n_generations=6,
+        split_at=3,
+        n_points=32,
+        device_name="cpu",
+        checkpoint_dir=tmp_path,
+    )
+    assert res["bit_exact_resumed"] is True
+    assert res["mismatches_count"] == 0
+    assert res["generations_verified"] == 6
+    assert res["split_generation"] == 3
+
+
+def test_parent_ordering_symmetry() -> None:
+    record = run_lineage_evolution(
+        seed=42,
+        pop_size=40,
+        n_generations=4,
+        n_points=32,
+        formula="x2_3x_7",
+        audit_mode=True,
+        device_name="cpu",
+        crossover_p=0.8,
+    )
+    val = validate_parent_ordering(record)
+    assert val["valid"] is True
+    assert len(val["violations"]) == 0
+    assert val["n_offspring"] > 0
+
+
+def test_honest_counters_consistency() -> None:
+    record = run_lineage_evolution(
+        seed=77,
+        pop_size=50,
+        n_generations=5,
+        n_points=32,
+        audit_mode=False,
+        device_name="cpu",
+    )
+    res = verify_honest_counters(record)
+    assert res["consistent"] is True
+    assert len(res["issues"]) == 0
+
+    # Verify per-generation invariants directly
+    cum = 0
+    for g in record.generations:
+        cum += 50
+        assert g.total_generated_cumulative == cum
+        assert g.executed_scored_count == 50
+        assert g.s0_valid_count == g.valid_count
+        assert g.distinct_bytes_window + g.repeated_bytes_window == 50
+        assert g.duplicate_count_status == "exact"
+        assert g.validity_sampled_estimated is False
+
+
+def test_manifest_integrity_fail_closed(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "test_manifest.json"
+    art_path = tmp_path / "test_art.bin"
+    art_path.write_bytes(b"honest content")
+    import hashlib
+
+    art_sha = hashlib.sha256(b"honest content").hexdigest()
+
+    write_manifest(
+        manifest_path,
+        {"phase": "test-p32", "status": "PASS"},
+        {
+            str(
+                art_path.relative_to(_REPO_ROOT)
+                if art_path.is_relative_to(_REPO_ROOT)
+                else art_path
+            ): art_sha
+        },
+    )
+
+    # 1. Valid passes
+    v_pass = verify_manifest_integrity(manifest_path)
+    assert v_pass["passed"] is True
+    assert v_pass["raw_artifacts_verified"] == 1
+
+    # 2. Tampered content fails closed
+    art_path.write_bytes(b"tampered content")
+    v_tamper = verify_manifest_integrity(manifest_path)
+    assert v_tamper["passed"] is False
+    assert v_tamper["reason"] == "artifact_tampered"
+
+    # 3. Missing artifact fails closed
+    art_path.unlink()
+    v_miss = verify_manifest_integrity(manifest_path)
+    assert v_miss["passed"] is False
+    assert v_miss["reason"] == "artifact_missing"
+
+    # 4. Missing manifest fails closed
+    v_nonexistent = verify_manifest_integrity(tmp_path / "missing.json")
+    assert v_nonexistent["passed"] is False
+    assert v_nonexistent["reason"] == "manifest_not_found"
+
+
+def test_config_sensitivity() -> None:
+    res = verify_config_sensitivity(seed=42, device_name="cpu")
+    assert res["diverged"] is True
+    assert res["first_diverged_generation"] >= 0
+
+
+def test_manifest_requires_checksum_and_raw_evidence(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "empty.json"
+    manifest_path.write_text('{"status":"PASS"}')
+    assert verify_manifest_integrity(manifest_path)["reason"] == "missing_manifest_hash"
+    write_manifest(manifest_path, {"status": "PASS"}, {})
+    assert verify_manifest_integrity(manifest_path)["reason"] == "missing_raw_artifacts"
+    manifest_path.write_text("[]")
+    assert verify_manifest_integrity(manifest_path)["passed"] is False
+
+
+def test_generate_claims_audit() -> None:
+    audit = generate_claims_audit()
+    assert audit["audit_complete"] is True
+    phases = audit["p13_p29_classifications"]
+    assert set(phases) == {f"P{i}" for i in range(13, 32)}
+    assert "Population-parallel GPU" in phases["P16"]["claim"]
+    assert "Streaming GPU cascade" in phases["P18"]["claim"]
+    assert "Quantum-inspired randomness" in phases["P27"]["claim"]
+    assert phases["P14"]["classification"] == "not_run"
+    assert phases["P22"]["classification"] == "provisional"
+    assert phases["P25"]["classification"] == "superseded"
+    assert phases["P29"]["classification"] == "superseded"
+    quantum = audit["quantum_classifications"]
+    assert set(quantum) == {f"Q{i:02}" for i in range(7, 14)}
+    assert "known ground-state" in quantum["Q10"]["rationale"]
+    assert "not a trained" in quantum["Q12"]["rationale"]
+    assert "oracle" in quantum["Q13"]["rationale"]
+    for entry in [*phases.values(), *quantum.values()]:
+        assert entry["classification"] != "accepted"
+        assert entry["classification_scope"] == "scientific_acceptance"
+        assert entry["evidence"][0]["present"] is True
+        assert len(entry["evidence"][0]["sha256"]) == 64
+        assert entry["independent_confirmation"] == "not_run"
+    h1 = audit["hypothesis_h1_evaluation"]
+    assert h1["overall_h1_verdict"] == "provisional"
+    assert set(h1["criteria_status"].values()) == {"provisional"}
+    assert len(h1["criterion_definitions"]) == 5
+    assert "ablation 8–9" in h1["criterion_definitions"]["criterion_2_speed"]
+    assert "1,000,000 distinct" in h1["engineering_goal"]
+
+
+def test_claims_audit_missing_or_forged_evidence_cannot_accept(tmp_path: Path) -> None:
+    missing = generate_claims_audit(repo_root=tmp_path)
+    assert missing["audit_complete"] is False
+    assert all(
+        e["classification"] == "not_run" for e in missing["p13_p29_classifications"].values()
+    )
+    doc = tmp_path / "docs/phases/P16-population-gpu-vm.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text("# P16 — Population-parallel GPU interpreter\n")
+    artifact = tmp_path / "experiments/p16-vm.json"
+    artifact.parent.mkdir()
+    artifact.write_text('{"status":"PASS","classification":"accepted"}')
+    forged = generate_claims_audit(repo_root=tmp_path)
+    p16 = forged["p13_p29_classifications"]["P16"]
+    assert p16["classification"] == "provisional"
+    assert p16["independent_confirmation"] == "not_run"
+    assert forged["audit_complete"] is False
+    previous_sha = p16["evidence"][1]["sha256"]
+    artifact.write_text('{"status":"PASS","throughput":1000000000}')
+    altered = generate_claims_audit(repo_root=tmp_path)
+    assert altered["p13_p29_classifications"]["P16"]["classification"] != "accepted"
+    assert altered["p13_p29_classifications"]["P16"]["evidence"][1]["sha256"] != previous_sha
+
+
+def test_run_acceptance_audit_smoke(tmp_path: Path) -> None:
+    out_file = tmp_path / "p32-smoke.json"
+    manifest = run_acceptance_audit(
+        seeds_count=2,
+        resume=True,
+        output_path=out_file,
+        device_name="cpu",
+        pop_size=30,
+        n_generations=4,
+        split_at=2,
+        n_points=32,
+    )
+    assert out_file.exists()
+    assert manifest["phase"] == "p32-replay-acceptance"
+    assert manifest["status"] == "PASS"
+    assert all(manifest["mandatory_checks"].values()) is True
+    assert len(manifest["seeds"]) == 2
+    assert len(manifest["resume_verification"]) == 2
+    assert all(r["bit_exact_resumed"] for r in manifest["resume_verification"]) is True
+    trace_path = out_file.with_suffix(".trace.json")
+    trace = json.loads(trace_path.read_text())
+    assert len(trace["lineage_runs"]) == 2
+    for run in trace["lineage_runs"]:
+        assert len(run["audit_store"]) == run["audit_store_count"]
+        assert len(run["audit_store"]) > 10
+    assert verify_manifest_integrity(out_file)["passed"] is True
+    trace_path.write_text('{"lineage_runs":[]}')
+    assert verify_manifest_integrity(out_file)["reason"] == "artifact_tampered"
+    trace_path.unlink()
+    assert verify_manifest_integrity(out_file)["reason"] == "artifact_missing"
+
+
+def test_acceptance_cannot_pass_without_resume(tmp_path: Path) -> None:
+    manifest = run_acceptance_audit(
+        seeds_count=1,
+        resume=False,
+        output_path=tmp_path / "no-resume.json",
+        device_name="cpu",
+        pop_size=30,
+        n_generations=4,
+        split_at=2,
+        n_points=32,
+    )
+    assert manifest["status"] == "FAIL"
+    assert manifest["mandatory_checks"]["all_resumed_bit_exact"] is False
+    with pytest.raises(ValueError, match="positive"):
+        run_acceptance_audit(seeds_count=0, output_path=tmp_path / "empty.json")
