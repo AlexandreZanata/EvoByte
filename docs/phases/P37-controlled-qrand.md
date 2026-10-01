@@ -1,8 +1,11 @@
 # P37 — One controlled quantum-inspired sampling hypothesis
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** P32/P34 valid harness and P36 scoped verdict recorded.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata
+**Result:** NULL — dependency-correlated bigram rotation shows no gain over the
+matched classical bigram (both 0 verified; genetic baseline verifies 17.8% of
+trials). Baseline selected; nothing nominated for P38.
 **Branch:** `codex/p37-controlled-qrand`.
 
 ## Objective

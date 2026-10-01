@@ -14,10 +14,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 
 import torch
 from gpu_limits import (
+    BoundedLineageTracker,
     LegConfig,
     LegResult,
+    check_full_verifier_acceptance,
     mix_spec,
+    profile_pipeline_components,
     reconcile_counters,
+    run_p34_profiled_benchmark,
     stability_verdict,
     workload_grid_hash,
 )
@@ -120,3 +124,81 @@ def test_checkpoint_roundtrip(tmp_path):
     torch.save({"pop": 1000, "generated": 5000, "iters": 12}, ckpt)
     state = torch.load(ckpt, map_location="cpu", weights_only=False)
     assert state["generated"] == 5000 and state["iters"] == 12
+
+
+def test_bounded_lineage_tracker_capacity_and_backpressure() -> None:
+    tracker = BoundedLineageTracker(capacity=5, device=torch.device("cpu"))
+    prog = torch.zeros(16, dtype=torch.int64)
+    mse = torch.tensor(0.5, dtype=torch.float32)
+
+    for i in range(8):
+        tracker.record_iteration_async(i, prog, mse, 100, 90)
+
+    summary = tracker.summary()
+    assert summary["capacity"] == 5
+    assert summary["stored_records"] == 5
+    assert summary["total_recorded"] == 8
+    assert summary["dropped_count"] == 3
+
+
+def test_profile_pipeline_components_cpu() -> None:
+    cfg = LegConfig(pop_size=64, n_points=32, n_streams=1, n_workers=1, mix="arith", length="short")
+    device = torch.device("cpu")
+    prof = profile_pipeline_components(cfg, device=device, n_iters=3, with_tracing=True)
+
+    assert "mean_wall_ms" in prof
+    assert "breakdown_ms" in prof
+    assert "breakdown_pct" in prof
+    assert "primary_bottleneck" in prof
+    assert prof["tracing_enabled"] is True
+    assert prof["breakdown_ms"]["lineage_tracing"] >= 0.0
+
+
+def test_check_full_verifier_acceptance() -> None:
+    if not torch.cuda.is_available():
+        return
+    res = check_full_verifier_acceptance(n_programs=64, n_points=64, seed=42)
+    assert res["n_programs"] == 64
+    assert res["valid_count"] > 0
+    assert res["acceptance_rate"] >= 0.99
+    assert res["passed"] is True
+
+
+def test_stability_verdict_with_tracing_check() -> None:
+    good = {
+        "ladder_rates": {"600.0": [1000.0, 1020.0, 990.0, 1010.0, 1005.0]},
+        "confirm_rate": 1000.0,
+        "leak_ok": True,
+        "parity_ok": True,
+        "resume_ok": True,
+        "any_abort": False,
+        "tracing_overhead_ok": True,
+    }
+    assert stability_verdict(**good)["stable"] is True
+
+    # Tracing overhead exceeded target (> 15%)
+    bad_tracing = dict(good, tracing_overhead_ok=False)
+    assert stability_verdict(**bad_tracing)["stable"] is False
+
+
+def test_p34_smoke_execution(tmp_path: Path) -> None:
+    if not torch.cuda.is_available():
+        return
+    out_file = tmp_path / "p34-test.json"
+    stable, manifest = run_p34_profiled_benchmark(
+        budgets_str="0.05s",
+        seeds_count=1,
+        confirm_1h=True,
+        tracing=True,
+        scale_factor=0.05,
+        output_path=str(out_file),
+        smoke=True,
+    )
+    assert manifest["phase"] == "p34-profiled-throughput"
+    assert manifest["status"] in ("PASS", "FAIL")
+    assert "workload_profiling" in manifest
+    assert "tracing_evaluation" in manifest
+    assert "distinct_s0_valid_candidates_per_sec_32pts" in manifest
+    assert "full_verifier_acceptance_rate" in manifest
+    assert manifest["tracing_evaluation"]["target_met"] is True
+    assert stable is True
