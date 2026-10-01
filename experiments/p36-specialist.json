@@ -1,0 +1,29 @@
+{
+  "corpus_manifest": "experiments/p35-training-corpus.json",
+  "corpus_manifest_sha256": "e18178d43965c845eb769427d9999abcba700578aa982ed3c1fe610555d5ae94",
+  "corpus_status": "PASS",
+  "coverage": {
+    "positives": 4,
+    "train": 3,
+    "val": 1
+  },
+  "elapsed_sec": 0.25039675399966654,
+  "family": "polynomial_arithmetic",
+  "manifest_sha256": "d99661e3ec8287db60062fa1ac3d7d80cc3f9e80b3019ca15c8589d1a7b8d0c0",
+  "p34_envelope_sha256": "999325fbc27d8d6e22a05ce11c090f3d3de2cfd30d0866892607436c3b34501a",
+  "phase": "p36-specialist-learning",
+  "raw_artifacts": [
+    {
+      "path": "experiments/p36-specialist-raw.json",
+      "sha256": "d7b6a8dad8120858105695644f691bad2223c00cc43cb2d2c98babe1fb96eba3"
+    }
+  ],
+  "status": "PASS",
+  "timestamp": "2026-10-01T19:36:59.833183+00:00",
+  "verdict": {
+    "decision": "INCONCLUSIVE",
+    "promotion": "blocked_insufficient_corpus",
+    "rationale": "P35 certified only 4 positives (3 train / 1 val; need >=16 with >=2 val). P35 published this limit and stopped learner promotion. Fitting a neural proposer on 4 programs cannot test learning versus imitation, so no training ran and no weights exist.",
+    "retained_baseline": "p33_grammar_resident_accepted_path"
+  }
+}

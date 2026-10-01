@@ -1,0 +1,1128 @@
+{
+  "budgets": [
+    0.5,
+    3.0,
+    30.0
+  ],
+  "candidate_points_per_sec": 39132989.01845097,
+  "confirm": {
+    "aborted": false,
+    "budget_sec": 180.0,
+    "config": {
+      "length": "standard",
+      "mix": "full",
+      "n_points": 256,
+      "n_streams": 1,
+      "n_workers": 1,
+      "pop_size": 20000,
+      "tracing": true
+    },
+    "degenerate_rate": 0.0754123263888889,
+    "distinct_per_sec": 154003.2908929879,
+    "elapsed_sec": 180.04443177299981,
+    "end_alloc_mb": 224.296875,
+    "iters": 1430,
+    "lat_ms": {
+      "max": 1227.8872319984657,
+      "p50": 105.23982149970834,
+      "p95": 210.0756598497355
+    },
+    "nop_fraction": 0.7035929361979166,
+    "oom_events": 0,
+    "peak_alloc_mb": 320.27783203125,
+    "raw_per_sec": 158849.67792871766,
+    "reconciled": {
+      "distinct_per_iter_sum": 27727435,
+      "generated": 28600000,
+      "global_distinct_reservoir": 500000,
+      "global_dup_rate": 0.31708916083916083,
+      "global_reservoir_total": 732160,
+      "global_reservoir_truncated": true,
+      "iters": 1430,
+      "oom_events": 0,
+      "s0_valid_est": 28593793,
+      "s0_valid_rate": 0.9997829861111112,
+      "s1_scored": 28600000
+    },
+    "s0_valid_rate": 0.9997829861111112,
+    "seed": 303,
+    "start_alloc_mb": 161.77783203125,
+    "tracing": {
+      "capacity": 10000,
+      "dropped_count": 0,
+      "stored_records": 1430,
+      "total_recorded": 1430
+    }
+  },
+  "confirm_rate": 154003.2908929879,
+  "distinct_s0_valid_candidates_per_sec_32pts": 79494.70994367477,
+  "full_verifier_acceptance_rate": 1.0,
+  "headline_cvps": 152863.2383533241,
+  "ladder": [
+    {
+      "aborted": false,
+      "budget_sec": 0.5,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.0703125,
+      "distinct_per_sec": 163654.5864344642,
+      "elapsed_sec": 0.5921373919991311,
+      "end_alloc_mb": 224.296875,
+      "iters": 5,
+      "lat_ms": {
+        "max": 127.5080719988182,
+        "p50": 107.74706700067327,
+        "p95": 125.39844079910836
+      },
+      "nop_fraction": 0.69873046875,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.2216796875,
+      "raw_per_sec": 168879.72512998595,
+      "reconciled": {
+        "distinct_per_iter_sum": 96906,
+        "generated": 100000,
+        "global_distinct_reservoir": 2544,
+        "global_dup_rate": 0.00625,
+        "global_reservoir_total": 2560,
+        "global_reservoir_truncated": false,
+        "iters": 5,
+        "oom_events": 0,
+        "s0_valid_est": 100000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 100000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 5,
+        "total_recorded": 5
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 0.5,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.0625,
+      "distinct_per_sec": 179496.5187986034,
+      "elapsed_sec": 0.5402556030003325,
+      "end_alloc_mb": 224.296875,
+      "iters": 5,
+      "lat_ms": {
+        "max": 106.64643299969612,
+        "p50": 101.41273299996101,
+        "p95": 105.83110159968783
+      },
+      "nop_fraction": 0.707763671875,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.2626953125,
+      "raw_per_sec": 185097.57130633303,
+      "reconciled": {
+        "distinct_per_iter_sum": 96974,
+        "generated": 100000,
+        "global_distinct_reservoir": 2543,
+        "global_dup_rate": 0.006640625,
+        "global_reservoir_total": 2560,
+        "global_reservoir_truncated": false,
+        "iters": 5,
+        "oom_events": 0,
+        "s0_valid_est": 100000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 100000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 101,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 5,
+        "total_recorded": 5
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 0.5,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.05859375,
+      "distinct_per_sec": 180971.4940659724,
+      "elapsed_sec": 0.5357473589992878,
+      "end_alloc_mb": 224.296875,
+      "iters": 5,
+      "lat_ms": {
+        "max": 106.50697499841044,
+        "p50": 102.36931899999036,
+        "p95": 106.23554259873345
+      },
+      "nop_fraction": 0.709716796875,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.22802734375,
+      "raw_per_sec": 186655.1431756716,
+      "reconciled": {
+        "distinct_per_iter_sum": 96955,
+        "generated": 100000,
+        "global_distinct_reservoir": 2541,
+        "global_dup_rate": 0.007421875,
+        "global_reservoir_total": 2560,
+        "global_reservoir_truncated": false,
+        "iters": 5,
+        "oom_events": 0,
+        "s0_valid_est": 100000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 100000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 202,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 5,
+        "total_recorded": 5
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 0.5,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.05859375,
+      "distinct_per_sec": 175727.18822164068,
+      "elapsed_sec": 0.5512692769989371,
+      "end_alloc_mb": 224.296875,
+      "iters": 5,
+      "lat_ms": {
+        "max": 114.70554299921787,
+        "p50": 103.67598499942687,
+        "p95": 112.55887859952054
+      },
+      "nop_fraction": 0.714599609375,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.2216796875,
+      "raw_per_sec": 181399.55221954588,
+      "reconciled": {
+        "distinct_per_iter_sum": 96873,
+        "generated": 100000,
+        "global_distinct_reservoir": 2552,
+        "global_dup_rate": 0.003125,
+        "global_reservoir_total": 2560,
+        "global_reservoir_truncated": false,
+        "iters": 5,
+        "oom_events": 0,
+        "s0_valid_est": 100000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 100000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 303,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 5,
+        "total_recorded": 5
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 0.5,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.0703125,
+      "distinct_per_sec": 185930.4066385045,
+      "elapsed_sec": 0.5211466040000232,
+      "end_alloc_mb": 224.296875,
+      "iters": 5,
+      "lat_ms": {
+        "max": 100.78290199999174,
+        "p50": 98.60646899869607,
+        "p95": 100.38208939986362
+      },
+      "nop_fraction": 0.701171875,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.2216796875,
+      "raw_per_sec": 191884.58532101562,
+      "reconciled": {
+        "distinct_per_iter_sum": 96897,
+        "generated": 100000,
+        "global_distinct_reservoir": 2547,
+        "global_dup_rate": 0.005078125,
+        "global_reservoir_total": 2560,
+        "global_reservoir_truncated": false,
+        "iters": 5,
+        "oom_events": 0,
+        "s0_valid_est": 100000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 100000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 404,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 5,
+        "total_recorded": 5
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 3.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.0703125,
+      "distinct_per_sec": 182155.8279996272,
+      "elapsed_sec": 3.0870766319985705,
+      "end_alloc_mb": 224.296875,
+      "iters": 29,
+      "lat_ms": {
+        "max": 119.80894900079875,
+        "p50": 101.79625700038741,
+        "p95": 117.81074299906321
+      },
+      "nop_fraction": 0.69873046875,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.259765625,
+      "raw_per_sec": 187880.0137282334,
+      "reconciled": {
+        "distinct_per_iter_sum": 562329,
+        "generated": 580000,
+        "global_distinct_reservoir": 14462,
+        "global_dup_rate": 0.02599676724137931,
+        "global_reservoir_total": 14848,
+        "global_reservoir_truncated": false,
+        "iters": 29,
+        "oom_events": 0,
+        "s0_valid_est": 580000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 580000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 29,
+        "total_recorded": 29
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 3.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.0625,
+      "distinct_per_sec": 112671.05914347916,
+      "elapsed_sec": 3.098053773999709,
+      "end_alloc_mb": 224.296875,
+      "iters": 18,
+      "lat_ms": {
+        "max": 303.7948549990688,
+        "p50": 143.77004600009968,
+        "p95": 268.67999329988373
+      },
+      "nop_fraction": 0.707763671875,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.2626953125,
+      "raw_per_sec": 116201.98558891568,
+      "reconciled": {
+        "distinct_per_iter_sum": 349061,
+        "generated": 360000,
+        "global_distinct_reservoir": 9055,
+        "global_dup_rate": 0.017469618055555556,
+        "global_reservoir_total": 9216,
+        "global_reservoir_truncated": false,
+        "iters": 18,
+        "oom_events": 0,
+        "s0_valid_est": 360000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 360000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 101,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 18,
+        "total_recorded": 18
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 3.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.05859375,
+      "distinct_per_sec": 89904.31481619453,
+      "elapsed_sec": 3.02035559199976,
+      "end_alloc_mb": 224.296875,
+      "iters": 14,
+      "lat_ms": {
+        "max": 282.8469789983501,
+        "p50": 217.86540599987347,
+        "p95": 272.4638737996429
+      },
+      "nop_fraction": 0.709716796875,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.2373046875,
+      "raw_per_sec": 92704.31625390626,
+      "reconciled": {
+        "distinct_per_iter_sum": 271543,
+        "generated": 280000,
+        "global_distinct_reservoir": 7063,
+        "global_dup_rate": 0.0146484375,
+        "global_reservoir_total": 7168,
+        "global_reservoir_truncated": false,
+        "iters": 14,
+        "oom_events": 0,
+        "s0_valid_est": 280000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 280000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 202,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 14,
+        "total_recorded": 14
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 3.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.05859375,
+      "distinct_per_sec": 96410.7603805092,
+      "elapsed_sec": 3.21566803099995,
+      "end_alloc_mb": 224.296875,
+      "iters": 16,
+      "lat_ms": {
+        "max": 258.4562219999498,
+        "p50": 201.17501649929181,
+        "p95": 252.3049927494867
+      },
+      "nop_fraction": 0.714599609375,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.2373046875,
+      "raw_per_sec": 99512.75968635737,
+      "reconciled": {
+        "distinct_per_iter_sum": 310025,
+        "generated": 320000,
+        "global_distinct_reservoir": 8079,
+        "global_dup_rate": 0.0137939453125,
+        "global_reservoir_total": 8192,
+        "global_reservoir_truncated": false,
+        "iters": 16,
+        "oom_events": 0,
+        "s0_valid_est": 320000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 320000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 303,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 16,
+        "total_recorded": 16
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 3.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.0703125,
+      "distinct_per_sec": 96890.20253254585,
+      "elapsed_sec": 3.0015831569999136,
+      "end_alloc_mb": 224.296875,
+      "iters": 15,
+      "lat_ms": {
+        "max": 297.059665001143,
+        "p50": 174.83501300011994,
+        "p95": 290.4112960010025
+      },
+      "nop_fraction": 0.701171875,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.23095703125,
+      "raw_per_sec": 99947.25593404862,
+      "reconciled": {
+        "distinct_per_iter_sum": 290824,
+        "generated": 300000,
+        "global_distinct_reservoir": 7569,
+        "global_dup_rate": 0.014453125,
+        "global_reservoir_total": 7680,
+        "global_reservoir_truncated": false,
+        "iters": 15,
+        "oom_events": 0,
+        "s0_valid_est": 300000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 300000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 404,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 15,
+        "total_recorded": 15
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 30.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.07877604166666667,
+      "distinct_per_sec": 149062.91644101037,
+      "elapsed_sec": 30.049613323999438,
+      "end_alloc_mb": 224.296875,
+      "iters": 231,
+      "lat_ms": {
+        "max": 260.6541710010788,
+        "p50": 123.75836399951368,
+        "p95": 211.1729580001338
+      },
+      "nop_fraction": 0.708251953125,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.259765625,
+      "raw_per_sec": 153745.73876164286,
+      "reconciled": {
+        "distinct_per_iter_sum": 4479283,
+        "generated": 4620000,
+        "global_distinct_reservoir": 111373,
+        "global_dup_rate": 0.05833164231601732,
+        "global_reservoir_total": 118272,
+        "global_reservoir_truncated": false,
+        "iters": 231,
+        "oom_events": 0,
+        "s0_valid_est": 4620000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 4620000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 231,
+        "total_recorded": 231
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 30.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.08333333333333333,
+      "distinct_per_sec": 189171.20385921968,
+      "elapsed_sec": 30.032499048998943,
+      "end_alloc_mb": 224.296875,
+      "iters": 293,
+      "lat_ms": {
+        "max": 145.15826199931325,
+        "p50": 98.92046200002369,
+        "p95": 119.99804080078316
+      },
+      "nop_fraction": 0.7085774739583334,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.2626953125,
+      "raw_per_sec": 195121.95739819156,
+      "reconciled": {
+        "distinct_per_iter_sum": 5681284,
+        "generated": 5860000,
+        "global_distinct_reservoir": 140881,
+        "global_dup_rate": 0.060893504692832764,
+        "global_reservoir_total": 150016,
+        "global_reservoir_truncated": false,
+        "iters": 293,
+        "oom_events": 0,
+        "s0_valid_est": 5856184,
+        "s0_valid_rate": 0.9993489583333334,
+        "s1_scored": 5860000
+      },
+      "s0_valid_rate": 0.9993489583333334,
+      "seed": 101,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 293,
+        "total_recorded": 293
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 30.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.0703125,
+      "distinct_per_sec": 155828.31770326718,
+      "elapsed_sec": 30.359000659998856,
+      "end_alloc_mb": 224.296875,
+      "iters": 244,
+      "lat_ms": {
+        "max": 552.8400250004779,
+        "p50": 99.60905349998939,
+        "p95": 243.83998435014286
+      },
+      "nop_fraction": 0.7142333984375,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.27783203125,
+      "raw_per_sec": 160743.1039859592,
+      "reconciled": {
+        "distinct_per_iter_sum": 4730792,
+        "generated": 4880000,
+        "global_distinct_reservoir": 117511,
+        "global_dup_rate": 0.05937019723360656,
+        "global_reservoir_total": 124928,
+        "global_reservoir_truncated": false,
+        "iters": 244,
+        "oom_events": 0,
+        "s0_valid_est": 4880000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 4880000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 202,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 244,
+        "total_recorded": 244
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 30.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.06380208333333333,
+      "distinct_per_sec": 152863.2383533241,
+      "elapsed_sec": 30.06279370700031,
+      "end_alloc_mb": 224.296875,
+      "iters": 237,
+      "lat_ms": {
+        "max": 502.0208690002619,
+        "p50": 102.86980900127674,
+        "p95": 238.82805880020894
+      },
+      "nop_fraction": 0.7073160807291666,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.27490234375,
+      "raw_per_sec": 157669.97725485044,
+      "reconciled": {
+        "distinct_per_iter_sum": 4595496,
+        "generated": 4740000,
+        "global_distinct_reservoir": 114348,
+        "global_dup_rate": 0.057654272151898736,
+        "global_reservoir_total": 121344,
+        "global_reservoir_truncated": false,
+        "iters": 237,
+        "oom_events": 0,
+        "s0_valid_est": 4740000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 4740000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 303,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 237,
+        "total_recorded": 237
+      }
+    },
+    {
+      "aborted": false,
+      "budget_sec": 30.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "degenerate_rate": 0.07486979166666667,
+      "distinct_per_sec": 136345.17546456394,
+      "elapsed_sec": 30.00365789300122,
+      "end_alloc_mb": 224.296875,
+      "iters": 211,
+      "lat_ms": {
+        "max": 383.72177599922,
+        "p50": 129.75247400027,
+        "p95": 227.37988799963205
+      },
+      "nop_fraction": 0.7040608723958334,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.259765625,
+      "raw_per_sec": 140649.51730383432,
+      "reconciled": {
+        "distinct_per_iter_sum": 4090854,
+        "generated": 4220000,
+        "global_distinct_reservoir": 101822,
+        "global_dup_rate": 0.05748296800947867,
+        "global_reservoir_total": 108032,
+        "global_reservoir_truncated": false,
+        "iters": 211,
+        "oom_events": 0,
+        "s0_valid_est": 4217252,
+        "s0_valid_rate": 0.9993489583333334,
+        "s1_scored": 4220000
+      },
+      "s0_valid_rate": 0.9993489583333334,
+      "seed": 404,
+      "start_alloc_mb": 161.77783203125,
+      "tracing": {
+        "capacity": 10000,
+        "dropped_count": 0,
+        "stored_records": 211,
+        "total_recorded": 211
+      }
+    }
+  ],
+  "ladder_rates": {
+    "0.5": [
+      163654.5864344642,
+      179496.5187986034,
+      180971.4940659724,
+      175727.18822164068,
+      185930.4066385045
+    ],
+    "3.0": [
+      182155.8279996272,
+      112671.05914347916,
+      89904.31481619453,
+      96410.7603805092,
+      96890.20253254585
+    ],
+    "30.0": [
+      149062.91644101037,
+      189171.20385921968,
+      155828.31770326718,
+      152863.2383533241,
+      136345.17546456394
+    ]
+  },
+  "leak": {
+    "max_growth_mb": 62.51904296875,
+    "passed": true
+  },
+  "manifest_sha256": "e768094b8f2d863289857bb0d4dfd048751a7035c6cb45fda810d879d4202964",
+  "parity": {
+    "n_points": 64,
+    "n_programs": 128,
+    "passed": true,
+    "worst_abs_err": 7.62939453125e-06
+  },
+  "phase": "p34-profiled-throughput",
+  "primary_bottleneck": "GPU VM execution compute / memory bandwidth",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "141c4372da5e0bad7c284b2c4776f320ea80912b",
+    "config": {
+      "budgets": "10s,1m,10m",
+      "grid_hash": "112fd9810360eca9",
+      "phase": "p34-profiled-throughput",
+      "tracing": true
+    },
+    "config_hash": "6ce0d720f863afdb",
+    "dataset_hashes": {},
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/gpu_limits.py\n M docs/phases/P34-profiled-throughput.md\n M tests/test_gpu_limits.py\n?? experiments/p34-throughput.json",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/gpu_limits.py",
+      "--profile-pipeline",
+      "--tracing",
+      "--budgets",
+      "10s,1m,10m",
+      "--confirm-1h",
+      "--seeds",
+      "5",
+      "--output",
+      "experiments/p34-throughput.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p34-raw/ckpt-p34.pt",
+      "sha256": "5647d615f8e25c0dd2f1906753133df51933f9c817890ebb34b10a700fef7172"
+    },
+    {
+      "path": "experiments/p34-raw/telemetry-p34.jsonl",
+      "sha256": "52b554cdfe819c6a56c0f9ede91373fd41613751c6623fc0161cc5c516de4fcc"
+    }
+  ],
+  "resume": {
+    "passed": true,
+    "state": {
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000,
+        "tracing": true
+      },
+      "generated": 21800000,
+      "global": {
+        "distinct": 500000,
+        "max_tracked": 500000,
+        "method": "exact-hash-set-bounded",
+        "repeats": 58080,
+        "total": 558080,
+        "truncated": true
+      },
+      "iter_distinct": 21135250,
+      "iters": 1090,
+      "pop": 20000,
+      "seed": 303
+    }
+  },
+  "seeds": [
+    42,
+    101,
+    202,
+    303,
+    404
+  ],
+  "stability_checks": {
+    "confirm_within_tolerance": true,
+    "cross_seed_floor": true,
+    "leak_ok": true,
+    "no_abort": true,
+    "parity_ok": true,
+    "resume_ok": true,
+    "tracing_overhead_ok": true
+  },
+  "stable": true,
+  "status": "PASS",
+  "target": "quad-x2-3x-7",
+  "thresholds": {
+    "confirm_tolerance": 0.15,
+    "cross_seed_floor": 0.9,
+    "leak_max_growth_mb": 64.0,
+    "parity_atol": 1e-05,
+    "parity_rtol": 1e-05,
+    "tracing_max_overhead_pct": 15.0
+  },
+  "tracing_evaluation": {
+    "baseline_iter_wall_ms": 90.38122293362296,
+    "preregistered_max_overhead_pct": 15.0,
+    "target_met": true,
+    "tracing_enabled": true,
+    "tracing_iter_wall_ms": 93.2349161333453,
+    "tracing_overhead_pct": 0.6911996195795231
+  },
+  "vram_budget": {
+    "budget_mb": 6501.875,
+    "free_mb": 7701.875,
+    "reserve_mb": 1200.0,
+    "total_mb": 7805.5625
+  },
+  "workload_profiling": {
+    "breakdown_ms": {
+      "cpu_orchestration": 0.043050698102646834,
+      "deduplication": 0.33721386790275576,
+      "error_computation": 0.057544533908367154,
+      "evaluation": 91.47545369466145,
+      "generation": 0.696938669681549,
+      "lineage_tracing": 0.6247146690885226
+    },
+    "breakdown_pct": {
+      "cpu_orchestration": 0.046174437526254,
+      "deduplication": 0.36168195552454824,
+      "error_computation": 0.06171993958364967,
+      "evaluation": 98.11287175271607,
+      "generation": 0.7475082282315587,
+      "lineage_tracing": 0.6700436864179198
+    },
+    "primary_bottleneck": "GPU VM execution compute / memory bandwidth",
+    "workload_grid": {
+      "arith_1024pts": {
+        "breakdown_ms": {
+          "cpu_orchestration": 0.0507702676685966,
+          "deduplication": 0.3107626656691233,
+          "error_computation": 0.7044885317484538,
+          "evaluation": 62.38362426757813,
+          "generation": 0.7056362668673197,
+          "lineage_tracing": 0.0
+        },
+        "breakdown_pct": {
+          "cpu_orchestration": 0.07913653573990566,
+          "deduplication": 0.48439139535134784,
+          "error_computation": 1.098099033768719,
+          "evaluation": 97.23848500585434,
+          "generation": 1.0998880292856812,
+          "lineage_tracing": 0.0
+        },
+        "mean_device_ms": 64.10451173186303,
+        "mean_wall_ms": 64.15528199953162,
+        "mix": "arith",
+        "n_points": 1024,
+        "pop_size": 8000,
+        "primary_bottleneck": "GPU VM execution compute / memory bandwidth",
+        "tracing_enabled": false
+      },
+      "arith_256pts": {
+        "breakdown_ms": {
+          "cpu_orchestration": 0.047388182887040387,
+          "deduplication": 0.3390997310479482,
+          "error_computation": 0.0522282674908638,
+          "evaluation": 49.73184661865234,
+          "generation": 0.6496767997741699,
+          "lineage_tracing": 0.0
+        },
+        "breakdown_pct": {
+          "cpu_orchestration": 0.09324667349104362,
+          "deduplication": 0.6672533103305821,
+          "error_computation": 0.1027706045900176,
+          "evaluation": 97.85834740298395,
+          "generation": 1.278382008604417,
+          "lineage_tracing": 0.0
+        },
+        "mean_device_ms": 50.77285141696532,
+        "mean_wall_ms": 50.82023959985236,
+        "mix": "arith",
+        "n_points": 256,
+        "pop_size": 8000,
+        "primary_bottleneck": "GPU VM execution compute / memory bandwidth",
+        "tracing_enabled": false
+      },
+      "arith_32pts": {
+        "breakdown_ms": {
+          "cpu_orchestration": 0.1290292100835302,
+          "deduplication": 2.236727511882782,
+          "error_computation": 4.560855439305305,
+          "evaluation": 134.15937118530275,
+          "generation": 2.2756351868311566,
+          "lineage_tracing": 0.0
+        },
+        "breakdown_pct": {
+          "cpu_orchestration": 0.09000261813692091,
+          "deduplication": 1.5601996788014705,
+          "error_computation": 3.1813643609517106,
+          "evaluation": 93.58109412948733,
+          "generation": 1.5873392126225876,
+          "lineage_tracing": 0.0
+        },
+        "mean_device_ms": 143.23258932332197,
+        "mean_wall_ms": 143.3616185334055,
+        "mix": "arith",
+        "n_points": 32,
+        "pop_size": 8000,
+        "primary_bottleneck": "GPU VM execution compute / memory bandwidth",
+        "tracing_enabled": false
+      },
+      "full_1024pts": {
+        "breakdown_ms": {
+          "cpu_orchestration": 0.05231186291784695,
+          "deduplication": 0.30643200079600014,
+          "error_computation": 0.7101866682370503,
+          "evaluation": 104.66559753417968,
+          "generation": 0.7360618670781454,
+          "lineage_tracing": 0.0
+        },
+        "breakdown_pct": {
+          "cpu_orchestration": 0.04913268814483257,
+          "deduplication": 0.287809056931338,
+          "error_computation": 0.6670261418505952,
+          "evaluation": 98.30470329866552,
+          "generation": 0.6913288144077089,
+          "lineage_tracing": 0.0
+        },
+        "mean_device_ms": 106.41827807029088,
+        "mean_wall_ms": 106.47058993320873,
+        "mix": "full",
+        "n_points": 1024,
+        "pop_size": 8000,
+        "primary_bottleneck": "GPU VM execution compute / memory bandwidth",
+        "tracing_enabled": false
+      },
+      "full_256pts": {
+        "breakdown_ms": {
+          "cpu_orchestration": 0.049379944314324575,
+          "deduplication": 0.3206272006034851,
+          "error_computation": 0.058984533449014026,
+          "evaluation": 91.16993052164713,
+          "generation": 0.6649642666180928,
+          "lineage_tracing": 0.0
+        },
+        "breakdown_pct": {
+          "cpu_orchestration": 0.05352033846111957,
+          "deduplication": 0.347511049970177,
+          "error_computation": 0.06393025018553303,
+          "evaluation": 98.81431837864258,
+          "generation": 0.7207199827405735,
+          "lineage_tracing": 0.0
+        },
+        "mean_device_ms": 92.21450652231773,
+        "mean_wall_ms": 92.26388646663206,
+        "mix": "full",
+        "n_points": 256,
+        "pop_size": 8000,
+        "primary_bottleneck": "GPU VM execution compute / memory bandwidth",
+        "tracing_enabled": false
+      },
+      "full_32pts": {
+        "breakdown_ms": {
+          "cpu_orchestration": 0.048026145035208856,
+          "deduplication": 0.351310936609904,
+          "error_computation": 0.06196906715631485,
+          "evaluation": 87.71783498128255,
+          "generation": 0.6473621368408203,
+          "lineage_tracing": 0.0
+        },
+        "breakdown_pct": {
+          "cpu_orchestration": 0.054067359705570826,
+          "deduplication": 0.3955023823849173,
+          "error_computation": 0.069764163709222,
+          "evaluation": 98.75187219482153,
+          "generation": 0.7287938993787572,
+          "lineage_tracing": 0.0
+        },
+        "mean_device_ms": 88.7784771218896,
+        "mean_wall_ms": 88.8265032669248,
+        "mix": "full",
+        "n_points": 32,
+        "pop_size": 8000,
+        "primary_bottleneck": "GPU VM execution compute / memory bandwidth",
+        "tracing_enabled": false
+      }
+    }
+  }
+}

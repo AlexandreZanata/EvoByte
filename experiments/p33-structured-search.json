@@ -1,0 +1,341 @@
+{
+  "arms": [
+    "unrestricted_structured",
+    "grammar_sampling",
+    "genetic_evolution",
+    "grammar_evolution"
+  ],
+  "development_targets": [
+    "3*x + 2",
+    "x^2 - x + 1"
+  ],
+  "elapsed_sec": 84.34389206199921,
+  "family": "polynomial_arithmetic",
+  "finalists_verification": {
+    "genetic_evolution": {
+      "best_expression": "ADD r7, r0, 0x00 ; CSEL r7, r7, 0x03 ; ADD r7, r0, 0x07 ; NEG r4, r5, 0x05",
+      "best_mse": 2.6201263381153694e-14,
+      "best_program_hex": "000000000107000000000000000000000f070703000000000107000700000000000000cf0000ec0000e0000000000000000000000c0405050000000000000000",
+      "best_target": "train_poly_linear",
+      "canonicalization": {
+        "dead_count": 1,
+        "is_constant_output": false,
+        "live_count": 3,
+        "reordered_count": 0
+      },
+      "liveness": {
+        "dead_count": 1,
+        "is_constant_output": false,
+        "live_count": 3,
+        "live_mask": [
+          false,
+          true,
+          false,
+          false,
+          true,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "padding_count": 12
+      },
+      "verified_off_hot_path": true
+    },
+    "grammar_evolution": {
+      "best_expression": "CSEL r2, r1, 0x0b ; MUL r2, r0, 0x02 ; CSEL r7, r2, 0x03",
+      "best_mse": 0.0,
+      "best_program_hex": "0f02010b030200020f07020300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "best_target": "train_poly_linear",
+      "canonicalization": {
+        "dead_count": 0,
+        "is_constant_output": false,
+        "live_count": 3,
+        "reordered_count": 0
+      },
+      "liveness": {
+        "dead_count": 0,
+        "is_constant_output": false,
+        "live_count": 3,
+        "live_mask": [
+          true,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "padding_count": 13
+      },
+      "verified_off_hot_path": true
+    },
+    "grammar_sampling": {
+      "best_expression": "CSEL r2, r1, 0x0b ; MUL r2, r0, 0x02 ; CSEL r7, r2, 0x03",
+      "best_mse": 0.0,
+      "best_program_hex": "0f02010b030200020f07020300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "best_target": "train_poly_linear",
+      "canonicalization": {
+        "dead_count": 0,
+        "is_constant_output": false,
+        "live_count": 3,
+        "reordered_count": 0
+      },
+      "liveness": {
+        "dead_count": 0,
+        "is_constant_output": false,
+        "live_count": 3,
+        "live_mask": [
+          true,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "padding_count": 13
+      },
+      "verified_off_hot_path": true
+    },
+    "unrestricted_structured": {
+      "best_expression": "MUL r1, r0, 0x06 ; POW r4, r2, 0x05 ; COS r1, r7, 0x00 ; EXP r3, r0, 0x05 ; SUB r2, r0, 0x04 ; MUL r7, r0, 0x02",
+      "best_mse": 1.0,
+      "best_program_hex": "03010006000000000904020500000000060107000703000500000000020200040307000200000000000000000000000000000000000000000000000000000000",
+      "best_target": "train_poly_quad1",
+      "canonicalization": {
+        "dead_count": 3,
+        "is_constant_output": false,
+        "live_count": 3,
+        "reordered_count": 0
+      },
+      "liveness": {
+        "dead_count": 3,
+        "is_constant_output": false,
+        "live_count": 3,
+        "live_mask": [
+          false,
+          false,
+          true,
+          false,
+          false,
+          false,
+          false,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "padding_count": 10
+      },
+      "verified_off_hot_path": true
+    }
+  },
+  "manifest_sha256": "47798af468e097dfa385d2eedfbed708eda0f82a7b3ae7c5d09b7ecddeb8bd97",
+  "overshoot_sec": 0.0,
+  "phase": "p33-structured-search",
+  "polynomial_spec": {
+    "allowed_const_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      7,
+      9,
+      10,
+      11,
+      14
+    ],
+    "allowed_opcodes": [
+      "NOP",
+      "ADD",
+      "SUB",
+      "MUL",
+      "CSEL"
+    ],
+    "development_targets": [
+      "3*x + 2",
+      "x^2 - x + 1",
+      "2*x^2 + 3",
+      "x^3 - 2*x",
+      "(x - 2)^2",
+      "4*x - 5"
+    ],
+    "family": "polynomial_arithmetic",
+    "heldout_targets": [
+      "x^2 + 3*x - 2",
+      "x^2 - 9",
+      "5*x - 7",
+      "x^3 + x^2"
+    ],
+    "max_degree": 4,
+    "max_instructions": 16,
+    "output_reg": 7,
+    "rational_coeff_bounds": [
+      -10.0,
+      10.0
+    ],
+    "scratch_regs": [
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "target_mse_threshold": 0.0001,
+    "variable_name": "x",
+    "variable_reg": 0,
+    "zero_reg": 1
+  },
+  "provenance": {
+    "clean_tree": false,
+    "commit": "ab2cc0c6291c1e30ffb6ebd52d713481a443112b",
+    "config": {
+      "budgets": "10s,1m",
+      "family": "polynomial_arithmetic",
+      "pop_size": 64,
+      "scale_factor": 0.05,
+      "seeds_count": 5
+    },
+    "config_hash": "f9b3b383a6688dbd",
+    "dataset_hashes": {
+      "family": "17985762fd7c33382ccb7c35b704554bb1433908ae51714315608cae910b497f"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/math_specialist.py\n M tests/test_math_specialist.py\n?? experiments/p33-structured-search-raw.json\n?? experiments/p33-structured-search.json\n?? src/evobyte/grammar.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 10,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/math_specialist.py",
+      "--structured-search",
+      "--family",
+      "polynomial_arithmetic",
+      "--budgets",
+      "10s,1m",
+      "--seeds",
+      "5",
+      "--output",
+      "experiments/p33-structured-search.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p33-structured-search-raw.json",
+      "sha256": "d9bd0b6fdd73231351dbb19a44a5dab02fe7877b8d2ff3ad6f38a7a9a8ed7b80"
+    }
+  ],
+  "ruling": {
+    "decision": "ADOPT",
+    "rationale": "Grammar-constrained search improves verified solution quality/rate on polynomial arithmetic (90.0% vs 20.0%) with acceptable throughput ratio (2.32x). Structured candidate construction adopted for polynomial arithmetic per P33 contract.",
+    "success_rate_genetic": 0.2,
+    "success_rate_grammar": 0.9,
+    "throughput_ratio": 2.3153179687372387
+  },
+  "seeds": [
+    42,
+    142,
+    242,
+    342,
+    442
+  ],
+  "status": "PASS",
+  "summary_by_arm": {
+    "genetic_evolution": {
+      "constant_output_fraction": 0.0,
+      "mean_active_instructions": 2.65,
+      "mean_best_mse": 3.596474739164121,
+      "mean_cvps": 1262.120892340222,
+      "mean_dead_instructions": 0.3,
+      "mean_time_to_solution_sec": 1.4889557234500899,
+      "median_best_mse": 4.0,
+      "median_cvps": 972.086438992774,
+      "success_rate": 0.2,
+      "trials_count": 20
+    },
+    "grammar_evolution": {
+      "constant_output_fraction": 0.0,
+      "mean_active_instructions": 4.25,
+      "mean_best_mse": 0.10000000000002451,
+      "mean_cvps": 2922.211180753994,
+      "mean_dead_instructions": 0.0,
+      "mean_time_to_solution_sec": 0.28154833790013073,
+      "median_best_mse": 3.352873534367973e-14,
+      "median_cvps": 2541.3294833522423,
+      "success_rate": 0.9,
+      "trials_count": 20
+    },
+    "grammar_sampling": {
+      "constant_output_fraction": 0.0,
+      "mean_active_instructions": 4.45,
+      "mean_best_mse": 0.15431547164918938,
+      "mean_cvps": 2846.8970420773467,
+      "mean_dead_instructions": 0.0,
+      "mean_time_to_solution_sec": 0.5552092482500484,
+      "median_best_mse": 3.352873534367973e-14,
+      "median_cvps": 2402.4138336197148,
+      "success_rate": 0.75,
+      "trials_count": 20
+    },
+    "unrestricted_structured": {
+      "constant_output_fraction": 0.0,
+      "mean_active_instructions": 2.4,
+      "mean_best_mse": 5.018073618412018,
+      "mean_cvps": 798.8852594256466,
+      "mean_dead_instructions": 3.15,
+      "mean_time_to_solution_sec": 1.75,
+      "median_best_mse": 4.095238208770752,
+      "median_cvps": 680.8047831898876,
+      "success_rate": 0.0,
+      "trials_count": 20
+    }
+  },
+  "timestamp": "2026-10-01T18:02:49.742674+00:00"
+}
