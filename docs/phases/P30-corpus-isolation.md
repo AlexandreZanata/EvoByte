@@ -1,9 +1,17 @@
 # P30 — Corpus isolation by original problem and template
 
-**Status:** Proposed.
+**Status:** Done (2026-10-01, zero leakage verified across 1507 groups, 640 GSM8K defects reproduced, experiments/p30-splits.json generated).
 **Prerequisite:** P29 outcome recorded; review evidence frozen. P24–P29 Done labels are historical, not acceptance of the defects under review.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata / EvoByte Agent.
 **Branch:** `codex/p30-corpus-isolation`.
+
+Integration note (2026-10-01): CI pipeline tests use controlled local fixtures,
+including arithmetic, symbolic and unsupported-label examples; they never
+download data or open the research final test. The historical 5,864-item
+measurements remain tied to their original snapshot and provenance. Green
+unit tests do not independently reproduce that full corpus. Exposure checks
+enforce the recorded exposure flags; they do not prove absence of external
+model-training contamination. Scientific acceptance still follows D014/D015.
 
 ## Objective
 

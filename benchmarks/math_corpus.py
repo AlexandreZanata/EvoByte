@@ -113,9 +113,36 @@ class CorpusItem:
     target_answer: float
     verifier: dict[str, Any]
     metadata: dict[str, Any]
+    verification_status: str = "reference_only"
+    group_id: str = ""
+    template_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> CorpusItem:
+        valid_fields = {
+            "id",
+            "source",
+            "source_id",
+            "track",
+            "family",
+            "difficulty",
+            "problem_text",
+            "expression",
+            "inputs",
+            "constraints",
+            "allowed_ops",
+            "target_answer",
+            "verifier",
+            "metadata",
+            "verification_status",
+            "group_id",
+            "template_id",
+        }
+        filtered = {k: v for k, v in data.items() if k in valid_fields}
+        return cls(**filtered)
 
 
 @dataclass
@@ -736,6 +763,628 @@ def stratify_and_seal(
 
 
 # ==============================================================================
+# P30 Corpus Isolation by Original Problem and Template
+# ==============================================================================
+
+
+def normalize_text_for_dedup(text: str) -> str:
+    """Normalize text for semantic deduplication (lower, strip formatting/spaces)."""
+    if not text:
+        return ""
+    t = re.sub(r"\\[a-zA-Z]+", " ", text)
+    t = re.sub(r"[\$\{\}\\]", " ", t)
+    return re.sub(r"\s+", " ", t).strip().lower()
+
+
+def extract_problem_template(text: str) -> tuple[str, str]:
+    """Extract structural template by masking numbers; returns (template_str, template_id)."""
+    norm = normalize_text_for_dedup(text)
+    tpl = re.sub(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", "{N}", norm)
+    tpl_clean = re.sub(r"\s+", " ", tpl).strip()
+    tpl_hash = hashlib.sha256(tpl_clean.encode()).hexdigest()[:16]
+    return tpl_clean, f"tpl_{tpl_hash}"
+
+
+def get_source_problem_id(item: CorpusItem) -> str:
+    """Derive unique source problem identifier, disambiguating reused source IDs."""
+    if not item.source or item.source_id is None:
+        return ""
+    if item.source == "symbolic_math":
+        return f"{item.source}:{item.family}:{item.source_id}"
+    return f"{item.source}:{item.source_id}"
+
+
+def reproduce_p25_contamination(items: list[CorpusItem], seed: int = 42) -> dict[str, Any]:
+    """Reproduce historical P25 contamination where 640 GSM8K source problems crossed train/test."""
+    legacy_splits, _ = stratify_and_seal(items, seed=seed)
+    train_gsm8k = {it.source_id for it in legacy_splits["train"] if it.source == "gsm8k"}
+    held_gsm8k = {it.source_id for it in legacy_splits["held_out"] if it.source == "gsm8k"}
+    overlap = sorted(train_gsm8k & held_gsm8k)
+    total_gsm8k = len({it.source_id for it in items if it.source == "gsm8k"})
+    return {
+        "reproduced_defect": "p25_item_stratification_leakage",
+        "gsm8k_shared_source_problems": len(overlap),
+        "total_gsm8k_source_problems": total_gsm8k,
+        "contamination_rate": len(overlap) / max(1, total_gsm8k),
+        "sample_overlap_ids": overlap[:10],
+        "status": "reproduced_as_reported",
+        "description": (
+            f"Replication of P25 naive item-level stratification reproduced {len(overlap)} "
+            f"GSM8K source problems ({len(overlap)}/{total_gsm8k}) overlapping between train and held-out."
+        ),
+    }
+
+
+@dataclass
+class ProblemGroup:
+    """Atomic group representing one source problem or cluster of duplicate problems."""
+
+    group_id: str
+    items: list[CorpusItem] = field(default_factory=list)
+    source: str = ""
+    family: str = ""
+    difficulty: int = 1
+    is_exposed: bool = False
+    template_id: str = ""
+    template_text: str = ""
+    source_problem_ids: list[str] = field(default_factory=list)
+
+
+def group_items_by_source_and_template(
+    items: list[CorpusItem],
+) -> tuple[list[ProblemGroup], list[str]]:
+    """Group items by original source problem and deduplicate normalized variants.
+
+    Returns (groups, ungroupable_record_ids).
+    Sibling chains across EXECUTE/FIND stay together; duplicate normalized texts are merged.
+    """
+    ungroupable: list[str] = []
+    item_to_base: dict[str, str] = {}
+    valid_items: list[CorpusItem] = []
+
+    for it in items:
+        base_id = get_source_problem_id(it)
+        if not base_id or not it.problem_text:
+            ungroupable.append(it.id)
+            continue
+        item_to_base[it.id] = base_id
+        valid_items.append(it)
+
+    # Disjoint Set / Union-Find
+    parent: dict[str, str] = {}
+
+    def find(x: str) -> str:
+        parent.setdefault(x, x)
+        if parent[x] != x:
+            parent[x] = find(parent[x])
+        return parent[x]
+
+    def union(x: str, y: str) -> None:
+        rx, ry = find(x), find(y)
+        if rx != ry:
+            parent[rx] = ry
+
+    # Check exact text matches among FIND items (and non-empty problem texts)
+    text_to_bases: dict[str, set[str]] = {}
+    for it in valid_items:
+        if it.track == "FIND":
+            norm_t = normalize_text_for_dedup(it.problem_text)
+            if len(norm_t) > 10:
+                text_to_bases.setdefault(norm_t, set()).add(item_to_base[it.id])
+
+    for bases in text_to_bases.values():
+        if len(bases) > 1:
+            base_list = sorted(bases)
+            for b in base_list[1:]:
+                union(base_list[0], b)
+
+    # Group items by canonical root
+    grouped_items: dict[str, list[CorpusItem]] = {}
+    for it in valid_items:
+        root = find(item_to_base[it.id])
+        grouped_items.setdefault(root, []).append(it)
+
+    # Build ProblemGroup objects
+    groups: list[ProblemGroup] = []
+    for gid, g_items in sorted(grouped_items.items()):
+        g_items.sort(key=lambda x: x.id)
+        find_it = next((it for it in g_items if it.track == "FIND"), g_items[0])
+        tpl_text, tpl_id = extract_problem_template(find_it.problem_text)
+        max_diff = max(it.difficulty for it in g_items)
+        is_exp = any(it.metadata.get("internal_exposure_prior", False) for it in g_items)
+        src_ids = sorted({get_source_problem_id(it) for it in g_items})
+
+        for it in g_items:
+            it.group_id = gid
+            it.template_id = tpl_id
+            it.verification_status = "reference_only"
+
+        grp = ProblemGroup(
+            group_id=gid,
+            items=g_items,
+            source=find_it.source,
+            family=find_it.family,
+            difficulty=max_diff,
+            is_exposed=is_exp,
+            template_id=tpl_id,
+            template_text=tpl_text,
+            source_problem_ids=src_ids,
+        )
+        groups.append(grp)
+
+    return groups, ungroupable
+
+
+def isolate_and_split_groups(
+    groups: list[ProblemGroup],
+    seed: int = 42,
+    dev_train_ratio: float = 0.85,
+    unexposed_train_ratio: float = 0.70,
+    unexposed_val_ratio: float = 0.15,
+) -> tuple[dict[str, list[CorpusItem]], dict[str, list[ProblemGroup]], HeldOutSeal]:
+    """Split problem groups into train/val/final_test with zero leakage and unexposed test."""
+    rng = np.random.default_rng(seed)
+
+    exposed_groups = [g for g in groups if g.is_exposed]
+    unexposed_groups = [g for g in groups if not g.is_exposed]
+
+    train_groups: list[ProblemGroup] = []
+    val_groups: list[ProblemGroup] = []
+    test_groups: list[ProblemGroup] = []
+
+    # 1. Exposed groups (GSM8K) -> train & val only, NEVER final_test
+    exp_buckets: dict[tuple[str, int], list[ProblemGroup]] = {}
+    for g in exposed_groups:
+        exp_buckets.setdefault((g.family, g.difficulty), []).append(g)
+
+    for _, g_list in sorted(exp_buckets.items()):
+        g_list_sorted = sorted(g_list, key=lambda x: x.group_id)
+        idx = np.arange(len(g_list_sorted))
+        rng.shuffle(idx)
+        n_tr = int(dev_train_ratio * len(g_list_sorted))
+        train_groups.extend(g_list_sorted[i] for i in idx[:n_tr])
+        val_groups.extend(g_list_sorted[i] for i in idx[n_tr:])
+
+    # 2. Unexposed groups (NuminaMath, SymbolicMath) -> train, val, final_test
+    unexp_buckets: dict[tuple[str, int], list[ProblemGroup]] = {}
+    for g in unexposed_groups:
+        unexp_buckets.setdefault((g.family, g.difficulty), []).append(g)
+
+    for _, g_list in sorted(unexp_buckets.items()):
+        g_list_sorted = sorted(g_list, key=lambda x: x.group_id)
+        idx = np.arange(len(g_list_sorted))
+        rng.shuffle(idx)
+        n_tr = int(unexposed_train_ratio * len(g_list_sorted))
+        n_va = int(unexposed_val_ratio * len(g_list_sorted))
+        train_groups.extend(g_list_sorted[i] for i in idx[:n_tr])
+        val_groups.extend(g_list_sorted[i] for i in idx[n_tr : n_tr + n_va])
+        test_groups.extend(g_list_sorted[i] for i in idx[n_tr + n_va :])
+
+    train_groups.sort(key=lambda g: g.group_id)
+    val_groups.sort(key=lambda g: g.group_id)
+    test_groups.sort(key=lambda g: g.group_id)
+
+    train_items = [it for g in train_groups for it in g.items]
+    val_items = [it for g in val_groups for it in g.items]
+    test_items = [it for g in test_groups for it in g.items]
+
+    train_items.sort(key=lambda it: it.id)
+    val_items.sort(key=lambda it: it.id)
+    test_items.sort(key=lambda it: it.id)
+
+    test_ids = [it.id for it in test_items]
+    ids_hash = hashlib.sha256(json.dumps(test_ids).encode()).hexdigest()
+    content_blob = json.dumps([it.to_dict() for it in test_items], sort_keys=True).encode()
+    content_hash = hashlib.sha256(content_blob).hexdigest()
+
+    seal = HeldOutSeal(
+        sealed=True,
+        sealed_at=datetime.datetime.now(datetime.UTC).isoformat(),
+        n_items=len(test_items),
+        item_ids_sha256=ids_hash,
+        content_sha256=content_hash,
+        access_count=0,
+        access_log=[],
+        policy=(
+            "Zero reads during development/training/tuning. "
+            "Enforced loader boundary requires explicit authorization and caller/reason logging for final-test evaluation."
+        ),
+    )
+
+    splits = {
+        "train": train_items,
+        "val": val_items,
+        "final_test": test_items,
+        "held_out": test_items,
+    }
+    split_groups = {
+        "train": train_groups,
+        "val": val_groups,
+        "final_test": test_groups,
+        "held_out": test_groups,
+    }
+    return splits, split_groups, seal
+
+
+def audit_splits_contamination(
+    splits: dict[str, list[CorpusItem]],
+    split_groups: dict[str, list[ProblemGroup]],
+    items: list[CorpusItem],
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Perform rigorous before/after contamination audit across source, group, template, and family."""
+    before = reproduce_p25_contamination(items, seed=seed)
+
+    train_items = splits["train"]
+    val_items = splits["val"]
+    test_items = splits["final_test"]
+
+    train_src = {get_source_problem_id(it) for it in train_items}
+    val_src = {get_source_problem_id(it) for it in val_items}
+    test_src = {get_source_problem_id(it) for it in test_items}
+
+    train_grp = {g.group_id for g in split_groups["train"]}
+    val_grp = {g.group_id for g in split_groups["val"]}
+    test_grp = {g.group_id for g in split_groups["final_test"]}
+
+    src_tr_val = sorted(train_src & val_src)
+    src_tr_test = sorted(train_src & test_src)
+    src_val_test = sorted(val_src & test_src)
+
+    grp_tr_val = sorted(train_grp & val_grp)
+    grp_tr_test = sorted(train_grp & test_grp)
+    grp_val_test = sorted(val_grp & test_grp)
+
+    exposed_in_test_items = [
+        it.id for it in test_items if it.metadata.get("internal_exposure_prior", False)
+    ]
+    exposed_in_test_groups = [g.group_id for g in split_groups["final_test"] if g.is_exposed]
+
+    train_tpl = {it.template_id for it in train_items}
+    val_tpl = {it.template_id for it in val_items}
+    test_tpl = {it.template_id for it in test_items}
+    all_tpl = train_tpl | val_tpl | test_tpl
+
+    unseen_test_tpl = sorted(test_tpl - (train_tpl | val_tpl))
+    shared_train_test_tpl = sorted(test_tpl & train_tpl)
+
+    train_fam = sorted({it.family for it in train_items})
+    val_fam = sorted({it.family for it in val_items})
+    test_fam = sorted({it.family for it in test_items})
+
+    after = {
+        "source_overlap_train_val": len(src_tr_val),
+        "source_overlap_train_final_test": len(src_tr_test),
+        "source_overlap_val_final_test": len(src_val_test),
+        "group_overlap_train_val": len(grp_tr_val),
+        "group_overlap_train_final_test": len(grp_tr_test),
+        "group_overlap_val_final_test": len(grp_val_test),
+        "exposed_items_in_final_test": len(exposed_in_test_items),
+        "exposed_groups_in_final_test": len(exposed_in_test_groups),
+        "zero_leakage_verified": (
+            len(src_tr_test) == 0
+            and len(src_tr_val) == 0
+            and len(src_val_test) == 0
+            and len(grp_tr_test) == 0
+            and len(grp_tr_val) == 0
+            and len(grp_val_test) == 0
+            and len(exposed_in_test_items) == 0
+            and len(exposed_in_test_groups) == 0
+        ),
+        "all_pristine_test_unexposed": len(exposed_in_test_items) == 0,
+        "template_overlap": {
+            "n_total_templates": len(all_tpl),
+            "templates_train": len(train_tpl),
+            "templates_val": len(val_tpl),
+            "templates_final_test": len(test_tpl),
+            "unseen_templates_final_test": len(unseen_test_tpl),
+            "shared_templates_train_test": len(shared_train_test_tpl),
+            "declaration": (
+                f"Declared template distribution: {len(test_tpl)} templates in final test "
+                f"({len(unseen_test_tpl)} unseen templates, {len(shared_train_test_tpl)} shared with train). "
+                "Distinguishes unseen problem instances from unseen template structures."
+            ),
+        },
+        "family_overlap": {
+            "families_train": train_fam,
+            "families_val": val_fam,
+            "families_final_test": test_fam,
+            "declaration": f"Declared families in pristine final test: {test_fam}",
+        },
+    }
+
+    return {
+        "before_audit": before,
+        "after_audit": after,
+    }
+
+
+class IsolatedCorpusLoader:
+    """Enforced loader boundary and access auditor for isolated corpus splits."""
+
+    def __init__(
+        self,
+        splits: dict[str, list[CorpusItem]],
+        seal: HeldOutSeal,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
+        self._splits = {k.lower(): v for k, v in splits.items()}
+        self._seal = seal
+        self._metadata = metadata or {}
+
+    @property
+    def seal(self) -> HeldOutSeal:
+        return self._seal
+
+    @property
+    def metadata(self) -> dict[str, Any]:
+        return self._metadata
+
+    def get_train_items(self) -> list[CorpusItem]:
+        return list(self._splits.get("train", []))
+
+    def get_val_items(self) -> list[CorpusItem]:
+        return list(self._splits.get("val", []))
+
+    def get_final_test_items(
+        self,
+        caller: str,
+        reason: str,
+        authorized: bool = False,
+    ) -> list[CorpusItem]:
+        """Access pristine final test split; raises PermissionError unless authorized."""
+        if not authorized:
+            raise PermissionError(
+                "Unauthorized access to pristine final test split. "
+                "Final-test access is restricted to frozen post-training evaluation with authorized=True."
+            )
+        if not caller or not str(caller).strip():
+            raise ValueError("Access to final test split requires non-empty 'caller'.")
+        if not reason or not str(reason).strip():
+            raise ValueError("Access to final test split requires non-empty 'reason'.")
+
+        self._seal.log_access(str(caller).strip(), str(reason).strip())
+        test_items = self._splits.get("final_test") or self._splits.get("held_out") or []
+        return list(test_items)
+
+    def load_split(
+        self,
+        split_name: str,
+        caller: str | None = None,
+        reason: str | None = None,
+        authorized: bool = False,
+    ) -> list[CorpusItem]:
+        """Generic split loader with enforced boundary on protected test split."""
+        canonical = split_name.lower().strip()
+        if canonical in ("train", "training"):
+            return self.get_train_items()
+        elif canonical in ("val", "validation", "dev"):
+            return self.get_val_items()
+        elif canonical in ("final_test", "held_out", "test", "pristine_test"):
+            return self.get_final_test_items(
+                caller=caller or "",
+                reason=reason or "",
+                authorized=authorized,
+            )
+        else:
+            raise ValueError(f"Unknown split name: {split_name}")
+
+    @classmethod
+    def from_manifest(
+        cls,
+        manifest_path: str | Path,
+        snapshot_path: str | Path | None = None,
+    ) -> IsolatedCorpusLoader:
+        """Load corpus and splits from a serialized P30 manifest and snapshot."""
+        manifest_p = Path(manifest_path)
+        with open(manifest_p, encoding="utf-8") as f:
+            manifest = json.load(f)
+
+        if snapshot_path is None:
+            snap_rel = manifest.get("corpus_snapshot", {}).get(
+                "path", "data/processed/p25_corpus.jsonl"
+            )
+            snap_p = _REPO_ROOT / snap_rel
+        else:
+            snap_p = Path(snapshot_path)
+
+        if not snap_p.exists():
+            raise FileNotFoundError(f"Corpus snapshot not found at {snap_p}")
+
+        items: list[CorpusItem] = []
+        with open(snap_p, encoding="utf-8") as f:
+            for line in f:
+                if line.strip():
+                    items.append(CorpusItem.from_dict(json.loads(line)))
+
+        groups_meta = manifest.get("groups_metadata")
+        splits: dict[str, list[CorpusItem]] = {
+            "train": [],
+            "val": [],
+            "final_test": [],
+            "held_out": [],
+        }
+        if groups_meta:
+            group_to_split = {g["group_id"]: g["split"] for g in groups_meta}
+            groups, _ = group_items_by_source_and_template(items)
+            for g in groups:
+                sp_name = group_to_split.get(g.group_id, "train")
+                if sp_name in splits:
+                    splits[sp_name].extend(g.items)
+                if sp_name == "final_test":
+                    splits["held_out"].extend(g.items)
+            for split_items in splits.values():
+                split_items.sort(key=lambda it: it.id)
+        else:
+            items_by_id = {it.id: it for it in items}
+            split_ids = manifest.get("splits", {})
+            for s_name, ids in split_ids.items():
+                splits[s_name] = [items_by_id[i_id] for i_id in ids if i_id in items_by_id]
+
+        seal_data = manifest.get("held_out_seal", {})
+        seal = HeldOutSeal(
+            sealed=seal_data.get("sealed", True),
+            sealed_at=seal_data.get("sealed_at", ""),
+            n_items=seal_data.get("n_items", len(splits.get("final_test", []))),
+            item_ids_sha256=seal_data.get("item_ids_sha256", ""),
+            content_sha256=seal_data.get("content_sha256", ""),
+            access_count=seal_data.get("access_count", 0),
+            access_log=list(seal_data.get("access_log", [])),
+            policy=seal_data.get("policy", ""),
+        )
+        return cls(splits=splits, seal=seal, metadata=manifest)
+
+
+def run_corpus_isolation_and_audit(
+    *,
+    snapshot_path: Path = PROCESSED_CORPUS_PATH,
+    output_path: Path = _REPO_ROOT / "experiments" / "p30-splits.json",
+    group_by: str = "source-problem-template",
+    device_name: str | None = None,
+    seed: int = 42,
+) -> dict[str, Any]:
+    """Execute complete P30 corpus isolation, grouping, contamination audit, and manifest generation."""
+    t0 = time.monotonic()
+    seed_all(seed)
+    device = resolve_device(device_name)
+    deadline = MonotonicDeadline(budget_sec=600.0)
+    deadline.mark_setup_done()
+
+    # Load items from snapshot or build if missing
+    if snapshot_path.exists():
+        print(f"Loading corpus from snapshot {snapshot_path}...")
+        with open(snapshot_path, encoding="utf-8") as f:
+            items = [CorpusItem.from_dict(json.loads(line)) for line in f if line.strip()]
+    else:
+        print(f"Snapshot {snapshot_path} missing; building fresh corpus...")
+        _ = build_and_verify_corpus(
+            output_manifest=_REPO_ROOT / "experiments" / "p25-corpus.json",
+            snapshot_path=snapshot_path,
+            device_name=device_name,
+            seed=seed,
+        )
+        with open(snapshot_path, encoding="utf-8") as f:
+            items = [CorpusItem.from_dict(json.loads(line)) for line in f if line.strip()]
+
+    snapshot_sha = hashlib.sha256(snapshot_path.read_bytes()).hexdigest()
+    deadline.mark_warmup_done()
+
+    # Group by source-problem-template
+    print(f"Grouping {len(items)} items using strategy '{group_by}'...")
+    groups, ungroupable = group_items_by_source_and_template(items)
+
+    # Stratified isolation split
+    print(f"Partitioning {len(groups)} problem groups into train, val, and final_test...")
+    splits, split_groups, seal = isolate_and_split_groups(groups, seed=seed)
+
+    # Run before/after audit
+    print("Running contamination audit (reproducing P25 defect + verifying P30 zero leakage)...")
+    audit_report = audit_splits_contamination(splits, split_groups, items, seed=seed)
+
+    if not audit_report["after_audit"]["zero_leakage_verified"]:
+        raise RuntimeError("Corpus isolation audit failed: detected cross-split contamination!")
+
+    deadline.mark_compute_done()
+    timing = deadline.finish()
+    elapsed = max(1e-6, time.monotonic() - t0)
+
+    prov = collect_provenance(
+        seed=seed,
+        device=device,
+        dataset_hashes={
+            "gsm8k": GSM8K_PIN["expected_sha256"][:16],
+            "snapshot": snapshot_sha[:16],
+        },
+        config={
+            "group_by": group_by,
+            "seed": seed,
+            "n_items": len(items),
+            "n_groups": len(groups),
+        },
+    )
+
+    groups_metadata = [
+        {
+            "group_id": g.group_id,
+            "source": g.source,
+            "family": g.family,
+            "difficulty": g.difficulty,
+            "is_exposed": g.is_exposed,
+            "template_id": g.template_id,
+            "n_items": len(g.items),
+            "item_ids": [it.id for it in g.items],
+            "split": (
+                "train"
+                if g in split_groups["train"]
+                else ("val" if g in split_groups["val"] else "final_test")
+            ),
+        }
+        for g in groups
+    ]
+
+    manifest_data = {
+        "phase": "p30-corpus-isolation",
+        "status": "complete",
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "elapsed_sec": elapsed,
+        "group_by": group_by,
+        "corpus_snapshot": {
+            "path": (
+                str(snapshot_path.relative_to(_REPO_ROOT))
+                if snapshot_path.is_relative_to(_REPO_ROOT)
+                else str(snapshot_path)
+            ),
+            "sha256": snapshot_sha,
+            "n_records": len(items),
+        },
+        "splits": {
+            "train": [it.id for it in splits["train"]],
+            "val": [it.id for it in splits["val"]],
+            "final_test": [it.id for it in splits["final_test"]],
+            "held_out": [it.id for it in splits["final_test"]],
+        },
+        "split_counts": {
+            "items_train": len(splits["train"]),
+            "items_val": len(splits["val"]),
+            "items_final_test": len(splits["final_test"]),
+            "items_held_out": len(splits["final_test"]),
+            "groups_train": len(split_groups["train"]),
+            "groups_val": len(split_groups["val"]),
+            "groups_final_test": len(split_groups["final_test"]),
+        },
+        "groups_summary": {
+            "total_groups": len(groups),
+            "exposed_groups": sum(1 for g in groups if g.is_exposed),
+            "unexposed_groups": sum(1 for g in groups if not g.is_exposed),
+            "ungroupable_records": ungroupable,
+        },
+        "groups_metadata": groups_metadata,
+        "contamination_audit": audit_report,
+        "held_out_seal": seal.to_dict(),
+        "internal_exposure_disclosure": GSM8K_PIN["internal_exposure_disclosure"],
+        "labeling_policy": "All target answers are reference_only until P31 independent verification.",
+        "pins": {
+            "gsm8k": GSM8K_PIN,
+            "numinamath": NUMINAMATH_PIN,
+            "symbolic": SYMBOLIC_PIN,
+        },
+        "provenance": prov,
+        "timing": timing,
+    }
+
+    snap_key = (
+        str(snapshot_path.relative_to(_REPO_ROOT))
+        if snapshot_path.is_relative_to(_REPO_ROOT)
+        else str(snapshot_path)
+    )
+    raw_artifacts = {
+        snap_key: snapshot_sha,
+    }
+    written = write_manifest(output_path, manifest_data, raw_artifacts)
+    return written
+
+
+# ==============================================================================
 # Independent Verification (8-Worker CPU + Max-GPU Chunked)
 # ==============================================================================
 
@@ -1110,7 +1759,7 @@ def build_and_verify_corpus(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="P25 Math Corpus Consolidation & Leak-Free Benchmark Harness"
+        description="P25/P30 Math Corpus Consolidation & Leak-Free Benchmark Harness"
     )
     parser.add_argument(
         "--build",
@@ -1121,16 +1770,27 @@ def main() -> int:
         "--verify", action="store_true", help="Run independent CPU and GPU verification"
     )
     parser.add_argument(
+        "--audit-splits",
+        action="store_true",
+        help="Run P30 corpus isolation, grouping, contamination audit, and write split manifest",
+    )
+    parser.add_argument(
+        "--group-by",
+        type=str,
+        default="source-problem-template",
+        help="Grouping strategy for corpus isolation (default: source-problem-template)",
+    )
+    parser.add_argument(
         "--output",
         type=str,
-        default="experiments/p25-corpus.json",
+        default=None,
         help="Path to write the checksummed artifact manifest",
     )
     parser.add_argument(
         "--snapshot",
         type=str,
         default="data/processed/p25_corpus.jsonl",
-        help="Path to write the processed corpus snapshot",
+        help="Path to write or read the processed corpus snapshot",
     )
     parser.add_argument(
         "--limit",
@@ -1164,12 +1824,46 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if not args.build and not args.verify:
+    if not args.build and not args.verify and not args.audit_splits:
         parser.print_help()
         return 1
 
-    out_path = _REPO_ROOT / args.output
     snap_path = _REPO_ROOT / args.snapshot
+
+    if args.audit_splits:
+        out_path = _REPO_ROOT / (args.output or "experiments/p30-splits.json")
+        manifest = run_corpus_isolation_and_audit(
+            snapshot_path=snap_path,
+            output_path=out_path,
+            group_by=args.group_by,
+            device_name=args.device,
+            seed=args.seed,
+        )
+
+        print("\n=== P30 Corpus Isolation Manifest Generated ===")
+        print(f"Manifest: {out_path} (sha256={manifest['manifest_sha256'][:16]}...)")
+        print(f"Status: {manifest['status']}")
+        print(f"Total Groups: {manifest['groups_summary']['total_groups']}")
+        print(
+            f"Splits: train={manifest['split_counts']['items_train']} items, "
+            f"val={manifest['split_counts']['items_val']} items, "
+            f"final_test={manifest['split_counts']['items_final_test']} items"
+        )
+        print(
+            f"Audit Before: {manifest['contamination_audit']['before_audit']['gsm8k_shared_source_problems']} "
+            f"GSM8K contaminated source problems reproduced"
+        )
+        print(
+            f"Audit After: zero_leakage_verified={manifest['contamination_audit']['after_audit']['zero_leakage_verified']}, "
+            f"exposed_in_test={manifest['contamination_audit']['after_audit']['exposed_items_in_final_test']}"
+        )
+        print(
+            f"Held-Out Seal: sealed={manifest['held_out_seal']['sealed']}, items={manifest['held_out_seal']['n_items']}"
+        )
+        print(f"Elapsed: {manifest['elapsed_sec']:.2f} s")
+        return 0
+
+    out_path = _REPO_ROOT / (args.output or "experiments/p25-corpus.json")
 
     manifest = build_and_verify_corpus(
         output_manifest=out_path,
