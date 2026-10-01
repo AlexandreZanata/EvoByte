@@ -470,6 +470,7 @@ class GPUResidentEvolution:
             "torch_cuda_rng": (
                 torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
             ),
+            "numpy_rng": np.random.get_state(),
         }
         torch.save(state, p)
 
@@ -487,3 +488,5 @@ class GPUResidentEvolution:
                 s.cpu() if isinstance(s, torch.Tensor) else s for s in state["torch_cuda_rng"]
             ]
             torch.cuda.set_rng_state_all(cuda_states)
+        if "numpy_rng" in state and state["numpy_rng"] is not None:
+            np.random.set_state(state["numpy_rng"])

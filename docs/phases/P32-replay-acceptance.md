@@ -1,8 +1,8 @@
 # P32 — Replay, resume and honest evidence acceptance
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** P30 isolation and P31 verifier gates green.
-**Owner:** assigned when moving to Building.
+**Owner:** Codex.
 **Branch:** `codex/p32-replay-acceptance`.
 
 ## Objective
