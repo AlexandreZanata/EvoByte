@@ -8,15 +8,14 @@ sparse Pauli term structure and continuous interaction coefficients.
 from __future__ import annotations
 
 import hashlib
-import json
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
 from evobyte.quantum.hamiltonians import PauliTerm, decode_hamiltonian, to_hamiltonian_matrix
-from evobyte.quantum.pauli import Pauli, decode_human
 
 
 @dataclass(frozen=True)
@@ -35,6 +34,7 @@ class DynamicsDataset:
 # -----------------------------------------------------------------------------
 # Standard Benchmark Hamiltonians
 # -----------------------------------------------------------------------------
+
 
 def xyz_field_benchmark(
     n_qubits: int = 2,
@@ -84,6 +84,7 @@ def ising_transverse_benchmark(
 # -----------------------------------------------------------------------------
 # Dynamics Simulator & Observable Measurement
 # -----------------------------------------------------------------------------
+
 
 def build_default_initial_states(n_qubits: int) -> list[np.ndarray]:
     """Construct an informationally complete, asymmetry-breaking set of initial states."""
@@ -138,18 +139,18 @@ def build_default_observable_terms(n_qubits: int) -> list[PauliTerm]:
     obs: list[PauliTerm] = []
     # 1-local Pauli observables on all qubits
     for q in range(n_qubits):
-        obs.append(PauliTerm(1.0, 1 << q, 0, 0))          # X_q
-        obs.append(PauliTerm(1.0, 1 << q, 1 << q, 1))     # Y_q
-        obs.append(PauliTerm(1.0, 0, 1 << q, 0))          # Z_q
+        obs.append(PauliTerm(1.0, 1 << q, 0, 0))  # X_q
+        obs.append(PauliTerm(1.0, 1 << q, 1 << q, 1))  # Y_q
+        obs.append(PauliTerm(1.0, 0, 1 << q, 0))  # Z_q
 
     # 2-local Pauli correlators on adjacent pairs
     for i in range(n_qubits - 1):
         j = i + 1
         xm = (1 << i) | (1 << j)
         zm = (1 << i) | (1 << j)
-        obs.append(PauliTerm(1.0, xm, 0, 0))              # X_i X_j
-        obs.append(PauliTerm(1.0, xm, zm, 2))             # Y_i Y_j
-        obs.append(PauliTerm(1.0, 0, zm, 0))              # Z_i Z_j
+        obs.append(PauliTerm(1.0, xm, 0, 0))  # X_i X_j
+        obs.append(PauliTerm(1.0, xm, zm, 2))  # Y_i Y_j
+        obs.append(PauliTerm(1.0, 0, zm, 0))  # Z_i Z_j
 
     return obs
 
@@ -250,6 +251,7 @@ def generate_dynamics_dataset(
 # Dynamics-Matching Fitness & Dictionary
 # -----------------------------------------------------------------------------
 
+
 def dynamics_matching_fitness(
     candidate_terms: Sequence[PauliTerm],
     dataset: DynamicsDataset,
@@ -280,9 +282,9 @@ def build_klocal_pauli_dictionary(n_qubits: int, max_k: int = 2) -> list[tuple[i
     words: list[tuple[int, int, int]] = []
     # 1-local terms
     for i in range(n_qubits):
-        words.append((1 << i, 0, 0))            # X_i
-        words.append((1 << i, 1 << i, 1))       # Y_i
-        words.append((0, 1 << i, 0))            # Z_i
+        words.append((1 << i, 0, 0))  # X_i
+        words.append((1 << i, 1 << i, 1))  # Y_i
+        words.append((0, 1 << i, 0))  # Z_i
 
     # 2-local terms
     if max_k >= 2:
@@ -292,15 +294,15 @@ def build_klocal_pauli_dictionary(n_qubits: int, max_k: int = 2) -> list[tuple[i
                 xm_j, zm_j = 1 << j, 1 << j
                 # 9 combinations: {X, Y, Z} x {X, Y, Z}
                 combos = [
-                    (xm_i | xm_j, 0, 0),                        # X_i X_j
-                    (xm_i | xm_j, zm_j, 1),                     # X_i Y_j
-                    (xm_i, zm_j, 0),                            # X_i Z_j
-                    (xm_i | xm_j, zm_i, 1),                     # Y_i X_j
-                    (xm_i | xm_j, zm_i | zm_j, 2),              # Y_i Y_j
-                    (xm_i, zm_i | zm_j, 1),                     # Y_i Z_j
-                    (xm_j, zm_i, 0),                            # Z_i X_j
-                    (xm_j, zm_i | zm_j, 1),                     # Z_i Y_j
-                    (0, zm_i | zm_j, 0),                        # Z_i Z_j
+                    (xm_i | xm_j, 0, 0),  # X_i X_j
+                    (xm_i | xm_j, zm_j, 1),  # X_i Y_j
+                    (xm_i, zm_j, 0),  # X_i Z_j
+                    (xm_i | xm_j, zm_i, 1),  # Y_i X_j
+                    (xm_i | xm_j, zm_i | zm_j, 2),  # Y_i Y_j
+                    (xm_i, zm_i | zm_j, 1),  # Y_i Z_j
+                    (xm_j, zm_i, 0),  # Z_i X_j
+                    (xm_j, zm_i | zm_j, 1),  # Z_i Y_j
+                    (0, zm_i | zm_j, 0),  # Z_i Z_j
                 ]
                 words.extend(combos)
 
@@ -311,12 +313,14 @@ def build_klocal_pauli_dictionary(n_qubits: int, max_k: int = 2) -> list[tuple[i
 # Structural Recovery Evaluation
 # -----------------------------------------------------------------------------
 
+
 def evaluate_structural_recovery(
     discovered_terms: Sequence[PauliTerm],
     true_terms: Sequence[PauliTerm],
     coeff_tol: float = 0.05,
 ) -> dict[str, float]:
     """Compute precision, recall, F1 score, and coefficient errors."""
+
     def term_key(t: PauliTerm) -> tuple[int, int, int]:
         return (t.x_mask, t.z_mask, t.phase)
 
@@ -363,6 +367,7 @@ def evaluate_structural_recovery(
 # Evolutionary Search with Local Optimization
 # -----------------------------------------------------------------------------
 
+
 def _optimize_active_coeffs(
     active_dict: dict[int, float],
     dictionary: list[tuple[int, int, int]],
@@ -378,8 +383,14 @@ def _optimize_active_coeffs(
 
     def score_dict(d: dict[int, float]) -> float:
         cand_terms = [
-            PauliTerm(coeff=c, x_mask=dictionary[idx][0], z_mask=dictionary[idx][1], phase=dictionary[idx][2])
-            for idx, c in d.items() if abs(c) > 1e-4
+            PauliTerm(
+                coeff=c,
+                x_mask=dictionary[idx][0],
+                z_mask=dictionary[idx][1],
+                phase=dictionary[idx][2],
+            )
+            for idx, c in d.items()
+            if abs(c) > 1e-4
         ]
         _, loss = dynamics_matching_fitness(cand_terms, dataset)
         return loss
@@ -454,8 +465,14 @@ def _single_evolution_run(
         for ind in pop:
             evals += 1
             cand_terms = [
-                PauliTerm(coeff=c, x_mask=dictionary[idx][0], z_mask=dictionary[idx][1], phase=dictionary[idx][2])
-                for idx, c in ind.items() if abs(c) > 1e-4
+                PauliTerm(
+                    coeff=c,
+                    x_mask=dictionary[idx][0],
+                    z_mask=dictionary[idx][1],
+                    phase=dictionary[idx][2],
+                )
+                for idx, c in ind.items()
+                if abs(c) > 1e-4
             ]
             mse, loss = dynamics_matching_fitness(cand_terms, dataset)
             evaluated.append((loss, mse, ind))
@@ -469,8 +486,14 @@ def _single_evolution_run(
         for i in range(n_elites_to_tune):
             opt_ind = _optimize_active_coeffs(evaluated[i][2], dictionary, dataset)
             cand_terms = [
-                PauliTerm(coeff=c, x_mask=dictionary[idx][0], z_mask=dictionary[idx][1], phase=dictionary[idx][2])
-                for idx, c in opt_ind.items() if abs(c) > 1e-4
+                PauliTerm(
+                    coeff=c,
+                    x_mask=dictionary[idx][0],
+                    z_mask=dictionary[idx][1],
+                    phase=dictionary[idx][2],
+                )
+                for idx, c in opt_ind.items()
+                if abs(c) > 1e-4
             ]
             opt_mse, opt_loss = dynamics_matching_fitness(cand_terms, dataset)
             if opt_loss < best_loss:
@@ -561,8 +584,14 @@ def rediscover_hamiltonian_from_dynamics(
     dt = max(time.perf_counter() - t0, 1e-9)
 
     final_terms = [
-        PauliTerm(coeff=float(c), x_mask=dictionary[idx][0], z_mask=dictionary[idx][1], phase=dictionary[idx][2])
-        for idx, c in sorted(global_best_ind.items()) if abs(c) > 0.01
+        PauliTerm(
+            coeff=float(c),
+            x_mask=dictionary[idx][0],
+            z_mask=dictionary[idx][1],
+            phase=dictionary[idx][2],
+        )
+        for idx, c in sorted(global_best_ind.items())
+        if abs(c) > 0.01
     ]
 
     return {

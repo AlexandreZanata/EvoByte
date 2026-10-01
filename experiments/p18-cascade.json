@@ -1,0 +1,312 @@
+{
+  "benchmark": "streaming_gpu_cascade",
+  "git_commit": "ad70bedfc775",
+  "timestamp": "2026-09-30T11:46:43.442083+00:00",
+  "device": "cuda",
+  "hardware": {
+    "cpu": "x86_64",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "numpy": "2.4.6",
+    "torch": "2.14.0+cu130",
+    "cuda_version": "13.0",
+    "cuda_available": true,
+    "gpu0": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "total_memory_MB": 7805
+    },
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB"
+  },
+  "seeds": [
+    42,
+    101,
+    202,
+    303,
+    404
+  ],
+  "runs": [
+    {
+      "seed": 42,
+      "no_cascade": {
+        "time_sec": 1.6134071579981537,
+        "search_cvps": 15495.15872423606,
+        "best_mse": 36.49050521850586,
+        "peak_alloc_vram_mb": 85.28759765625
+      },
+      "cascade_only": {
+        "time_sec": 4.220164993999788,
+        "search_cvps": 5923.939001329306,
+        "best_mse": 36.49050521850586,
+        "speedup_ratio": 0.3823090235315655,
+        "peak_alloc_vram_mb": 102.4638671875,
+        "peak_res_vram_mb": 120.0
+      },
+      "cascade_plus_early_stop": {
+        "time_sec": 4.162465795001481,
+        "generations": 25,
+        "best_mse": 36.49050521850586,
+        "converged": false
+      },
+      "audit": {
+        "total_candidates": 1000,
+        "oracle_top_k": 16,
+        "oracle_best_fitness": 36.49650573730469,
+        "cascade_best_fitness": 36.49650573730469,
+        "quality_loss": 0.0,
+        "false_rejections": 0,
+        "false_rejection_rate": 0.0,
+        "counters": {
+          "s0_entries": 1000,
+          "s0_survivors": 544,
+          "s0_rejected_invalid": 456,
+          "s0_survivor_rate": 0.544,
+          "s1_entries": 544,
+          "s1_survivors": 448,
+          "s1_rejected_error": 51,
+          "s1_rejected_invalid": 45,
+          "s1_survivor_rate": 0.8235294117647058,
+          "s2_entries": 448,
+          "s2_survivors": 448,
+          "s2_rejected_error": 0,
+          "s2_rejected_invalid": 0,
+          "s2_survivor_rate": 1.0,
+          "s3_entries": 448,
+          "s3_survivors": 448,
+          "s3_survivor_rate": 1.0
+        },
+        "passed_predeclared_audit": true
+      }
+    },
+    {
+      "seed": 101,
+      "no_cascade": {
+        "time_sec": 1.4955183489983028,
+        "search_cvps": 16716.612013984974,
+        "best_mse": 31.03347396850586,
+        "peak_alloc_vram_mb": 151.57470703125
+      },
+      "cascade_only": {
+        "time_sec": 3.8170400470007735,
+        "search_cvps": 6549.577602583359,
+        "best_mse": 31.03347396850586,
+        "speedup_ratio": 0.3918005393140691,
+        "peak_alloc_vram_mb": 136.21435546875,
+        "peak_res_vram_mb": 188.0
+      },
+      "cascade_plus_early_stop": {
+        "time_sec": 3.9288177179987542,
+        "generations": 25,
+        "best_mse": 31.03347396850586,
+        "converged": false
+      },
+      "audit": {
+        "total_candidates": 1000,
+        "oracle_top_k": 16,
+        "oracle_best_fitness": 31.041473388671875,
+        "cascade_best_fitness": 31.041473388671875,
+        "quality_loss": 0.0,
+        "false_rejections": 0,
+        "false_rejection_rate": 0.0,
+        "counters": {
+          "s0_entries": 1000,
+          "s0_survivors": 548,
+          "s0_rejected_invalid": 452,
+          "s0_survivor_rate": 0.548,
+          "s1_entries": 548,
+          "s1_survivors": 430,
+          "s1_rejected_error": 46,
+          "s1_rejected_invalid": 72,
+          "s1_survivor_rate": 0.7846715328467153,
+          "s2_entries": 430,
+          "s2_survivors": 430,
+          "s2_rejected_error": 0,
+          "s2_rejected_invalid": 0,
+          "s2_survivor_rate": 1.0,
+          "s3_entries": 430,
+          "s3_survivors": 430,
+          "s3_survivor_rate": 1.0
+        },
+        "passed_predeclared_audit": true
+      }
+    },
+    {
+      "seed": 202,
+      "no_cascade": {
+        "time_sec": 1.5790235130007204,
+        "search_cvps": 15832.569809230316,
+        "best_mse": 64.16167449951172,
+        "peak_alloc_vram_mb": 151.57470703125
+      },
+      "cascade_only": {
+        "time_sec": 3.885068790998048,
+        "search_cvps": 6434.892493519444,
+        "best_mse": 64.16167449951172,
+        "speedup_ratio": 0.4064338620359615,
+        "peak_alloc_vram_mb": 136.126953125,
+        "peak_res_vram_mb": 188.0
+      },
+      "cascade_plus_early_stop": {
+        "time_sec": 3.9153268039990508,
+        "generations": 25,
+        "best_mse": 64.16167449951172,
+        "converged": false
+      },
+      "audit": {
+        "total_candidates": 1000,
+        "oracle_top_k": 16,
+        "oracle_best_fitness": 64.16767120361328,
+        "cascade_best_fitness": 64.16767120361328,
+        "quality_loss": 0.0,
+        "false_rejections": 0,
+        "false_rejection_rate": 0.0,
+        "counters": {
+          "s0_entries": 1000,
+          "s0_survivors": 535,
+          "s0_rejected_invalid": 465,
+          "s0_survivor_rate": 0.535,
+          "s1_entries": 535,
+          "s1_survivors": 474,
+          "s1_rejected_error": 3,
+          "s1_rejected_invalid": 58,
+          "s1_survivor_rate": 0.8859813084112149,
+          "s2_entries": 474,
+          "s2_survivors": 474,
+          "s2_rejected_error": 0,
+          "s2_rejected_invalid": 0,
+          "s2_survivor_rate": 1.0,
+          "s3_entries": 474,
+          "s3_survivors": 474,
+          "s3_survivor_rate": 1.0
+        },
+        "passed_predeclared_audit": true
+      }
+    },
+    {
+      "seed": 303,
+      "no_cascade": {
+        "time_sec": 0.9524800339968351,
+        "search_cvps": 26247.269347047615,
+        "best_mse": 0.0,
+        "peak_alloc_vram_mb": 151.57470703125
+      },
+      "cascade_only": {
+        "time_sec": 2.1092546049985685,
+        "search_cvps": 11852.528348523845,
+        "best_mse": 0.0,
+        "speedup_ratio": 0.4515718641740178,
+        "peak_alloc_vram_mb": 135.3486328125,
+        "peak_res_vram_mb": 188.0
+      },
+      "cascade_plus_early_stop": {
+        "time_sec": 2.1209821140000713,
+        "generations": 15,
+        "best_mse": 0.0,
+        "converged": true
+      },
+      "audit": {
+        "total_candidates": 1000,
+        "oracle_top_k": 16,
+        "oracle_best_fitness": 0.006000000052154064,
+        "cascade_best_fitness": 0.006000000052154064,
+        "quality_loss": 0.0,
+        "false_rejections": 0,
+        "false_rejection_rate": 0.0,
+        "counters": {
+          "s0_entries": 1000,
+          "s0_survivors": 519,
+          "s0_rejected_invalid": 481,
+          "s0_survivor_rate": 0.519,
+          "s1_entries": 519,
+          "s1_survivors": 304,
+          "s1_rejected_error": 157,
+          "s1_rejected_invalid": 58,
+          "s1_survivor_rate": 0.5857418111753372,
+          "s2_entries": 304,
+          "s2_survivors": 304,
+          "s2_rejected_error": 0,
+          "s2_rejected_invalid": 0,
+          "s2_survivor_rate": 1.0,
+          "s3_entries": 304,
+          "s3_survivors": 304,
+          "s3_survivor_rate": 1.0
+        },
+        "passed_predeclared_audit": true
+      }
+    },
+    {
+      "seed": 404,
+      "no_cascade": {
+        "time_sec": 0.7923458410004969,
+        "search_cvps": 31551.878872024423,
+        "best_mse": 1.2359002710127243e-12,
+        "peak_alloc_vram_mb": 151.56201171875
+      },
+      "cascade_only": {
+        "time_sec": 1.764315030999569,
+        "search_cvps": 14169.805029567935,
+        "best_mse": 1.2359002710127243e-12,
+        "speedup_ratio": 0.44909544331864304,
+        "peak_alloc_vram_mb": 136.302734375,
+        "peak_res_vram_mb": 188.0
+      },
+      "cascade_plus_early_stop": {
+        "time_sec": 1.7784634300005564,
+        "generations": 12,
+        "best_mse": 1.2359002710127243e-12,
+        "converged": true
+      },
+      "audit": {
+        "total_candidates": 1000,
+        "oracle_top_k": 16,
+        "oracle_best_fitness": 0.006000000052154064,
+        "cascade_best_fitness": 0.006000000052154064,
+        "quality_loss": 0.0,
+        "false_rejections": 0,
+        "false_rejection_rate": 0.0,
+        "counters": {
+          "s0_entries": 1000,
+          "s0_survivors": 563,
+          "s0_rejected_invalid": 437,
+          "s0_survivor_rate": 0.563,
+          "s1_entries": 563,
+          "s1_survivors": 311,
+          "s1_rejected_error": 185,
+          "s1_rejected_invalid": 67,
+          "s1_survivor_rate": 0.5523978685612788,
+          "s2_entries": 311,
+          "s2_survivors": 311,
+          "s2_rejected_error": 0,
+          "s2_rejected_invalid": 0,
+          "s2_survivor_rate": 1.0,
+          "s3_entries": 311,
+          "s3_survivors": 311,
+          "s3_survivor_rate": 1.0
+        },
+        "passed_predeclared_audit": true
+      }
+    }
+  ],
+  "summary": {
+    "mean_no_cascade_time_s": 1.2865549789989017,
+    "mean_cascade_time_s": 3.1591686935993493,
+    "mean_early_stop_time_s": 3.1812111721999825,
+    "mean_cascade_speedup": 0.40724478613805376,
+    "mean_false_rejection_rate": 0.0
+  },
+  "stage_accounting": {
+    "s0_entries": 102000,
+    "s0_survivors": 56065,
+    "s0_rejected_invalid": 45935,
+    "s1_entries": 56065,
+    "s1_survivors": 47364,
+    "s1_rejected_error": 2133,
+    "s1_rejected_invalid": 6568,
+    "s2_entries": 47364,
+    "s2_survivors": 47358,
+    "s2_rejected_error": 6,
+    "s2_rejected_invalid": 0,
+    "s3_entries": 47358,
+    "s3_survivors": 47358
+  },
+  "verdict": "PASS"
+}

@@ -103,7 +103,7 @@ def mutate_ansatz(
         # 1. Flip bit in basis bitstring
         for q in range(n_qubits):
             if rng.random() < p_bit:
-                mask ^= (1 << q)
+                mask ^= 1 << q
 
         # 2. Mutate coefficient
         if rng.random() < 0.3:
@@ -140,7 +140,7 @@ def optimize_subspace(
         return terms
 
     h_sub = h_dense[np.ix_(unique_masks, unique_masks)]
-    evals, evecs = np.linalg.eigh(h_sub)
+    _evals, evecs = np.linalg.eigh(h_sub)
     opt_v = evecs[:, 0]
 
     opt_terms = []
@@ -205,7 +205,11 @@ def evolve_ground_state(
                 best_gen = gen
 
                 # Check if target energy reached for TTS/TTE
-                if target_energy is not None and abs(e - target_energy) <= target_energy_tol and tts is None:
+                if (
+                    target_energy is not None
+                    and abs(e - target_energy) <= target_energy_tol
+                    and tts is None
+                ):
                     tts = time.perf_counter() - t0
                     tte = total_evals
 
@@ -242,7 +246,11 @@ def evolve_ground_state(
     dt = max(time.perf_counter() - t0, 1e-9)
     assert best_cand is not None
 
-    if target_energy is not None and tts is None and abs(best_energy - target_energy) <= target_energy_tol:
+    if (
+        target_energy is not None
+        and tts is None
+        and abs(best_energy - target_energy) <= target_energy_tol
+    ):
         tts = dt
         tte = total_evals
 
@@ -255,6 +263,7 @@ def evolve_ground_state(
 
     if oracle_truth is not None:
         from evobyte.quantum.oracle import ground_state_fidelity
+
         energy_exact = float(oracle_truth["E_exact"])
         energy_error = abs(best_energy - energy_exact)
         fid = float(ground_state_fidelity(best_psi, oracle_truth))

@@ -8,12 +8,13 @@ import json
 import pickle
 import sqlite3
 import time
+import types
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 
-from evobyte.bytecode import OPCODE_VERSION, decode_human, encode_instr, nop_program
+from evobyte.bytecode import OPCODE_VERSION, decode_human
 
 DB_SCHEMA = """
 CREATE TABLE IF NOT EXISTS elites (
@@ -26,11 +27,17 @@ CREATE TABLE IF NOT EXISTS elites (
     train_error REAL,
     validation_error REAL,
     test_error REAL,
+    extrapolation_error REAL,
     complexity REAL,
     parents TEXT,
     mutation_history TEXT,
     timestamp REAL,
-    novelty_score REAL
+    novelty_score REAL,
+    constants TEXT,
+    linear_head TEXT,
+    domain TEXT,
+    verifier_outcome TEXT,
+    status TEXT
 );
 """
 
@@ -52,6 +59,20 @@ class EliteArchive:
     def _init_db(self) -> None:
         with self.conn:
             self.conn.executescript(DB_SCHEMA)
+            # Ensure new columns exist for existing databases
+            cur = self.conn.cursor()
+            cur.execute("PRAGMA table_info(elites)")
+            cols = {row[1] for row in cur.fetchall()}
+            for col_name, col_type in [
+                ("extrapolation_error", "REAL"),
+                ("constants", "TEXT"),
+                ("linear_head", "TEXT"),
+                ("domain", "TEXT"),
+                ("verifier_outcome", "TEXT"),
+                ("status", "TEXT"),
+            ]:
+                if col_name not in cols:
+                    cur.execute(f"ALTER TABLE elites ADD COLUMN {col_name} {col_type}")
 
     def add_elite(
         self,
@@ -59,13 +80,19 @@ class EliteArchive:
         generation: int,
         fitness: float,
         train_error: float,
-        validation_error: float = 0.0,
-        test_error: float = 0.0,
+        validation_error: float | None = None,
+        test_error: float | None = None,
         complexity: float = 0.0,
         parents: list[str] | None = None,
         mutation_history: str = "",
         novelty_score: float = 0.0,
         timestamp: float | None = None,
+        constants: list[float] | np.ndarray | None = None,
+        linear_head: tuple[float, float] | None = None,
+        domain: str = "",
+        verifier_outcome: str = "unverified",
+        status: str = "provisional",
+        extrapolation_error: float | None = None,
     ) -> bool:
         """Add an elite row to the archive. Returns True if inserted, False if duplicate."""
         prog_bytes = np.ascontiguousarray(program, dtype=np.uint32).tobytes()
@@ -74,6 +101,20 @@ class EliteArchive:
         ts = timestamp if timestamp is not None else time.time()
         parents_json = json.dumps(parents or [])
 
+        val_err = float(validation_error) if validation_error is not None else None
+        t_err = float(test_error) if test_error is not None else None
+        extrap_err = float(extrapolation_error) if extrapolation_error is not None else None
+        consts_json = (
+            json.dumps([float(c) for c in np.asarray(constants).ravel()])
+            if constants is not None
+            else None
+        )
+        lhead_json = (
+            json.dumps([float(linear_head[0]), float(linear_head[1])])
+            if linear_head is not None
+            else None
+        )
+
         cur = self.conn.cursor()
         try:
             cur.execute(
@@ -81,9 +122,10 @@ class EliteArchive:
                 INSERT INTO elites (
                     sha256, generation, opcode_version, candidate_binary,
                     decoded_expression, fitness, train_error, validation_error,
-                    test_error, complexity, parents, mutation_history,
-                    timestamp, novelty_score
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    test_error, extrapolation_error, complexity, parents, mutation_history,
+                    timestamp, novelty_score, constants, linear_head, domain,
+                    verifier_outcome, status
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     sha,
@@ -93,13 +135,19 @@ class EliteArchive:
                     expr,
                     float(fitness),
                     float(train_error),
-                    float(validation_error),
-                    float(test_error),
+                    val_err,
+                    t_err,
+                    extrap_err,
                     float(complexity),
                     parents_json,
                     mutation_history,
                     float(ts),
                     float(novelty_score),
+                    consts_json,
+                    lhead_json,
+                    domain,
+                    verifier_outcome,
+                    status,
                 ),
             )
             self.conn.commit()
@@ -108,10 +156,36 @@ class EliteArchive:
             # Duplicate sha256
             return False
 
-    def __enter__(self) -> EliteArchive:
+    def update_verification(
+        self,
+        sha256: str,
+        test_error: float,
+        extrapolation_error: float,
+        verifier_outcome: str,
+        status: str = "confirmed",
+    ) -> bool:
+        """Update an elite row with Level-2 strict verification results."""
+        cur = self.conn.cursor()
+        cur.execute(
+            """
+            UPDATE elites
+            SET test_error = ?, extrapolation_error = ?, verifier_outcome = ?, status = ?
+            WHERE sha256 = ?
+            """,
+            (float(test_error), float(extrapolation_error), verifier_outcome, status, sha256),
+        )
+        self.conn.commit()
+        return cur.rowcount > 0
+
+    def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: types.TracebackType | None,
+    ) -> None:
         self.close()
 
     def count(self) -> int:
@@ -129,7 +203,11 @@ class EliteArchive:
 
     def get_elites(self, limit: int | None = 10, order_by: str = "fitness") -> list[dict[str, Any]]:
         cur = self.conn.cursor()
-        valid_orders = {"fitness": "fitness ASC", "novelty": "novelty_score DESC", "generation": "generation DESC"}
+        valid_orders = {
+            "fitness": "fitness ASC",
+            "novelty": "novelty_score DESC",
+            "generation": "generation DESC",
+        }
         order_clause = valid_orders.get(order_by, "fitness ASC")
         if limit is not None:
             cur.execute(f"SELECT * FROM elites ORDER BY {order_clause} LIMIT ?", (limit,))
@@ -176,22 +254,38 @@ def is_memorizer(
     extrapolation_error: float | None = None,
 ) -> bool:
     """Check if candidate exhibits overfitting/memorization signatures."""
-    if val_error > 2.0 * train_error + 0.05:
-        return True
-    if val_gap > 0.05:
-        return True
-    if extrapolation_error is not None and extrapolation_error > 2.0 * train_error + 0.1:
-        return True
-    return False
+    return (
+        val_error > 2.0 * train_error + 0.05
+        or val_gap > 0.05
+        or (extrapolation_error is not None and extrapolation_error > 2.0 * train_error + 0.1)
+    )
 
 
-def write_hall_of_fame_entry(fame_path: str | Path, entry: dict[str, Any]) -> bool:
+def write_hall_of_fame_entry(
+    fame_path: str | Path,
+    entry: dict[str, Any],
+    require_strict_evidence: bool = False,
+) -> bool:
     """Append a promoted discovery to fame.jsonl if eligible (non-memorizer)."""
     train_err = float(entry.get("train_error", 0.0))
     val_err = float(entry.get("validation_error", entry.get("val_error", 0.0)))
     val_gap = float(entry.get("val_gap", max(0.0, val_err - train_err)))
+
+    test_err_raw = entry.get("test_error", None)
+    test_val = float(test_err_raw) if test_err_raw is not None else None
+
     extrap_err = entry.get("extrapolation_error", None)
     extrap_val = float(extrap_err) if extrap_err is not None else None
+
+    if require_strict_evidence:
+        if test_val is None or extrap_val is None:
+            return False
+        status = str(entry.get("status", "provisional"))
+        if status == "provisional":
+            return False
+        verifier_outcome = str(entry.get("verifier_outcome", ""))
+        if "rejected" in verifier_outcome.lower():
+            return False
 
     if is_memorizer(train_err, val_err, val_gap, extrap_val):
         return False
@@ -213,8 +307,14 @@ def write_hall_of_fame_entry(fame_path: str | Path, entry: dict[str, Any]) -> bo
         "hash": str(entry.get("hash", entry.get("sha256", ""))),
         "timestamp": float(entry.get("timestamp", time.time())),
     }
+    if test_val is not None:
+        record["test_error"] = test_val
     if extrap_val is not None:
         record["extrapolation_error"] = extrap_val
+    if "status" in entry:
+        record["status"] = str(entry["status"])
+    if "verifier_outcome" in entry:
+        record["verifier_outcome"] = str(entry["verifier_outcome"])
     if "reproduction_cmd" in entry:
         record["reproduction_cmd"] = str(entry["reproduction_cmd"])
 
@@ -223,7 +323,9 @@ def write_hall_of_fame_entry(fame_path: str | Path, entry: dict[str, Any]) -> bo
     return True
 
 
-def run_resume_selftest(seed: int = 42, checkpoint_dir: str | Path = "/tmp/evobyte_selftest") -> bool:
+def run_resume_selftest(
+    seed: int = 42, checkpoint_dir: str | Path = "/tmp/evobyte_selftest"
+) -> bool:
     """Prove resume equivalence: uninterrupted execution == checkpoint-resumed execution."""
     from evobyte.evolution import crossover_single_point, mutate_point, sample_structured
     from evobyte.verifier import evaluate
@@ -306,14 +408,23 @@ def run_resume_selftest(seed: int = 42, checkpoint_dir: str | Path = "/tmp/evoby
         pop_resumed = np.stack(next_pop)
 
     # Assert 100% bitwise equivalence between uninterrupted and resumed runs
-    assert np.array_equal(pop_unbroken, pop_resumed), "Resumed population diverges from uninterrupted run!"
-    print(f"Resume equivalence test PASSED: seed={seed}, 6 generations, bit-identical final population.")
+    assert np.array_equal(pop_unbroken, pop_resumed), (
+        "Resumed population diverges from uninterrupted run!"
+    )
+    print(
+        f"Resume equivalence test PASSED: seed={seed}, 6 generations, bit-identical final population."
+    )
     return True
 
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Archive and Checkpointing Self-Test")
-    ap.add_argument("--selftest-resume", dest="selftest_resume", action="store_true", help="Run resume equivalence self-test")
+    ap.add_argument(
+        "--selftest-resume",
+        dest="selftest_resume",
+        action="store_true",
+        help="Run resume equivalence self-test",
+    )
     args = ap.parse_args()
 
     if args.selftest_resume:

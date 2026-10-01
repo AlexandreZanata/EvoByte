@@ -48,6 +48,8 @@ Newcomers start at the root [README.md](../README.md), then:
 - [EVOLUTION.md](EVOLUTION.md) — selection, QD, islands, autoevolution.
 - [CONSTANTS.md](CONSTANTS.md) — structure vs. coefficient strategy.
 - [STACK.md](STACK.md) — technology choices and why.
+- [GPU_ACCESS.md](GPU_ACCESS.md) — RTX 4060 access runbook: detection steps,
+  wake-up, troubleshooting, measured baseline (read before any GPU task).
 - [REPOSITORY.md](REPOSITORY.md) — repo layout contract.
 
 ## Measurement

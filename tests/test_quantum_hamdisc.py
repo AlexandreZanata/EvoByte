@@ -8,16 +8,12 @@ rediscovery of terms and coefficients.
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from evobyte.quantum.hamdisc import (
-    build_default_initial_states,
-    build_default_observable_terms,
     build_klocal_pauli_dictionary,
     dynamics_matching_fitness,
     evaluate_structural_recovery,
     generate_dynamics_dataset,
-    ising_transverse_benchmark,
     rediscover_hamiltonian_from_dynamics,
     simulate_dynamics,
     xyz_field_benchmark,
@@ -34,7 +30,11 @@ def test_dynamics_simulator_and_dataset_generation():
     assert len(ds.initial_states) > 0
     assert len(ds.times) == 10
     assert len(ds.observable_terms) > 0
-    assert ds.observed_trajectories.shape == (len(ds.initial_states), len(ds.times), len(ds.observable_terms))
+    assert ds.observed_trajectories.shape == (
+        len(ds.initial_states),
+        len(ds.times),
+        len(ds.observable_terms),
+    )
     assert isinstance(ds.sha256_hash, str) and len(ds.sha256_hash) == 64
     assert not np.isnan(ds.observed_trajectories).any()
 
@@ -44,7 +44,7 @@ def test_true_hamiltonian_scores_near_zero_dynamics_error():
     target = xyz_field_benchmark(n_qubits=2, jx=1.0, jy=0.5, jz=0.8, hz=0.4)
     ds = generate_dynamics_dataset(target, n_qubits=2)
 
-    mse, total_loss = dynamics_matching_fitness(target, ds, lambda_sparse=0.0, lambda_comp=0.0)
+    mse, _total_loss = dynamics_matching_fitness(target, ds, lambda_sparse=0.0, lambda_comp=0.0)
     assert mse < 1e-14
 
 
@@ -54,9 +54,7 @@ def test_perturbed_and_wrong_hamiltonian_incur_error():
     ds = generate_dynamics_dataset(target, n_qubits=2)
 
     # Small perturbation (5% coefficient offset)
-    perturbed = [
-        PauliTerm(t.coeff * 1.05, t.x_mask, t.z_mask, t.phase) for t in target
-    ]
+    perturbed = [PauliTerm(t.coeff * 1.05, t.x_mask, t.z_mask, t.phase) for t in target]
     mse_pert, _ = dynamics_matching_fitness(perturbed, ds, lambda_sparse=0.0, lambda_comp=0.0)
     assert 1e-5 < mse_pert < 1e-2
 
@@ -82,9 +80,9 @@ def test_klocal_pauli_dictionary_cardinality():
 def test_evaluate_structural_recovery_metrics():
     """Verify precision, recall, and coefficient error metrics."""
     true_terms = [
-        PauliTerm(1.0, 3, 0, 0),   # XX
-        PauliTerm(0.5, 3, 3, 2),   # YY
-        PauliTerm(0.8, 0, 3, 0),   # ZZ
+        PauliTerm(1.0, 3, 0, 0),  # XX
+        PauliTerm(0.5, 3, 3, 2),  # YY
+        PauliTerm(0.8, 0, 3, 0),  # ZZ
     ]
 
     # Exact match
