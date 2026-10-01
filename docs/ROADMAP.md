@@ -120,6 +120,15 @@ scheduled only after P21; Q13 still requires its own rediscovery gates.
 Quantum operation throughput cannot substitute for symbolic-search CVPS.
 This supersedes the earlier parallel-expansion priority (D013).
 
+The integration audit (D015) keeps Q10–Q13 scientific acceptance provisional:
+QHO and dimer runs use known initial solutions, Q12's `micro_model` is a
+hand-written motif sampler, and Q13 consults reference energy for stopping.
+Q11's reported population counter omits local refinement. Corrected software
+and green CI do not establish a new law, learned-model superiority, exact
+symbolic proof or prospective registration. P32 records these distinctions;
+independent verification and controlled unseeded arms are required before
+accepting new quantum discovery claims. See the corrections in the phase files.
+
 The Q-Forge laboratory retains its own phase line
 ([phases/quantum/](phases/quantum/README.md), Q00–Q13) and never blocks the
 main track: Q0 Pauli representation -> Q1 algebra benchmark -> Q2 known

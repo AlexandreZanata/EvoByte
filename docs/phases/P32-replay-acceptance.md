@@ -14,7 +14,8 @@ revision.
 ## Scope
 
 Existing provenance, resident/checkpoint, evo_trace and gpu_limits paths and their
-acceptance tests. No new optimization, learned model or open-problem campaign.
+acceptance tests, plus retained quantum report/claim mappings. No new optimization,
+learned model, quantum search operator or open-problem campaign.
 
 ## Ordered work
 
@@ -35,10 +36,18 @@ acceptance tests. No new optimization, learned model or open-problem campaign.
 - Make PASS/eligibility derive from mandatory check results. Verify raw-artifact hashes
   against the saved files and reject missing/altered artifacts. Test that a changed
   configuration changes the executed path, not merely the config hash.
-- Produce a claim-to-evidence audit of retained P13–P29 conclusions with
+- Produce a claim-to-evidence audit of retained P13–P29 and Q07–Q13 conclusions with
   accepted/provisional/superseded/not_run classifications. Freeze a clean code revision
   and complete resolved config/dependency/split hashes. Re-evaluate H1 only under its
   unchanged original criteria.
+- Include the D015 quantum corrections: seeded known solutions, hand-written motifs
+  versus learned parameters, oracle-based early stopping, omitted local-refinement
+  calls, numerical tolerances versus exact proofs and placeholder versus actual
+  content hashes. Record incomplete provenance and unverified prospective registration
+  as provisional. A software integration or report-consistency PASS cannot promote a
+  scientific claim. Quantum records may remain explicitly provisional without
+  blocking the main track; accepting a blind-discovery comparison requires matched
+  unseeded controls and independent final verification before further quantum research.
 
 ## Exit gate
 
