@@ -983,7 +983,7 @@ def build_and_verify_corpus(
                 if i >= numina_limit:
                     break
                 numina_rows.append(row)
-        except (OSError, RuntimeError, ValueError) as exc:
+        except (OSError, RuntimeError, ValueError, ImportError) as exc:
             print(f"Notice: Streaming NuminaMath failed or offline ({exc}); using sample")
 
     for idx, row in enumerate(numina_rows):
