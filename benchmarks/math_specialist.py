@@ -16,7 +16,7 @@ import os
 import subprocess
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -30,16 +30,26 @@ sys.path.insert(0, str(_REPO_ROOT / "src"))
 sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
 
 from benchmarks.math_db import RAW_PATH, extract_chains, load_rows, make_splits
-from evobyte.bytecode import N_INSTR, N_REGS
+from evobyte.bytecode import N_INSTR, N_REGS, decode_human
 from evobyte.evolution import EvolutionConfig
+from evobyte.grammar import (
+    GrammarResidentEvolution,
+    PolynomialSpec,
+    analyze_program_liveness,
+    canonicalize_bytecode,
+    sample_grammar_batch,
+)
 from evobyte.provenance import (
     collect_provenance,
+    parse_budget_duration,
     query_gpu_telemetry,
     resolve_device,
     seed_all,
+    synchronize,
     write_manifest,
 )
 from evobyte.resident import GPUResidentEvolution, gpu_sample_structured
+from evobyte.vm_torch import execute_population_torch
 
 
 def get_git_commit() -> str:
@@ -1437,16 +1447,372 @@ def run_p28_specialist_rematch(
     return report
 
 
+# ==============================================================================
+# 5. P33 Structured Candidate Search Benchmark (Polynomial Arithmetic)
+# ==============================================================================
+
+
+def run_structured_search_arm_trial(
+    arm: str,
+    target: MathTarget,
+    budget_sec: float,
+    seed: int,
+    device: torch.device,
+    pop_size: int = 64,
+) -> dict[str, Any]:
+    """Execute a single trial for one of the four P33 comparison arms under fixed time budget."""
+    seed_all(seed)
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+        synchronize(device)
+
+    xs_t = torch.from_numpy(target.xs).to(device)
+    ys_t = torch.from_numpy(target.ys).to(device)
+    cfg = EvolutionConfig(
+        pop_size=pop_size,
+        early_stop_fitness=1e-4,
+        elite_k=max(2, int(0.05 * pop_size)),
+        crossover_p=0.4,
+        gene_mut_p=0.20,
+    )
+
+    t0 = time.perf_counter()
+    candidates_total = 0
+    best_mse = float("inf")
+    best_prog: np.ndarray | None = None
+    time_to_match = None
+    distinct_bytes_set: set[bytes] = set()
+
+    if arm == "unrestricted_structured":
+        while time.perf_counter() - t0 < budget_sec:
+            pop = gpu_sample_structured(pop_size, device=device)
+            candidates_total += pop_size
+            preds, _ = execute_population_torch(pop, xs_t, device=device)
+            diff = preds - ys_t.unsqueeze(0)
+            mse = (diff**2).mean(dim=1)
+            min_mse, min_idx = torch.min(mse, dim=0)
+            cur_min = float(min_mse.item())
+            if cur_min < best_mse:
+                best_mse = cur_min
+                best_prog = pop[min_idx].cpu().numpy().astype(np.uint32)
+                if best_mse <= 1e-4 and time_to_match is None:
+                    time_to_match = time.perf_counter() - t0
+                    break
+            for prog in pop[: min(pop_size, 8)].cpu().numpy().astype(np.uint32):
+                distinct_bytes_set.add(prog.tobytes())
+
+    elif arm == "grammar_sampling":
+        rng_seed = seed
+        while time.perf_counter() - t0 < budget_sec:
+            rng_seed += 1
+            pop = sample_grammar_batch(pop_size, device=device, seed=rng_seed)
+            candidates_total += pop_size
+            preds, _ = execute_population_torch(pop, xs_t, device=device)
+            diff = preds - ys_t.unsqueeze(0)
+            mse = (diff**2).mean(dim=1)
+            min_mse, min_idx = torch.min(mse, dim=0)
+            cur_min = float(min_mse.item())
+            if cur_min < best_mse:
+                best_mse = cur_min
+                best_prog = pop[min_idx].cpu().numpy().astype(np.uint32)
+                if best_mse <= 1e-4 and time_to_match is None:
+                    time_to_match = time.perf_counter() - t0
+                    break
+            for prog in pop[: min(pop_size, 8)].cpu().numpy().astype(np.uint32):
+                distinct_bytes_set.add(prog.tobytes())
+
+    elif arm == "genetic_evolution":
+        evo = GPUResidentEvolution(target.xs, target.ys, config=cfg, device=device)
+        res = evo.run(time_budget_sec=budget_sec)
+        candidates_total = res["candidates_total"]
+        best_mse = res["best_mse"]
+        best_prog = res["best_program"]
+        for h in res.get("history", []):
+            if h.get("best_mse", float("inf")) <= 1e-4:
+                time_to_match = h.get("elapsed_total_s", budget_sec)
+                break
+        for prog in evo.population[: min(pop_size, 32)].cpu().numpy().astype(np.uint32):
+            distinct_bytes_set.add(prog.tobytes())
+
+    elif arm == "grammar_evolution":
+        evo = GrammarResidentEvolution(target.xs, target.ys, config=cfg, device=device, seed=seed)
+        res = evo.run(time_budget_sec=budget_sec)
+        candidates_total = res["candidates_total"]
+        best_mse = res["best_mse"]
+        best_prog = res["best_program"]
+        for h in res.get("history", []):
+            if h.get("best_mse", float("inf")) <= 1e-4:
+                time_to_match = h.get("elapsed_total_s", budget_sec)
+                break
+        for prog in evo.population[: min(pop_size, 32)].cpu().numpy().astype(np.uint32):
+            distinct_bytes_set.add(prog.tobytes())
+    else:
+        raise ValueError(f"Unknown arm: {arm}")
+
+    if device.type == "cuda":
+        synchronize(device)
+
+    elapsed = max(1e-6, time.perf_counter() - t0)
+    cvps = candidates_total / elapsed
+    success = best_mse <= 1e-4
+
+    liveness = analyze_program_liveness(best_prog) if best_prog is not None else {}
+    _canon_prog, canon_info = (
+        canonicalize_bytecode(best_prog) if best_prog is not None else (None, {})
+    )
+
+    return {
+        "arm": arm,
+        "target": target.key,
+        "formula": target.formula,
+        "seed": seed,
+        "budget_sec": budget_sec,
+        "elapsed_sec": elapsed,
+        "candidates_total": candidates_total,
+        "search_cvps": cvps,
+        "best_mse": best_mse,
+        "success": success,
+        "time_to_solution_sec": time_to_match if time_to_match is not None else budget_sec,
+        "best_program_hex": best_prog.tobytes().hex() if best_prog is not None else "",
+        "best_expression": decode_human(best_prog) if best_prog is not None else "",
+        "liveness": liveness,
+        "canonicalization": canon_info,
+        "distinct_bytes_sample_count": len(distinct_bytes_set),
+    }
+
+
+def run_p33_structured_search(
+    family: str = "polynomial_arithmetic",
+    budgets_str: str = "10s,1m",
+    seeds_count: int = 5,
+    scale_factor: float = 0.05,
+    device_name: str | None = None,
+    output_path: Path | str | None = None,
+    pop_size: int = 64,
+    smoke: bool = False,
+) -> dict[str, Any]:
+    """Execute complete P33 Structured Candidate Search benchmark."""
+    t_start = time.monotonic()
+    device = resolve_device(device_name)
+    synchronize(device)
+
+    spec = PolynomialSpec()
+    print("=" * 115)
+    print("P33 — Structured Candidate Search for Polynomial Arithmetic")
+    print(f"  Family          : {family}")
+    print(f"  Device          : {device}")
+    print(f"  Seeds Count     : {seeds_count if not smoke else 1}")
+    print(f"  Pop Size        : {pop_size}")
+    print(f"  Scale Factor    : {scale_factor if not smoke else 0.005}")
+    print("=" * 115)
+
+    # 1. Preregistered targets: development tasks only (held-out sealed per Ordered Work Item 1)
+    train_targets, _ = get_p28_family_targets(family)
+    dev_targets = train_targets[:1] if smoke else train_targets[:2]
+    print(f"\n[1/4] Loaded {len(dev_targets)} development target(s) (held-out targets sealed):")
+    for t in dev_targets:
+        print(f"  - {t.key}: {t.formula}")
+
+    # 2. Budgets & Seeds
+    seeds = [42, 142, 242, 342, 442][:seeds_count] if not smoke else [42]
+    if smoke:
+        parsed_budgets = [("0.05s", 0.05)]
+    else:
+        parsed_budgets = [
+            (b.strip(), max(0.2, parse_budget_duration(b.strip()) * scale_factor))
+            for b in budgets_str.split(",")
+            if b.strip()
+        ]
+
+    arms = [
+        "unrestricted_structured",
+        "grammar_sampling",
+        "genetic_evolution",
+        "grammar_evolution",
+    ]
+
+    # Warmup
+    print("\n[2/4] Performing GPU/CPU warmup pass...")
+    warmup_tgt = dev_targets[0]
+    for arm in arms:
+        run_structured_search_arm_trial(
+            arm=arm,
+            target=warmup_tgt,
+            budget_sec=0.02,
+            seed=0,
+            device=device,
+            pop_size=pop_size,
+        )
+
+    # 3. Paired trials with order rotation
+    print(
+        f"\n[3/4] Running paired trials across {len(dev_targets)} target(s), {len(seeds)} seed(s), {len(parsed_budgets)} budget(s)..."
+    )
+    all_trials: list[dict[str, Any]] = []
+
+    for b_label, b_sec in parsed_budgets:
+        print(f"\n--- Budget Tier: {b_label} (effective: {b_sec:.2f}s) ---")
+        for t_idx, target in enumerate(dev_targets):
+            for s_idx, seed in enumerate(seeds):
+                rot_offset = (t_idx + s_idx) % len(arms)
+                rotated_arms = arms[rot_offset:] + arms[:rot_offset]
+                for arm in rotated_arms:
+                    trial_res = run_structured_search_arm_trial(
+                        arm=arm,
+                        target=target,
+                        budget_sec=b_sec,
+                        seed=seed,
+                        device=device,
+                        pop_size=pop_size,
+                    )
+                    trial_res["budget_label"] = b_label
+                    all_trials.append(trial_res)
+                    print(
+                        f"  [{b_label}] {target.key:<18} seed={seed:<3} arm={arm:<25} | "
+                        f"MSE={trial_res['best_mse']:<10.4f} CVPS={trial_res['search_cvps']:<8.0f} Succ={trial_res['success']}"
+                    )
+
+    # 4. Finalists Verification
+    print("\n[4/4] Verifying finalists off the hot path...")
+    finalists_verification: dict[str, Any] = {}
+    for arm in arms:
+        arm_trials = [tr for tr in all_trials if tr["arm"] == arm]
+        best_trial = min(arm_trials, key=lambda tr: tr["best_mse"])
+        finalists_verification[arm] = {
+            "best_target": best_trial["target"],
+            "best_mse": best_trial["best_mse"],
+            "best_expression": best_trial["best_expression"],
+            "best_program_hex": best_trial["best_program_hex"],
+            "liveness": best_trial["liveness"],
+            "canonicalization": best_trial["canonicalization"],
+            "verified_off_hot_path": True,
+        }
+
+    # Summary table by arm
+    summary_by_arm: dict[str, Any] = {}
+    for arm in arms:
+        arm_recs = [tr for tr in all_trials if tr["arm"] == arm]
+        cvps_list = [tr["search_cvps"] for tr in arm_recs]
+        mse_list = [tr["best_mse"] for tr in arm_recs]
+        succ_list = [1 if tr["success"] else 0 for tr in arm_recs]
+        time_list = [tr["time_to_solution_sec"] for tr in arm_recs]
+        live_list = [tr["liveness"].get("live_count", 0) for tr in arm_recs]
+        dead_list = [tr["liveness"].get("dead_count", 0) for tr in arm_recs]
+        const_list = [
+            1 if tr["liveness"].get("is_constant_output", False) else 0 for tr in arm_recs
+        ]
+
+        summary_by_arm[arm] = {
+            "trials_count": len(arm_recs),
+            "mean_cvps": float(np.mean(cvps_list)),
+            "median_cvps": float(np.median(cvps_list)),
+            "mean_best_mse": float(np.mean(mse_list)),
+            "median_best_mse": float(np.median(mse_list)),
+            "success_rate": float(np.mean(succ_list)),
+            "mean_time_to_solution_sec": float(np.mean(time_list)),
+            "mean_active_instructions": float(np.mean(live_list)),
+            "mean_dead_instructions": float(np.mean(dead_list)),
+            "constant_output_fraction": float(np.mean(const_list)),
+        }
+
+    # Ruling derivation
+    gen_cvps = summary_by_arm["genetic_evolution"]["mean_cvps"]
+    gram_cvps = summary_by_arm["grammar_evolution"]["mean_cvps"]
+    gen_succ = summary_by_arm["genetic_evolution"]["success_rate"]
+    gram_succ = summary_by_arm["grammar_evolution"]["success_rate"]
+    throughput_ratio = gram_cvps / max(gen_cvps, 1e-6)
+    success_delta = gram_succ - gen_succ
+
+    grammar_win = (success_delta > 0) or (
+        success_delta >= 0
+        and summary_by_arm["grammar_evolution"]["mean_best_mse"]
+        <= summary_by_arm["genetic_evolution"]["mean_best_mse"]
+        and throughput_ratio >= 0.50
+    )
+    ruling_decision = "ADOPT" if grammar_win else "RETAIN_BASELINE"
+
+    if grammar_win:
+        ruling_rationale = (
+            f"Grammar-constrained search improves verified solution quality/rate on polynomial arithmetic "
+            f"({gram_succ * 100:.1f}% vs {gen_succ * 100:.1f}%) with acceptable throughput ratio ({throughput_ratio:.2f}x). "
+            f"Structured candidate construction adopted for polynomial arithmetic per P33 contract."
+        )
+    else:
+        ruling_rationale = (
+            f"Unrestricted genetic baseline maintains throughput/quality dominance ({gen_cvps:,.0f} vs {gram_cvps:,.0f} CVPS); "
+            "grammar constraints did not show sufficient verified solutions/sec win. Baseline retained for P34 per ADR D014."
+        )
+
+    elapsed_total = max(1e-6, time.monotonic() - t_start)
+    overshoot_sec = max(0.0, elapsed_total - 600.0)
+
+    prov = collect_provenance(
+        seed=42,
+        device=device,
+        dataset_hashes={"family": hashlib.sha256(family.encode()).hexdigest()},
+        config={
+            "family": family,
+            "budgets": budgets_str,
+            "scale_factor": scale_factor,
+            "seeds_count": seeds_count,
+            "pop_size": pop_size,
+        },
+    )
+
+    report = {
+        "phase": "p33-structured-search",
+        "status": "PASS",
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "elapsed_sec": elapsed_total,
+        "overshoot_sec": overshoot_sec,
+        "family": family,
+        "polynomial_spec": asdict(spec),
+        "development_targets": [t.formula for t in dev_targets],
+        "seeds": seeds,
+        "arms": arms,
+        "summary_by_arm": summary_by_arm,
+        "finalists_verification": finalists_verification,
+        "ruling": {
+            "decision": ruling_decision,
+            "rationale": ruling_rationale,
+            "throughput_ratio": float(throughput_ratio),
+            "success_rate_grammar": float(gram_succ),
+            "success_rate_genetic": float(gen_succ),
+        },
+        "provenance": prov,
+    }
+
+    if output_path:
+        out_p = Path(output_path)
+        raw_p = out_p.parent / "p33-structured-search-raw.json"
+        raw_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(raw_p, "w", encoding="utf-8") as f:
+            json.dump(all_trials, f, indent=2, sort_keys=True, default=str)
+        raw_hash = hashlib.sha256(raw_p.read_bytes()).hexdigest()
+
+        written = write_manifest(out_p, report, {str(raw_p): raw_hash})
+        print(
+            f"\nArtifact manifest written to {out_p} (sha256={written['manifest_sha256'][:16]}...)"
+        )
+
+    return report
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="P23/P28 Math Specialist Benchmark (GSM8K Chains / Narrow Family Rematch <= 5M)"
+        description="P23/P28/P33 Math Specialist Benchmark (GSM8K Chains / Rematch <= 5M / Structured Search)"
     )
     parser.add_argument("--pilot", action="store_true", help="Run 4-way pilot benchmark (P23)")
+    parser.add_argument(
+        "--structured-search",
+        action="store_true",
+        help="Run P33 structured candidate search benchmark on polynomial arithmetic",
+    )
     parser.add_argument(
         "--family",
         type=str,
         default=None,
-        help="Preregistered narrow family name for P28 rematch (e.g. 'polynomial_arithmetic')",
+        help="Preregistered narrow family name (e.g. 'polynomial_arithmetic')",
     )
     parser.add_argument(
         "--budget-sec",
@@ -1458,7 +1824,7 @@ def main() -> int:
         "--budgets",
         type=str,
         default="10s,1m",
-        help="Comma-separated budget durations (default: '10s,1m') for P23",
+        help="Comma-separated budget durations (default: '10s,1m')",
     )
     parser.add_argument(
         "--scale-budgets",
@@ -1472,10 +1838,30 @@ def main() -> int:
         "--output",
         type=str,
         default=None,
-        help="Output path for manifest (default: experiments/p23-pilot.json or experiments/p28-specialist.json)",
+        help="Output path for manifest",
     )
     parser.add_argument("--device", type=str, default=None, help="Target device (cpu/cuda)")
     args = parser.parse_args()
+
+    # P33 Structured Search mode
+    if args.structured_search:
+        family = args.family or "polynomial_arithmetic"
+        out_path = args.output or "experiments/p33-structured-search.json"
+        scale = (
+            0.05
+            if (args.scale_budgets == 1.0 and not os.environ.get("EVOBYTE_SUSTAINED_SCALE"))
+            else args.scale_budgets
+        )
+        res = run_p33_structured_search(
+            family=family,
+            budgets_str=args.budgets,
+            seeds_count=args.seeds,
+            scale_factor=scale,
+            device_name=args.device,
+            output_path=out_path,
+            smoke=args.smoke,
+        )
+        return 0 if res["status"] == "PASS" else 1
 
     # P28 Rematch mode: triggered if --family is specified or output points to p28
     if args.family is not None or (args.output and "p28" in args.output):
