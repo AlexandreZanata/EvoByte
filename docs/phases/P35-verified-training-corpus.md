@@ -1,8 +1,9 @@
 # P35 — Certified program corpus for specialist training
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** P30–P32 integrity accepted and P34 operating envelope measured.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata
+**Result:** 4 certified positives / 36 negatives; 0 checker failures; 0 group/item leakage; learner promotion blocked (limit published).
 **Branch:** `codex/p35-verified-training-corpus`.
 
 ## Objective
