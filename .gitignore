@@ -11,7 +11,7 @@ build/
 dist/
 *.whl
 
-# Machine-local notes
+# Machine-local notes (never commit: paths, versions, measurements)
 .local/
 
 # Test / coverage

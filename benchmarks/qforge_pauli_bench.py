@@ -7,10 +7,9 @@ across millions of random mask pairs on CPU, validating parity-rate sanity.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime
 import json
-import os
-import platform
 import subprocess
 import sys
 import time
@@ -21,32 +20,34 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import numpy as np
+from hw_probe import probe
 
 from evobyte.quantum.pauli import Pauli, commutes_with, multiply
-from hw_probe import probe
 
 
 def get_git_info() -> dict[str, str]:
     """Capture current git provenance."""
     info = {"commit": "unknown", "branch": "unknown", "clean": "unknown"}
-    try:
+    with contextlib.suppress(OSError, subprocess.SubprocessError):
         out = subprocess.run(
-            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, check=False
         )
         if out.returncode == 0:
             info["commit"] = out.stdout.strip()[:12]
         out_branch = subprocess.run(
-            ["git", "branch", "--show-current"], capture_output=True, text=True, timeout=5
+            ["git", "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
         )
         if out_branch.returncode == 0:
             info["branch"] = out_branch.stdout.strip()
         out_status = subprocess.run(
-            ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5
+            ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=5, check=False
         )
         if out_status.returncode == 0:
             info["clean"] = "true" if not out_status.stdout.strip() else "false"
-    except Exception:
-        pass
     return info
 
 
@@ -56,13 +57,11 @@ def generate_pauli_pairs(
     """Generate n pairs of random Pauli operators and raw int masks."""
     rng = np.random.default_rng(seed)
     if n_qubits == 64:
-        mask_cap = (1 << 64) - 1
         x1_raw = rng.integers(0, 2**64, size=n, dtype=np.uint64)
         z1_raw = rng.integers(0, 2**64, size=n, dtype=np.uint64)
         x2_raw = rng.integers(0, 2**64, size=n, dtype=np.uint64)
         z2_raw = rng.integers(0, 2**64, size=n, dtype=np.uint64)
     else:
-        mask_cap = (1 << n_qubits) - 1
         x1_raw = rng.integers(0, 1 << n_qubits, size=n, dtype=np.uint64)
         z1_raw = rng.integers(0, 1 << n_qubits, size=n, dtype=np.uint64)
         x2_raw = rng.integers(0, 1 << n_qubits, size=n, dtype=np.uint64)
@@ -76,18 +75,12 @@ def generate_pauli_pairs(
     x2_list = [int(v) for v in x2_raw]
     z2_list = [int(v) for v in z2_raw]
 
-    p1_list = [
-        Pauli(x1_list[i], z1_list[i], int(p1_phases[i]), n_qubits) for i in range(n)
-    ]
-    p2_list = [
-        Pauli(x2_list[i], z2_list[i], int(p2_phases[i]), n_qubits) for i in range(n)
-    ]
+    p1_list = [Pauli(x1_list[i], z1_list[i], int(p1_phases[i]), n_qubits) for i in range(n)]
+    p2_list = [Pauli(x2_list[i], z2_list[i], int(p2_phases[i]), n_qubits) for i in range(n)]
     return p1_list, p2_list, x1_list, z1_list, x2_list, z2_list
 
 
-def benchmark_pauli_algebra(
-    n: int = 1_000_000, n_qubits: int = 64, seed: int = 0
-) -> dict:
+def benchmark_pauli_algebra(n: int = 1_000_000, n_qubits: int = 64, seed: int = 0) -> dict:
     """Run full benchmark suite over n random Pauli pairs."""
     t0_gen = time.perf_counter()
     p1s, p2s, x1s, z1s, x2s, z2s = generate_pauli_pairs(n, n_qubits=n_qubits, seed=seed)
@@ -123,12 +116,13 @@ def benchmark_pauli_algebra(
     ops_comm_raw = n / time_comm_raw if time_comm_raw > 0 else 0.0
     rate_comm_raw = c_raw / n
 
-    # 4. Raw int bit-op multiply (XOR/AND/POPCOUNT/Z4)
+    # 4. Raw int bit-op multiply (XOR/AND/POPCOUNT/Z4).
+    # Keep the computations even though only their elapsed time is reported.
     t0 = time.perf_counter()
     for i in range(n):
-        rx = x1s[i] ^ x2s[i]
-        rz = z1s[i] ^ z2s[i]
-        rphase = (2 * ((z1s[i] & x2s[i]).bit_count() & 1)) & 3
+        _rx = x1s[i] ^ x2s[i]
+        _rz = z1s[i] ^ z2s[i]
+        _rphase = (2 * ((z1s[i] & x2s[i]).bit_count() & 1)) & 3
     t1 = time.perf_counter()
     time_mul_raw = t1 - t0
     ops_mul_raw = n / time_mul_raw if time_mul_raw > 0 else 0.0
@@ -176,8 +170,10 @@ def print_provenance_header(hw: dict, git: dict, n: int, n_qubits: int, seed: in
     print("=" * 85)
     print("Q-FORGE PAULI ALGEBRA BENCHMARK — PROVENANCE & TELEMETRY")
     print("=" * 85)
-    print(f"  Git Commit          : {git.get('commit', 'unknown')} (branch: {git.get('branch', 'unknown')}, clean: {git.get('clean', 'unknown')})")
-    print(f"  Timestamp           : {datetime.datetime.now(datetime.timezone.utc).isoformat()}")
+    print(
+        f"  Git Commit          : {git.get('commit', 'unknown')} (branch: {git.get('branch', 'unknown')}, clean: {git.get('clean', 'unknown')})"
+    )
+    print(f"  Timestamp           : {datetime.datetime.now(datetime.UTC).isoformat()}")
     print(f"  CPU                 : {hw.get('cpu', 'unknown')}")
     print(f"  OS                  : {hw.get('os', 'unknown')}")
     print(f"  Python              : {hw.get('python', sys.version.split()[0])}")
@@ -197,29 +193,49 @@ def print_results(res: dict) -> None:
 
     print("\nBENCHMARK RESULTS (CPU Baseline):")
     print("-" * 85)
-    print(f"{'Operation / Layer':<35} | {'Count':>10} | {'Time (s)':>10} | {'Throughput (ops/s)':>20}")
+    print(
+        f"{'Operation / Layer':<35} | {'Count':>10} | {'Time (s)':>10} | {'Throughput (ops/s)':>20}"
+    )
     print("-" * 85)
-    print(f"{'commutes_with (Pauli object)':<35} | {res['n']:>10,} | {comm_obj['elapsed_s']:>10.3f} | {comm_obj['ops_per_sec']:>20,.0f}")
-    print(f"{'multiply (Pauli object)':<35} | {res['n']:>10,} | {mul_obj['elapsed_s']:>10.3f} | {mul_obj['ops_per_sec']:>20,.0f}")
-    print(f"{'raw_commute (XOR/AND/POPCNT)':<35} | {res['n']:>10,} | {comm_raw['elapsed_s']:>10.3f} | {comm_raw['ops_per_sec']:>20,.0f}")
-    print(f"{'raw_multiply (XOR/AND/POPCNT/Z4)':<35} | {res['n']:>10,} | {mul_raw['elapsed_s']:>10.3f} | {mul_raw['ops_per_sec']:>20,.0f}")
+    print(
+        f"{'commutes_with (Pauli object)':<35} | {res['n']:>10,} | {comm_obj['elapsed_s']:>10.3f} | {comm_obj['ops_per_sec']:>20,.0f}"
+    )
+    print(
+        f"{'multiply (Pauli object)':<35} | {res['n']:>10,} | {mul_obj['elapsed_s']:>10.3f} | {mul_obj['ops_per_sec']:>20,.0f}"
+    )
+    print(
+        f"{'raw_commute (XOR/AND/POPCNT)':<35} | {res['n']:>10,} | {comm_raw['elapsed_s']:>10.3f} | {comm_raw['ops_per_sec']:>20,.0f}"
+    )
+    print(
+        f"{'raw_multiply (XOR/AND/POPCNT/Z4)':<35} | {res['n']:>10,} | {mul_raw['elapsed_s']:>10.3f} | {mul_raw['ops_per_sec']:>20,.0f}"
+    )
     print("-" * 85)
 
     print("\nPARITY-RATE SANITY CHECK:")
     print("-" * 85)
-    print(f"  Empirical Commutation Rate : {sanity['empirical_rate']:.6f} ({comm_obj['commute_count']:,} / {res['n']:,})")
+    print(
+        f"  Empirical Commutation Rate : {sanity['empirical_rate']:.6f} ({comm_obj['commute_count']:,} / {res['n']:,})"
+    )
     print(f"  Theoretical Expected Rate  : {sanity['expected_rate']:.6f}")
     print(f"  Deviation (|Emp - Exp|)    : {sanity['delta']:.6f} (tolerance: < 0.010000)")
-    status_str = "PASS (rate within binomial bounds)" if sanity["passed"] else "FAIL (rate deviates unexpectedly)"
+    status_str = (
+        "PASS (rate within binomial bounds)"
+        if sanity["passed"]
+        else "FAIL (rate deviates unexpectedly)"
+    )
     print(f"  Sanity Verdict             : {status_str}")
     print("=" * 85)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Q-Forge Pauli Algebra Throughput Benchmark")
-    parser.add_argument("--n", type=int, default=1_000_000, help="Number of random Pauli pairs (default: 1000000)")
+    parser.add_argument(
+        "--n", type=int, default=1_000_000, help="Number of random Pauli pairs (default: 1000000)"
+    )
     parser.add_argument("--seed", type=int, default=0, help="Random seed (default: 0)")
-    parser.add_argument("--qubits", type=int, default=64, help="Number of qubits per operator (default: 64)")
+    parser.add_argument(
+        "--qubits", type=int, default=64, help="Number of qubits per operator (default: 64)"
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON results")
     args = parser.parse_args()
 
@@ -233,7 +249,7 @@ def main() -> int:
     res["telemetry"] = {
         "hardware": hw,
         "git": git,
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
     }
 
     if args.json:

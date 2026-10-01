@@ -1,8 +1,8 @@
 # P22 — Optional learning across tasks
 
-**Status:** Proposed.
+**Status:** Done (2026-09-30; verdict DROP, D010 stands; artifact `experiments/p22-transfer.json`; `make verify` + `pytest` green).
 **Prerequisite:** P21; optional separate experiment after the core mechanism is evaluated.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** executed on `codex/p22-cross-task-learning` from `5f9c129`.
 
 ## Objective
 
@@ -48,6 +48,29 @@ A reproducible held-out-family report includes all compute costs, resource
 caps and a preregistered keep/drop verdict. Missing transfer benefit leaves
 the production search genetic; merely fitting training elites does not pass
 as learned generalization.
+
+### Empirical artifact (2026-09-30, RTX 4060 Laptop, torch 2.14.0+cu130)
+
+Families preregistered by structure: train `quad` (x^2+3x+7, sha16
+`3e05172a75a520ee`), held-out `cubic` (x^3-2x+1, `19e57c107af80d31`) and
+`sinlin` (sin(x)+2x+1, `a49cf5a026aca8a4`). Equal budgets (15 s per
+method/task/seed, 5 seeds [42,101,202,303,404]); neural <= 5M params trained
+offline on train elites only and billed; hidden splits scoring-only.
+
+| Held-out task | Genetic hidden MSE | Best learned (benefit / CVPS ratio) | Pass |
+|:---|:---:|:---:|:---:|
+| cubic | 0.507 | learned-dist (+0.4% / 53.6%) | FAIL |
+| sinlin | 0.444 | learned-dist (+0.7% / 64.6%) | FAIL |
+
+Genetic also wins outright on hidden MSE (cubic 0.507 vs 0.586-1.300;
+sinlin 0.444 vs 0.530). Neural generator has 412,080 params (<= 5M cap) and
+its frozen CVPS is only 38-40% of genetic; the hybrid matches genetic
+throughput on sinlin (103%) but with worse quality. Verdict **DROP**: no
+learned configuration reaches the preregistered +15% time-to-quality
+benefit with CVPS >= 70% on either held-out family (0/5 successes everywhere
+at these budgets; amortized cost 71.0 s per new task including 21.3 s
+archive + billed neural training). D010 stands; the production search
+remains genetic. No ADR required.
 
 ## Risks
 

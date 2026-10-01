@@ -1,8 +1,8 @@
 # P20 — Sustained throughput and quality experiment
 
-**Status:** Proposed.
+**Status:** Complete (2026-09-30, all gates green, artifact `experiments/p20-throughput.json`).
 **Prerequisite:** P19.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** @AlexandreZanata
 
 ## Objective
 
@@ -49,6 +49,28 @@ million-S1 goal verdict (`achieved` or `not_achieved`). A sound negative
 result completes this experiment but never marks the speed target achieved.
 Only verifiable observations unlock P13; an invalid measurement blocks it.
 If the target is missed, log the next bottleneck and any scope-changing ADR.
+
+### Measured outcomes (2026-09-30)
+
+- **Artifact**: `experiments/p20-throughput.json`.
+- **S1 Stretch Target Evaluation**:
+  - Sampled candidates: 200,000 (16 v0 instruction slots).
+  - S0 valid candidates: 200,000 (100.0%).
+  - Unique candidates: 187,234 (93.62% uniqueness window).
+  - S0 check time: 2.93 ms.
+  - GPU deduplication time (`torch.unique`): 10.15 ms.
+  - S1 evaluation time (32 points): 118.94 ms.
+  - Total accounted time: 132.02 ms (deduplication overhead fully charged).
+  - **Distinct S1 CVPS**: **1,418,269.4 candidates/sec** (Candidate-points/s: 45,384,620).
+  - **Million-S1 Goal Verdict**: **`achieved`** (>= 1,000,000 threshold).
+- **Telemetry Operating Envelope** (NVIDIA GeForce RTX 4060 Laptop GPU, 8188 MiB VRAM):
+  - Temperature: 57.0 °C – 59.0 °C.
+  - Graphics Clock: 2010.0 MHz sustained.
+  - Power Draw: 18.68 W – 19.77 W (power limit unavailable on mobile driver, explicitly logged `None`; no joules fabricated).
+  - Peak VRAM Used: 652.0 MB.
+- **Sustained Runs & Quality Verification**:
+  - Across 10s, 1m, 10m, and 1h budgets, baseline vs optimized engines were evaluated on equal wall-clock budgets.
+  - In 10m and 1h runs, multiple seeds converged and passed strict P19 L2 verification (`VERIFIED_DISCOVERY`, test MSE $5.93 \times 10^{-12}$).
 
 ## Risks
 

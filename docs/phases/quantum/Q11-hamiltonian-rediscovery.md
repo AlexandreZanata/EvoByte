@@ -1,6 +1,6 @@
 # Q11 — Hamiltonian rediscovery
 
-**Status:** Complete (2026-09-29).
+**Status:** Implementation complete; simulated recovery pilot (2026-09-29).
 **Goal:** recover a hidden Hamiltonian from its dynamics.
 
 ## Objective
@@ -33,6 +33,22 @@ python3 experiments/q11_hamiltonian_rediscovery.py --seeds 5
 Artifact: term-recovery table (precision/recall on Pauli terms + coefficients).
 
 ### Measured Artifacts (`experiments/q11_hamiltonian_rediscovery.py --seeds 5`)
+
+#### Interpretation and rendering correction (2026-10-01)
+
+These are recovery runs on a known, simulator-generated two-qubit system.
+They do not establish a novel physical law or recovery from experimental
+device data. The reported evaluation counter counts population evaluations;
+local coefficient refinement also calls the fitness function and is not
+included in that counter. Do not compare its evaluations/second with a
+pipeline that counts every verifier call.
+
+The historical strings below printed the internal XZ phase twice when
+displaying Y operators: `+0.5001*-1*Y0 Y1` actually represents
+`+0.5001*Y0 Y1`. The matrix representation and stored coefficients are
+unchanged; the human-readable decoder now subtracts the phase already
+contained in the printed Y symbols. Historical strings are retained as
+recorded, with this correction governing their interpretation.
 
 - **Target Hamiltonian:** $+1.0000\cdot X_0 X_1 + 0.5000\cdot Y_0 Y_1 + 0.8000\cdot Z_0 Z_1 + 0.4000\cdot Z_0$
 - **Dataset SHA-256 Provenance:** `ef653d3366b82832c865e823df9f5cbc383d1a53f461076c7f0c265bc5d4431c`

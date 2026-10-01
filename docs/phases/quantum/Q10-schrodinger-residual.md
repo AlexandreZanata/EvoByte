@@ -1,6 +1,6 @@
 # Q10 — Schrodinger residual search
 
-**Status:** Complete (2026-09-29).
+**Status:** Implementation complete; seeded validation only (2026-09-29).
 **Goal:** evolve wavefunctions scored by the Schrodinger residual.
 
 ## Objective
@@ -34,6 +34,20 @@ Artifact: residual tables per strictness stage; analytic-sanity log.
 
 ### Measured Artifacts (`experiments/q10_residual_search.py --seeds 3`)
 
+#### Interpretation correction (2026-10-01)
+
+`search_wavefunction_residual` inserts `build_qho_ground_program()` into
+the QHO population before search. The published box runs pass no explicit
+seed templates and use `sample_structured`. The QHO results below therefore
+validate residual scoring with target-specific initialization; the aggregate
+6/6 result does not establish six blind discoveries from random bytecode.
+Historical measurements are preserved unchanged.
+An unseeded arm, equal budgets, all oracle consultations recorded, and an
+independent final verifier are required before accepting a discovery claim.
+The stages named `HIGH_PRECISION` and `STRICT` use NumPy floating-point
+evaluation on a finite grid; their names do not certify arbitrary precision
+or an exact mathematical proof.
+
 #### 1. Analytic Sanity Oracle Log Across Stages
 | System | Stage | Grid Points | Residual Norm | Rayleigh Energy | Norm Error | BC Error | Fidelity | Total Loss |
 |---|---|---|---|---|---|---|---|---|
@@ -46,7 +60,7 @@ Artifact: residual tables per strictness stage; analytic-sanity log.
 | Box | HIGH_PRECISION | 256 | $5.9105\times 10^{-4}$ | 0.500000 | $5.71\times 10^{-1}$ | $4.87\times 10^{-15}$ | N/A | $2.9231\times 10^{-2}$ |
 | Box | STRICT | 256 | $5.9105\times 10^{-4}$ | 0.500000 | $5.71\times 10^{-1}$ | $4.87\times 10^{-15}$ | 1.000000 | $2.9231\times 10^{-2}$ |
 
-#### 2. Staged Rediscovery Results (3 Seeds per System)
+#### 2. Staged Seeded Recovery Results (3 Seeds per System)
 | System | Seed | Gen | Evals | Time (s) | Residual Norm | Energy | Fidelity | Result | Discovered Expression |
 |---|---|---|---|---|---|---|---|---|---|
 | BOX | 0 | 4 | 1200 | 1.120 | $1.2830\times 10^{-3}$ | 0.500000 | 1.000000 | PASS | `CSEL r6, r6, 0x03 ; CSEL r3, r5, 0x0a ; SIN r2, r0, 0x06 ; CSEL r1, r2, 0x03 ; SUB r7, r6, 0x01 ; SUB r6, r1, 0x07` |

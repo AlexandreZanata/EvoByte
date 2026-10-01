@@ -7,13 +7,12 @@ NOVEL PHYSICAL RESULT), and registers structural anomalies with rigorous extra v
 
 from __future__ import annotations
 
-import hashlib
 import json
 import time
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -28,14 +27,15 @@ class DiscoveryClass(str, Enum):
     NOVEL_PHYSICAL_RESULT = "NOVEL PHYSICAL RESULT"
 
 
-def validate_discovery_class(class_name: str | DiscoveryClass, allow_manual_novel_physics: bool = False) -> DiscoveryClass:
+def validate_discovery_class(
+    class_name: str | DiscoveryClass, allow_manual_novel_physics: bool = False
+) -> DiscoveryClass:
     """Validate discovery class and strictly prohibit automated assignment of NOVEL PHYSICAL RESULT."""
     if isinstance(class_name, DiscoveryClass):
         val = class_name
     else:
         name_str = str(class_name)
-        if name_str.startswith("DiscoveryClass."):
-            name_str = name_str[len("DiscoveryClass."):]
+        name_str = name_str.removeprefix("DiscoveryClass.")
         if name_str in DiscoveryClass.__members__:
             val = DiscoveryClass[name_str]
         else:
@@ -181,6 +181,7 @@ class QuantumHallOfFame:
 # Anomaly Vault & Extra Verification
 # -----------------------------------------------------------------------------
 
+
 def default_quantum_verification_hook(
     unitary: np.ndarray,
     target_state_or_unitary: np.ndarray,
@@ -276,7 +277,9 @@ class AnomalyVault:
         payload = {
             "entry": asdict(entry),
             "anomaly_reason": anomaly_reason,
-            "verification": asdict(verification_report) if verification_report is not None else None,
+            "verification": asdict(verification_report)
+            if verification_report is not None
+            else None,
             "vault_timestamp": time.time(),
         }
 

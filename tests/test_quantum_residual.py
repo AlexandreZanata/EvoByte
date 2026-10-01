@@ -106,7 +106,9 @@ def test_bytecode_programs_staged_progression():
         assert res.is_valid
         assert res.residual_norm < 1e-2
 
-    res_box_strict = evaluate_program_staged(box_prog, "box", target_energy=0.5, max_stage=StrictnessStage.STRICT)
+    res_box_strict = evaluate_program_staged(
+        box_prog, "box", target_energy=0.5, max_stage=StrictnessStage.STRICT
+    )
     assert res_box_strict.is_valid
     assert res_box_strict.analytical_fidelity is not None
     assert abs(res_box_strict.analytical_fidelity - 1.0) < 1e-5
@@ -117,7 +119,9 @@ def test_bytecode_programs_staged_progression():
         assert res.is_valid
         assert res.residual_norm < 1e-2
 
-    res_qho_strict = evaluate_program_staged(qho_prog, "qho", target_energy=0.5, max_stage=StrictnessStage.STRICT)
+    res_qho_strict = evaluate_program_staged(
+        qho_prog, "qho", target_energy=0.5, max_stage=StrictnessStage.STRICT
+    )
     assert res_qho_strict.is_valid
     assert res_qho_strict.analytical_fidelity is not None
     assert abs(res_qho_strict.analytical_fidelity - 1.0) < 1e-5

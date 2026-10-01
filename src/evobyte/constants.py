@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
 
-from evobyte.bytecode import CONST_BANK, N_INSTR, decode_instr, decode_human, encode_instr
-from evobyte.vm import execute_batch
-
+from evobyte.bytecode import CONST_BANK, N_INSTR, decode_instr, encode_instr
+from evobyte.vm import execute_batch, execute_batch_f64
 
 MAX_TUNABLE_SLOTS = 4
 ABSURD_CONSTANT_THRESHOLD = 1e6
@@ -20,7 +18,7 @@ def extract_csel_slots(program: np.ndarray) -> list[tuple[int, int]]:
     """Extract up to MAX_TUNABLE_SLOTS (instr_idx, bank_idx) for CSEL instructions."""
     slots = []
     for idx in range(N_INSTR):
-        op, dst, a, b = decode_instr(program[idx])
+        op, _dst, _a, b = decode_instr(program[idx])
         if op == 0x0F:  # CSEL
             bank_idx = int(b) & 0x0F
             slots.append((idx, bank_idx))
@@ -58,7 +56,10 @@ class TunableProgram:
                 assigned_indices.add(bank_idx)
                 self.csel_slots.append((instr_idx, bank_idx))
             else:
-                while next_free_bank_idx in used_bank_indices or next_free_bank_idx in assigned_indices:
+                while (
+                    next_free_bank_idx in used_bank_indices
+                    or next_free_bank_idx in assigned_indices
+                ):
                     next_free_bank_idx -= 1
                     if next_free_bank_idx < 0:
                         break
@@ -80,7 +81,9 @@ class TunableProgram:
                 if i < len(self.slots):
                     self.custom_bank[bank_idx] = self.slots[i]
         else:
-            self.slots = np.array([self.custom_bank[bank_idx] for _, bank_idx in self.csel_slots], dtype=np.float32)
+            self.slots = np.array(
+                [self.custom_bank[bank_idx] for _, bank_idx in self.csel_slots], dtype=np.float32
+            )
 
     def get_slots(self) -> np.ndarray:
         return self.slots.copy()
@@ -100,6 +103,14 @@ class TunableProgram:
             preds = self.linear_head[0] * preds + self.linear_head[1]
         return preds, flags
 
+    def execute_f64(self, xs: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Execute program with current tunable constant slots and linear head in pure float64."""
+        bank_f64 = self.custom_bank.astype(np.float64)
+        preds, flags = execute_batch_f64(self.program, xs, const_bank=bank_f64)
+        if self.linear_head != (1.0, 0.0):
+            preds = np.float64(self.linear_head[0]) * preds + np.float64(self.linear_head[1])
+        return preds, flags
+
     def decode_expression(self) -> str:
         """Decode program replacing CSEL bank constants with actual fitted values and affine head."""
         parts = []
@@ -117,10 +128,20 @@ class TunableProgram:
                     parts.append(f"CSEL r{dst}, r{a}, {b:#04x}")
             else:
                 name = {
-                    0x01: "ADD", 0x02: "SUB", 0x03: "MUL", 0x04: "DIV",
-                    0x05: "SIN", 0x06: "COS", 0x07: "EXP", 0x08: "LOG",
-                    0x09: "POW", 0x0A: "ABS", 0x0B: "SQRT", 0x0C: "NEG",
-                    0x0D: "MIN", 0x0E: "MAX",
+                    0x01: "ADD",
+                    0x02: "SUB",
+                    0x03: "MUL",
+                    0x04: "DIV",
+                    0x05: "SIN",
+                    0x06: "COS",
+                    0x07: "EXP",
+                    0x08: "LOG",
+                    0x09: "POW",
+                    0x0A: "ABS",
+                    0x0B: "SQRT",
+                    0x0C: "NEG",
+                    0x0D: "MIN",
+                    0x0E: "MAX",
                 }.get(op, f"OP{op:#x}")
                 parts.append(f"{name} r{dst}, r{a}, {b:#04x}")
         body = " ; ".join(parts) if parts else "NOP"
@@ -143,12 +164,12 @@ def fit_linear_head(
     # Design matrix [preds, 1]
     X = np.stack([preds, np.ones_like(preds)], axis=1)
     try:
-        w, residuals, rank, s = np.linalg.lstsq(X, ys, rcond=None)
+        w, _residuals, _rank, _s = np.linalg.lstsq(X, ys, rcond=None)
         w1, w0 = float(w[0]), float(w[1])
         fitted_preds = w1 * preds + w0
         mse = float(np.mean((fitted_preds - ys) ** 2))
         return w1, w0, mse, 1
-    except Exception:
+    except (np.linalg.LinAlgError, ValueError, TypeError):
         mse_base = float(np.mean((preds - ys) ** 2))
         return 1.0, 0.0, mse_base, 1
 
@@ -281,7 +302,7 @@ def tune_promoted_candidate(
             w1_comb, w0_comb = float(w_comb[0]), float(w_comb[1])
             fitted_comb = w1_comb * preds_tuned + w0_comb
             mse_comb = float(np.mean((fitted_comb - ys) ** 2))
-        except Exception:
+        except (np.linalg.LinAlgError, ValueError, TypeError):
             mse_comb = float("inf")
             w1_comb, w0_comb = 1.0, 0.0
     else:
@@ -334,5 +355,3 @@ def evaluate_tunable(
     mse = float(np.mean((preds_f - ys_f) ** 2))
     mae = float(np.mean(np.abs(preds_f - ys_f)))
     return {"mse": mse, "mae": mae, "invalid_rate": 0.0}
-
-

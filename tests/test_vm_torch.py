@@ -6,6 +6,7 @@ import torch
 from evobyte.bytecode import encode_instr, nop_program
 from evobyte.vm import execute, execute_batch
 from evobyte.vm_torch import (
+    PopulationVMBuffer,
     execute_batch_torch,
     execute_population_torch,
     execute_torch,
@@ -113,7 +114,7 @@ def test_quadratic_conformance():
     p = _exact_quadratic_program()
     xs = np.linspace(-10.0, 10.0, 128, dtype=np.float32)
 
-    cpu_preds, cpu_flags = execute_batch(p, xs)
+    cpu_preds, _cpu_flags = execute_batch(p, xs)
     t_preds, t_flags = execute_batch_torch(p, xs)
 
     expected = xs**2 + 3 * xs + 7
@@ -149,3 +150,107 @@ def test_population_batch_conformance():
 
     np.testing.assert_allclose(t_preds_np, cpu_preds, rtol=1e-5, atol=1e-5)
     assert np.array_equal(t_flags_np, cpu_flags)
+
+
+def test_population_buffer_reuse():
+    """Verify PopulationVMBuffer can be reused repeatedly across calls with zero discrepancy."""
+    from evobyte.evolution import sample_structured
+
+    rng = np.random.default_rng(42)
+    device = get_default_device()
+    P = 50
+    B = 128
+    buf = PopulationVMBuffer(max_pop=P, max_points=B, device=device)
+
+    xs = np.linspace(-3.0, 3.0, B, dtype=np.float32)
+    progs_1 = np.stack([sample_structured(rng) for _ in range(P)])
+    progs_2 = np.stack([sample_structured(rng) for _ in range(P)])
+
+    # Run without buffer
+    out1_nobuf, flag1_nobuf = execute_population_torch(progs_1, xs, device=device)
+    # Run with buffer
+    out1_buf, flag1_buf = execute_population_torch(progs_1, xs, device=device, buffer=buf)
+
+    np.testing.assert_allclose(out1_buf.cpu().numpy(), out1_nobuf.cpu().numpy(), rtol=1e-6)
+    assert torch.equal(flag1_buf, flag1_nobuf)
+
+    # Reuse buffer on second program set
+    out2_nobuf, flag2_nobuf = execute_population_torch(progs_2, xs, device=device)
+    out2_buf, flag2_buf = execute_population_torch(progs_2, xs, device=device, buffer=buf)
+
+    np.testing.assert_allclose(out2_buf.cpu().numpy(), out2_nobuf.cpu().numpy(), rtol=1e-6)
+    assert torch.equal(flag2_buf, flag2_nobuf)
+
+
+def test_population_edge_cases_and_malformed_operands():
+    """Verify edge cases: all 16 opcodes, malformed registers, CSEL, NaN/Inf match CPU oracle."""
+    from evobyte.evolution import sample_structured
+
+    progs = []
+    # 1. Single opcodes
+    for op in range(16):
+        p = nop_program()
+        p[0] = encode_instr(op, dst=7, a=0, b=1 if op != 0x0F else 11)
+        progs.append(p)
+
+    # 2. Malformed registers via direct uint32 packing
+    p = nop_program()
+    p[0] = np.uint32(0x01 | (9 << 8) | (0 << 16) | (1 << 24))  # bad dst
+    progs.append(p)
+    p = nop_program()
+    p[0] = np.uint32(0x01 | (7 << 8) | (12 << 16) | (1 << 24))  # bad a
+    progs.append(p)
+    p = nop_program()
+    p[0] = np.uint32(0x01 | (7 << 8) | (0 << 16) | (15 << 24))  # bad b for binary op
+    progs.append(p)
+
+    # 3. CSEL with different const indices
+    for c_idx in range(16):
+        p = nop_program()
+        p[0] = encode_instr(0x0F, dst=7, a=0, b=c_idx)
+        progs.append(p)
+
+    # 4. Mixed structured programs
+    rng = np.random.default_rng(999)
+    for _ in range(30):
+        progs.append(sample_structured(rng))
+
+    progs_np = np.stack(progs)
+    xs = np.array(
+        [-10.0, -1.0, 0.0, 1e-15, 1.0, 10.0, float("nan"), float("inf"), float("-inf")],
+        dtype=np.float32,
+    )
+
+    device = get_default_device()
+    cpu_preds = np.zeros((len(progs), len(xs)), dtype=np.float32)
+    cpu_flags = np.zeros((len(progs), len(xs)), dtype=bool)
+    for i, p in enumerate(progs):
+        cpu_preds[i], cpu_flags[i] = execute_batch(p, xs)
+
+    t_preds, t_flags = execute_population_torch(progs_np, xs, device=device)
+    t_preds_np = t_preds.cpu().numpy()
+    t_flags_np = t_flags.cpu().numpy()
+
+    np.testing.assert_allclose(t_preds_np, cpu_preds, rtol=1e-5, atol=1e-5)
+    assert np.array_equal(t_flags_np, cpu_flags)
+
+
+def test_population_multi_point_grids():
+    """Verify conformance across multi-point batches: 32, 256, 1024 points."""
+    from evobyte.evolution import sample_structured
+
+    rng = np.random.default_rng(777)
+    P = 30
+    progs = np.stack([sample_structured(rng) for _ in range(P)])
+    device = get_default_device()
+
+    for B in (32, 256, 1024):
+        xs = np.linspace(-5.0, 5.0, B, dtype=np.float32)
+        cpu_preds = np.zeros((P, B), dtype=np.float32)
+        cpu_flags = np.zeros((P, B), dtype=bool)
+        for i in range(P):
+            cpu_preds[i], cpu_flags[i] = execute_batch(progs[i], xs)
+
+        t_preds, t_flags = execute_population_torch(progs, xs, device=device)
+        np.testing.assert_allclose(t_preds.cpu().numpy(), cpu_preds, rtol=1e-5, atol=1e-5)
+        assert np.array_equal(t_flags.cpu().numpy(), cpu_flags)
