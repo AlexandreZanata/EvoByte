@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -34,6 +35,45 @@ from benchmarks.math_corpus import (
     safe_eval_arithmetic,
     stratify_and_seal,
 )
+
+
+@pytest.fixture
+def local_corpus_snapshot(tmp_path: Path) -> Path:
+    """Controlled inputs for pipeline tests, independent of research caches."""
+    items = [
+        CorpusItem(
+            id=f"fixture_exec_{idx}",
+            source="ci_fixture",
+            source_id=chr(97 + idx),
+            track="EXECUTE",
+            family="arithmetic_chain",
+            difficulty=1,
+            problem_text=f"Arithmetic case {chr(97 + idx)}",
+            expression=f"{idx} + 3",
+            inputs=[],
+            constraints={},
+            allowed_ops=["ADD"],
+            target_answer=float(idx + 3),
+            verifier={"method": "guarded_arithmetic", "tolerance": 1e-6},
+            metadata={},
+        )
+        for idx in range(20)
+    ]
+    for idx in range(4):
+        item, rejected = generate_symbolic_task("polynomial_arithmetic", idx, seed=42)
+        assert item is not None and rejected is None
+        items.append(item)
+    unsupported, rejected = convert_gsm8k_row(
+        {"question": "How many candles were counted?", "answer": "#### 7"},
+        idx=999,
+    )
+    assert len(unsupported) == 1 and not rejected
+    items.extend(unsupported)
+    snapshot = tmp_path / "controlled-corpus.jsonl"
+    snapshot.write_text(
+        "".join(json.dumps(item.to_dict()) + "\n" for item in items), encoding="utf-8"
+    )
+    return snapshot
 
 
 def test_safe_eval_arithmetic_valid() -> None:
@@ -283,8 +323,32 @@ def test_generate_coverage_report() -> None:
 def test_full_pipeline_fast(tmp_path: Path) -> None:
     out_manifest = tmp_path / "test-manifest.json"
     snapshot_path = tmp_path / "test-snapshot.jsonl"
+    gsm8k_path = tmp_path / "gsm8k.jsonl"
+    numina_path = tmp_path / "numina.jsonl"
+    gsm8k_path.write_text(
+        json.dumps(
+            {
+                "question": "How many apples remain after giving two away?",
+                "answer": "5 - 2 = <<5-2=3>>3. #### 3",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    numina_path.write_text(
+        json.dumps(
+            {
+                "problem": "Evaluate 4 times 5.",
+                "solution": r"\boxed{20}",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     manifest = build_and_verify_corpus(
+        gsm8k_path=gsm8k_path,
+        numina_path=numina_path,
         output_manifest=out_manifest,
         snapshot_path=snapshot_path,
         device_name="cpu",
@@ -695,10 +759,15 @@ def test_isolated_splits_determinism() -> None:
     assert seal1.content_sha256 == seal2.content_sha256
 
 
-def test_run_corpus_isolation_and_audit_manifest(tmp_path: Path) -> None:
+def test_run_corpus_isolation_and_audit_manifest(
+    tmp_path: Path,
+    local_corpus_snapshot: Path,
+) -> None:
     manifest_p = tmp_path / "p30-splits.json"
     manifest = run_corpus_isolation_and_audit(
+        snapshot_path=local_corpus_snapshot,
         output_path=manifest_p,
+        device_name="cpu",
         seed=42,
     )
 

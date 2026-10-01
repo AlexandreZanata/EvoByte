@@ -1,6 +1,6 @@
 # Q07 — Quantum circuit bytecode
 
-**Status:** Proposed.
+**Status:** Complete (2026-09-29).
 **Goal:** freeze the circuit gate table and codec.
 
 ## Objective
@@ -26,7 +26,25 @@ git diff --check
 python3 -m pytest tests/test_quantum_circuit.py -q
 ```
 
-Artifact: frozen gate table; doc table matches code table.
+### Artifact: Frozen v0 Gate Table (`CIRCUIT_BYTECODE_VERSION = 0`)
+
+| Opcode | Name | Arity (Qubits) | Parameterized | Description |
+|:---:|:---:|:---:|:---:|:---|
+| 0 | `NOP` | 0 | No | No-operation (padding / identity) |
+| 1 | `H` | 1 | No | Hadamard gate |
+| 2 | `X` | 1 | No | Pauli-X gate |
+| 3 | `Y` | 1 | No | Pauli-Y gate |
+| 4 | `Z` | 1 | No | Pauli-Z gate |
+| 5 | `S` | 1 | No | Phase gate ($S = Z^{1/2}$) |
+| 6 | `T` | 1 | No | $\pi/8$ gate ($T = Z^{1/4}$) |
+| 7 | `RX` | 1 | Yes | Rotation around X by angle `PARAM` |
+| 8 | `RY` | 1 | Yes | Rotation around Y by angle `PARAM` |
+| 9 | `RZ` | 1 | Yes | Rotation around Z by angle `PARAM` |
+| 10 | `CNOT` | 2 | No | Controlled-NOT (control=`QUBIT_A`, target=`QUBIT_B`) |
+| 11 | `CZ` | 2 | No | Controlled-Z (`QUBIT_A`, `QUBIT_B`) |
+| 12 | `SWAP` | 2 | No | Swap gate (`QUBIT_A`, `QUBIT_B`) |
+
+Document table in [REPRESENTATION.md](../../quantum/REPRESENTATION.md) matches code table in `src/evobyte/quantum/circuit.py`. Tests cover codec roundtrip, operand bounds, arity validation, critical path depth math, and NOP padding invariance.
 
 ## Commit & Push (mandatory for this phase)
 

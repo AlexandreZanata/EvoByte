@@ -13,6 +13,7 @@ authors = [{ name = "EvoByte Contributors" }]
 keywords = ["symbolic-regression", "evolutionary-computation", "gpu", "program-synthesis"]
 dependencies = [
   "numpy>=1.26",
+  "scipy>=1.11",
   "sympy>=1.12",
   "torch>=2.2",
 ]
