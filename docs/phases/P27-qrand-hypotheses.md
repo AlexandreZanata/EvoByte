@@ -1,8 +1,8 @@
 # P27 — Quantum-inspired randomness hypotheses (one per cycle, falsifiable)
 
-**Status:** Proposed.
-**Prerequisite:** P26 lineage available (ancestry needed to judge exploration).
-**Owner:** assigned when moving to Building; see the phase index.
+**Status:** Done (2026-10-01; FALSIFIED_NULL recorded; amplitude-distribution vs 3 controls across 5 seeds; artifact `experiments/p27-qrand-amplitude-distribution.json`; `make verify` + `pytest` green).
+**Prerequisite:** P26 lineage available.
+**Owner:** executed on `codex/p27-qrand-amplitude-distribution` from `f943b65`.
 
 ## Objective
 
