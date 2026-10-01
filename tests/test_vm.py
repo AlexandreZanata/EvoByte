@@ -174,3 +174,32 @@ def test_fuzz_1k_random_programs_no_nan_inf():
             assert np.isfinite(y), f"escaped non-finite on random program with input {x}: {y}"
             assert isinstance(bad, (bool, np.bool_))
             assert abs(y) <= CLAMP
+
+
+def test_f64_execution_accuracy():
+    from evobyte.vm import CLAMP_F64, execute_batch_f64, execute_f64
+
+    # r7 = r0 + r1
+    p = nop_program()
+    p[0] = encode_instr(0x01, dst=7, a=0, b=1)
+
+    y, flag = execute_f64(p, 1e-15, 1e-15)
+    assert isinstance(y, (float, np.float64))
+    np.testing.assert_allclose(y, 2e-15, rtol=1e-12)
+    assert not flag
+
+    # Batch f64
+    xs = np.array([1e-12, 1.0, 1e12], dtype=np.float64)
+    preds, flags = execute_batch_f64(p, xs)
+    np.testing.assert_allclose(preds, xs, rtol=1e-12)
+    assert not np.any(flags)
+
+    # Large values within float64 clamp
+    p_exp = nop_program()
+    p_exp[0] = encode_instr(0x07, dst=7, a=0, b=0)  # exp(x)
+    y_large, flag_large = execute_f64(
+        p_exp, 50.0
+    )  # exp(50) ~ 5.18e21 (escaped float32, valid in f64)
+    assert np.isfinite(y_large)
+    assert abs(y_large) <= CLAMP_F64
+    assert not flag_large

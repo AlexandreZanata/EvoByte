@@ -7,12 +7,8 @@ from pathlib import Path
 
 import numpy as np
 
-_REPO_ROOT = Path(__file__).resolve().parents[1]
-_SRC_DIR = _REPO_ROOT / "src"
-_BENCH_DIR = _REPO_ROOT / "benchmarks"
-for p in (str(_SRC_DIR), str(_BENCH_DIR)):
-    if p not in sys.path:
-        sys.path.insert(0, p)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 
 from benchmarks.full_matrix import (
     TARGET_REGISTRY,
@@ -27,6 +23,7 @@ from benchmarks.full_matrix import (
     run_baseline_random,
     run_evobyte_full,
     run_full_benchmark_matrix,
+    run_reproduce_manifest,
 )
 
 
@@ -87,8 +84,18 @@ def test_baseline_pysr_adapter():
     target = generate_target_dataset("x_plus_1", n_points=32, seed=0)
     rec = run_baseline_pysr_adapter(target, max_time_sec=0.2, seed=42)
     assert rec["method"] == "PySR-Adapter"
-    assert rec["success"] is True
-    assert rec["cvps"] == 250.0
+    # P15: missing PySR must be explicit not_run, never a win or zero error.
+    import importlib.util
+
+    has_pysr = importlib.util.find_spec("pysr") is not None
+    if not has_pysr:
+        assert rec["status"] == "not_run"
+        assert rec["hidden_mse"] is None
+        assert rec["success"] is None
+        assert "missing_dependency" in rec["reason"]
+    else:
+        assert rec["status"] == "completed"
+        assert rec["success"] is not None
 
 
 def test_baseline_evobyte():
@@ -150,7 +157,31 @@ def test_full_matrix_smoke():
         seeds=[42],
         target_keys=["x_plus_1"],
         max_trial_sec=0.5,
+        output_manifest_path=None,
     )
     assert res["status"] == "PASS"
     assert len(res["records"]) > 0
     assert len(res["ablations"]) == 9
+
+
+def test_full_matrix_manifest_and_reproduction(tmp_path: Path):
+    manifest_file = tmp_path / "p13-manifest.json"
+    reproduce_file = tmp_path / "p21-reproduction.json"
+
+    res = run_full_benchmark_matrix(
+        budget_strings=["10s"],
+        seeds=[42],
+        target_keys=["x_plus_1"],
+        max_trial_sec=0.5,
+        output_manifest_path=manifest_file,
+    )
+    assert res["status"] == "PASS"
+    assert manifest_file.exists()
+    raw_file = tmp_path / "p13-raw.json"
+    assert raw_file.exists()
+
+    repro = run_reproduce_manifest(manifest_file, output_path=reproduce_file)
+    assert repro["status"] == "PASS"
+    assert reproduce_file.exists()
+    assert len(repro["raw_artifacts_verified"]) > 0
+    assert repro["p14_eligible"] == (repro["h1_verdict"] == "SUPPORTED")

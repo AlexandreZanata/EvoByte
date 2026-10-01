@@ -7,8 +7,9 @@ NOP-equivalent padding, and human decoder for logs.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -92,7 +93,10 @@ class CircuitInstruction:
 # Codec and Conversions
 # -----------------------------------------------------------------------------
 
-def encode_circuit(instructions: Sequence[CircuitInstruction | tuple[int, int, int, float]]) -> np.ndarray:
+
+def encode_circuit(
+    instructions: Sequence[CircuitInstruction | tuple[int, int, int, float]],
+) -> np.ndarray:
     """Encode instructions into an (L, 4) float64 ndarray buffer."""
     if len(instructions) == 0:
         return np.zeros((0, 4), dtype=np.float64)
@@ -135,6 +139,7 @@ def decode_circuit(buffer: np.ndarray | Sequence[Any]) -> list[CircuitInstructio
 # Validation
 # -----------------------------------------------------------------------------
 
+
 def validate_instruction(inst: CircuitInstruction, n_qubits: int) -> tuple[bool, str]:
     """Validate a single instruction against qubit bounds and gate specifications."""
     if n_qubits <= 0:
@@ -154,16 +159,28 @@ def validate_instruction(inst: CircuitInstruction, n_qubits: int) -> tuple[bool,
 
     if info.num_qubits == 1:
         if not (0 <= inst.qubit_a < n_qubits):
-            return False, f"qubit_a={inst.qubit_a} out of range [0, {n_qubits}) for gate {info.name}"
+            return (
+                False,
+                f"qubit_a={inst.qubit_a} out of range [0, {n_qubits}) for gate {info.name}",
+            )
         return True, ""
 
     if info.num_qubits == 2:
         if not (0 <= inst.qubit_a < n_qubits):
-            return False, f"qubit_a={inst.qubit_a} out of range [0, {n_qubits}) for gate {info.name}"
+            return (
+                False,
+                f"qubit_a={inst.qubit_a} out of range [0, {n_qubits}) for gate {info.name}",
+            )
         if not (0 <= inst.qubit_b < n_qubits):
-            return False, f"qubit_b={inst.qubit_b} out of range [0, {n_qubits}) for gate {info.name}"
+            return (
+                False,
+                f"qubit_b={inst.qubit_b} out of range [0, {n_qubits}) for gate {info.name}",
+            )
         if inst.qubit_a == inst.qubit_b:
-            return False, f"qubit_a and qubit_b must be distinct for 2-qubit gate {info.name}, got {inst.qubit_a}"
+            return (
+                False,
+                f"qubit_a and qubit_b must be distinct for 2-qubit gate {info.name}, got {inst.qubit_a}",
+            )
         return True, ""
 
     return False, f"unsupported arity {info.num_qubits} for gate {info.name}"
@@ -174,9 +191,9 @@ def validate_circuit(
     n_qubits: int,
 ) -> bool:
     """Validate entire circuit against qubit bounds; raises ValueError on violation."""
-    if isinstance(circuit, np.ndarray):
-        insts = decode_circuit(circuit)
-    elif len(circuit) > 0 and not isinstance(circuit[0], CircuitInstruction):
+    if isinstance(circuit, np.ndarray) or (
+        len(circuit) > 0 and not isinstance(circuit[0], CircuitInstruction)
+    ):
         insts = decode_circuit(circuit)
     else:
         insts = list(circuit)  # type: ignore[arg-type]
@@ -203,15 +220,30 @@ def is_valid_circuit(
 # Accounting: Depth, Gate Counts, and Padding
 # -----------------------------------------------------------------------------
 
-def gate_count(circuit: Sequence[CircuitInstruction | tuple[int, int, int, float]] | np.ndarray) -> int:
+
+def gate_count(
+    circuit: Sequence[CircuitInstruction | tuple[int, int, int, float]] | np.ndarray,
+) -> int:
     """Count non-NOP instructions in circuit."""
-    insts = decode_circuit(circuit) if not isinstance(circuit, list) or (circuit and not isinstance(circuit[0], CircuitInstruction)) else circuit
+    insts = (
+        decode_circuit(circuit)
+        if not isinstance(circuit, list)
+        or (circuit and not isinstance(circuit[0], CircuitInstruction))
+        else circuit
+    )
     return sum(1 for inst in insts if inst.gate != OPCODE_NOP)  # type: ignore[union-attr]
 
 
-def two_qubit_count(circuit: Sequence[CircuitInstruction | tuple[int, int, int, float]] | np.ndarray) -> int:
+def two_qubit_count(
+    circuit: Sequence[CircuitInstruction | tuple[int, int, int, float]] | np.ndarray,
+) -> int:
     """Count 2-qubit instructions (CNOT, CZ, SWAP) in circuit."""
-    insts = decode_circuit(circuit) if not isinstance(circuit, list) or (circuit and not isinstance(circuit[0], CircuitInstruction)) else circuit
+    insts = (
+        decode_circuit(circuit)
+        if not isinstance(circuit, list)
+        or (circuit and not isinstance(circuit[0], CircuitInstruction))
+        else circuit
+    )
     count = 0
     for inst in insts:
         info = V0_GATE_TABLE.get(inst.gate)  # type: ignore[union-attr]
@@ -228,7 +260,12 @@ def circuit_depth(
     if n_qubits <= 0:
         return 0
 
-    insts = decode_circuit(circuit) if not isinstance(circuit, list) or (circuit and not isinstance(circuit[0], CircuitInstruction)) else circuit
+    insts = (
+        decode_circuit(circuit)
+        if not isinstance(circuit, list)
+        or (circuit and not isinstance(circuit[0], CircuitInstruction))
+        else circuit
+    )
     qubit_depth = np.zeros(n_qubits, dtype=np.int32)
 
     for inst in insts:
@@ -246,11 +283,10 @@ def circuit_depth(
         if info.num_qubits == 1:
             if 0 <= qa < n_qubits:
                 qubit_depth[qa] += 1
-        elif info.num_qubits == 2:
-            if 0 <= qa < n_qubits and 0 <= qb < n_qubits:
-                step = max(qubit_depth[qa], qubit_depth[qb]) + 1
-                qubit_depth[qa] = step
-                qubit_depth[qb] = step
+        elif info.num_qubits == 2 and 0 <= qa < n_qubits and 0 <= qb < n_qubits:
+            step = max(qubit_depth[qa], qubit_depth[qb]) + 1
+            qubit_depth[qa] = step
+            qubit_depth[qb] = step
 
     return int(np.max(qubit_depth)) if len(qubit_depth) > 0 else 0
 
@@ -260,7 +296,12 @@ def pad_circuit(
     target_length: int,
 ) -> list[CircuitInstruction]:
     """Pad circuit with NOP instructions to fixed length."""
-    insts = decode_circuit(circuit) if not isinstance(circuit, list) or (circuit and not isinstance(circuit[0], CircuitInstruction)) else list(circuit)  # type: ignore[arg-type]
+    insts = (
+        decode_circuit(circuit)
+        if not isinstance(circuit, list)
+        or (circuit and not isinstance(circuit[0], CircuitInstruction))
+        else list(circuit)
+    )  # type: ignore[arg-type]
     if len(insts) > target_length:
         raise ValueError(f"circuit length {len(insts)} exceeds target_length {target_length}")
 
@@ -275,13 +316,19 @@ def strip_nops(
     circuit: Sequence[CircuitInstruction | tuple[int, int, int, float]] | np.ndarray,
 ) -> list[CircuitInstruction]:
     """Strip all NOP instructions from circuit."""
-    insts = decode_circuit(circuit) if not isinstance(circuit, list) or (circuit and not isinstance(circuit[0], CircuitInstruction)) else circuit
+    insts = (
+        decode_circuit(circuit)
+        if not isinstance(circuit, list)
+        or (circuit and not isinstance(circuit[0], CircuitInstruction))
+        else circuit
+    )
     return [inst for inst in insts if inst.gate != OPCODE_NOP]  # type: ignore[union-attr]
 
 
 # -----------------------------------------------------------------------------
 # Human-Readable Decoder for Logs
 # -----------------------------------------------------------------------------
+
 
 def decode_instruction_text(inst: CircuitInstruction) -> str:
     """Format single instruction as human-readable string for logs."""
@@ -309,7 +356,12 @@ def decode_circuit_text(
     multiline: bool = False,
 ) -> str:
     """Format entire circuit as human-readable string for logs and artifacts."""
-    insts = decode_circuit(circuit) if not isinstance(circuit, list) or (circuit and not isinstance(circuit[0], CircuitInstruction)) else circuit
+    insts = (
+        decode_circuit(circuit)
+        if not isinstance(circuit, list)
+        or (circuit and not isinstance(circuit[0], CircuitInstruction))
+        else circuit
+    )
     tokens = [decode_instruction_text(inst) for inst in insts]  # type: ignore[arg-type]
     if multiline:
         return "\n".join(tokens)
@@ -319,6 +371,7 @@ def decode_circuit_text(
 # -----------------------------------------------------------------------------
 # Unitary Matrix Simulator (Verification and Equivalence Testing)
 # -----------------------------------------------------------------------------
+
 
 def single_qubit_gate_matrix(gate: int, param: float = 0.0) -> np.ndarray:
     """2x2 complex unitary matrix for 1-qubit gate."""
@@ -345,10 +398,13 @@ def single_qubit_gate_matrix(gate: int, param: float = 0.0) -> np.ndarray:
         s = np.sin(param / 2.0)
         return np.array([[c, -s], [s, c]], dtype=np.complex128)
     if gate == OPCODE_RZ:
-        return np.array([
-            [np.exp(-1.0j * param / 2.0), 0.0],
-            [0.0, np.exp(1.0j * param / 2.0)],
-        ], dtype=np.complex128)
+        return np.array(
+            [
+                [np.exp(-1.0j * param / 2.0), 0.0],
+                [0.0, np.exp(1.0j * param / 2.0)],
+            ],
+            dtype=np.complex128,
+        )
     raise ValueError(f"not a 1-qubit gate: opcode {gate}")
 
 
@@ -358,7 +414,12 @@ def circuit_to_unitary(
 ) -> np.ndarray:
     """Build exact 2^N x 2^N unitary matrix for circuit (strict verification)."""
     validate_circuit(circuit, n_qubits)
-    insts = decode_circuit(circuit) if not isinstance(circuit, list) or (circuit and not isinstance(circuit[0], CircuitInstruction)) else circuit
+    insts = (
+        decode_circuit(circuit)
+        if not isinstance(circuit, list)
+        or (circuit and not isinstance(circuit[0], CircuitInstruction))
+        else circuit
+    )
     dim = 1 << n_qubits
     u_total = np.eye(dim, dtype=np.complex128)
 
@@ -391,7 +452,6 @@ def circuit_to_unitary(
                 bit_b = (i >> qb) & 1
 
                 if gate == OPCODE_CNOT:
-                    out_a = bit_a
                     out_b = bit_b ^ bit_a
                     j = (i & ~(1 << qb)) | (out_b << qb)
                     u_step[j, i] = 1.0
