@@ -38,9 +38,19 @@ P26 reproducible tracing + exploration map
 P27 quantum-inspired randomness, one falsifiable hypothesis per cycle
 P28 new narrow-family specialist with its own hypothesis
 P29 open problems with verifiable certificates (binding discovery criterion)
+P30 corpus isolation by original problem and template
+P31 independent answer verification + certificate bounds
+P32 replay/resume + fail-closed evidence acceptance
+P33 structured candidate search (polynomial arithmetic first)
+P34 profiled full-pipeline throughput + bounded tracing
+P35 certified program corpus for specialist training
+P36 specialist learning with fully billed comparisons
+P37 one controlled quantum-inspired sampling hypothesis
+P38 clean-environment confirmation + frozen model export
+P39 bounded mathematical campaign + novelty review
 ```
 
-## Revised execution order (D012)
+## Execution order and acceptance review (D013, D014)
 
 The phase numbers are stable identifiers, not execution order. P00–P12
 remain historical milestones; their implementation is not proof that the
@@ -52,6 +62,7 @@ experiment history. Execute one phase at a time in this dependency order:
 P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
                                                         P21 -> P14(mathdb) -> P23 -> P22 (optional)
                                                         P23 -> P24 -> P25 -> P26 -> P27 -> P28 -> P29
+P29 recorded outcome -> P30 -> P31 -> P32 -> P33 -> P34 -> P35 -> P36 -> P37 -> P38 -> P39
 ```
 
 P23 (math specialist pilot on GSM8K chains, <= 5M, billed cost) runs after
@@ -63,12 +74,30 @@ narrow-family specialist with its own hypothesis (P28), and certified open
 problems (P29). No validated novel mathematical discovery exists to date;
 P29 defines the binding discovery criterion.
 
-P15 is next. P13 completion must be re-evaluated against raw executed runs;
-provisional P13 reports cannot unlock P14. P13 is a valid experiment even
-if H1 is weakened, but P14 requires support of the unchanged H1 criteria
+P30 is the next planned micro-task, beginning with corpus isolation.
+P24–P29 outcomes are historical inputs to the acceptance review, not proof
+that all of their documented gates were enforced. P30 repairs split
+boundaries, P31 repairs mathematical acceptance and P32 establishes the
+clean baseline before new search/model comparisons. Preserve old artifacts;
+map unsupported claims to provisional/superseded records rather than
+rewriting measurements. P13 completion must be re-evaluated against actual
+executed runs; provisional reports cannot unlock P14. P13 is a valid
+experiment even if H1 is rejected, but P14 requires the unchanged H1 criteria
 and P21 reproduction. P22 is optional and does not block scientific entry.
 A missed million-S1 target remains a negative speed result, never a reason
 to manufacture numbers or silently relax the workload.
+
+P33–P37 use development tasks only. P30's fresh final test is opened for
+authorized frozen scoring in P38, with an access log and no subsequent
+tuning. P36 KEEP needs a scoped ADR; neither a pilot gain nor a same-family
+confirmation automatically unlocks P22 cross-family claims. P39 evaluates
+one bounded nomination with exact independent certificates and novelty
+review; no unbounded conjecture is proved by a finite successful search.
+
+The full P30–P39 scope and executable acceptance contracts are indexed in
+[phases/README.md](phases/README.md#acceptance-and-specialist-program-p30p39).
+These files are Proposed; their new CLI flags are implementation contracts,
+not existing commands or completed experiments.
 
 The reference system is RTX 4060 Laptop (8 GB), i7-13620H and approximately
 32 GB system RAM. Optimize measured software bottlenecks before considering
@@ -81,7 +110,7 @@ scope, owner, exit gate, and risks. It moves to Done only when its gate
 artifact runs, is measured, is committed, and is pushed to GitHub.
 
 The original sequence put the hardware probe before bytecode freezing and
-batching before the archive. D012 adds explicit corrective gates because
+batching before the archive. D013 adds explicit corrective gates because
 those earlier milestones alone do not demonstrate resident massive search.
 
 ## Quantum track (experimental, deferred expansion)
@@ -89,7 +118,16 @@ those earlier milestones alone do not demonstrate resident massive search.
 Existing quantum artifacts are preserved. New quantum development is
 scheduled only after P21; Q13 still requires its own rediscovery gates.
 Quantum operation throughput cannot substitute for symbolic-search CVPS.
-This supersedes the earlier parallel-expansion priority (D012).
+This supersedes the earlier parallel-expansion priority (D013).
+
+The integration audit (D015) keeps Q10–Q13 scientific acceptance provisional:
+QHO and dimer runs use known initial solutions, Q12's `micro_model` is a
+hand-written motif sampler, and Q13 consults reference energy for stopping.
+Q11's reported population counter omits local refinement. Corrected software
+and green CI do not establish a new law, learned-model superiority, exact
+symbolic proof or prospective registration. P32 records these distinctions;
+independent verification and controlled unseeded arms are required before
+accepting new quantum discovery claims. See the corrections in the phase files.
 
 The Q-Forge laboratory retains its own phase line
 ([phases/quantum/](phases/quantum/README.md), Q00–Q13) and never blocks the
