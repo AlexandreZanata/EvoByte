@@ -1,8 +1,11 @@
 # P39 — Bounded mathematical campaign with novelty review
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** Accepted P38 integrity and frozen pipeline; P31 independent certificate checkers.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata
+**Result:** rediscovery — 2/3 nominated Erdős-Straus instances carry bounded
+dual-checked certificates (n=1009 duplicate of catalogue, n=10007 benchmark
+rediscovery); n=100003 budget_exhausted. No new theorem claimed.
 **Branch:** `codex/p39-certified-science`.
 
 ## Objective
