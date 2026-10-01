@@ -40,12 +40,19 @@ measurement)`.
 - [P21 — Independent reproduction and usable model](P21-independent-reproduction.md).
 - [P22 — Optional learning across tasks](P22-cross-task-learning.md).
 - [P23 — Math specialist pilot (GSM8K chains, ≤5M, billed)](P23-math-specialist-pilot.md).
+- [P24 — Stable limits of the RTX 4060](P24-stable-limits.md).
+- [P25 — Math corpus consolidation](P25-math-corpus.md).
+- [P26 — Reproducible tracing and exploration map](P26-lineage-map.md).
+- [P27 — Quantum-inspired randomness hypotheses](P27-qrand-hypotheses.md).
+- [P28 — New specialist micro-model](P28-specialist-rematch.md).
+- [P29 — Open problems with verifiable certificates](P29-open-problems.md).
 
 ## Execution and acceptance contract
 
 ```text
 P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
                                                         P21 -> P14(mathdb) -> P23 -> P22 (optional)
+                                                        P23 -> P24 -> P25 -> P26 -> P27 -> P28 -> P29
 ```
 
 P15 is the next task. Numbers preserve historical references; the dependency
