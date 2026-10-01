@@ -1,0 +1,270 @@
+{
+  "amortized_cost_analysis": {
+    "N=1": {
+      "distributor": {
+        "amortized_train_sec": 0.10137425699986125,
+        "sampling_sec": 0.000296788400009973,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.6016710453998713
+      },
+      "genetic": {
+        "amortized_train_sec": 0.0,
+        "sampling_sec": 0.0006164837499909482,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5006164837499909
+      },
+      "multihead": {
+        "amortized_train_sec": 0.8813740499999767,
+        "sampling_sec": 0.004805427299970688,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 1.3861794772999474
+      },
+      "sequential": {
+        "amortized_train_sec": 0.3290548620000209,
+        "sampling_sec": 0.0013119040000219683,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.8303667660000429
+      }
+    },
+    "N=10": {
+      "distributor": {
+        "amortized_train_sec": 0.010137425699986125,
+        "sampling_sec": 0.000296788400009973,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5104342140999961
+      },
+      "genetic": {
+        "amortized_train_sec": 0.0,
+        "sampling_sec": 0.0006164837499909482,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5006164837499909
+      },
+      "multihead": {
+        "amortized_train_sec": 0.08813740499999767,
+        "sampling_sec": 0.004805427299970688,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5929428322999684
+      },
+      "sequential": {
+        "amortized_train_sec": 0.03290548620000209,
+        "sampling_sec": 0.0013119040000219683,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.534217390200024
+      }
+    },
+    "N=100": {
+      "distributor": {
+        "amortized_train_sec": 0.0010137425699986125,
+        "sampling_sec": 0.000296788400009973,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5013105309700085
+      },
+      "genetic": {
+        "amortized_train_sec": 0.0,
+        "sampling_sec": 0.0006164837499909482,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5006164837499909
+      },
+      "multihead": {
+        "amortized_train_sec": 0.008813740499999768,
+        "sampling_sec": 0.004805427299970688,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5136191677999704
+      },
+      "sequential": {
+        "amortized_train_sec": 0.0032905486200002086,
+        "sampling_sec": 0.0013119040000219683,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5046024526200221
+      }
+    },
+    "N=1000": {
+      "distributor": {
+        "amortized_train_sec": 0.00010137425699986125,
+        "sampling_sec": 0.000296788400009973,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5003981626570099
+      },
+      "genetic": {
+        "amortized_train_sec": 0.0,
+        "sampling_sec": 0.0006164837499909482,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5006164837499909
+      },
+      "multihead": {
+        "amortized_train_sec": 0.0008813740499999767,
+        "sampling_sec": 0.004805427299970688,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.5056868013499707
+      },
+      "sequential": {
+        "amortized_train_sec": 0.00032905486200002085,
+        "sampling_sec": 0.0013119040000219683,
+        "search_sec": 0.5,
+        "total_cost_per_query_sec": 0.501640958862022
+      }
+    }
+  },
+  "billed_costs": {
+    "distributor_train_sec": 0.10137425699986125,
+    "multihead_peak_vram_mb": 27.140625,
+    "multihead_train_sec": 0.8813740499999767,
+    "sequential_peak_vram_mb": 82.56982421875,
+    "sequential_train_sec": 0.3290548620000209
+  },
+  "device": "cuda",
+  "family": {
+    "domain": "polynomial_arithmetic",
+    "heldout_targets": [
+      "x^2 + 3*x - 2",
+      "x^2 - 9",
+      "5*x - 7",
+      "x^3 + x^2"
+    ],
+    "hypothesis": "Feature-conditioned joint (MultiHeadJointSpecialist) and sequential (SequentialSpecialist) neural models (<=5M params) with penalty schedule and >=10% exploration floor evaluated against genetic and distributor baselines on held-out problems.",
+    "name": "polynomial_arithmetic",
+    "thresholds": {
+      "max_throughput_penalty_pct": 25.0,
+      "min_quality_benefit_pct": 20.0
+    },
+    "train_targets": [
+      "3*x + 2",
+      "x^2 - x + 1",
+      "2*x^2 + 3",
+      "x^3 - 2*x",
+      "(x - 2)^2",
+      "4*x - 5"
+    ]
+  },
+  "git_commit": "3fa1b4eecf85",
+  "heldout_summary_table": {
+    "distributor": {
+      "mean_best_mse": 22.55064148902893,
+      "mean_cvps": 7327.36086328236,
+      "mean_sampling_sec": 0.000296788400009973,
+      "mean_time_to_match_sec": null,
+      "success_rate_pct": 0.0,
+      "trials_count": 20
+    },
+    "genetic": {
+      "mean_best_mse": 19.406518197059633,
+      "mean_cvps": 7078.339212771445,
+      "mean_sampling_sec": 0.0006164837499909482,
+      "mean_time_to_match_sec": null,
+      "success_rate_pct": 0.0,
+      "trials_count": 20
+    },
+    "multihead": {
+      "mean_best_mse": 23.638826489448547,
+      "mean_cvps": 6901.118086355813,
+      "mean_sampling_sec": 0.004805427299970688,
+      "mean_time_to_match_sec": null,
+      "success_rate_pct": 0.0,
+      "trials_count": 20
+    },
+    "sequential": {
+      "mean_best_mse": 15.599055194854737,
+      "mean_cvps": 6830.471367087924,
+      "mean_sampling_sec": 0.0013119040000219683,
+      "mean_time_to_match_sec": null,
+      "success_rate_pct": 0.0,
+      "trials_count": 20
+    }
+  },
+  "manifest_sha256": "ad93e77e1126984148dde959081cfbc1b8d944cef1086d529f9e33fc104a4312",
+  "manifest_version": "1.0",
+  "models": {
+    "multihead_joint": {
+      "epochs": 5,
+      "final_loss": 6.830880165100098,
+      "loss_components": {
+        "loss_entropy": -0.46566349267959595,
+        "loss_gaming": 0.0,
+        "loss_invalid": 0.09996511042118073,
+        "loss_sup": 7.196578502655029,
+        "loss_total": 6.830880165100098
+      },
+      "parameters": 36720,
+      "training_peak_vram_mb": 27.140625,
+      "training_time_sec": 0.8813740499999767
+    },
+    "sequential_gru": {
+      "epochs": 5,
+      "final_loss": 5.2108988761901855,
+      "loss_components": {
+        "loss_entropy": -0.4098707139492035,
+        "loss_gaming": 0.0,
+        "loss_invalid": 0.11888449639081955,
+        "loss_sup": 5.501884937286377,
+        "loss_total": 5.2108988761901855
+      },
+      "parameters": 197808,
+      "training_peak_vram_mb": 82.56982421875,
+      "training_time_sec": 0.3290548620000209
+    },
+    "statistical_distributor": {
+      "parameters": 0,
+      "training_time_sec": 0.10137425699986125
+    }
+  },
+  "phase": "p28-specialist-rematch",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "3fa1b4eecf857d00633a3d4c39a00fd9ee773abc",
+    "config": {
+      "budget_sec": 0.5,
+      "family": "polynomial_arithmetic",
+      "pop_size": 1000,
+      "seeds_count": 5
+    },
+    "config_hash": "f150a96f3e2349df",
+    "dataset_hashes": {
+      "family": "17985762fd7c33382ccb7c35b704554bb1433908ae51714315608cae910b497f"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/math_specialist.py\n M tests/test_math_specialist.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/math_specialist.py",
+      "--family",
+      "polynomial_arithmetic",
+      "--seeds",
+      "5",
+      "--output",
+      "experiments/p28-specialist.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p28-specialist-raw.json",
+      "sha256": "27467aa73c0f83b0347a921d94d5b30ec96021d97fb627499531db9427711e1d"
+    }
+  ],
+  "ruling": {
+    "best_arm": "genetic",
+    "decision": "DROP",
+    "quality_improvement_pct": 19.619506000730112,
+    "rationale": "Genetic baseline maintains dominance: pure GPU-resident evolution exhibits higher search throughput (7,078 vs 6,901 CVPS) and zero training overhead. Neural specialist initialization imposes sampling overhead (4.81ms) without reproducible, statistically significant time-to-solution advantage on held-out polynomial arithmetic targets. Standing genetic default is kept; ruling is DROP per ADR D010.",
+    "throughput_penalty_pct": 2.5037105610292336
+  },
+  "status": "PASS",
+  "timestamp": "2026-10-01T15:45:40.291054+00:00"
+}

@@ -1,11 +1,12 @@
 # P28 — New specialist micro-model (narrow family, own hypothesis)
 
-**Status:** Proposed.
+**Status:** Done (2026-10-01). Artifact: `experiments/p28-specialist.json`. Ruling: DROP (standing genetic default kept per ADR D010; no ADR required).
 **Prerequisite:** P25 corpus sealed AND P26 lineage available. The P23 DROP
 (27,440-param proposer, billed, `experiments/p23-pilot.json`) stays on
 record; this phase tests a different architecture/hypothesis, not a retry
 of the same bet.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** Codex / Antigravity.
+
 
 ## Objective
 
@@ -63,6 +64,23 @@ Artifact: checksummed `experiments/p28-specialist.json` with family
 definition, billed costs, held-out 4-way table, amortized analysis and the
 keep/drop ruling (+ADR on KEEP). Done means a reproducible verdict on the
 new hypothesis — not a useful specialist by declaration.
+
+## Outcome & Ruling
+
+- **Preregistered narrow family:** `polynomial_arithmetic` (6 train targets, 4 held-out targets).
+- **Contestants under <= 5M cap:**
+  - `distributor`: 0 parameters, 0.101s train time.
+  - `multihead_joint`: 36,720 parameters, 0.881s train time, 27.14 MB peak VRAM.
+  - `sequential_gru`: 197,808 parameters, 0.329s train time, 82.57 MB peak VRAM.
+- **Held-out 4-way comparison (20 trials each, 4 targets x 5 seeds):**
+  - `genetic`: 7,078 CVPS, 19.41 mean MSE, 0.62ms sampling latency.
+  - `distributor`: 7,327 CVPS, 22.55 mean MSE, 0.30ms sampling latency.
+  - `multihead`: 6,901 CVPS, 23.64 mean MSE, 4.81ms sampling latency.
+  - `sequential`: 6,830 CVPS, 15.60 mean MSE, 1.31ms sampling latency.
+- **Ruling:** `DROP`.
+  - While sequential specialist achieved slight MSE reduction on some held-out targets (19.6% vs 20.0% preregistered benefit threshold), it incurred sampling overhead and training cost without achieving a win under equal wall-clock time.
+  - The pure GPU-resident genetic baseline maintains superior search throughput (7,078 CVPS) and zero training overhead.
+  - Standing genetic default is kept; ruling is DROP per ADR D010. No ADR superseding D010 required.
 
 ## Risks
 
