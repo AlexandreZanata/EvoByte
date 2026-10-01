@@ -1,0 +1,288 @@
+{
+  "access": {
+    "log": [
+      {
+        "caller": "p38-confirmation",
+        "reason": "authorized frozen final scoring",
+        "timestamp": "2026-10-01T20:22:12.435699+00:00"
+      }
+    ],
+    "openings": 1,
+    "retune_against_final_test": false
+  },
+  "confirmation": {
+    "deterministic_resume": true,
+    "n_dev_tasks": 7,
+    "n_final_tasks": 10,
+    "n_seeds": 20,
+    "overall_verified_fraction": 0.2,
+    "paired_dev_minus_final_ci95": [
+      0.1014285714285714,
+      0.20501785714285703
+    ],
+    "per_problem": {
+      "sym_poly_0003_find": {
+        "censored": 20,
+        "fraction": 0.0,
+        "median_ttc_sec": null,
+        "n": 20,
+        "verified": 0,
+        "wilson95": [
+          0.0,
+          0.16113012549493322
+        ]
+      },
+      "sym_poly_0012_find": {
+        "censored": 20,
+        "fraction": 0.0,
+        "median_ttc_sec": null,
+        "n": 20,
+        "verified": 0,
+        "wilson95": [
+          0.0,
+          0.16113012549493322
+        ]
+      },
+      "sym_poly_0016_find": {
+        "censored": 20,
+        "fraction": 0.0,
+        "median_ttc_sec": null,
+        "n": 20,
+        "verified": 0,
+        "wilson95": [
+          0.0,
+          0.16113012549493322
+        ]
+      },
+      "sym_poly_0019_find": {
+        "censored": 2,
+        "fraction": 0.9,
+        "median_ttc_sec": 2.1217958349989203,
+        "n": 20,
+        "verified": 18,
+        "wilson95": [
+          0.6989617935882066,
+          0.9721341060158468
+        ]
+      },
+      "sym_poly_0024_find": {
+        "censored": 20,
+        "fraction": 0.0,
+        "median_ttc_sec": null,
+        "n": 20,
+        "verified": 0,
+        "wilson95": [
+          0.0,
+          0.16113012549493322
+        ]
+      },
+      "sym_poly_0026_find": {
+        "censored": 20,
+        "fraction": 0.0,
+        "median_ttc_sec": null,
+        "n": 20,
+        "verified": 0,
+        "wilson95": [
+          0.0,
+          0.16113012549493322
+        ]
+      },
+      "sym_poly_0029_find": {
+        "censored": 20,
+        "fraction": 0.0,
+        "median_ttc_sec": null,
+        "n": 20,
+        "verified": 0,
+        "wilson95": [
+          0.0,
+          0.16113012549493322
+        ]
+      },
+      "sym_poly_0035_find": {
+        "censored": 17,
+        "fraction": 0.15,
+        "median_ttc_sec": 0.04099964199849637,
+        "n": 20,
+        "verified": 3,
+        "wilson95": [
+          0.05236779195949584,
+          0.36042329588695743
+        ]
+      },
+      "sym_poly_0039_find": {
+        "censored": 19,
+        "fraction": 0.05,
+        "median_ttc_sec": 0.10787050499857287,
+        "n": 20,
+        "verified": 1,
+        "wilson95": [
+          0.008881219432873136,
+          0.23613589351256675
+        ]
+      },
+      "sym_poly_0041_find": {
+        "censored": 2,
+        "fraction": 0.9,
+        "median_ttc_sec": 2.670500083500883,
+        "n": 20,
+        "verified": 18,
+        "wilson95": [
+          0.6989617935882066,
+          0.9721341060158468
+        ]
+      }
+    },
+    "timing_cv_repeat_subset": 0.0007160582768324894
+  },
+  "elapsed_sec": 1476.282009974002,
+  "freeze_manifest": "experiments/p37-qrand-dependency-correlated.json",
+  "freeze_manifest_sha256": "20f2f5ceb7c1fb04a2ae8cceb62c58540cf9935b9cfc30830d4a8739932dd7c3",
+  "frozen_config": {
+    "budget_sec": 5.0,
+    "device": "cuda",
+    "early_stop_fitness": 0.0001,
+    "elite_k": 16,
+    "engine": "GrammarResidentEvolution",
+    "pop_size": 256,
+    "seeds": [
+      2000,
+      2001,
+      2002,
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019
+    ]
+  },
+  "manifest_sha256": "a332ce9ff253d08b06a015d7f40118744bff8e444acd25f2a64e7e0e120fa1f0",
+  "p34_envelope_sha256": "999325fbc27d8d6e22a05ce11c090f3d3de2cfd30d0866892607436c3b34501a",
+  "phase": "p38-independent-confirmation",
+  "preregistration_hash": "3800f6c82ad750bf7351afb5726670a51ab5915e2201f8fa97d444fb870a0569",
+  "problem_set": {
+    "dev_ids": [
+      "sym_poly_0013_find",
+      "sym_poly_0017_find",
+      "sym_poly_0020_find",
+      "sym_poly_0028_find",
+      "sym_poly_0031_find",
+      "sym_poly_0038_find",
+      "sym_poly_0049_find"
+    ],
+    "final_ids": [
+      "sym_poly_0003_find",
+      "sym_poly_0012_find",
+      "sym_poly_0016_find",
+      "sym_poly_0019_find",
+      "sym_poly_0024_find",
+      "sym_poly_0026_find",
+      "sym_poly_0029_find",
+      "sym_poly_0035_find",
+      "sym_poly_0039_find",
+      "sym_poly_0041_find"
+    ],
+    "set_hash": "6017625cbc468a12d84993aab145e0553623857b281e4746a1528023b388f3ca"
+  },
+  "provenance": {
+    "clean_tree": false,
+    "commit": "f57d81812fc4ea062bfc68c2bb4bdad22c2f60f1",
+    "config": {
+      "budget_sec": 5.0,
+      "pop_size": 256,
+      "problems_hash": "6017625cbc468a12",
+      "seeds": [
+        2000,
+        2001,
+        2002,
+        2003,
+        2004,
+        2005,
+        2006,
+        2007,
+        2008,
+        2009,
+        2010,
+        2011,
+        2012,
+        2013,
+        2014,
+        2015,
+        2016,
+        2017,
+        2018,
+        2019
+      ]
+    },
+    "config_hash": "0148cacde7120822",
+    "dataset_hashes": {
+      "p30_splits": "646c71aa4e2f5b59",
+      "p37_freeze": "20f2f5ceb7c1fb04"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/full_matrix.py\n M tests/test_benchmarks.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/full_matrix.py",
+      "--confirm-program",
+      "--freeze-manifest",
+      "experiments/p37-qrand-dependency-correlated.json",
+      "--split-manifest",
+      "experiments/p30-splits.json",
+      "--seeds",
+      "20",
+      "--output",
+      "experiments/p38-confirmation.json"
+    ],
+    "seed_numpy": 2000,
+    "seed_torch_cpu": 2000,
+    "seed_torch_cuda": 2000
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p38-confirmation-raw.json",
+      "sha256": "83342ab776d973979de15e04da2491547ace747ed1947656ac9dc96cb5aba8ee"
+    },
+    {
+      "path": "experiments/p38-frozen-proposer.json",
+      "sha256": "4ee3aefbecb16ef56b5dce3e3d4acf40f88148622b5bef4a3863fb00b55f0efd"
+    }
+  ],
+  "selected_method": "grammar_resident_p33_accepted_baseline",
+  "split_manifest": "experiments/p30-splits.json",
+  "split_manifest_sha256": "646c71aa4e2f5b5927deae995996949a583664ff1443b97a3fce8fa2e870d969",
+  "status": "PASS",
+  "timestamp": "2026-10-01T20:22:12.318041+00:00",
+  "verdict": {
+    "family": "PROVISIONAL",
+    "h1": "NOT_CONFIRMED",
+    "h1_rationale": "H1 named targets (x2_3x_7, sin_x2) are absent from this confirmation; a narrow-family result cannot replace H1.",
+    "rationale": "Overall verified fraction 0.20 is mixed (0.20-0.50); reported with intervals, no promotion beyond the baseline."
+  }
+}
