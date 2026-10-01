@@ -185,3 +185,82 @@ def test_full_matrix_manifest_and_reproduction(tmp_path: Path):
     assert reproduce_file.exists()
     assert len(repro["raw_artifacts_verified"]) > 0
     assert repro["p14_eligible"] == (repro["h1_verdict"] == "SUPPORTED")
+
+
+def test_p38_preregistration_hash() -> None:
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "benchmarks"))
+    from benchmarks.full_matrix import P38_PREREGISTRATION_HASH, P38_PREREGISTRATION_SPEC
+
+    assert len(P38_PREREGISTRATION_HASH) == 64
+    assert "SELECTED METHOD" in P38_PREREGISTRATION_SPEC
+    assert "FAMILY VERDICT RULE" in P38_PREREGISTRATION_SPEC
+    assert "exactly once" in P38_PREREGISTRATION_SPEC
+
+
+def test_p38_wilson_ci_bounds() -> None:
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "benchmarks"))
+    from benchmarks.full_matrix import _p38_wilson_ci
+
+    lo, hi = _p38_wilson_ci(0, 20)
+    assert lo == 0.0 and 0.0 < hi < 0.2
+    lo, hi = _p38_wilson_ci(20, 20)
+    assert 0.8 < lo < 1.0 and hi == 1.0
+    lo, hi = _p38_wilson_ci(10, 20)
+    assert lo < 0.5 < hi
+
+
+def test_p38_confirm_smoke(tmp_path: Path) -> None:
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "benchmarks"))
+    from benchmarks.full_matrix import run_confirm_program
+
+    out_file = tmp_path / "p38-smoke.json"
+    report = run_confirm_program(
+        freeze_manifest=_Path(__file__).resolve().parents[1]
+        / "experiments"
+        / "p37-qrand-dependency-correlated.json",
+        split_manifest=_Path(__file__).resolve().parents[1] / "experiments" / "p30-splits.json",
+        seeds_count=2,
+        device_name="cpu",
+        output_path=out_file,
+        smoke=True,
+    )
+    assert out_file.exists()
+    assert report["phase"] == "p38-independent-confirmation"
+    assert report["status"] in ("PASS", "FAIL")
+    assert report["problem_set"]["final_ids"]
+    assert report["access"]["openings"] == 1
+    assert report["access"]["retune_against_final_test"] is False
+    assert report["verdict"]["family"] in ("CONFIRMED", "PROVISIONAL", "REJECTED", "BLOCKED")
+    assert report["verdict"]["h1"] == "NOT_CONFIRMED"
+    assert isinstance(report["confirmation"]["deterministic_resume"], bool)
+
+
+def test_p38_blocked_without_valid_freeze(tmp_path: Path) -> None:
+    import json as _json
+    import sys as _sys
+    from pathlib import Path as _Path
+
+    _sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "benchmarks"))
+    from benchmarks.full_matrix import run_confirm_program
+
+    bad_freeze = tmp_path / "bad-freeze.json"
+    bad_freeze.write_text(_json.dumps({"phase": "p37", "status": "FAIL"}))
+    report = run_confirm_program(
+        freeze_manifest=bad_freeze,
+        split_manifest=_Path(__file__).resolve().parents[1] / "experiments" / "p30-splits.json",
+        seeds_count=2,
+        device_name="cpu",
+        output_path=tmp_path / "p38-blocked.json",
+        smoke=True,
+    )
+    assert report["status"] == "FAIL"
+    assert report["verdict"]["family"] == "BLOCKED"
