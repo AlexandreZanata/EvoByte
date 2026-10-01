@@ -29,10 +29,12 @@ from benchmarks.math_specialist import (
     run_four_way_trial,
     run_p28_specialist_rematch,
     run_p33_structured_search,
+    run_p36_certified_pilot,
     sample_multihead_candidates,
     sample_neural_candidates,
     sample_sequential_candidates,
     train_neural_proposer,
+    train_p36_certified_specialists,
 )
 from evobyte.bytecode import N_INSTR, encode_instr, is_valid
 from evobyte.grammar import (
@@ -391,3 +393,139 @@ def test_p33_structured_search_smoke() -> None:
         "grammar_evolution",
     }
     assert set(report["summary_by_arm"].keys()) == expected_arms
+
+
+def _p36_synthetic_positive(gt_expr: str, item_id: str, split: str, device: torch.device) -> dict:
+    import json as _json  # noqa: F401 (kept local to preserve test import order)
+
+    from benchmarks.math_specialist import _eval_ground_truth_expr, _try_exact_horner_program
+
+    prog = _try_exact_horner_program(gt_expr)
+    assert prog is not None, f"synthetic gt must be bank-exact: {gt_expr}"
+    xs = np.linspace(-3.0, 3.0, 48, dtype=np.float32)
+    ys = _eval_ground_truth_expr(gt_expr, xs.astype(np.float64)).astype(np.float32)
+    feat = extract_problem_features(xs, ys, device=device)
+    return {
+        "item_id": item_id,
+        "group_id": f"synthetic:{item_id}",
+        "template_id": "tpl_synthetic",
+        "split": split,
+        "label": "positive",
+        "ground_truth_expr": gt_expr,
+        "program_words": [int(w) for w in np.asarray(prog, dtype=np.uint32)],
+        "features_inference_only": [float(f) for f in feat.cpu().numpy().tolist()],
+    }
+
+
+def test_p36_blocked_path_insufficient_corpus() -> None:
+    report = run_p36_certified_pilot(
+        corpus_manifest=_REPO_ROOT / "experiments" / "p35-training-corpus.json",
+        family="polynomial_arithmetic",
+        budgets_str="10s,1m,10m",
+        seeds_count=5,
+        device_name="cpu",
+        output_path=None,
+        smoke=True,
+    )
+    assert report["phase"] == "p36-specialist-learning"
+    assert report["status"] == "PASS"
+    assert report["corpus_status"] == "PASS"
+    assert report["verdict"]["decision"] == "INCONCLUSIVE"
+    assert report["verdict"]["promotion"] == "blocked_insufficient_corpus"
+    assert report["verdict"]["retained_baseline"] == "p33_grammar_resident_accepted_path"
+    assert "training" not in report, "blocked path must not train"
+
+
+def test_p36_trainer_on_certified_data_smoke() -> None:
+    import json as _json
+
+    device = torch.device("cpu")
+    corpus = _json.loads((_REPO_ROOT / "experiments" / "p35-training-corpus.json").read_text())
+    positives = corpus["positives"]
+    train_pos = [p for p in positives if p["split"] == "train"]
+    val_pos = [p for p in positives if p["split"] == "val"]
+    assert train_pos and val_pos
+    fitted = train_p36_certified_specialists(
+        train_pos,
+        val_pos,
+        ["2*x**2 + 3*x - 2"],
+        device=device,
+        max_epochs=2,
+        patience=1,
+        seed=42,
+        cert_track_samples=2,
+    )
+    assert fitted["n_params"]["joint"] <= 5_000_000
+    assert fitted["n_params"]["sequential"] <= 5_000_000
+    assert len(fitted["curves"]) >= 1
+    assert fitted["best"]["epoch"] >= 0
+    assert set(fitted["billed"]) == {
+        "data_sec",
+        "train_joint_sec",
+        "train_seq_sec",
+        "validation_sec",
+        "negative_labelling_sec",
+    }
+
+
+def test_p36_full_pilot_smoke(tmp_path) -> None:
+    import json as _json
+
+    device = torch.device("cpu")
+    bank_gts = [
+        "x+1",
+        "x-1",
+        "x+3",
+        "x+7",
+        "2*x+1",
+        "2*x+3",
+        "3*x-1",
+        "3*x+7",
+        "7*x-10",
+        "x**2-1",
+        "x**2+1",
+        "x**2+2*x+1",
+        "x**2+x-1",
+        "2*x**2+3*x+1",
+        "3*x**2+x+2",
+        "2*x**2-10",
+        "3*x**2+7*x+10",
+        "x**2+10*x+7",
+    ]
+    assert len({g for g in bank_gts}) == 18
+    positives = [
+        _p36_synthetic_positive(g, f"syn_{i:02d}", "train" if i < 16 else "val", device)
+        for i, g in enumerate(bank_gts)
+    ]
+    manifest = {
+        "phase": "p35-verified-training-corpus",
+        "status": "PASS",
+        "positives": positives,
+        "negatives_summary": [],
+        "learning_curve": {"sufficient_for_p36": True},
+        "leakage": {"item_overlap_positives_final_test": []},
+        "curriculum": {"p25_snapshot_path": "data/processed/p25_corpus.jsonl"},
+    }
+    manifest_p = tmp_path / "p35-synthetic.json"
+    manifest_p.write_text(_json.dumps(manifest))
+    report = run_p36_certified_pilot(
+        corpus_manifest=manifest_p,
+        family="polynomial_arithmetic",
+        budgets_str="0.3s",
+        seeds_count=1,
+        device_name="cpu",
+        output_path=None,
+        smoke=True,
+        train_epochs=2,
+    )
+    assert report["status"] == "PASS"
+    assert report["verdict"]["decision"] in ("KEEP", "DROP", "INCONCLUSIVE")
+    assert set(report["pilot"]["summary"]) == {
+        "structured",
+        "genetic",
+        "distributor",
+        "neural",
+        "hybrid",
+    }
+    assert report["training"]["n_train_positives"] == 16
+    assert "amortized_costs" in report

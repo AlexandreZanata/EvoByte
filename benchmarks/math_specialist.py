@@ -30,7 +30,14 @@ sys.path.insert(0, str(_REPO_ROOT / "src"))
 sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
 
 from benchmarks.math_db import RAW_PATH, extract_chains, load_rows, make_splits
-from evobyte.bytecode import CONST_BANK, N_INSTR, N_REGS, OPCODE_VERSION, decode_human
+from evobyte.bytecode import (
+    CONST_BANK,
+    N_INSTR,
+    N_REGS,
+    OPCODE_VERSION,
+    decode_human,
+    decode_instr,
+)
 from evobyte.evolution import EvolutionConfig
 from evobyte.grammar import (
     GrammarResidentEvolution,
@@ -2316,15 +2323,871 @@ def build_verified_training_corpus(
     return report
 
 
+# ==============================================================================
+# 7. P36 Specialist Learning from Certified Solutions (Polynomial Arithmetic)
+# ==============================================================================
+
+P36_MIN_POSITIVES = 16
+P36_MIN_VAL_POSITIVES = 2
+P36_KEEP_TTQ_IMPROVEMENT_PCT = 20.0
+P36_KEEP_MAX_PENALTY_PCT = 25.0
+P36_ALLOWED_OPS = (0x00, 0x01, 0x02, 0x03, 0x0F)  # NOP, ADD, SUB, MUL, CSEL
+P36_PILOT_SEEDS = (42, 142, 242, 342, 442)
+
+
+def _p36_op_allow_mask(device: torch.device) -> torch.Tensor:
+    """Boolean mask over the 16 opcode classes for the polynomial grammar."""
+    mask = torch.zeros(16, dtype=torch.bool, device=device)
+    mask[list(P36_ALLOWED_OPS)] = True
+    return mask
+
+
+def _p36_program_targets(prog_words: np.ndarray) -> dict[str, np.ndarray]:
+    """Split program words into opcode/dst/a/b class-index targets."""
+    w = np.asarray(prog_words, dtype=np.uint32)
+    return {
+        "ops": (w & 0xFF).astype(np.int64).clip(0, 15),
+        "dst": (((w >> 8) & 0xFF) % N_REGS).astype(np.int64),
+        "a": (((w >> 16) & 0xFF) % N_REGS).astype(np.int64),
+        "b": (((w >> 24) & 0xFF) % 16).astype(np.int64),
+    }
+
+
+def _p36_op_histogram(programs: list[np.ndarray]) -> dict[str, int]:
+    """Count arithmetic operator usage across certified programs."""
+    counts = {"ADD": 0, "SUB": 0, "MUL": 0, "DIV": 0, "POW": 0}
+    names = {0x01: "ADD", 0x02: "SUB", 0x03: "MUL", 0x04: "DIV", 0x09: "POW"}
+    for prog in programs:
+        for word in np.asarray(prog, dtype=np.uint32):
+            op, _, _, _ = decode_instr(word)
+            if op in names:
+                counts[names[op]] += 1
+    return counts
+
+
+def _p36_grids_from_gt(
+    gt_expr: str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Build train/test/extrapolation grids from a ground-truth expression."""
+    train_xs = np.linspace(-3.0, 3.0, 48, dtype=np.float64)
+    test_xs = np.linspace(-2.9, 2.9, 32, dtype=np.float64)
+    extrap_xs = np.concatenate([np.linspace(-6.0, -3.5, 16), np.linspace(3.5, 6.0, 16)]).astype(
+        np.float64
+    )
+    return (
+        train_xs,
+        _eval_ground_truth_expr(gt_expr, train_xs),
+        test_xs,
+        _eval_ground_truth_expr(gt_expr, test_xs),
+        extrap_xs,
+        _eval_ground_truth_expr(gt_expr, extrap_xs),
+    )
+
+
+def _p36_certify(
+    candidate: np.ndarray,
+    gt_expr: str,
+    grids: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    threshold: float,
+) -> Any:
+    """Run P31-style L2 verification for one candidate program."""
+    from evobyte.verifier import verify_l2
+
+    train_xs, train_ys, test_xs, test_ys, extrap_xs, extrap_ys = grids
+    return verify_l2(
+        np.asarray(candidate, dtype=np.uint32),
+        train_xs,
+        train_ys,
+        test_xs,
+        test_ys,
+        val_xs=test_xs,
+        val_ys=test_ys,
+        extrap_xs=extrap_xs,
+        extrap_ys=extrap_ys,
+        adversarial_xs=extrap_xs,
+        ground_truth_formula=gt_expr,
+        error_threshold=threshold,
+        extrap_threshold=1.0,
+        domain_str="[-3, 3] train; [-6, -3.5]U[3.5, 6] extrap",
+    )
+
+
+def train_p36_certified_specialists(
+    positives_train: list[dict[str, Any]],
+    positives_val: list[dict[str, Any]],
+    neg_ground_truths: list[str],
+    device: torch.device,
+    max_epochs: int = 20,
+    patience: int = 5,
+    seed: int = 42,
+    cert_track_samples: int = 4,
+) -> dict[str, Any]:
+    """Train joint (primary) and sequential (diagnostic) proposers on certified data.
+
+    Supervised cross-entropy on certified positives with grammar/type masks,
+    constant handling via CONST_BANK class targets, duplicate/invalidity/gaming
+    penalties, online unlikelihood on checker-labelled negatives, >=10%
+    exploration floor at sampling time, and validation-based stopping on the
+    held-out certified split (never a fixed-epoch declaration).
+    """
+    billed = {
+        "data_sec": 0.0,
+        "train_joint_sec": 0.0,
+        "train_seq_sec": 0.0,
+        "validation_sec": 0.0,
+        "negative_labelling_sec": 0.0,
+    }
+    t_data_0 = time.perf_counter()
+    torch.manual_seed(seed)
+    np.random.seed(seed % (2**32))
+    allow = _p36_op_allow_mask(device)
+
+    def _stack(entries: list[dict[str, Any]]) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        feats = torch.tensor(
+            np.array([x["features_inference_only"] for x in entries], dtype=np.float32),
+            device=device,
+        )
+        tgts = {k: [] for k in ("ops", "dst", "a", "b")}
+        for e in entries:
+            t = _p36_program_targets(np.array(e["program_words"], dtype=np.uint32))
+            for k, v in tgts.items():
+                v.append(t[k])
+        tstack = {
+            k: torch.tensor(np.stack(v), dtype=torch.long, device=device) for k, v in tgts.items()
+        }
+        return feats, tstack
+
+    tr_feats, tr_t = _stack(positives_train)
+    va_feats, va_t = _stack(positives_val)
+    billed["data_sec"] = time.perf_counter() - t_data_0
+
+    progs = [np.array(e["program_words"], dtype=np.uint32) for e in positives_train]
+    fake_corpus = MathCorpus(
+        chains=[],
+        operator_counts=_p36_op_histogram(progs),
+        corpus_hash="p36_certified_" + hashlib.sha256(b"polynomial_arithmetic").hexdigest(),
+        n_train_rows=len(positives_train),
+        n_val_rows=len(positives_val),
+        n_hidden_sealed=0,
+    )
+    distributor = CountingOpcodeDistributor(fake_corpus, device=device)
+    n_params_dist = 0
+
+    joint = MultiHeadJointSpecialist(feat_dim=16, hidden_dim=128).to(device)
+    seq = SequentialSpecialist(feat_dim=16, hidden_dim=128).to(device)
+    n_params_joint = sum(p.numel() for p in joint.parameters())
+    n_params_seq = sum(p.numel() for p in seq.parameters())
+    assert n_params_joint <= 5_000_000 and n_params_seq <= 5_000_000
+
+    criterion = nn.CrossEntropyLoss()
+
+    def _penalties(
+        lo: torch.Tensor, ld: torch.Tensor, la: torch.Tensor, lb: torch.Tensor
+    ) -> tuple[torch.Tensor, dict[str, float]]:
+        p_op = torch.softmax(lo, dim=-1)
+        p_dst = torch.softmax(ld, dim=-1)
+        p_a = torch.softmax(la, dim=-1)
+        p_b = torch.softmax(lb, dim=-1)
+        ent = -(p_op * torch.log(p_op + 1e-8)).sum(-1).mean()
+        ent += -(p_dst * torch.log(p_dst + 1e-8)).sum(-1).mean()
+        ent += -(p_a * torch.log(p_a + 1e-8)).sum(-1).mean()
+        ent += -(p_b * torch.log(p_b + 1e-8)).sum(-1).mean()
+        l_entropy = -0.05 * ent
+        l_invalid = 0.10 * (p_op[:, -1, 0].mean() + (1.0 - p_dst[:, -1, 7]).mean())
+        l_gaming = 0.10 * torch.relu(p_op[:, :, 0x0F].mean() - 0.35) ** 2
+        disallowed = (~allow).to(dtype=lo.dtype)
+        l_mask = 0.20 * (p_op * disallowed.view(1, 1, -1)).sum(-1).mean()
+        parts = {
+            "entropy": float(l_entropy.item()),
+            "invalid": float(l_invalid.item()),
+            "gaming": float(l_gaming.item()),
+            "mask": float(l_mask.item()),
+        }
+        return l_entropy + l_invalid + l_gaming + l_mask, parts
+
+    def _sup_loss(
+        model: nn.Module, feats: torch.Tensor, t: dict[str, torch.Tensor]
+    ) -> tuple[torch.Tensor, tuple[torch.Tensor, ...]]:
+        out = model(feats)
+        lo, ld, la, lb = out[0], out[1], out[2], out[3]
+        loss = (
+            criterion(lo.reshape(-1, 16), t["ops"].reshape(-1))
+            + criterion(ld.reshape(-1, N_REGS), t["dst"].reshape(-1))
+            + criterion(la.reshape(-1, N_REGS), t["a"].reshape(-1))
+            + criterion(lb.reshape(-1, 16), t["b"].reshape(-1))
+        )
+        return loss, (lo, ld, la, lb)
+
+    def _cert_rate(model: nn.Module, entries: list[dict[str, Any]], threshold: float) -> float:
+        ok, tot = 0, 0
+        model.eval()
+        with torch.no_grad():
+            for e in entries:
+                feat = torch.tensor(
+                    np.array(e["features_inference_only"], dtype=np.float32), device=device
+                )
+                if isinstance(model, SequentialSpecialist):
+                    cands = sample_sequential_candidates(
+                        model, cert_track_samples, feat, device=device, exploration_floor=0.10
+                    )
+                else:
+                    cands = sample_multihead_candidates(
+                        model, cert_track_samples, feat, device=device, exploration_floor=0.10
+                    )
+                grids = _p36_grids_from_gt(e["ground_truth_expr"])
+                for c in cands.cpu().numpy().astype(np.uint32):
+                    tot += 1
+                    if _p36_certify(c, e["ground_truth_expr"], grids, threshold).passed:
+                        ok += 1
+        model.train()
+        return ok / max(tot, 1)
+
+    neg_cycle = list(neg_ground_truths)
+    train_curves: list[dict[str, Any]] = []
+    best = {
+        "epoch": -1,
+        "val_loss": float("inf"),
+        "val_cert_rate": 0.0,
+        "joint_state": None,
+        "seq_state": None,
+    }
+    no_improve = 0
+    opt_j = torch.optim.Adam(joint.parameters(), lr=2e-3)
+    opt_s = torch.optim.Adam(seq.parameters(), lr=2e-3)
+
+    for epoch in range(max_epochs):
+        joint.train()
+        seq.train()
+        t_j_0 = time.perf_counter()
+        l_sup_j, outs_j = _sup_loss(joint, tr_feats, tr_t)
+        pen_j, parts_j = _penalties(*outs_j)
+        # Online negatives: sample grammar programs, label with the checker,
+        # apply unlikelihood on verified failures (explicit negative supervision).
+        l_neg_j = torch.zeros((), device=device)
+        n_neg_used = 0
+        if neg_cycle:
+            t_n_0 = time.perf_counter()
+            gt_neg = neg_cycle[epoch % len(neg_cycle)]
+            neg_pop = sample_grammar_batch(4, device=device, seed=seed + epoch)
+            grids_neg = _p36_grids_from_gt(gt_neg)
+            for c in neg_pop.cpu().numpy().astype(np.uint32):
+                if not _p36_certify(c, gt_neg, grids_neg, 1e-4).passed:
+                    nt = _p36_program_targets(c)
+                    lj = joint(tr_feats[:1])[0]
+                    step_idx = torch.arange(N_INSTR, device=device)
+                    tgt_ops = torch.tensor(nt["ops"][:N_INSTR], dtype=torch.long, device=device)
+                    l_neg_j = l_neg_j + torch.log_softmax(lj, dim=-1)[0, step_idx, tgt_ops].mean()
+                    n_neg_used += 1
+            l_neg_j = -0.10 * l_neg_j / max(n_neg_used, 1)
+            billed["negative_labelling_sec"] += time.perf_counter() - t_n_0
+        loss_j = l_sup_j + pen_j + l_neg_j
+        opt_j.zero_grad()
+        loss_j.backward()
+        opt_j.step()
+        billed["train_joint_sec"] += time.perf_counter() - t_j_0
+
+        t_s_0 = time.perf_counter()
+        l_sup_s, outs_s = _sup_loss(seq, tr_feats, tr_t)
+        pen_s, _parts_s = _penalties(*outs_s)
+        loss_s = l_sup_s + pen_s
+        opt_s.zero_grad()
+        loss_s.backward()
+        opt_s.step()
+        billed["train_seq_sec"] += time.perf_counter() - t_s_0
+
+        t_v_0 = time.perf_counter()
+        joint.eval()
+        seq.eval()
+        with torch.no_grad():
+            l_va_j, _ = _sup_loss(joint, va_feats, va_t)
+            l_va_s, _ = _sup_loss(seq, va_feats, va_t)
+        val_loss = float(l_va_j.item() + l_va_s.item())
+        val_cert = _cert_rate(joint, positives_val, 1e-4)
+        billed["validation_sec"] += time.perf_counter() - t_v_0
+        train_curves.append(
+            {
+                "epoch": epoch,
+                "train_joint": float(loss_j.item()),
+                "train_seq": float(loss_s.item()),
+                "val_loss": val_loss,
+                "val_cert_rate": val_cert,
+                "neg_used": n_neg_used,
+                "penalties_joint": parts_j,
+            }
+        )
+        if val_loss < best["val_loss"] - 1e-6:
+            best = {
+                "epoch": epoch,
+                "val_loss": val_loss,
+                "val_cert_rate": val_cert,
+                "joint_state": {k: v.cpu().clone() for k, v in joint.state_dict().items()},
+                "seq_state": {k: v.cpu().clone() for k, v in seq.state_dict().items()},
+            }
+            no_improve = 0
+        else:
+            no_improve += 1
+            if no_improve >= patience:
+                break
+
+    if best["joint_state"] is not None:
+        joint.load_state_dict({k: v.to(device) for k, v in best["joint_state"].items()})
+        seq.load_state_dict({k: v.to(device) for k, v in best["seq_state"].items()})
+
+    return {
+        "joint": joint,
+        "sequential": seq,
+        "distributor": distributor,
+        "n_params": {
+            "distributor": n_params_dist,
+            "joint": n_params_joint,
+            "sequential": n_params_seq,
+        },
+        "curves": train_curves,
+        "best": {k: v for k, v in best.items() if not k.endswith("_state")},
+        "billed": billed,
+    }
+
+
+def _p36_neg_ground_truths(
+    neg_tasks: list[dict[str, Any]],
+    snapshot_rel: str,
+    split_manifest: str | Path,
+) -> list[str]:
+    """Resolve negative-task ground truths from the snapshot (train/val ids only).
+
+    Final-test ids are rejected before any content read; unknown ids are skipped.
+    """
+    try:
+        with open(split_manifest, encoding="utf-8") as f:
+            splits = json.load(f).get("splits", {})
+    except (OSError, ValueError):
+        return []
+    allowed = set(splits.get("train", [])) | set(splits.get("val", []))
+    wanted = {n.get("item_id", "") for n in neg_tasks} & allowed
+    if not wanted:
+        return []
+    snap_p = _REPO_ROOT / snapshot_rel
+    gts: list[str] = []
+    try:
+        with open(snap_p, encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                rec = json.loads(line)
+                if rec.get("id") in wanted:
+                    gt = (rec.get("metadata") or {}).get("ground_truth_expr") or (
+                        rec.get("verifier") or {}
+                    ).get("target_expression")
+                    if gt:
+                        gts.append(str(gt))
+    except (OSError, ValueError):
+        return []
+    return sorted(set(gts))
+
+
+def run_p36_certified_pilot(
+    corpus_manifest: str | Path = "experiments/p35-training-corpus.json",
+    family: str = "polynomial_arithmetic",
+    budgets_str: str = "10s,1m,10m",
+    seeds_count: int = 5,
+    scale_factor: float | None = None,
+    device_name: str | None = None,
+    output_path: str | Path | None = "experiments/p36-specialist.json",
+    smoke: bool = False,
+    train_epochs: int = 20,
+    split_manifest: str | Path = "experiments/p30-splits.json",
+) -> dict[str, Any]:
+    """Execute the P36 certificate-based pilot verdict for the declared family."""
+    t_wall_0 = time.perf_counter()
+    device = resolve_device(device_name)
+    torch.set_num_threads(8)
+    seed_all(42)
+    synchronize(device)
+    spec = PolynomialSpec()
+    if scale_factor is None:
+        scale_factor = (
+            0.05
+            if float(os.environ.get("EVOBYTE_SUSTAINED_SCALE", "1.0")) == 1.0
+            else float(os.environ.get("EVOBYTE_SUSTAINED_SCALE", "1.0"))
+        )
+
+    manifest_p = Path(corpus_manifest)
+    with open(manifest_p, encoding="utf-8") as f:
+        corpus = json.load(f)
+    corpus_sha = hashlib.sha256(manifest_p.read_bytes()).hexdigest()
+    split_manifest_p = Path(split_manifest)
+    p34_p = _REPO_ROOT / "experiments" / "p34-throughput.json"
+    p34_sha = hashlib.sha256(p34_p.read_bytes()).hexdigest() if p34_p.exists() else "missing"
+
+    print("=" * 115)
+    print("P36 SPECIALIST LEARNING FROM CERTIFIED SOLUTIONS (certificate-based pilot)")
+    print(f"  Family              : {family}")
+    print(f"  Device              : {device}")
+    print(f"  Corpus              : {manifest_p} (status={corpus.get('status')})")
+    print("=" * 115)
+
+    base_report = {
+        "phase": "p36-specialist-learning",
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "family": family,
+        "corpus_manifest": str(manifest_p),
+        "corpus_manifest_sha256": corpus_sha,
+        "corpus_status": corpus.get("status"),
+        "p34_envelope_sha256": p34_sha,
+    }
+
+    def _finish(report: dict[str, Any], raw: dict[str, Any]) -> dict[str, Any]:
+        report["elapsed_sec"] = time.perf_counter() - t_wall_0
+        if output_path:
+            out_p = Path(output_path)
+            raw_p = out_p.parent / "p36-specialist-raw.json"
+            raw_p.parent.mkdir(parents=True, exist_ok=True)
+            with open(raw_p, "w", encoding="utf-8") as f:
+                json.dump(raw, f, indent=2, sort_keys=True, default=str)
+            raw_hash = hashlib.sha256(raw_p.read_bytes()).hexdigest()
+            written = write_manifest(out_p, report, {str(raw_p): raw_hash})
+            print(
+                f"Artifact manifest written to {out_p} "
+                f"(manifest_sha256={written['manifest_sha256'][:16]})"
+            )
+        return report
+
+    # Prerequisite gate: corpus must be an accepted (PASS) P35 artifact.
+    if corpus.get("phase") != "p35-verified-training-corpus" or corpus.get("status") != "PASS":
+        report = {
+            **base_report,
+            "status": "FAIL",
+            "verdict": {
+                "decision": "BLOCKED",
+                "rationale": "P35 corpus prerequisite not met: manifest is not an "
+                "accepted PASS artifact; advancement blocked per README contract.",
+            },
+        }
+        print("P36 BLOCKED: P35 corpus prerequisite not met.")
+        return _finish(report, {"trials": []})
+
+    positives = [p for p in corpus.get("positives", []) if p.get("label") == "positive"]
+    train_pos = sorted(
+        [p for p in positives if p.get("split") == "train"], key=lambda e: e["item_id"]
+    )
+    val_pos = sorted([p for p in positives if p.get("split") == "val"], key=lambda e: e["item_id"])
+    learn_curve = corpus.get("learning_curve", {})
+    sufficient = (
+        bool(learn_curve.get("sufficient_for_p36", False))
+        and len(train_pos) >= P36_MIN_POSITIVES
+        and len(val_pos) >= P36_MIN_VAL_POSITIVES
+    )
+
+    # Sufficiency gate: P35 published the limit; fitting on 4 positives cannot test
+    # learning. Inconclusive is a valid outcome; the accepted genetic baseline is
+    # retained for P37 and no learner is promoted.
+    if not sufficient:
+        rationale = (
+            f"P35 certified only {len(positives)} positives "
+            f"({len(train_pos)} train / {len(val_pos)} val; need >={P36_MIN_POSITIVES} "
+            f"with >={P36_MIN_VAL_POSITIVES} val). P35 published this limit and stopped "
+            f"learner promotion. Fitting a neural proposer on {len(positives)} programs "
+            "cannot test learning versus imitation, so no training ran and no weights exist."
+        )
+        print(f"P36 INCONCLUSIVE: {rationale}")
+        report = {
+            **base_report,
+            "status": "PASS",
+            "coverage": {"positives": len(positives), "train": len(train_pos), "val": len(val_pos)},
+            "verdict": {
+                "decision": "INCONCLUSIVE",
+                "rationale": rationale,
+                "promotion": "blocked_insufficient_corpus",
+                "retained_baseline": "p33_grammar_resident_accepted_path",
+            },
+        }
+        return _finish(report, {"trials": []})
+
+    # ---- Full path: adequate certified supervision exists. ----
+    neg_gts = _p36_neg_ground_truths(
+        corpus.get("negatives_summary", []),
+        corpus.get("curriculum", {}).get("p25_snapshot_path", "data/processed/p25_corpus.jsonl"),
+        split_manifest_p,
+    )
+    return _p36_full_pilot(
+        base_report,
+        family,
+        budgets_str,
+        seeds_count,
+        scale_factor,
+        device,
+        spec,
+        train_pos,
+        val_pos,
+        neg_gts,
+        corpus_sha,
+        smoke,
+        train_epochs,
+        output_path,
+        t_wall_0,
+        _finish,
+    )
+
+
+def _p36_full_pilot(
+    base_report: dict[str, Any],
+    family: str,
+    budgets_str: str,
+    seeds_count: int,
+    scale_factor: float,
+    device: torch.device,
+    spec: PolynomialSpec,
+    train_pos: list[dict[str, Any]],
+    val_pos: list[dict[str, Any]],
+    neg_gts: list[str],
+    corpus_sha: str,
+    smoke: bool,
+    train_epochs: int,
+    output_path: str | Path | None,
+    t_wall_0: float,
+    _finish: Any,
+) -> dict[str, Any]:
+    """Full P36 path: billed training with validation stopping + 5-arm pilot."""
+    t_train_0 = time.perf_counter()
+    fitted = train_p36_certified_specialists(
+        train_pos, val_pos, neg_gts, device=device, max_epochs=train_epochs, seed=42
+    )
+    train_time = time.perf_counter() - t_train_0
+    joint, seq_model, distributor = fitted["joint"], fitted["sequential"], fitted["distributor"]
+    print(
+        f"  Trained joint/seq specialists: best val epoch={fitted['best']['epoch']} "
+        f"val_loss={fitted['best']['val_loss']:.4f} "
+        f"val_cert_rate={fitted['best']['val_cert_rate']:.3f} "
+        f"({train_time:.1f}s billed)"
+    )
+
+    seeds = list(P36_PILOT_SEEDS[:seeds_count]) if not smoke else [42]
+    if smoke:
+        parsed_budgets = [("smoke", 0.3)]
+        _, pilot_targets = get_p28_family_targets(family)
+        pilot_targets = pilot_targets[:1]
+        pop_size = 64
+    else:
+        parsed_budgets = [
+            (b.strip(), max(0.2, parse_budget_duration(b.strip()) * scale_factor))
+            for b in budgets_str.split(",")
+            if b.strip()
+        ]
+        _, pilot_targets = get_p28_family_targets(family)
+        pop_size = 1000
+
+    # Runtime guard: pilot tasks must be disjoint from P35 training ground truths.
+    train_gts = {p["ground_truth_expr"] for p in train_pos} | {
+        p["ground_truth_expr"] for p in val_pos
+    }
+    for t in pilot_targets:
+        assert t.formula not in train_gts, f"Pilot task overlaps training supervision: {t.key}"
+
+    arms = ["structured", "genetic", "distributor", "neural", "hybrid"]
+    cfg = EvolutionConfig(
+        pop_size=pop_size,
+        elite_k=max(4, pop_size // 32),
+        tournament_size=4,
+        crossover_p=0.4,
+        gene_mut_p=0.20,
+        random_inject_p=0.10,
+        max_generations=1_000_000,
+        early_stop_fitness=spec.target_mse_threshold,
+    )
+    all_trials: list[dict[str, Any]] = []
+
+    for b_label, b_sec in parsed_budgets:
+        for target in pilot_targets:
+            grids = _p36_grids_from_gt(target.formula)
+            tr_xs_f = grids[0].astype(np.float32)
+            tr_ys_f = grids[1].astype(np.float32)
+            feat = extract_problem_features(tr_xs_f, tr_ys_f, device=device)
+            for arm in arms:
+                for sd in seeds:
+                    seed_all(sd)
+                    t_inf_0 = time.perf_counter()
+                    if arm in ("structured", "genetic"):
+                        init_pop = sample_grammar_batch(pop_size, device=device, seed=sd)
+                    elif arm == "distributor":
+                        init_pop = distributor.sample(pop_size)
+                    elif arm == "neural":
+                        init_pop = sample_multihead_candidates(
+                            joint, pop_size, feat, device=device, exploration_floor=0.10
+                        )
+                    elif arm == "hybrid":
+                        half = pop_size // 2
+                        init_pop = torch.cat(
+                            [
+                                sample_grammar_batch(pop_size - half, device=device, seed=sd),
+                                sample_sequential_candidates(
+                                    seq_model, half, feat, device=device, exploration_floor=0.10
+                                ),
+                            ],
+                            dim=0,
+                        )
+                    else:
+                        raise ValueError(f"Unknown arm: {arm}")
+                    synchronize(device)
+                    t_inf = time.perf_counter() - t_inf_0
+                    # Pure-proposal probe: certificate rate of the initial population.
+                    probe = init_pop[: min(4, pop_size)].cpu().numpy().astype(np.uint32)
+                    probe_ok = sum(
+                        1
+                        for c in probe
+                        if _p36_certify(c, target.formula, grids, spec.target_mse_threshold).passed
+                    )
+
+                    t_run_0 = time.perf_counter()
+                    if arm == "structured":
+                        best_mse, best_prog, cands, ttm = _p36_sampling_loop(
+                            target, grids, b_sec, sd, device, pop_size
+                        )
+                        gens = cands // max(pop_size, 1)
+                    elif arm == "genetic":
+                        evo = GrammarResidentEvolution(
+                            tr_xs_f, tr_ys_f, config=cfg, device=device, seed=sd
+                        )
+                        res = evo.run(time_budget_sec=b_sec)
+                        best_mse, best_prog = (
+                            res["best_mse"],
+                            np.asarray(res["best_program"], dtype=np.uint32),
+                        )
+                    else:
+                        evo = GPUResidentEvolution(
+                            tr_xs_f,
+                            tr_ys_f,
+                            config=cfg,
+                            device=device,
+                            initial_population=init_pop,
+                        )
+                        res = evo.run(time_budget_sec=b_sec)
+                        best_mse, best_prog = (
+                            res["best_mse"],
+                            np.asarray(res["best_program"], dtype=np.uint32),
+                        )
+                        cands, gens = res["candidates_total"], res["generations"]
+                        ttm = next(
+                            (
+                                h.get("elapsed_total_s", b_sec)
+                                for h in res.get("history", [])
+                                if h.get("best_mse", float("inf")) <= spec.target_mse_threshold
+                            ),
+                            b_sec,
+                        )
+                    t_run = time.perf_counter() - t_run_0
+                    cert = _p36_certify(best_prog, target.formula, grids, spec.target_mse_threshold)
+                    certified = bool(cert.passed)
+                    all_trials.append(
+                        {
+                            "arm": arm,
+                            "target": target.key,
+                            "formula": target.formula,
+                            "seed": sd,
+                            "budget_label": b_label,
+                            "budget_sec": b_sec,
+                            "sampling_sec": t_inf,
+                            "search_sec": t_run,
+                            "candidates_total": cands,
+                            "generations": gens,
+                            "search_cvps": cands / max(t_run, 1e-6),
+                            "best_mse": best_mse,
+                            "certified": certified,
+                            "certificate": cert.decision,
+                            "time_to_certified_sec": ttm if certified else None,
+                            "censored": not certified,
+                            "probe_cert_rate": probe_ok / max(len(probe), 1),
+                        }
+                    )
+
+    summary: dict[str, Any] = {}
+    for arm in arms:
+        recs = [t for t in all_trials if t["arm"] == arm]
+        cert_rate = float(np.mean([1.0 if t["certified"] else 0.0 for t in recs]))
+        ttcs = [t["time_to_certified_sec"] for t in recs if t["time_to_certified_sec"] is not None]
+        summary[arm] = {
+            "trials": len(recs),
+            "cert_rate": cert_rate,
+            "median_time_to_certified_sec": float(np.median(ttcs)) if ttcs else None,
+            "mean_cvps": float(np.mean([t["search_cvps"] for t in recs])),
+            "mean_probe_cert_rate": float(np.mean([t["probe_cert_rate"] for t in recs])),
+            "censored": sum(1 for t in recs if t["censored"]),
+        }
+
+    gen_ttc = summary["genetic"]["median_time_to_certified_sec"]
+    neu_ttc = summary["neural"]["median_time_to_certified_sec"]
+    if gen_ttc is None or neu_ttc is None or summary["neural"]["cert_rate"] == 0:
+        decision, rationale = (
+            "INCONCLUSIVE",
+            (
+                "Lack of certified successes cannot support a time-to-solution win; "
+                "no promotion, genetic baseline retained."
+            ),
+        )
+        improv, penalty = 0.0, 0.0
+    else:
+        improv = (gen_ttc - neu_ttc) / max(gen_ttc, 1e-9) * 100.0
+        gen_cvps = summary["genetic"]["mean_cvps"]
+        neu_cvps = summary["neural"]["mean_cvps"]
+        penalty = max(0.0, (gen_cvps - neu_cvps) / max(gen_cvps, 1e-9)) * 100.0
+        if improv >= P36_KEEP_TTQ_IMPROVEMENT_PCT and penalty <= P36_KEEP_MAX_PENALTY_PCT:
+            decision, rationale = (
+                "KEEP",
+                (
+                    f"Primary joint proposer improves verified time-to-certified by {improv:.1f}% "
+                    f"(>={P36_KEEP_TTQ_IMPROVEMENT_PCT}%) with {penalty:.1f}% throughput penalty. "
+                    "Promotion additionally requires an ADR superseding D010 for this family."
+                ),
+            )
+        else:
+            decision, rationale = (
+                "DROP",
+                (
+                    f"Joint proposer ttq-improvement {improv:.1f}% / penalty {penalty:.1f}% "
+                    "misses the frozen adoption bar; genetic baseline retained."
+                ),
+            )
+
+    amortized: dict[str, Any] = {}
+    fit_cost = train_time + fitted["billed"]["validation_sec"]
+    for n_q in (1, 10, 100, 1000):
+        amortized[f"N={n_q}"] = {
+            arm: {
+                "amortized_fit_sec": fit_cost / n_q if arm in ("neural", "hybrid") else 0.0,
+                "note": "observed" if arm in summary else "missing",
+            }
+            for arm in arms
+        }
+
+    weights_paths: dict[str, str] = {}
+    if output_path:
+        out_p = Path(output_path)
+        weights_paths = {
+            "joint": str(out_p.parent / "p36-joint.pt"),
+            "sequential": str(out_p.parent / "p36-sequential.pt"),
+        }
+        torch.save(joint.state_dict(), weights_paths["joint"])
+        torch.save(seq_model.state_dict(), weights_paths["sequential"])
+    weights_hashes = {
+        k: hashlib.sha256(Path(v).read_bytes()).hexdigest() if Path(v).exists() else "missing"
+        for k, v in weights_paths.items()
+    }
+
+    prov = collect_provenance(
+        seed=42,
+        device=device,
+        dataset_hashes={"p35_corpus": corpus_sha[:16]},
+        config={
+            "family": family,
+            "budgets": budgets_str,
+            "scale": scale_factor,
+            "seeds": seeds,
+            "criterion_ttq_pct": P36_KEEP_TTQ_IMPROVEMENT_PCT,
+        },
+    )
+    report = {
+        **base_report,
+        "status": "PASS",
+        "provenance": prov,
+        "preregistration": {
+            "primary_neural": "MultiHeadJointSpecialist (feature-conditioned joint heads)",
+            "diagnostic_neural": "SequentialSpecialist (reported separately; cannot win KEEP)",
+            "baseline": "CountingOpcodeDistributor (0 params)",
+            "criterion": f"KEEP iff joint ttq-improvement >= {P36_KEEP_TTQ_IMPROVEMENT_PCT}% "
+            f"with throughput penalty <= {P36_KEEP_MAX_PENALTY_PCT}%",
+            "adr": "KEEP additionally requires an ADR superseding D010 for this family only",
+        },
+        "training": {
+            "n_train_positives": len(train_pos),
+            "n_val_positives": len(val_pos),
+            "best_val_epoch": fitted["best"]["epoch"],
+            "best_val_loss": fitted["best"]["val_loss"],
+            "best_val_cert_rate": fitted["best"]["val_cert_rate"],
+            "curves": fitted["curves"],
+            "billed": fitted["billed"],
+        },
+        "pilot": {
+            "arms": arms,
+            "summary": summary,
+            "budgets_nominal": budgets_str,
+            "budgets_effective_sec": parsed_budgets,
+            "scale_factor": scale_factor,
+            "seeds": seeds,
+        },
+        "verdict": {
+            "decision": decision,
+            "rationale": rationale,
+            "ttq_improvement_pct": float(improv),
+            "throughput_penalty_pct": float(penalty),
+            "promotion": "blocked_pending_adr" if decision == "KEEP" else "not_promoted",
+            "retained_baseline": "p33_grammar_resident_accepted_path",
+        },
+        "artifacts": {
+            "weights": weights_paths,
+            "weights_sha256": weights_hashes,
+            "bytecode_schema": "v0_16word_r7_output",
+            "constants": "CONST_BANK_pinned_opcode_v0",
+            "proposal_commands": {
+                "neural": "sample_multihead_candidates(joint, n, features, exploration_floor=0.10)",
+                "sequential": "sample_sequential_candidates(seq, n, features, exploration_floor=0.10)",
+            },
+        },
+        "amortized_costs": amortized,
+    }
+    return _finish(report, {"trials": all_trials, "curves": fitted["curves"]})
+
+
+def _p36_sampling_loop(
+    target: Any,
+    grids: tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray],
+    budget_sec: float,
+    seed: int,
+    device: torch.device,
+    pop_size: int,
+) -> tuple[float, np.ndarray, int, float]:
+    """Pure grammar-sampling search loop (structured arm, no evolution)."""
+    from evobyte.vm_torch import execute_population_torch
+
+    xs_t = torch.from_numpy(grids[0].astype(np.float32)).to(device)
+    ys_t = torch.from_numpy(grids[1].astype(np.float32)).to(device)
+    t0 = time.perf_counter()
+    best_mse, best_prog, cands, ttm, ctr = float("inf"), None, 0, budget_sec, seed
+    while time.perf_counter() - t0 < budget_sec:
+        ctr += 1
+        pop = sample_grammar_batch(pop_size, device=device, seed=ctr)
+        cands += pop_size
+        preds, _ = execute_population_torch(pop, xs_t, device=device)
+        mse = ((preds - ys_t.unsqueeze(0)) ** 2).mean(dim=1)
+        cur = int(torch.argmin(mse).item())
+        if float(mse[cur].item()) < best_mse:
+            best_mse = float(mse[cur].item())
+            best_prog = pop[cur].cpu().numpy().astype(np.uint32)
+            if best_mse <= 1e-4:
+                ttm = time.perf_counter() - t0
+                break
+    assert best_prog is not None
+    return best_mse, best_prog, cands, ttm
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="P23/P28/P33/P35 Math Specialist Benchmark (GSM8K Chains / Rematch / Structured Search / Verified Corpus)"
+        description="P23/P28/P33/P35/P36 Math Specialist Benchmark (Chains / Rematch / Structured Search / Verified Corpus / Certified Pilot)"
     )
     parser.add_argument("--pilot", action="store_true", help="Run 4-way pilot benchmark (P23)")
     parser.add_argument(
         "--build-verified-corpus",
         action="store_true",
         help="Run P35 certified program corpus build for specialist training",
+    )
+    parser.add_argument(
+        "--train-certified",
+        action="store_true",
+        help="Run P36 certificate-based pilot on the certified corpus",
+    )
+    parser.add_argument(
+        "--corpus-manifest",
+        type=str,
+        default="experiments/p35-training-corpus.json",
+        help="P35 corpus manifest path (default: experiments/p35-training-corpus.json)",
     )
     parser.add_argument(
         "--split-manifest",
@@ -2371,6 +3234,23 @@ def main() -> int:
     )
     parser.add_argument("--device", type=str, default=None, help="Target device (cpu/cuda)")
     args = parser.parse_args()
+
+    # P36 Certified pilot mode (takes precedence over P28 family trigger)
+    if args.train_certified:
+        family = args.family or "polynomial_arithmetic"
+        out_path = args.output or "experiments/p36-specialist.json"
+        res = run_p36_certified_pilot(
+            corpus_manifest=args.corpus_manifest,
+            family=family,
+            budgets_str=args.budgets,
+            seeds_count=args.seeds,
+            scale_factor=None if args.scale_budgets == 1.0 else args.scale_budgets,
+            device_name=args.device,
+            output_path=out_path,
+            smoke=args.smoke,
+            split_manifest=args.split_manifest,
+        )
+        return 0 if res["status"] == "PASS" else 1
 
     # P35 Certified corpus mode (takes precedence over P28 family trigger)
     if args.build_verified_corpus:

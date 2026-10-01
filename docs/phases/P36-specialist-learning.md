@@ -1,8 +1,11 @@
 # P36 — Specialist learning from certified solutions
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** Accepted P35 corpus and P34 resource configuration.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata
+**Result:** INCONCLUSIVE — P35 certified only 4 positives (3 train/1 val, need
+>=16 with >=2 val); no training ran, no weights, promotion blocked, P33
+grammar-resident baseline retained for P37.
 **Branch:** `codex/p36-specialist-learning`.
 
 ## Objective
