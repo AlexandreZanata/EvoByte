@@ -1,9 +1,10 @@
 # P29 — Open problems with verifiable certificates
 
-**Status:** Proposed.
+**Status:** Done (2026-10-01; certified erdos-straus rediscovery; artifact `experiments/p29-erdos-straus.json`; `make verify` green).
 **Prerequisite:** P26 lineage (ancestry/audit) AND P28 verdict recorded.
 Only finalists reach exact checking; the search stays stochastic.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** Codex / Antigravity.
+
 
 ## Objective
 
@@ -72,6 +73,21 @@ Artifact: checksummed per-problem JSON (nomination, campaign lineage ref,
 checker evidence, reproduction, classification) plus certificate/proof
 artifacts where claimed. Done means certified results or honest
 nulls/candidates — never an uncertified "discovery".
+
+## Outcome & Certified Results
+
+- **Nominated Problem:** `erdos-straus` (Erdős-Straus Diophantine Decomposition: $4/n = 1/x + 1/y + 1/z$).
+- **Registry Suite Implemented:**
+  - `erdos-straus`: Diophantine fraction problem with exact integer certificate.
+  - `taxicab`: Hardy-Ramanujan cube sum collisions ($x^3 + y^3 = z^3 + w^3$).
+  - `diophantine-quintuple`: Search for 5th extension to $\{1, 3, 8, 120\}$, certified bounded null.
+- **Campaign Execution:**
+  - **Candidates Filtered on GPU:** 1,085,094 candidates at 6,506,948 CVPS in 0.17s.
+  - **Finalist Promoted to CPU:** $n = 1009 \implies x = 253, y = 85096, z = 1974822872$.
+  - **Exact Arithmetic Check:** $\text{LHS} = 4xyz = 170066121441100544$, $\text{RHS} = n(xy+yz+xz) = 170066121441100544$, Residual = 0 (bit-exact).
+  - **Independent Reproduction:** Pass; reproduction hash `4e1801ad2d7a1df00195087bb0333dd71586fa7ce73bdd8e312e5dcecf2212dd`.
+- **Classification:** `rediscovery` (per P29 binding Discovery Criterion; matches known literature instances, Mordell 1967 / Elsholtz & Tao 2013).
+- **Artifact:** `experiments/p29-erdos-straus.json` (checksummed manifest with raw trace and signed certificate).
 
 ## Risks
 
