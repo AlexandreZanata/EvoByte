@@ -1,8 +1,8 @@
 # P34 — Profiled full-pipeline throughput and bounded tracing
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** P33 verdict recorded; use its winning path or the P32 accepted baseline.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata
 **Branch:** `codex/p34-profiled-throughput`.
 
 ## Objective

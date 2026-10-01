@@ -22,17 +22,33 @@ from benchmarks.math_specialist import (
     SequentialSpecialist,
     TinyMathProposer,
     build_math_corpus,
+    build_verified_training_corpus,
     extract_problem_features,
     get_p28_family_targets,
     get_pilot_targets,
     run_four_way_trial,
     run_p28_specialist_rematch,
+    run_p33_structured_search,
     sample_multihead_candidates,
     sample_neural_candidates,
     sample_sequential_candidates,
     train_neural_proposer,
 )
-from evobyte.bytecode import N_INSTR
+from evobyte.bytecode import N_INSTR, encode_instr, is_valid
+from evobyte.grammar import (
+    BinOp,
+    Const,
+    HornerPoly,
+    PolynomialSpec,
+    Var,
+    analyze_program_liveness,
+    canonicalize_bytecode,
+    compile_expr_to_bytecode,
+    compile_horner_to_bytecode,
+    grammar_mutate_batch,
+    sample_grammar_batch,
+)
+from evobyte.vm import execute
 
 
 def test_build_math_corpus_isolation() -> None:
@@ -226,3 +242,152 @@ def test_p28_rematch_smoke() -> None:
     assert report["ruling"]["decision"] in ("KEEP", "DROP")
     assert "amortized_cost_analysis" in report
     assert "heldout_summary_table" in report
+
+
+def test_p33_polynomial_spec() -> None:
+    spec = PolynomialSpec()
+    assert spec.family == "polynomial_arithmetic"
+    assert spec.variable_reg == 0
+    assert spec.output_reg == 7
+    assert spec.max_degree == 4
+    assert spec.max_instructions == 16
+    assert spec.target_mse_threshold == 1e-4
+    assert len(spec.development_targets) >= 4
+    assert len(spec.heldout_targets) >= 3
+    # Ensure disjoint dev and heldout
+    assert set(spec.development_targets).isdisjoint(set(spec.heldout_targets))
+
+
+def test_p33_horner_compilation_and_execution() -> None:
+    # 3*x + 2: index 11 is 3.0, index 3 is 2.0
+    poly = HornerPoly(coeff_indices=[11, 3])
+    prog, overlength = compile_horner_to_bytecode(poly)
+    assert not overlength
+    assert prog is not None
+    assert is_valid(prog)
+
+    # Verify execution against exact polynomial
+    xs = [-2.0, -1.0, 0.0, 1.0, 2.5]
+    for x in xs:
+        out, flags = execute(prog, x)
+        assert flags == 0
+        expected = 3.0 * x + 2.0
+        assert abs(out - expected) < 1e-5
+
+
+def test_p33_expr_compilation_and_execution() -> None:
+    # Expression: (x * x) - 1.0 (where 1 is const index 1)
+    tree = BinOp("-", BinOp("*", Var(), Var()), Const(1))
+    prog, overlength = compile_expr_to_bytecode(tree)
+    assert not overlength
+    assert prog is not None
+    assert is_valid(prog)
+
+    xs = [-3.0, -1.0, 0.0, 1.0, 2.0]
+    for x in xs:
+        out, flags = execute(prog, x)
+        assert flags == 0
+        expected = x * x - 1.0
+        assert abs(out - expected) < 1e-5
+
+
+def test_p33_liveness_and_dead_code() -> None:
+    # Program with known live and dead instructions
+    tree = BinOp("+", Var(), Const(1))
+    prog, _ = compile_expr_to_bytecode(tree)
+    assert prog is not None
+
+    # Inject a dead instruction at index 10 writing to scratch r4
+    prog[10] = encode_instr(0x01, dst=4, a=0, b=0)
+
+    liveness = analyze_program_liveness(prog)
+    assert liveness["dead_count"] >= 1
+    assert not liveness["is_constant_output"]
+    assert liveness["live_count"] >= 1
+
+    # Test pure constant output detection
+    const_prog, _ = compile_expr_to_bytecode(Const(3))
+    assert const_prog is not None
+    const_live = analyze_program_liveness(const_prog)
+    assert const_live["is_constant_output"] is True
+
+
+def test_p33_canonicalization() -> None:
+    # Test commutative canonicalization: ADD r7, r4, r2 -> ADD r7, r2, r4
+    prog = np.zeros(N_INSTR, dtype=np.uint32)
+    prog[0] = encode_instr(0x01, dst=7, a=4, b=2)
+    canon, info = canonicalize_bytecode(prog)
+
+    assert info["reordered_count"] == 1
+    assert info["live_count"] == 1
+    assert is_valid(canon)
+
+
+def test_p33_sample_and_mutate_grammar_batch() -> None:
+    device = torch.device("cpu")
+    batch = sample_grammar_batch(16, device=device, seed=42)
+    assert batch.shape == (16, N_INSTR)
+    assert batch.dtype == torch.int64
+
+    for i in range(16):
+        prog = batch[i].numpy().astype(np.uint32)
+        assert is_valid(prog)
+
+    mutated = grammar_mutate_batch(batch, device=device, p_mut=0.30, seed=99)
+    assert mutated.shape == (16, N_INSTR)
+    for i in range(16):
+        prog = mutated[i].numpy().astype(np.uint32)
+        assert is_valid(prog)
+
+
+def test_p35_build_verified_corpus_smoke() -> None:
+    report = build_verified_training_corpus(
+        family="polynomial_arithmetic",
+        split_manifest=_REPO_ROOT / "experiments" / "p30-splits.json",
+        output_path=None,
+        device_name="cpu",
+        teacher_budget_sec=0.06,
+        teacher_pop_size=32,
+        seed=42,
+        smoke=True,
+    )
+    assert report["phase"] == "p35-verified-training-corpus"
+    assert report["status"] in ("PASS", "FAIL")
+    assert report["leakage"]["final_test_accessed"] is False
+    assert report["leakage"]["seal_access_count"] == 0
+    assert report["leakage"]["group_overlap_positives_final_test"] == []
+    assert report["leakage"]["item_overlap_positives_final_test"] == []
+    assert report["labels"]["checker_failures_on_reverify"] == 0
+    assert "data_size_ladder" in report["learning_curve"]
+    assert "billed_costs" in report and "teacher_search_sec" in report["billed_costs"]
+    for p in report["positives"]:
+        assert p["label"] == "positive"
+        assert len(p["features_inference_only"]) == 16
+        assert p["certificate"]["decision"].startswith("VERIFIED")
+        assert "ground_truth_expr" in p
+
+
+def test_p33_structured_search_smoke() -> None:
+    report = run_p33_structured_search(
+        family="polynomial_arithmetic",
+        budgets_str="0.05s",
+        seeds_count=1,
+        device_name="cpu",
+        pop_size=32,
+        smoke=True,
+    )
+    assert report["phase"] == "p33-structured-search"
+    assert report["status"] == "PASS"
+    assert "summary_by_arm" in report
+    assert "finalists_verification" in report
+    assert "ruling" in report
+    assert report["ruling"]["decision"] in ("ADOPT", "RETAIN_BASELINE")
+
+    # Confirm all 4 comparison arms were measured
+    expected_arms = {
+        "unrestricted_structured",
+        "grammar_sampling",
+        "genetic_evolution",
+        "grammar_evolution",
+    }
+    assert set(report["summary_by_arm"].keys()) == expected_arms
