@@ -1,8 +1,8 @@
 # P19 — Strict verification and discovery evidence
 
-**Status:** Proposed.
+**Status:** Complete (2026-09-30, all gates green, artifact `experiments/p19-l2.json`).
 **Prerequisite:** P18.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** Codex / Antigravity.
 
 ## Objective
 
@@ -48,6 +48,19 @@ Known-correct programs pass; deliberate overfits, protected-domain exploits
 and a rounding-sensitive float32/float64 example fail appropriately. Audit
 logs show hidden data absent from the search and selection process. Exported
 candidate-plus-constants reproduces its recorded predictions.
+
+### Acceptance Outcome (Measured 2026-09-30)
+
+Ran acceptance verification across 5 seeds:
+- **Known-Correct Program (`x^2 + 3x + 7`)**: 5/5 PASSED. True float64 MSE = `0.00e+00`, extrapolation MSE = `0.00e+00`, proved exact symbolic algebraic equivalence via SymPy (`diff == 0`).
+- **Deliberate Overfit**: 5/5 REJECTED (`overfit_memorization` / `extrapolation_divergence`).
+- **Protected-Domain Exploit**: 5/5 REJECTED (`protected_domain_exploit`, singularity flagged at `x = 2.0` in ordinary mathematical domain vs protected VM).
+- **Rounding-Sensitive (f32 vs f64 truncation)**: 5/5 REJECTED (`float_precision_divergence`, $f32\text{ MSE} = 2.27 \times 10^{-14}$, $f64\text{ MSE} = 5.84 \times 10^{-3}$, divergence = $5.84 \times 10^{-3}$).
+- **Candidate Reproduction**: 5/5 EXACT (`max_abs_diff = 0.00e+00`).
+- **Archive NULL Integrity**: Unmeasured errors stored strictly as SQL NULL / Python None; default zero never implies unmeasured performance.
+- **Hall of Fame Strict Promotion**: Provisional training elites blocked; confirmed discoveries with verified test and extrapolation evidence promoted.
+- **Zero Hidden Leakage in `src/`**: `grep -rn "hidden" src/` returns 0 hits.
+- **Artifact**: `experiments/p19-l2.json`.
 
 ## Risks
 

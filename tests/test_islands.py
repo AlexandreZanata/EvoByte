@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from pathlib import Path
+
 import numpy as np
 import pytest
 
 from evobyte.islands import (
-    IslandConfig,
     IslandModel,
     IslandRunnerConfig,
     get_default_island_configs,
@@ -99,7 +99,7 @@ def test_islands_checkpoint_hook(tmp_path: Path) -> None:
     )
     rng = np.random.default_rng(777)
 
-    res = run_evolution_islands(xs, ys, config, rng)
+    run_evolution_islands(xs, ys, config, rng)
     assert ckpt_path.exists()
 
     loaded = load_checkpoint(ckpt_path)

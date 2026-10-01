@@ -10,11 +10,27 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 
-import numpy as np
+# Preserve the public oracle exports used by existing callers.
+from evobyte.quantum.oracle import (
+    ORACLE_MAX_QUBITS,
+    commutator_norm,
+    energy,
+    exact,
+    fidelity,
+    operator_matrix,
+    to_hamiltonian_matrix,
+)
 
-from evobyte.quantum.pauli import PHASES, Pauli, commutes_with, decode_human, to_matrix
-
-ORACLE_MAX_QUBITS = 12
+__all__ = [
+    "ORACLE_MAX_QUBITS",
+    "commutator_norm",
+    "energy",
+    "exact",
+    "fidelity",
+    "operator_matrix",
+    "to_hamiltonian_matrix",
+]
+from evobyte.quantum.pauli import PHASES, Pauli, commutes_with, decode_human
 
 
 @dataclass(frozen=True)
@@ -101,17 +117,6 @@ def hamiltonian_hash(terms: list[PauliTerm]) -> str:
     """Stable id for Hall of Fame rows and run records."""
     canon = sorted((t.coeff, t.x_mask, t.z_mask, t.phase) for t in terms)
     return hashlib.sha256(repr(canon).encode()).hexdigest()[:16]
-
-
-from evobyte.quantum.oracle import (
-    ORACLE_MAX_QUBITS,
-    commutator_norm,
-    energy,
-    exact,
-    fidelity,
-    operator_matrix,
-    to_hamiltonian_matrix,
-)
 
 
 def commutes_bitwise(h_terms: list[PauliTerm], o: Pauli) -> bool:

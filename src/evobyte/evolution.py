@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 import torch
@@ -232,8 +233,12 @@ def step_generation(
     pool_size = max(4, min(len(sorted_pop), max(20, int(0.25 * len(sorted_pop)))))
 
     while len(offspring) < n_offspring:
-        idx1 = select_tournament(sorted_fit, config.tournament_size, rng, sample_pool_size=pool_size)
-        idx2 = select_tournament(sorted_fit, config.tournament_size, rng, sample_pool_size=pool_size)
+        idx1 = select_tournament(
+            sorted_fit, config.tournament_size, rng, sample_pool_size=pool_size
+        )
+        idx2 = select_tournament(
+            sorted_fit, config.tournament_size, rng, sample_pool_size=pool_size
+        )
         p1 = sorted_pop[idx1]
         p2 = sorted_pop[idx2]
 
@@ -283,7 +288,7 @@ def run_evolution(
     start_generation: int = 1,
 ) -> dict[str, Any]:
     """Execute the full closed evolutionary loop."""
-    from evobyte.archive import compute_program_hash, save_checkpoint
+    from evobyte.archive import save_checkpoint
 
     if initial_population is not None:
         pop = initial_population.copy()
@@ -303,15 +308,13 @@ def run_evolution(
         # Evaluate batch with VRAM-budget-aware batching
         preds, flags = execute_chunked(pop, xs_train)
         diff = preds - ys_t.unsqueeze(0).to(preds.device)
-        mse = (diff ** 2).mean(dim=1)
+        mse = (diff**2).mean(dim=1)
         # Heavy penalty for runtime invalidity (division by zero, overflow, NaN)
         mse[flags.any(dim=1)] += 1e6
         raw_mse = mse.cpu().numpy()
 
         # Complexity penalty: non-NOP instruction count
-        complexity = np.array(
-            [sum((int(w) & 0xFF) != 0 for w in p) for p in pop], dtype=np.float32
-        )
+        complexity = np.array([sum((int(w) & 0xFF) != 0 for w in p) for p in pop], dtype=np.float32)
         fitnesses = raw_mse + config.complexity_weight * complexity
 
         best_idx = int(np.argmin(fitnesses))

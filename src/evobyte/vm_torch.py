@@ -91,8 +91,14 @@ def _safe_apply_torch(
     elif op == 0x0E:  # MAX
         out = torch.maximum(a, b)
     elif op == 0x0F:  # CSEL: ra + const[b & 0xF]
-        idx = int(b_raw) & 0x0F
-        c_val = const_bank[idx]
+        if isinstance(b_raw, torch.Tensor):
+            idx = b_raw.to(torch.long) & 0x0F
+            c_val = const_bank[idx]
+            if a.ndim > c_val.ndim:
+                c_val = c_val.view(-1, *([1] * (a.ndim - 1)))
+        else:
+            idx = int(b_raw) & 0x0F
+            c_val = const_bank[idx]
         out = a + c_val
     else:
         out = torch.zeros_like(a)
@@ -205,15 +211,43 @@ def execute_torch(
     return out[0], flag[0]
 
 
+class PopulationVMBuffer:
+    """Preallocated reusable VRAM buffer for population-level GPU VM execution."""
+
+    def __init__(
+        self,
+        max_pop: int,
+        max_points: int,
+        device: torch.device | str | None = None,
+    ) -> None:
+        self.device = torch.device(device) if device is not None else get_default_device()
+        self.max_pop = max_pop
+        self.max_points = max_points
+        self.regs = torch.zeros(
+            (max_pop, N_REGS, max_points), dtype=torch.float32, device=self.device
+        )
+        self.overall_invalid = torch.zeros(
+            (max_pop, max_points), dtype=torch.bool, device=self.device
+        )
+        self.p_arange = torch.arange(max_pop, device=self.device)
+
+
 def execute_population_torch(
     programs: np.ndarray | torch.Tensor,
     xs: np.ndarray | torch.Tensor,
     x1s: np.ndarray | torch.Tensor | None = None,
     device: torch.device | str | None = None,
     const_bank: torch.Tensor | np.ndarray | None = None,
+    buffer: PopulationVMBuffer | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Execute a population of P programs across B data points in parallel on device."""
-    if device is None:
+    """Execute a population of P programs across B data points in parallel on device.
+
+    Vectorized across both candidate population (P) and batch data points (B) without
+    candidate-by-candidate Python loops or CPU transfers.
+    """
+    if buffer is not None:
+        device = buffer.device
+    elif device is None:
         device = get_default_device()
     else:
         device = torch.device(device)
@@ -225,11 +259,11 @@ def execute_population_torch(
     const_bank = cb
 
     if isinstance(programs, torch.Tensor):
-        progs_np = programs.cpu().numpy().astype(np.uint32)
+        programs_t = programs.to(dtype=torch.int64, device=device)
     else:
-        progs_np = np.asarray(programs, dtype=np.uint32)
+        programs_t = torch.from_numpy(np.asarray(programs, dtype=np.int64)).to(device)
 
-    P = progs_np.shape[0]
+    P = programs_t.shape[0]
 
     if isinstance(xs, np.ndarray):
         xs_t = torch.from_numpy(xs.astype(np.float32)).to(device)
@@ -247,50 +281,84 @@ def execute_population_torch(
     else:
         x1s_t = torch.zeros_like(xs_t)
 
-    # Initialize registers tensor: shape (P, N_REGS, B)
-    regs = torch.zeros((P, N_REGS, B), dtype=torch.float32, device=device)
+    # Use preallocated buffer if compatible, otherwise allocate
+    if (
+        buffer is not None
+        and buffer.max_pop >= P
+        and buffer.max_points >= B
+        and buffer.device == device
+    ):
+        regs = buffer.regs[:P, :, :B]
+        overall_invalid = buffer.overall_invalid[:P, :B]
+        p_arange = buffer.p_arange[:P]
+        regs.zero_()
+        overall_invalid.zero_()
+    else:
+        regs = torch.zeros((P, N_REGS, B), dtype=torch.float32, device=device)
+        overall_invalid = torch.zeros((P, B), dtype=torch.bool, device=device)
+        p_arange = torch.arange(P, device=device)
+
     regs[:, 0, :] = xs_t.unsqueeze(0).expand(P, -1)
     regs[:, 1, :] = x1s_t.unsqueeze(0).expand(P, -1)
 
-    overall_invalid = torch.zeros((P, B), dtype=torch.bool, device=device)
-    bad_x0 = (~torch.isfinite(regs[:, 0, :])).any(dim=1, keepdim=True)
-    bad_x1 = (~torch.isfinite(regs[:, 1, :])).any(dim=1, keepdim=True)
-    overall_invalid = overall_invalid | bad_x0 | bad_x1
+    bad_x0 = ~torch.isfinite(regs[:, 0, :])
+    bad_x1 = ~torch.isfinite(regs[:, 1, :])
+    overall_invalid |= bad_x0 | bad_x1
+    regs[:, 0, :] = torch.where(bad_x0, torch.zeros_like(regs[:, 0, :]), regs[:, 0, :])
+    regs[:, 1, :] = torch.where(bad_x1, torch.zeros_like(regs[:, 1, :]), regs[:, 1, :])
 
     for step in range(N_INSTR):
-        words = progs_np[:, step]
+        words = programs_t[:, step]
         ops = words & 0xFF
         dsts = (words >> 8) & 0xFF
         as_ = (words >> 16) & 0xFF
         bs = (words >> 24) & 0xFF
 
-        unique_ops = np.unique(ops)
-        for op in unique_ops:
+        # Only dst >= N_REGS or a >= N_REGS skips execution
+        invalid_dst_a = (dsts >= N_REGS) | (as_ >= N_REGS)
+        invalid_b = bs >= N_REGS
+
+        safe_a = torch.clamp(as_, 0, N_REGS - 1)
+        safe_b = bs % N_REGS
+
+        ra_all = regs[p_arange, safe_a]
+        rb_all = regs[p_arange, safe_b]
+
+        unique_ops = torch.unique(ops)
+        for op_t in unique_ops:
+            op = int(op_t.item())
             if op == 0x00:
                 continue
-            idx_p = np.where(ops == op)[0]
-            if len(idx_p) == 0:
+            idx = torch.nonzero(ops == op).squeeze(1)
+            if idx.numel() == 0:
                 continue
 
-            for p_idx in idx_p:
-                dst = int(dsts[p_idx])
-                a = int(as_[p_idx])
-                b = int(bs[p_idx])
+            dst_sub = dsts[idx]
+            bad_dst_a = invalid_dst_a[idx]
+            if bad_dst_a.any():
+                overall_invalid[idx[bad_dst_a]] = True
 
-                if dst >= N_REGS or a >= N_REGS:
-                    overall_invalid[p_idx, :] = True
-                    continue
+            if op in BINARY_OPS:
+                bad_b = invalid_b[idx]
+                if bad_b.any():
+                    overall_invalid[idx[bad_b]] = True
 
-                if op in BINARY_OPS and b >= N_REGS:
-                    overall_invalid[p_idx, :] = True
+            good_mask = ~bad_dst_a
+            if not good_mask.any():
+                continue
 
-                rb = regs[p_idx, b % N_REGS, :]
-                out, flag = _safe_apply_torch(int(op), regs[p_idx, a, :], rb, b, const_bank)
-                regs[p_idx, dst, :] = out
-                overall_invalid[p_idx, :] = overall_invalid[p_idx, :] | flag
+            good_idx = idx[good_mask]
+            good_dst = dst_sub[good_mask]
+            ra_sub = ra_all[good_idx]
+            rb_sub = rb_all[good_idx]
+            b_raw_sub = bs[good_idx]
+
+            out_sub, flag_sub = _safe_apply_torch(op, ra_sub, rb_sub, b_raw_sub, const_bank)
+            regs[good_idx, good_dst] = out_sub
+            overall_invalid[good_idx] = overall_invalid[good_idx] | flag_sub
 
     final = regs[:, 7, :]
     bad_final = ~torch.isfinite(final)
-    overall_invalid = overall_invalid | bad_final
+    overall_invalid |= bad_final
     final = torch.where(bad_final, torch.zeros_like(final), final)
     return final, overall_invalid

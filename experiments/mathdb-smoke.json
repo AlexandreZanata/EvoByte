@@ -1,0 +1,69 @@
+{
+  "chains_computed": 332,
+  "chains_match": 332,
+  "chains_total": 332,
+  "deadline": {
+    "budget_sec": 120.0,
+    "compute_sec": 0.14094272999864188,
+    "elapsed_sec": 0.1446772029994463,
+    "overshoot_sec": 0.0,
+    "setup_sec": 2.7419991965871304e-06,
+    "verification_sec": 1.252999936696142e-06,
+    "warmup_sec": 0.0037304780016711447
+  },
+  "device_actual": "cuda",
+  "gpu_checksum": 662491.0,
+  "hidden_touched": false,
+  "manifest_sha256": "04d81829dc0cf7c441c5d2ad2cbd81933fdd5cf4652412afdd17c4c91df5d2ea",
+  "n_hidden_sealed": 20,
+  "n_visible": 108,
+  "parse_ok": 108,
+  "phase": "p14-mathdb-gsm8k-smoke",
+  "problems_per_sec": 746.4332671120695,
+  "provenance": {
+    "clean_tree": false,
+    "commit": "cabec331e2045edea83c6aa76098bac10bc87bad",
+    "config": {
+      "limit": 128
+    },
+    "config_hash": "f486d106506348fb",
+    "dataset_hashes": {
+      "gsm8k-test": "3730d312f6e34405"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "?? benchmarks/math_db.py\n?? tests/test_math_db.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/math_db.py",
+      "--smoke",
+      "--limit",
+      "128",
+      "--output",
+      "experiments/mathdb-smoke.json"
+    ],
+    "seed_numpy": 0,
+    "seed_torch_cpu": 0,
+    "seed_torch_cuda": 0
+  },
+  "raw_artifacts": [
+    {
+      "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/benchmarks/math_db.py",
+      "sha256": "ce6346301fdabacc75d5b6d1fc46398636683a978e33aaafc40ff80ebaccb659"
+    }
+  ]
+}

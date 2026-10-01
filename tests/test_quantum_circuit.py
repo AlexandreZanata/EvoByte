@@ -11,7 +11,6 @@ import numpy as np
 import pytest
 
 from evobyte.quantum.circuit import (
-    ANGLE_BANK,
     CIRCUIT_BYTECODE_VERSION,
     OPCODE_CNOT,
     OPCODE_CZ,
@@ -309,7 +308,7 @@ def test_unitary_gate_algebra():
 
 
 def test_exact_equivalence_checker():
-    from evobyte.quantum.circuit_evo import check_circuit_equivalence, unitary_fidelity
+    from evobyte.quantum.circuit_evo import check_circuit_equivalence
 
     # 1. Identical circuits
     c1 = [CircuitInstruction(OPCODE_H, 0), CircuitInstruction(OPCODE_CNOT, 0, 1)]
