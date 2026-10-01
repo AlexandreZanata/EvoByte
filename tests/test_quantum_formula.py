@@ -7,18 +7,14 @@ dataset generation and SHA-256 hashing, dataset splitting, and symbolic rediscov
 from __future__ import annotations
 
 import numpy as np
-import pytest
 
 from evobyte.evolution import EvolutionConfig, run_evolution
-from evobyte.quantum.hamiltonians import heisenberg, ising
+from evobyte.quantum.hamiltonians import ising
 from evobyte.quantum.observables import (
-    compute_dataset_hash,
-    correlation_zz,
     entanglement_entropy,
     generate_observable_dataset,
     ground_energy,
     magnetization_x,
-    magnetization_z,
     spectral_gap,
     split_observable_dataset,
 )
@@ -74,14 +70,16 @@ def test_dataset_generation_and_hashing():
     assert "entropy" in ds1.targets
 
     # Check split partitioning
-    splits = split_observable_dataset(ds1, "energy", train_fraction=0.6, val_fraction=0.2, extrap_fraction=0.2)
+    splits = split_observable_dataset(
+        ds1, "energy", train_fraction=0.6, val_fraction=0.2, extrap_fraction=0.2
+    )
     assert "train" in splits
     assert "validation" in splits
     assert "extrapolation" in splits
 
-    xs_train, ys_train = splits["train"]
-    xs_val, ys_val = splits["validation"]
-    xs_extrap, ys_extrap = splits["extrapolation"]
+    xs_train, _ys_train = splits["train"]
+    xs_val, _ys_val = splits["validation"]
+    xs_extrap, _ys_extrap = splits["extrapolation"]
 
     assert len(xs_train) + len(xs_val) + len(xs_extrap) == 11
     assert len(xs_train) > 0

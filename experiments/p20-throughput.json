@@ -1,0 +1,1990 @@
+{
+  "benchmark": "p20_sustained_throughput",
+  "git_commit": "e80750140859",
+  "timestamp": "2026-09-30T12:26:54.184478+00:00",
+  "device": "cuda",
+  "hardware": {
+    "cpu": "x86_64",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "numpy": "2.4.6",
+    "torch": "2.14.0+cu130",
+    "cuda_version": "13.0",
+    "cuda_available": true,
+    "gpu0": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "total_memory_MB": 7805
+    },
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB"
+  },
+  "preregistration": {
+    "targets": [
+      {
+        "id": "poly",
+        "formula": "x**2 + 3*x + 7",
+        "domain": [
+          -10.0,
+          10.0
+        ],
+        "train_points": 256,
+        "val_points": 128,
+        "test_points": 512,
+        "extrap_points": 100
+      },
+      {
+        "id": "sin_x2",
+        "formula": "sin(x) + x**2",
+        "domain": [
+          -10.0,
+          10.0
+        ],
+        "train_points": 256,
+        "val_points": 128,
+        "test_points": 512,
+        "extrap_points": 100
+      }
+    ],
+    "opcode_version": 0,
+    "instruction_slots": 16,
+    "population_size": 2000,
+    "s1_stretch_batch_size": 200000,
+    "uniqueness_window": 200000,
+    "precision_search": "float32",
+    "precision_verification": "float64",
+    "budgets_requested": "10s,1m,10m,1h",
+    "time_scale": 0.02,
+    "seed_list": [
+      42,
+      101,
+      202,
+      303,
+      404
+    ],
+    "duplicate_handling": "GPU torch.unique across batch, accounting overhead charged to runtime, duplicate elites cannot count as new",
+    "stop_conditions": "wall-clock time budget reached or target MSE <= 1e-6"
+  },
+  "s1_stretch_target": {
+    "description": "Distinct S0-valid candidates/s completing S1 at 32 points",
+    "target_threshold": 1000000,
+    "candidates_sampled": 200000,
+    "sample_time_s": 0.008408418001636164,
+    "s0_valid_candidates": 200000,
+    "unique_valid_candidates": 187234,
+    "uniqueness_rate": 0.93617,
+    "s0_check_time_s": 0.0029258329996082466,
+    "dedup_time_s": 0.010146748001716333,
+    "s1_eval_time_s": 0.1189432430001034,
+    "total_time_s": 0.13201582400142797,
+    "s1_unique_valid_cvps": 1418269.373510669,
+    "candidate_points_per_sec": 45384619.95234141,
+    "opcode_distribution": {
+      "0": 2068141,
+      "1": 157362,
+      "2": 158185,
+      "3": 135797,
+      "4": 65584,
+      "5": 32910,
+      "6": 33023,
+      "7": 33245,
+      "8": 21911,
+      "9": 21971,
+      "10": 32748,
+      "11": 21960,
+      "12": 32640,
+      "13": 33116,
+      "14": 32965,
+      "15": 114186
+    },
+    "sample_verification": {
+      "evaluated_top_k": 16,
+      "verified_count": 0,
+      "verified_fraction": 0.0
+    },
+    "verdict": "achieved"
+  },
+  "budget_runs": [
+    {
+      "nominal_budget": "10s",
+      "nominal_budget_seconds": 10.0,
+      "effective_budget_seconds": 0.5,
+      "time_scale": 0.02,
+      "seeds": [
+        42,
+        101,
+        202,
+        303,
+        404
+      ],
+      "runs": [
+        {
+          "seed": 42,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 57.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 17.4,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 648.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 199.15771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 0.6831061489974672,
+            "generations": 3,
+            "candidates_total": 6000,
+            "search_cvps": 8783.407979573385,
+            "best_mse": 88.1554183959961,
+            "best_expression": "LOG r6, r0, 0x03 ; ADD r4, r5, 0x03 ; MAX r2, r6, 0x06 ; MUL r6, r6, 0x06 ; ABS r6, r5, 0x05 ; ADD r3, r0, 0x02 ; MUL r7, r3, 0x00 ; NEG r0, r4, 0x07",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: protected_domain_exploit, test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 88.13697741024852,
+              "extrap_mse": 83.71656485892876,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 0.6163252430014836,
+            "generations": 1,
+            "candidates_total": 2000,
+            "search_cvps": 3245.039892022053,
+            "best_mse": 351.3529357910156,
+            "best_expression": "CSEL r3, r5, 0x01 ; POW r1, r4, 0x01 ; MUL r7, r0, 0x00",
+            "speedup_vs_baseline": 0.3694511173303903,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 350.17416829745594,
+              "extrap_mse": 1474.7653061224491,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.34,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 10.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.6162508790002903,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            }
+          ]
+        },
+        {
+          "seed": 101,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.34,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 10.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 0.6001378619985189,
+            "generations": 3,
+            "candidates_total": 6000,
+            "search_cvps": 9997.702827845924,
+            "best_mse": 183.37908935546875,
+            "best_expression": "SUB r5, r6, 0x01 ; CSEL r7, r2, 0x04 ; SQRT r1, r2, 0x01 ; NEG r5, r1, 0x01 ; EXP r5, r6, 0x9e ; ADD r4, r5, 0x00 ; MAX r5, r4, 0x07 ; MUL r2, r7, 0x05 ; SUB r5, r1, 0x06 ; MUL r7, r4, 0x00",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 182.8551859099804,
+              "extrap_mse": 682.6734693877551,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 0.6831350669999665,
+            "generations": 1,
+            "candidates_total": 2000,
+            "search_cvps": 2927.678722134898,
+            "best_mse": 351.3529357910156,
+            "best_expression": "CSEL r6, r7, 0x04 ; SUB r2, r0, 0x04 ; MUL r7, r0, 0x00",
+            "speedup_vs_baseline": 0.29283514148676565,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 350.17416829745594,
+              "extrap_mse": 1474.7653061224491,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.25,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 12.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.6830420420010341,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            }
+          ]
+        },
+        {
+          "seed": 202,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.08,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 0.5707106359986938,
+            "generations": 2,
+            "candidates_total": 4000,
+            "search_cvps": 7008.805772474083,
+            "best_mse": 69.59476470947266,
+            "best_expression": "EXP r4, r4, 0x00 ; ADD r3, r0, 0x04 ; MUL r7, r3, 0x03",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 69.46379647749508,
+              "extrap_mse": 194.41836734693882,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 1.0180756599984306,
+            "generations": 1,
+            "candidates_total": 2000,
+            "search_cvps": 1964.4905369833546,
+            "best_mse": 351.3529357910156,
+            "best_expression": "ADD r3, r0, 0x04 ; MUL r7, r3, 0x03",
+            "speedup_vs_baseline": 0.28028891094379643,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 350.17416829745594,
+              "extrap_mse": 1474.7653061224491,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.36,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 9.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 1.017997364000621,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            }
+          ]
+        },
+        {
+          "seed": 303,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.36,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 9.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 0.6104785429997719,
+            "generations": 2,
+            "candidates_total": 4000,
+            "search_cvps": 6552.236840863864,
+            "best_mse": 317.2402648925781,
+            "best_expression": "DIV r1, r5, 0x00 ; CSEL r1, r2, 0x0e ; MUL r5, r0, 0x00 ; MAX r0, r4, 0x04 ; ADD r6, r2, 0x05 ; CSEL r7, r6, 0x05",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 316.06149511182116,
+              "extrap_mse": 1440.6526329368144,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 0.8156069209981069,
+            "generations": 1,
+            "candidates_total": 2000,
+            "search_cvps": 2452.161633881773,
+            "best_mse": 317.2402648925781,
+            "best_expression": "DIV r1, r5, 0x00 ; CSEL r1, r2, 0x0e ; MUL r5, r0, 0x00 ; MAX r0, r4, 0x04 ; ADD r6, r2, 0x05 ; CSEL r7, r6, 0x05",
+            "speedup_vs_baseline": 0.3742480153630212,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 316.06149511182116,
+              "extrap_mse": 1440.6526329368144,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.95,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.8155025969972485,
+              "best_mse": 317.2402648925781,
+              "candidates": 2000
+            }
+          ]
+        },
+        {
+          "seed": 404,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.95,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 0.6813508359991829,
+            "generations": 2,
+            "candidates_total": 4000,
+            "search_cvps": 5870.69067602171,
+            "best_mse": 69.59476470947266,
+            "best_expression": "EXP r4, r5, 0x03 ; ADD r4, r0, 0x04 ; EXP r6, r3, 0x03 ; MUL r2, r5, 0x07 ; DIV r5, r6, 0x00 ; MUL r2, r5, 0x04 ; SUB r5, r0, 0x07 ; MUL r7, r4, 0x04",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 69.46379647749508,
+              "extrap_mse": 194.41836734693882,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 1.8053181340001174,
+            "generations": 1,
+            "candidates_total": 2000,
+            "search_cvps": 1107.837982864836,
+            "best_mse": 69.59476470947266,
+            "best_expression": "EXP r4, r5, 0x03 ; ADD r4, r0, 0x04 ; EXP r6, r3, 0x03 ; MUL r2, r5, 0x07 ; DIV r5, r6, 0x00 ; MUL r2, r5, 0x04 ; SUB r5, r0, 0x07 ; MUL r7, r4, 0x04",
+            "speedup_vs_baseline": 0.1887065839441511,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 69.46379647749508,
+              "extrap_mse": 194.41836734693882,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.73,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 1.8051651940004376,
+              "best_mse": 69.59476470947266,
+              "candidates": 2000
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "median_baseline_cvps": 7008.805772474083,
+        "median_optimized_cvps": 2452.161633881773,
+        "median_speedup": 0.3498686814110657,
+        "median_optimized_mse": 351.3529357910156,
+        "min_optimized_mse": 69.59476470947266,
+        "max_optimized_mse": 351.3529357910156,
+        "l2_pass_count": 0,
+        "l2_pass_rate": 0.0
+      }
+    },
+    {
+      "nominal_budget": "1m",
+      "nominal_budget_seconds": 60.0,
+      "effective_budget_seconds": 1.2,
+      "time_scale": 0.02,
+      "seeds": [
+        42,
+        101,
+        202,
+        303,
+        404
+      ],
+      "runs": [
+        {
+          "seed": 42,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.61,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 1.7682204129996535,
+            "generations": 3,
+            "candidates_total": 6000,
+            "search_cvps": 3393.2421297079413,
+            "best_mse": 88.1554183959961,
+            "best_expression": "LOG r6, r0, 0x03 ; ADD r4, r5, 0x03 ; MAX r2, r6, 0x06 ; MUL r6, r6, 0x06 ; ABS r6, r5, 0x05 ; ADD r3, r0, 0x02 ; MUL r7, r3, 0x00 ; NEG r0, r4, 0x07",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: protected_domain_exploit, test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 88.13697741024852,
+              "extrap_mse": 83.71656485892876,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 1.5951794460015662,
+            "generations": 1,
+            "candidates_total": 2000,
+            "search_cvps": 1253.7774386531535,
+            "best_mse": 351.3529357910156,
+            "best_expression": "CSEL r3, r5, 0x01 ; POW r1, r4, 0x01 ; MUL r7, r0, 0x00",
+            "speedup_vs_baseline": 0.36949247673082114,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 350.17416829745594,
+              "extrap_mse": 1474.7653061224491,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 57.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.93,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 1.595001105000847,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            }
+          ]
+        },
+        {
+          "seed": 101,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 57.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.82,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 1.4757111229992006,
+            "generations": 3,
+            "candidates_total": 6000,
+            "search_cvps": 4065.8364001524506,
+            "best_mse": 183.37908935546875,
+            "best_expression": "SUB r5, r6, 0x01 ; CSEL r7, r2, 0x04 ; SQRT r1, r2, 0x01 ; NEG r5, r1, 0x01 ; EXP r5, r6, 0x9e ; ADD r4, r5, 0x00 ; MAX r5, r4, 0x07 ; MUL r2, r7, 0x05 ; SUB r5, r1, 0x06 ; MUL r7, r4, 0x00",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 182.8551859099804,
+              "extrap_mse": 682.6734693877551,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 1.500509534998855,
+            "generations": 1,
+            "candidates_total": 2000,
+            "search_cvps": 1332.8805671345008,
+            "best_mse": 351.3529357910156,
+            "best_expression": "CSEL r6, r7, 0x04 ; SUB r2, r0, 0x04 ; MUL r7, r0, 0x00",
+            "speedup_vs_baseline": 0.3278244464249776,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 350.17416829745594,
+              "extrap_mse": 1474.7653061224491,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.89,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 1.5004015990016342,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            }
+          ]
+        },
+        {
+          "seed": 202,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.85,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 1.6977377209987026,
+            "generations": 3,
+            "candidates_total": 6000,
+            "search_cvps": 3534.114796289306,
+            "best_mse": 69.59476470947266,
+            "best_expression": "EXP r4, r4, 0x00 ; ADD r3, r0, 0x04 ; MUL r7, r3, 0x03",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 69.46379647749508,
+              "extrap_mse": 194.41836734693882,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 1.5578470949985785,
+            "generations": 1,
+            "candidates_total": 2000,
+            "search_cvps": 1283.8230442647036,
+            "best_mse": 351.3529357910156,
+            "best_expression": "ADD r3, r0, 0x04 ; MUL r7, r3, 0x03",
+            "speedup_vs_baseline": 0.363265801555929,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 350.17416829745594,
+              "extrap_mse": 1474.7653061224491,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.23,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 1.5577578949996678,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            }
+          ]
+        },
+        {
+          "seed": 303,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.12,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 1.2277926279966778,
+            "generations": 2,
+            "candidates_total": 4000,
+            "search_cvps": 3257.8791473333586,
+            "best_mse": 317.2402648925781,
+            "best_expression": "DIV r1, r5, 0x00 ; CSEL r1, r2, 0x0e ; MUL r5, r0, 0x00 ; MAX r0, r4, 0x04 ; ADD r6, r2, 0x05 ; CSEL r7, r6, 0x05",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 316.06149511182116,
+              "extrap_mse": 1440.6526329368144,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 1.304361972001061,
+            "generations": 2,
+            "candidates_total": 4000,
+            "search_cvps": 3066.633408411531,
+            "best_mse": 317.2402648925781,
+            "best_expression": "DIV r1, r5, 0x00 ; CSEL r1, r2, 0x0e ; MUL r5, r0, 0x00 ; MAX r0, r4, 0x04 ; ADD r6, r2, 0x05 ; CSEL r7, r6, 0x05",
+            "speedup_vs_baseline": 0.9412974729040007,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 316.06149511182116,
+              "extrap_mse": 1440.6526329368144,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 59.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.14,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.7288847780000651,
+              "best_mse": 317.2402648925781,
+              "candidates": 2000
+            },
+            {
+              "generation": 2,
+              "elapsed_s": 1.3042852850012423,
+              "best_mse": 317.2402648925781,
+              "candidates": 4000
+            }
+          ]
+        },
+        {
+          "seed": 404,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 59.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.14,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 650.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 502.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 1.2819149200004176,
+            "generations": 7,
+            "candidates_total": 14000,
+            "search_cvps": 10921.161600955107,
+            "best_mse": 54.340518951416016,
+            "best_expression": "CSEL r5, r4, 0x08 ; EXP r4, r5, 0x03 ; ADD r4, r0, 0x04 ; MUL r2, r5, 0x07 ; SUB r5, r0, 0x07 ; MUL r7, r4, 0x04",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 54.25887132524965,
+              "extrap_mse": 132.17554485251748,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 1.2370031889986421,
+            "generations": 3,
+            "candidates_total": 6000,
+            "search_cvps": 4850.432119626966,
+            "best_mse": 69.59476470947266,
+            "best_expression": "ADD r7, r1, 0x03 ; EXP r4, r5, 0x22 ; ADD r4, r0, 0x04 ; EXP r6, r3, 0x03 ; MUL r2, r5, 0x07 ; DIV r5, r6, 0x00 ; MUL r7, r4, 0x04",
+            "speedup_vs_baseline": 0.4441315216142184,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 69.46379647749508,
+              "extrap_mse": 194.41836734693882,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 59.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.48,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.6021182629992836,
+              "best_mse": 69.59476470947266,
+              "candidates": 2000
+            },
+            {
+              "generation": 2,
+              "elapsed_s": 0.9017460670002038,
+              "best_mse": 69.59476470947266,
+              "candidates": 4000
+            },
+            {
+              "generation": 3,
+              "elapsed_s": 1.2369460820009408,
+              "best_mse": 69.59476470947266,
+              "candidates": 6000
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "median_baseline_cvps": 3534.114796289306,
+        "median_optimized_cvps": 1332.8805671345008,
+        "median_speedup": 0.37714693606839755,
+        "median_optimized_mse": 351.3529357910156,
+        "min_optimized_mse": 69.59476470947266,
+        "max_optimized_mse": 351.3529357910156,
+        "l2_pass_count": 0,
+        "l2_pass_rate": 0.0
+      }
+    },
+    {
+      "nominal_budget": "10m",
+      "nominal_budget_seconds": 600.0,
+      "effective_budget_seconds": 12.0,
+      "time_scale": 0.02,
+      "seeds": [
+        42,
+        101,
+        202,
+        303,
+        404
+      ],
+      "runs": [
+        {
+          "seed": 42,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 59.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.48,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 3.2925416979996953,
+            "generations": 15,
+            "candidates_total": 30000,
+            "search_cvps": 9111.501919087548,
+            "best_mse": 5.928590951498336e-12,
+            "best_expression": "ADD r4, r5, 0x03 ; CSEL r2, r5, 0x0b ; SUB r6, r6, 0x06 ; ADD r3, r0, 0x02 ; MUL r7, r3, 0x00 ; NEG r0, r4, 0x07 ; CSEL r7, r7, 0x6a",
+            "l2_verification": {
+              "passed": true,
+              "decision": "VERIFIED_DISCOVERY",
+              "f64_test_mse": 1.5580002878114983e-29,
+              "extrap_mse": 2.9484465193540537e-28,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 11.355516174000513,
+            "generations": 15,
+            "candidates_total": 30000,
+            "search_cvps": 2641.8878314565504,
+            "best_mse": 5.928590951498336e-12,
+            "best_expression": "ADD r4, r5, 0x03 ; CSEL r2, r5, 0x0b ; SUB r6, r6, 0x06 ; ADD r3, r0, 0x02 ; MUL r7, r3, 0x00 ; NEG r0, r4, 0x07 ; CSEL r7, r7, 0x6a",
+            "speedup_vs_baseline": 0.2899508615502895,
+            "l2_verification": {
+              "passed": true,
+              "decision": "VERIFIED_DISCOVERY",
+              "f64_test_mse": 1.5580002878114983e-29,
+              "extrap_mse": 2.9484465193540537e-28,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.05,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.744580599002802,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            },
+            {
+              "generation": 2,
+              "elapsed_s": 1.505114894000144,
+              "best_mse": 351.3529357910156,
+              "candidates": 4000
+            },
+            {
+              "generation": 3,
+              "elapsed_s": 2.3235271710000234,
+              "best_mse": 88.1554183959961,
+              "candidates": 6000
+            },
+            {
+              "generation": 4,
+              "elapsed_s": 2.794730065001204,
+              "best_mse": 88.1554183959961,
+              "candidates": 8000
+            },
+            {
+              "generation": 5,
+              "elapsed_s": 3.2784502190006606,
+              "best_mse": 88.1554183959961,
+              "candidates": 10000
+            },
+            {
+              "generation": 6,
+              "elapsed_s": 3.7802395440012333,
+              "best_mse": 88.1554183959961,
+              "candidates": 12000
+            },
+            {
+              "generation": 7,
+              "elapsed_s": 4.2809758729999885,
+              "best_mse": 84.54774475097656,
+              "candidates": 14000
+            },
+            {
+              "generation": 8,
+              "elapsed_s": 4.997746107001149,
+              "best_mse": 52.75680923461914,
+              "candidates": 16000
+            },
+            {
+              "generation": 9,
+              "elapsed_s": 5.741316341001948,
+              "best_mse": 49.0,
+              "candidates": 18000
+            },
+            {
+              "generation": 10,
+              "elapsed_s": 6.442677630002436,
+              "best_mse": 48.986000061035156,
+              "candidates": 20000
+            },
+            {
+              "generation": 11,
+              "elapsed_s": 7.254687216001912,
+              "best_mse": 48.986000061035156,
+              "candidates": 22000
+            },
+            {
+              "generation": 12,
+              "elapsed_s": 8.119933434001723,
+              "best_mse": 48.986000061035156,
+              "candidates": 24000
+            },
+            {
+              "generation": 13,
+              "elapsed_s": 9.641868908001925,
+              "best_mse": 44.33695983886719,
+              "candidates": 26000
+            },
+            {
+              "generation": 14,
+              "elapsed_s": 10.5189449540012,
+              "best_mse": 9.0,
+              "candidates": 28000
+            },
+            {
+              "generation": 15,
+              "elapsed_s": 11.355314415002795,
+              "best_mse": 5.928590951498336e-12,
+              "candidates": 30000
+            }
+          ]
+        },
+        {
+          "seed": 101,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.92,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 12.01964617900012,
+            "generations": 30,
+            "candidates_total": 60000,
+            "search_cvps": 4991.827471995622,
+            "best_mse": 21.08181381225586,
+            "best_expression": "CSEL r2, r4, 0x08 ; CSEL r6, r7, 0x04 ; EXP r5, r6, 0x9e ; ADD r4, r5, 0x00 ; SUB r0, r4, 0x02 ; MUL r7, r4, 0x00",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 21.076703108448942,
+              "extrap_mse": 25.947876690139093,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 12.145866554001259,
+            "generations": 28,
+            "candidates_total": 56000,
+            "search_cvps": 4610.622037630712,
+            "best_mse": 21.08181381225586,
+            "best_expression": "CSEL r2, r4, 0x08 ; CSEL r6, r7, 0x04 ; EXP r5, r6, 0x9e ; ADD r4, r5, 0x00 ; SUB r0, r4, 0x02 ; MUL r7, r4, 0x00",
+            "speedup_vs_baseline": 0.9236340926236956,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 21.076703108448942,
+              "extrap_mse": 25.947876690139093,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 59.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.32,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.6139811530010775,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            },
+            {
+              "generation": 2,
+              "elapsed_s": 1.176751098002569,
+              "best_mse": 183.37908935546875,
+              "candidates": 4000
+            },
+            {
+              "generation": 3,
+              "elapsed_s": 1.4943486820011458,
+              "best_mse": 183.37908935546875,
+              "candidates": 6000
+            },
+            {
+              "generation": 4,
+              "elapsed_s": 1.9835503220019746,
+              "best_mse": 183.37908935546875,
+              "candidates": 8000
+            },
+            {
+              "generation": 5,
+              "elapsed_s": 2.5554164009990927,
+              "best_mse": 183.37908935546875,
+              "candidates": 10000
+            },
+            {
+              "generation": 6,
+              "elapsed_s": 2.936064166999131,
+              "best_mse": 69.59476470947266,
+              "candidates": 12000
+            },
+            {
+              "generation": 7,
+              "elapsed_s": 3.346029014999658,
+              "best_mse": 51.66625213623047,
+              "candidates": 14000
+            },
+            {
+              "generation": 8,
+              "elapsed_s": 3.728063819999079,
+              "best_mse": 51.66625213623047,
+              "candidates": 16000
+            },
+            {
+              "generation": 9,
+              "elapsed_s": 4.12409666700114,
+              "best_mse": 21.305309295654297,
+              "candidates": 18000
+            },
+            {
+              "generation": 10,
+              "elapsed_s": 4.497150319999491,
+              "best_mse": 21.305309295654297,
+              "candidates": 20000
+            },
+            {
+              "generation": 11,
+              "elapsed_s": 4.867246406000049,
+              "best_mse": 21.305309295654297,
+              "candidates": 22000
+            },
+            {
+              "generation": 12,
+              "elapsed_s": 5.320216566000454,
+              "best_mse": 21.305309295654297,
+              "candidates": 24000
+            },
+            {
+              "generation": 13,
+              "elapsed_s": 5.685881543002324,
+              "best_mse": 21.305309295654297,
+              "candidates": 26000
+            },
+            {
+              "generation": 14,
+              "elapsed_s": 6.052390748001926,
+              "best_mse": 21.305309295654297,
+              "candidates": 28000
+            },
+            {
+              "generation": 15,
+              "elapsed_s": 6.491063666999253,
+              "best_mse": 21.305309295654297,
+              "candidates": 30000
+            },
+            {
+              "generation": 16,
+              "elapsed_s": 7.10707123300017,
+              "best_mse": 21.305309295654297,
+              "candidates": 32000
+            },
+            {
+              "generation": 17,
+              "elapsed_s": 7.504623725999409,
+              "best_mse": 21.305309295654297,
+              "candidates": 34000
+            },
+            {
+              "generation": 18,
+              "elapsed_s": 7.850068240000837,
+              "best_mse": 21.305309295654297,
+              "candidates": 36000
+            },
+            {
+              "generation": 19,
+              "elapsed_s": 8.340508935001708,
+              "best_mse": 21.08181381225586,
+              "candidates": 38000
+            },
+            {
+              "generation": 20,
+              "elapsed_s": 8.67539090900027,
+              "best_mse": 21.08181381225586,
+              "candidates": 40000
+            },
+            {
+              "generation": 21,
+              "elapsed_s": 9.018893054002547,
+              "best_mse": 21.08181381225586,
+              "candidates": 42000
+            },
+            {
+              "generation": 22,
+              "elapsed_s": 9.368490994002059,
+              "best_mse": 21.08181381225586,
+              "candidates": 44000
+            },
+            {
+              "generation": 23,
+              "elapsed_s": 9.814859327001614,
+              "best_mse": 21.08181381225586,
+              "candidates": 46000
+            },
+            {
+              "generation": 24,
+              "elapsed_s": 10.179947958000412,
+              "best_mse": 21.08181381225586,
+              "candidates": 48000
+            },
+            {
+              "generation": 25,
+              "elapsed_s": 10.583837031001167,
+              "best_mse": 21.08181381225586,
+              "candidates": 50000
+            },
+            {
+              "generation": 26,
+              "elapsed_s": 10.920709018999332,
+              "best_mse": 21.08181381225586,
+              "candidates": 52000
+            },
+            {
+              "generation": 27,
+              "elapsed_s": 11.579006878000655,
+              "best_mse": 21.08181381225586,
+              "candidates": 54000
+            },
+            {
+              "generation": 28,
+              "elapsed_s": 12.14574248200006,
+              "best_mse": 21.08181381225586,
+              "candidates": 56000
+            }
+          ]
+        },
+        {
+          "seed": 202,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 59.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.32,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 4.313918116000423,
+            "generations": 13,
+            "candidates_total": 26000,
+            "search_cvps": 6027.003596467303,
+            "best_mse": 1.1826095658307167e-11,
+            "best_expression": "CSEL r4, r7, 0x03 ; NEG r1, r4, 0x07 ; ADD r3, r0, 0x04 ; MUL r7, r3, 0x03 ; CSEL r7, r7, 0x0b ; SUB r7, r7, 0x00",
+            "l2_verification": {
+              "passed": true,
+              "decision": "VERIFIED_DISCOVERY",
+              "f64_test_mse": 1.91714770384083e-29,
+              "extrap_mse": 3.493707177042817e-28,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 12.185395381002309,
+            "generations": 12,
+            "candidates_total": 24000,
+            "search_cvps": 1969.5708879021931,
+            "best_mse": 29.284732818603516,
+            "best_expression": "EXP r4, r4, 0x00 ; CSEL r4, r4, 0x08 ; ADD r3, r0, 0x04 ; MUL r7, r3, 0x03 ; CSEL r7, r7, 0x0b",
+            "speedup_vs_baseline": 0.3267910590026272,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 29.200929567736377,
+              "extrap_mse": 109.17185432835056,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.68,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 1.749196357002802,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            },
+            {
+              "generation": 2,
+              "elapsed_s": 3.030026094002096,
+              "best_mse": 69.59476470947266,
+              "candidates": 4000
+            },
+            {
+              "generation": 3,
+              "elapsed_s": 3.5546000480026123,
+              "best_mse": 69.59476470947266,
+              "candidates": 6000
+            },
+            {
+              "generation": 4,
+              "elapsed_s": 4.2642271330005315,
+              "best_mse": 69.59476470947266,
+              "candidates": 8000
+            },
+            {
+              "generation": 5,
+              "elapsed_s": 5.237466080001468,
+              "best_mse": 69.59476470947266,
+              "candidates": 10000
+            },
+            {
+              "generation": 6,
+              "elapsed_s": 6.278049249001924,
+              "best_mse": 66.90434265136719,
+              "candidates": 12000
+            },
+            {
+              "generation": 7,
+              "elapsed_s": 7.169705710002745,
+              "best_mse": 42.594764709472656,
+              "candidates": 14000
+            },
+            {
+              "generation": 8,
+              "elapsed_s": 7.985789438000211,
+              "best_mse": 42.594764709472656,
+              "candidates": 16000
+            },
+            {
+              "generation": 9,
+              "elapsed_s": 8.81037612,
+              "best_mse": 42.594764709472656,
+              "candidates": 18000
+            },
+            {
+              "generation": 10,
+              "elapsed_s": 10.24668666100115,
+              "best_mse": 29.284732818603516,
+              "candidates": 20000
+            },
+            {
+              "generation": 11,
+              "elapsed_s": 11.704670918003103,
+              "best_mse": 29.284732818603516,
+              "candidates": 22000
+            },
+            {
+              "generation": 12,
+              "elapsed_s": 12.185268653000094,
+              "best_mse": 29.284732818603516,
+              "candidates": 24000
+            }
+          ]
+        },
+        {
+          "seed": 303,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.68,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 3.0228593760002695,
+            "generations": 18,
+            "candidates_total": 36000,
+            "search_cvps": 11909.253961933819,
+            "best_mse": 5.928590951498336e-12,
+            "best_expression": "CSEL r6, r4, 0x5b ; ADD r7, r0, 0x06 ; MUL r7, r0, 0x07 ; SIN r5, r4, 0x07 ; CSEL r7, r7, 0x1a",
+            "l2_verification": {
+              "passed": true,
+              "decision": "VERIFIED_DISCOVERY",
+              "f64_test_mse": 1.5580002878114983e-29,
+              "extrap_mse": 2.9484465193540537e-28,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 3.0669240149982215,
+            "generations": 18,
+            "candidates_total": 36000,
+            "search_cvps": 11738.145393869785,
+            "best_mse": 5.928590951498336e-12,
+            "best_expression": "CSEL r6, r4, 0x5b ; ADD r7, r0, 0x06 ; MUL r7, r0, 0x07 ; SIN r5, r4, 0x07 ; CSEL r7, r7, 0x1a",
+            "speedup_vs_baseline": 0.9856323016864904,
+            "l2_verification": {
+              "passed": true,
+              "decision": "VERIFIED_DISCOVERY",
+              "f64_test_mse": 1.5580002878114983e-29,
+              "extrap_mse": 2.9484465193540537e-28,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 59.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.77,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 20.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.2617645129976154,
+              "best_mse": 317.2402648925781,
+              "candidates": 2000
+            },
+            {
+              "generation": 2,
+              "elapsed_s": 0.4883070089999819,
+              "best_mse": 317.2402648925781,
+              "candidates": 4000
+            },
+            {
+              "generation": 3,
+              "elapsed_s": 0.7152616829989711,
+              "best_mse": 317.2402648925781,
+              "candidates": 6000
+            },
+            {
+              "generation": 4,
+              "elapsed_s": 0.9259685119977803,
+              "best_mse": 183.37908935546875,
+              "candidates": 8000
+            },
+            {
+              "generation": 5,
+              "elapsed_s": 1.0856242849986302,
+              "best_mse": 149.26641845703125,
+              "candidates": 10000
+            },
+            {
+              "generation": 6,
+              "elapsed_s": 1.2479364509999868,
+              "best_mse": 149.26641845703125,
+              "candidates": 12000
+            },
+            {
+              "generation": 7,
+              "elapsed_s": 1.4292593489990395,
+              "best_mse": 51.66625213623047,
+              "candidates": 14000
+            },
+            {
+              "generation": 8,
+              "elapsed_s": 1.6039780829996744,
+              "best_mse": 51.66625213623047,
+              "candidates": 16000
+            },
+            {
+              "generation": 9,
+              "elapsed_s": 1.7744010769965826,
+              "best_mse": 51.66625213623047,
+              "candidates": 18000
+            },
+            {
+              "generation": 10,
+              "elapsed_s": 1.935207136997633,
+              "best_mse": 51.66625213623047,
+              "candidates": 20000
+            },
+            {
+              "generation": 11,
+              "elapsed_s": 2.096433120997972,
+              "best_mse": 11.666288375854492,
+              "candidates": 22000
+            },
+            {
+              "generation": 12,
+              "elapsed_s": 2.2396412809976027,
+              "best_mse": 11.666288375854492,
+              "candidates": 24000
+            },
+            {
+              "generation": 13,
+              "elapsed_s": 2.3745645659982983,
+              "best_mse": 9.673500061035156,
+              "candidates": 26000
+            },
+            {
+              "generation": 14,
+              "elapsed_s": 2.502798849996907,
+              "best_mse": 9.673500061035156,
+              "candidates": 28000
+            },
+            {
+              "generation": 15,
+              "elapsed_s": 2.6256199779963936,
+              "best_mse": 0.6734998226165771,
+              "candidates": 30000
+            },
+            {
+              "generation": 16,
+              "elapsed_s": 2.7564473709971935,
+              "best_mse": 0.6734998226165771,
+              "candidates": 32000
+            },
+            {
+              "generation": 17,
+              "elapsed_s": 2.909302037998714,
+              "best_mse": 0.6734998226165771,
+              "candidates": 34000
+            },
+            {
+              "generation": 18,
+              "elapsed_s": 3.066885073996673,
+              "best_mse": 5.928590951498336e-12,
+              "candidates": 36000
+            }
+          ]
+        },
+        {
+          "seed": 404,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 59.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.77,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 20.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 12.030396281999856,
+            "generations": 135,
+            "candidates_total": 270000,
+            "search_cvps": 22443.150971176234,
+            "best_mse": 21.06521987915039,
+            "best_expression": "CSEL r5, r4, 0x34 ; SIN r5, r5, 0x06 ; EXP r4, r5, 0x03 ; ADD r4, r0, 0x04 ; MUL r7, r4, 0x04",
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 21.05827881124715,
+              "extrap_mse": 27.68520428408515,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 12.083747240998491,
+            "generations": 51,
+            "candidates_total": 102000,
+            "search_cvps": 8441.090165634054,
+            "best_mse": 21.053058624267578,
+            "best_expression": "CSEL r5, r4, 0x08 ; EXP r4, r5, 0x03 ; ADD r4, r0, 0x04 ; CSEL r4, r4, 0x04 ; MUL r7, r4, 0x04",
+            "speedup_vs_baseline": 0.3761098509061832,
+            "l2_verification": {
+              "passed": false,
+              "decision": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+              "f64_test_mse": 21.04726221319837,
+              "extrap_mse": 26.575713438491565,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.99,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 10.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.29530336699826876,
+              "best_mse": 69.59476470947266,
+              "candidates": 2000
+            },
+            {
+              "generation": 3,
+              "elapsed_s": 0.6548186749969318,
+              "best_mse": 69.59476470947266,
+              "candidates": 6000
+            },
+            {
+              "generation": 5,
+              "elapsed_s": 1.0608348879977711,
+              "best_mse": 69.59476470947266,
+              "candidates": 10000
+            },
+            {
+              "generation": 7,
+              "elapsed_s": 1.4813779719988815,
+              "best_mse": 22.5625,
+              "candidates": 14000
+            },
+            {
+              "generation": 9,
+              "elapsed_s": 1.8347630819989718,
+              "best_mse": 21.053058624267578,
+              "candidates": 18000
+            },
+            {
+              "generation": 11,
+              "elapsed_s": 2.1896047729969723,
+              "best_mse": 21.053058624267578,
+              "candidates": 22000
+            },
+            {
+              "generation": 13,
+              "elapsed_s": 2.51700727899879,
+              "best_mse": 21.053058624267578,
+              "candidates": 26000
+            },
+            {
+              "generation": 15,
+              "elapsed_s": 2.8186524779994215,
+              "best_mse": 21.053058624267578,
+              "candidates": 30000
+            },
+            {
+              "generation": 17,
+              "elapsed_s": 3.1110128669970436,
+              "best_mse": 21.053058624267578,
+              "candidates": 34000
+            },
+            {
+              "generation": 19,
+              "elapsed_s": 3.4690472959991894,
+              "best_mse": 21.053058624267578,
+              "candidates": 38000
+            },
+            {
+              "generation": 21,
+              "elapsed_s": 3.857183542997518,
+              "best_mse": 21.053058624267578,
+              "candidates": 42000
+            },
+            {
+              "generation": 23,
+              "elapsed_s": 4.216621192997991,
+              "best_mse": 21.053058624267578,
+              "candidates": 46000
+            },
+            {
+              "generation": 25,
+              "elapsed_s": 4.604765565996786,
+              "best_mse": 21.053058624267578,
+              "candidates": 50000
+            },
+            {
+              "generation": 27,
+              "elapsed_s": 5.022293571997579,
+              "best_mse": 21.053058624267578,
+              "candidates": 54000
+            },
+            {
+              "generation": 29,
+              "elapsed_s": 5.416916815996956,
+              "best_mse": 21.053058624267578,
+              "candidates": 58000
+            },
+            {
+              "generation": 31,
+              "elapsed_s": 5.801025774999289,
+              "best_mse": 21.053058624267578,
+              "candidates": 62000
+            },
+            {
+              "generation": 33,
+              "elapsed_s": 6.188954219996958,
+              "best_mse": 21.053058624267578,
+              "candidates": 66000
+            },
+            {
+              "generation": 35,
+              "elapsed_s": 6.648471044998587,
+              "best_mse": 21.053058624267578,
+              "candidates": 70000
+            },
+            {
+              "generation": 37,
+              "elapsed_s": 7.3999987639981555,
+              "best_mse": 21.053058624267578,
+              "candidates": 74000
+            },
+            {
+              "generation": 39,
+              "elapsed_s": 8.35133417599718,
+              "best_mse": 21.053058624267578,
+              "candidates": 78000
+            },
+            {
+              "generation": 41,
+              "elapsed_s": 9.05728142999942,
+              "best_mse": 21.053058624267578,
+              "candidates": 82000
+            },
+            {
+              "generation": 43,
+              "elapsed_s": 9.580843081999774,
+              "best_mse": 21.053058624267578,
+              "candidates": 86000
+            },
+            {
+              "generation": 45,
+              "elapsed_s": 10.089481960996636,
+              "best_mse": 21.053058624267578,
+              "candidates": 90000
+            },
+            {
+              "generation": 47,
+              "elapsed_s": 10.650908105999406,
+              "best_mse": 21.053058624267578,
+              "candidates": 94000
+            },
+            {
+              "generation": 49,
+              "elapsed_s": 11.3861159329972,
+              "best_mse": 21.053058624267578,
+              "candidates": 98000
+            },
+            {
+              "generation": 51,
+              "elapsed_s": 12.083670852996875,
+              "best_mse": 21.053058624267578,
+              "candidates": 102000
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "median_baseline_cvps": 9111.501919087548,
+        "median_optimized_cvps": 4610.622037630712,
+        "median_speedup": 0.5060221770871813,
+        "median_optimized_mse": 21.053058624267578,
+        "min_optimized_mse": 5.928590951498336e-12,
+        "max_optimized_mse": 29.284732818603516,
+        "l2_pass_count": 2,
+        "l2_pass_rate": 0.4
+      }
+    },
+    {
+      "nominal_budget": "1h",
+      "nominal_budget_seconds": 3600.0,
+      "effective_budget_seconds": 72.0,
+      "time_scale": 0.02,
+      "seeds": [
+        42
+      ],
+      "runs": [
+        {
+          "seed": 42,
+          "target": "poly",
+          "telemetry_cold": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 18.4,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 0.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "baseline": {
+            "time_sec": 2.683773808999831,
+            "generations": 15,
+            "candidates_total": 30000,
+            "search_cvps": 11178.289280339977,
+            "best_mse": 5.928590951498336e-12,
+            "best_expression": "ADD r4, r5, 0x03 ; CSEL r2, r5, 0x0b ; SUB r6, r6, 0x06 ; ADD r3, r0, 0x02 ; MUL r7, r3, 0x00 ; NEG r0, r4, 0x07 ; CSEL r7, r7, 0x6a",
+            "l2_verification": {
+              "passed": true,
+              "decision": "VERIFIED_DISCOVERY",
+              "f64_test_mse": 1.5580002878114983e-29,
+              "extrap_mse": 2.9484465193540537e-28,
+              "symbolic_equivalent": false
+            }
+          },
+          "optimized": {
+            "time_sec": 3.946338489000482,
+            "generations": 15,
+            "candidates_total": 30000,
+            "search_cvps": 7601.983480032986,
+            "best_mse": 5.928590951498336e-12,
+            "best_expression": "ADD r4, r5, 0x03 ; CSEL r2, r5, 0x0b ; SUB r6, r6, 0x06 ; ADD r3, r0, 0x02 ; MUL r7, r3, 0x00 ; NEG r0, r4, 0x07 ; CSEL r7, r7, 0x6a",
+            "speedup_vs_baseline": 0.6800668053387307,
+            "l2_verification": {
+              "passed": true,
+              "decision": "VERIFIED_DISCOVERY",
+              "f64_test_mse": 1.5580002878114983e-29,
+              "extrap_mse": 2.9484465193540537e-28,
+              "symbolic_equivalent": false
+            }
+          },
+          "telemetry_warm": {
+            "temperature_c": 58.0,
+            "graphics_clock_mhz": 2010.0,
+            "power_draw_w": 19.75,
+            "power_limit_w": null,
+            "gpu_utilization_pct": 22.0,
+            "vram_used_mb": 652.0,
+            "vram_total_mb": 8188.0,
+            "telemetry_available": true,
+            "torch_vram_allocated_mb": 231.90771484375,
+            "torch_vram_reserved_mb": 504.0,
+            "torch_max_vram_allocated_mb": 457.849609375
+          },
+          "quality_curve": [
+            {
+              "generation": 1,
+              "elapsed_s": 0.4351103000008152,
+              "best_mse": 351.3529357910156,
+              "candidates": 2000
+            },
+            {
+              "generation": 2,
+              "elapsed_s": 0.982431512002222,
+              "best_mse": 351.3529357910156,
+              "candidates": 4000
+            },
+            {
+              "generation": 3,
+              "elapsed_s": 1.425198018001538,
+              "best_mse": 88.1554183959961,
+              "candidates": 6000
+            },
+            {
+              "generation": 4,
+              "elapsed_s": 1.7347944579996692,
+              "best_mse": 88.1554183959961,
+              "candidates": 8000
+            },
+            {
+              "generation": 5,
+              "elapsed_s": 2.177962761001254,
+              "best_mse": 88.1554183959961,
+              "candidates": 10000
+            },
+            {
+              "generation": 6,
+              "elapsed_s": 2.476039777000551,
+              "best_mse": 88.1554183959961,
+              "candidates": 12000
+            },
+            {
+              "generation": 7,
+              "elapsed_s": 2.680190292001498,
+              "best_mse": 84.54774475097656,
+              "candidates": 14000
+            },
+            {
+              "generation": 8,
+              "elapsed_s": 2.867798663999565,
+              "best_mse": 52.75680923461914,
+              "candidates": 16000
+            },
+            {
+              "generation": 9,
+              "elapsed_s": 3.0207794130001275,
+              "best_mse": 49.0,
+              "candidates": 18000
+            },
+            {
+              "generation": 10,
+              "elapsed_s": 3.16607847799969,
+              "best_mse": 48.986000061035156,
+              "candidates": 20000
+            },
+            {
+              "generation": 11,
+              "elapsed_s": 3.3167544820025796,
+              "best_mse": 48.986000061035156,
+              "candidates": 22000
+            },
+            {
+              "generation": 12,
+              "elapsed_s": 3.484076112999901,
+              "best_mse": 48.986000061035156,
+              "candidates": 24000
+            },
+            {
+              "generation": 13,
+              "elapsed_s": 3.641389242002333,
+              "best_mse": 44.33695983886719,
+              "candidates": 26000
+            },
+            {
+              "generation": 14,
+              "elapsed_s": 3.795044181002595,
+              "best_mse": 9.0,
+              "candidates": 28000
+            },
+            {
+              "generation": 15,
+              "elapsed_s": 3.9462982790028036,
+              "best_mse": 5.928590951498336e-12,
+              "candidates": 30000
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "median_baseline_cvps": 11178.289280339977,
+        "median_optimized_cvps": 7601.983480032986,
+        "median_speedup": 0.6800668053387307,
+        "median_optimized_mse": 5.928590951498336e-12,
+        "min_optimized_mse": 5.928590951498336e-12,
+        "max_optimized_mse": 5.928590951498336e-12,
+        "l2_pass_count": 1,
+        "l2_pass_rate": 1.0
+      }
+    }
+  ],
+  "telemetry_summary": {
+    "device_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "temperature_c_min": 57.0,
+    "temperature_c_max": 59.0,
+    "graphics_clock_mhz_min": 2010.0,
+    "graphics_clock_mhz_max": 2010.0,
+    "power_draw_w_min": 18.68,
+    "power_draw_w_max": 19.77,
+    "power_limit_w": null,
+    "vram_used_mb_peak": 652.0
+  },
+  "overall_verdict": {
+    "s1_stretch_million_goal": "achieved",
+    "sustained_runs_completed": true,
+    "telemetry_recorded": true,
+    "quality_frozen_verified": true
+  }
+}

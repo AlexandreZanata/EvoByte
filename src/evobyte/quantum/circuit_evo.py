@@ -8,8 +8,9 @@ Provides exact unitary equivalence checking and certified superoptimization.
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -33,10 +34,8 @@ from evobyte.quantum.circuit import (
     circuit_depth,
     circuit_to_unitary,
     gate_count,
-    pad_circuit,
     strip_nops,
     two_qubit_count,
-    validate_circuit,
 )
 
 # Standard gate subset for general synthesis
@@ -89,6 +88,7 @@ class EquivalenceCertificate:
 # -----------------------------------------------------------------------------
 # Unitary & State Equivalence Checking
 # -----------------------------------------------------------------------------
+
 
 def unitary_fidelity(u1: np.ndarray, u2: np.ndarray) -> tuple[float, float, float]:
     """Calculate process fidelity, optimal global phase angle, and phase-aligned Frobenius error.
@@ -170,6 +170,7 @@ def state_fidelity(
 # -----------------------------------------------------------------------------
 # Circuit Sampling and Genetic Operators
 # -----------------------------------------------------------------------------
+
 
 def sample_random_instruction(
     rng: np.random.Generator,
@@ -299,6 +300,7 @@ def crossover_circuits(
 # Circuit Evolution: Target State Preparation
 # -----------------------------------------------------------------------------
 
+
 def evolve_circuit_state_prep(
     target_state: np.ndarray,
     n_qubits: int,
@@ -314,7 +316,6 @@ def evolve_circuit_state_prep(
 ) -> dict[str, Any]:
     """Evolve a quantum circuit from scratch to prepare target state from |0...0>."""
     rng = np.random.default_rng(seed)
-    dim = 1 << n_qubits
 
     # 1. Initialize population
     population = [
@@ -377,7 +378,9 @@ def evolve_circuit_state_prep(
         n_injected = max(1, int(pop_size * 0.15))
         for _ in range(n_injected):
             new_pop.append(
-                sample_random_circuit(rng, n_qubits, max_gates=max_gates, allowed_opcodes=allowed_opcodes)
+                sample_random_circuit(
+                    rng, n_qubits, max_gates=max_gates, allowed_opcodes=allowed_opcodes
+                )
             )
 
         while len(new_pop) < pop_size:
@@ -426,6 +429,7 @@ def evolve_circuit_state_prep(
 # Circuit Superoptimizer (Exact Unitary Equivalence + Cost Reduction)
 # -----------------------------------------------------------------------------
 
+
 def superoptimize_circuit(
     circuit_ref: Sequence[CircuitInstruction],
     n_qubits: int,
@@ -451,7 +455,12 @@ def superoptimize_circuit(
         if rng.random() < 0.4:
             # Perturbed copy of reference
             mut = mutate_circuit(
-                clean_ref, n_qubits, rng, p_mut=0.4, max_gates=ref_gates, allowed_opcodes=allowed_opcodes
+                clean_ref,
+                n_qubits,
+                rng,
+                p_mut=0.4,
+                max_gates=ref_gates,
+                allowed_opcodes=allowed_opcodes,
             )
             population.append(mut)
         else:
@@ -504,7 +513,10 @@ def superoptimize_circuit(
         for _ in range(max(1, int(pop_size * 0.15))):
             new_pop.append(
                 sample_random_circuit(
-                    rng, n_qubits, max_gates=max(1, gate_count(best_cand)), allowed_opcodes=allowed_opcodes
+                    rng,
+                    n_qubits,
+                    max_gates=max(1, gate_count(best_cand)),
+                    allowed_opcodes=allowed_opcodes,
                 )
             )
 

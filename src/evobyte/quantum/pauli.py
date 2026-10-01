@@ -74,8 +74,9 @@ def multiply(a: Pauli, b: Pauli) -> Pauli:
     if a.n_qubits != b.n_qubits:
         raise ValueError("width mismatch in multiply")
     sign = (a.z_mask & b.x_mask).bit_count() % 2
-    return Pauli(a.x_mask ^ b.x_mask, a.z_mask ^ b.z_mask,
-                 (a.phase + b.phase + 2 * sign) % 4, a.n_qubits)
+    return Pauli(
+        a.x_mask ^ b.x_mask, a.z_mask ^ b.z_mask, (a.phase + b.phase + 2 * sign) % 4, a.n_qubits
+    )
 
 
 def commutes_with(a: Pauli, b: Pauli) -> bool:

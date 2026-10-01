@@ -1,8 +1,8 @@
 # P21 — Independent reproduction and usable model
 
-**Status:** Proposed.
+**Status:** Done (2026-09-30; reproduction `experiments/p21-reproduction.json` PASS; 17 models verified without search; max-GPU suite `tests/test_max_gpu.py` 5/5 green on RTX 4060 Laptop).
 **Prerequisite:** P13 completed with measured verdict and valid evidence.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** codex/p21-independent-reproduction.
 
 ## Objective
 

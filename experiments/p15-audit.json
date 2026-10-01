@@ -1,0 +1,101 @@
+{
+  "checks": {
+    "ablation_path_ok": true,
+    "counter_ok": true,
+    "deadline_ok": true,
+    "device_ok": true,
+    "manifest_ok": true,
+    "pysr_status": "not_run"
+  },
+  "claims": [
+    {
+      "claim": "pysr_adapter_reports_measured_or_not_run",
+      "detail": "missing_dependency: pysr unavailable (No module named 'pysr')",
+      "evidence": "raw"
+    },
+    {
+      "claim": "ablation_outputs_are_executed_not_hardcoded",
+      "detail": "config_hash_a=53055984 config_hash_b=251a0779",
+      "evidence": "raw"
+    },
+    {
+      "claim": "budget_curves_are_measured_not_rescaled",
+      "detail": "full_matrix scaling slots are labelled synthesized/unverified until per-budget execution (P13 locked until P20)",
+      "evidence": "unverified"
+    },
+    {
+      "claim": "device_labels_are_actual_not_silent_cpu",
+      "detail": "device_actual=cuda",
+      "evidence": "raw"
+    },
+    {
+      "claim": "counters_distinguish_distinct_repeats_bounded",
+      "detail": "{'method': 'exact-hash-set-bounded', 'max_tracked': 200000, 'total': 22, 'distinct': 20, 'repeats': 2, 'truncated': False}",
+      "evidence": "raw"
+    },
+    {
+      "claim": "deadlines_are_monotonic_with_overshoot",
+      "detail": "{'budget_sec': 0.05, 'elapsed_sec': 0.0601, 'overshoot_sec': 0.0101, 'setup_sec': 0.0, 'warmup_sec': 0.0, 'compute_sec': 0.0601, 'verification_sec': 0.0}",
+      "evidence": "raw"
+    },
+    {
+      "claim": "manifest_hashes_validate_raw_observations",
+      "detail": "sha256=8be01d12ce864a32",
+      "evidence": "raw"
+    }
+  ],
+  "manifest_sha256": "0a42178c423cd120e5aad51cb681d374b217d9f2af886ec75a40c0c34c4f8cf9",
+  "phase": "P15-measurement-integrity",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "3122a8083098b5eaecaca3e143a0e276f83bc05c",
+    "config": {
+      "mode": "audit-only",
+      "seed": 42,
+      "target": "x_plus_1"
+    },
+    "config_hash": "914575353a6b8e7e",
+    "dataset_hashes": {
+      "x_plus_1": "4e60e27e05d3e2de"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/full_matrix.py\n M tests/test_benchmarks.py\n?? experiments/p15-raw/\n?? src/evobyte/provenance.py\n?? tests/test_measurement_integrity.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 10,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/full_matrix.py",
+      "--audit-only",
+      "--output",
+      "experiments/p15-audit.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p15-raw/audit-observations.json",
+      "sha256": "8be01d12ce864a32f39c930642e1c07e68cfe9a84aed1c75ac39fc46dac80077"
+    }
+  ],
+  "short_run": {
+    "evobyte_cvps": 1326.3511379949668,
+    "pysr_status": "not_run",
+    "random_cvps": 566.0761788292913
+  },
+  "status": "PASS"
+}

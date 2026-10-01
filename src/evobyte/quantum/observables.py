@@ -8,8 +8,9 @@ hashes for dataset provenance.
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Any
 
 import numpy as np
 
@@ -17,7 +18,6 @@ from evobyte.quantum.hamiltonians import (
     PauliTerm,
     heisenberg,
     ising,
-    to_hamiltonian_matrix,
 )
 from evobyte.quantum.oracle import exact
 
@@ -37,13 +37,16 @@ class ObservableDataset:
     def to_arrays(self, target_name: str) -> tuple[np.ndarray, np.ndarray]:
         """Extract (X, y) arrays for symbolic regression on given target."""
         if target_name not in self.targets:
-            raise KeyError(f"target {target_name} not found; available: {list(self.targets.keys())}")
+            raise KeyError(
+                f"target {target_name} not found; available: {list(self.targets.keys())}"
+            )
         return self.features.copy(), self.targets[target_name].copy()
 
 
 # -----------------------------------------------------------------------------
 # Observables Measurement
 # -----------------------------------------------------------------------------
+
 
 def ground_energy(h_terms: list[PauliTerm], n_qubits: int) -> float:
     """Exact ground state energy E_0."""
@@ -159,6 +162,7 @@ def entanglement_entropy(psi: np.ndarray, n_qubits: int, subsystem_size: int = 1
 # -----------------------------------------------------------------------------
 # Dataset Generation and Provenance
 # -----------------------------------------------------------------------------
+
 
 def compute_dataset_hash(features: np.ndarray, targets: dict[str, np.ndarray]) -> str:
     """Compute SHA-256 hash across features and all target arrays for provenance."""

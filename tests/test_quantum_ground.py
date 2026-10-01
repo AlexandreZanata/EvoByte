@@ -84,7 +84,14 @@ def test_ground_state_evolution_2qubit():
     h = heisenberg(2, j=1.0)
     owe = exact(h, 2)
     res = evolve_ground_state(
-        h, n_qubits=2, pop_size=30, generations=20, n_terms=2, seed=0, target_energy_tol=1e-4, oracle_truth=owe
+        h,
+        n_qubits=2,
+        pop_size=30,
+        generations=20,
+        n_terms=2,
+        seed=0,
+        target_energy_tol=1e-4,
+        oracle_truth=owe,
     )
 
     assert res["success"]
