@@ -305,3 +305,85 @@ def test_unitary_gate_algebra():
     psi_out = u_bell @ psi_00
     expected_bell = np.array([1.0 / np.sqrt(2), 0.0, 0.0, 1.0 / np.sqrt(2)], dtype=np.complex128)
     np.testing.assert_allclose(psi_out, expected_bell, atol=1e-12)
+
+
+def test_exact_equivalence_checker():
+    from evobyte.quantum.circuit_evo import check_circuit_equivalence
+
+    # 1. Identical circuits
+    c1 = [CircuitInstruction(OPCODE_H, 0), CircuitInstruction(OPCODE_CNOT, 0, 1)]
+    c2 = [CircuitInstruction(OPCODE_H, 0), CircuitInstruction(OPCODE_CNOT, 0, 1)]
+    cert1 = check_circuit_equivalence(c1, c2, n_qubits=2)
+    assert cert1.is_equivalent
+    assert abs(cert1.process_fidelity - 1.0) < 1e-12
+    assert cert1.frobenius_error < 1e-12
+    assert cert1.gate_reduction == 0
+
+    # 2. Equivalence up to global phase: X * X = I (identity)
+    c_xx = [CircuitInstruction(OPCODE_X, 0), CircuitInstruction(OPCODE_X, 0)]
+    c_ident = []
+    cert_xx = check_circuit_equivalence(c_xx, c_ident, n_qubits=1)
+    assert cert_xx.is_equivalent
+    assert abs(cert_xx.process_fidelity - 1.0) < 1e-12
+    assert cert_xx.gate_reduction == 2
+
+    # 3. Inequivalent circuits: H vs X
+    c_h = [CircuitInstruction(OPCODE_H, 0)]
+    c_x = [CircuitInstruction(OPCODE_X, 0)]
+    cert_diff = check_circuit_equivalence(c_h, c_x, n_qubits=1)
+    assert not cert_diff.is_equivalent
+    assert cert_diff.process_fidelity < 0.9
+
+
+def test_bell_state_rediscovery_seeded():
+    from evobyte.quantum.circuit_evo import evolve_circuit_state_prep
+
+    bell_target = np.array([1.0, 0.0, 0.0, 1.0], dtype=np.complex128) / np.sqrt(2.0)
+    res = evolve_circuit_state_prep(
+        target_state=bell_target,
+        n_qubits=2,
+        pop_size=40,
+        generations=40,
+        max_gates=4,
+        seed=42,
+        allowed_opcodes=[OPCODE_H, OPCODE_CNOT, OPCODE_X, OPCODE_Z],
+    )
+
+    assert res["success"]
+    assert res["fidelity"] > 0.9999
+    assert res["gate_count"] == 2
+    assert res["circuit_depth"] == 2
+    assert res["two_qubit_count"] == 1
+    assert res["tts_s"] is not None
+    assert res["tte_evals"] is not None
+
+
+def test_superoptimizer_redundant_circuits():
+    from evobyte.quantum.circuit_evo import superoptimize_circuit
+
+    c_redundant = [
+        CircuitInstruction(OPCODE_X, 0),
+        CircuitInstruction(OPCODE_X, 0),
+        CircuitInstruction(OPCODE_H, 0),
+        CircuitInstruction(OPCODE_Z, 1),
+        CircuitInstruction(OPCODE_Z, 1),
+        CircuitInstruction(OPCODE_CNOT, 0, 1),
+    ]
+
+    res = superoptimize_circuit(
+        circuit_ref=c_redundant,
+        n_qubits=2,
+        pop_size=50,
+        generations=40,
+        seed=0,
+        allowed_opcodes=[OPCODE_H, OPCODE_CNOT, OPCODE_X, OPCODE_Z],
+    )
+
+    cert = res["certificate"]
+    assert res["improved"]
+    assert cert.is_equivalent
+    assert cert.process_fidelity > 0.9999
+    assert cert.gate_reduction >= 4
+    assert cert.opt_gates <= 2
+    assert cert.opt_depth <= 2
+    assert cert.opt_two_qubits == 1
