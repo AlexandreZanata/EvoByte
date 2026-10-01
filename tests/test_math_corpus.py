@@ -5,18 +5,31 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO_ROOT))
 sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
 
 from benchmarks.math_corpus import (
     CorpusItem,
+    HeldOutSeal,
+    IsolatedCorpusLoader,
+    ProblemGroup,
+    audit_splits_contamination,
     build_and_verify_corpus,
     convert_gsm8k_row,
     convert_numinamath_row,
+    extract_problem_template,
     generate_coverage_report,
     generate_symbolic_task,
+    get_source_problem_id,
+    group_items_by_source_and_template,
+    isolate_and_split_groups,
+    normalize_text_for_dedup,
     parse_boxed_or_scalar,
+    reproduce_p25_contamination,
+    run_corpus_isolation_and_audit,
     run_parallel_verification,
     safe_eval_arithmetic,
     stratify_and_seal,
@@ -291,3 +304,419 @@ def test_full_pipeline_fast(tmp_path: Path) -> None:
     assert manifest["held_out_seal"]["sealed"] is True
     assert manifest["held_out_seal"]["access_count"] == 0
     assert "internal_exposure_disclosure" in manifest
+
+
+# ==============================================================================
+# P30 Corpus Isolation Unit Tests
+# ==============================================================================
+
+
+def test_normalize_and_template_extraction() -> None:
+    text = "Janet sells 3 eggs for $2 each. Compute \\boxed{6}."
+    norm = normalize_text_for_dedup(text)
+    assert "$" not in norm
+    assert "janet sells 3 eggs for 2 each. compute 6" in norm
+
+    tpl_text, tpl_id = extract_problem_template(text)
+    assert "{N}" in tpl_text
+    assert "3" not in tpl_text
+    assert tpl_id.startswith("tpl_")
+    assert len(tpl_id) == 20  # tpl_ + 16 hex chars
+
+
+def test_reused_source_ids_disambiguation() -> None:
+    it_diff = CorpusItem(
+        id="sym_diff_0000",
+        source="symbolic_math",
+        source_id="0",
+        track="FIND",
+        family="symbolic_differentiation",
+        difficulty=1,
+        problem_text="diff x",
+        expression=None,
+        inputs=[],
+        constraints={},
+        allowed_ops=["ADD"],
+        target_answer=0.0,
+        verifier={"method": "target_scalar_float"},
+        metadata={},
+    )
+    it_inte = CorpusItem(
+        id="sym_inte_0000",
+        source="symbolic_math",
+        source_id="0",
+        track="FIND",
+        family="symbolic_integration",
+        difficulty=1,
+        problem_text="inte x",
+        expression=None,
+        inputs=[],
+        constraints={},
+        allowed_ops=["ADD"],
+        target_answer=0.0,
+        verifier={"method": "target_scalar_float"},
+        metadata={},
+    )
+    id_diff = get_source_problem_id(it_diff)
+    id_inte = get_source_problem_id(it_inte)
+    assert id_diff != id_inte
+    assert id_diff == "symbolic_math:symbolic_differentiation:0"
+    assert id_inte == "symbolic_math:symbolic_integration:0"
+
+
+def test_group_by_source_problem_and_sibling_chains() -> None:
+    row = {
+        "question": "A farmer has 10 sheep and buys 5 more.",
+        "answer": "10 + 5 = <<10+5=15>>15 sheep. #### 15",
+    }
+    items, rejected = convert_gsm8k_row(row, idx=42)
+    assert len(rejected) == 0
+    assert len(items) == 2  # 1 exec + 1 find
+
+    groups, ungroupable = group_items_by_source_and_template(items)
+    assert len(ungroupable) == 0
+    assert len(groups) == 1
+
+    group = groups[0]
+    assert isinstance(group, ProblemGroup)
+    assert len(group.items) == 2
+    assert group.group_id == "gsm8k:42"
+    assert group.is_exposed is True
+
+    # Sibling items share group_id and template_id and have reference_only status
+    assert items[0].group_id == group.group_id
+    assert items[1].group_id == group.group_id
+    assert items[0].template_id == group.template_id
+    assert items[1].template_id == group.template_id
+    assert items[0].verification_status == "reference_only"
+    assert items[1].verification_status == "reference_only"
+
+
+def test_duplicate_text_clustering() -> None:
+    it1 = CorpusItem(
+        id="it1",
+        source="symbolic_math",
+        source_id="1",
+        track="FIND",
+        family="symbolic_differentiation",
+        difficulty=1,
+        problem_text="Differentiate with respect to x: 2*x + 1",
+        expression="2*x + 1",
+        inputs=[],
+        constraints={},
+        allowed_ops=["ADD"],
+        target_answer=2.0,
+        verifier={"method": "target_scalar_float"},
+        metadata={},
+    )
+    it2 = CorpusItem(
+        id="it2",
+        source="symbolic_math",
+        source_id="19",
+        track="FIND",
+        family="symbolic_differentiation",
+        difficulty=1,
+        problem_text="differentiate with respect to x:  2*x + 1 ",
+        expression="2*x + 1",
+        inputs=[],
+        constraints={},
+        allowed_ops=["ADD"],
+        target_answer=2.0,
+        verifier={"method": "target_scalar_float"},
+        metadata={},
+    )
+    groups, ungroupable = group_items_by_source_and_template([it1, it2])
+    assert len(ungroupable) == 0
+    # Clustered into 1 group because normalized problem text is identical
+    assert len(groups) == 1
+    assert len(groups[0].items) == 2
+    assert it1.group_id == it2.group_id
+
+
+def test_ungroupable_records_reporting() -> None:
+    bad_item = CorpusItem(
+        id="bad_01",
+        source="",
+        source_id="",
+        track="FIND",
+        family="unknown",
+        difficulty=1,
+        problem_text="",
+        expression=None,
+        inputs=[],
+        constraints={},
+        allowed_ops=[],
+        target_answer=0.0,
+        verifier={},
+        metadata={},
+    )
+    groups, ungroupable = group_items_by_source_and_template([bad_item])
+    assert len(groups) == 0
+    assert len(ungroupable) == 1
+    assert ungroupable[0] == "bad_01"
+
+
+def test_p25_contamination_reproduction_640() -> None:
+    snapshot = _REPO_ROOT / "data" / "processed" / "p25_corpus.jsonl"
+    if not snapshot.exists():
+        pytest.skip("p25_corpus.jsonl snapshot not found")
+
+    import json
+
+    with open(snapshot, encoding="utf-8") as f:
+        items = [CorpusItem.from_dict(json.loads(line)) for line in f if line.strip()]
+
+    report = reproduce_p25_contamination(items, seed=42)
+    assert report["reproduced_defect"] == "p25_item_stratification_leakage"
+    assert report["gsm8k_shared_source_problems"] == 640
+    assert report["total_gsm8k_source_problems"] == 1319
+    assert report["status"] == "reproduced_as_reported"
+
+
+def test_isolated_splits_zero_leakage() -> None:
+    # Build synthetic groups: exposed and unexposed
+    items: list[CorpusItem] = []
+    # 20 exposed problems with 2 chain steps each (total 60 items)
+    for i in range(20):
+        items.append(
+            CorpusItem(
+                id=f"gsm_{i}_exec_0",
+                source="gsm8k",
+                source_id=str(i),
+                track="EXECUTE",
+                family="arithmetic_chain",
+                difficulty=1,
+                problem_text=f"compute {i} + 1",
+                expression=f"{i} + 1",
+                inputs=[],
+                constraints={},
+                allowed_ops=["ADD"],
+                target_answer=float(i + 1),
+                verifier={"method": "guarded_arithmetic"},
+                metadata={"internal_exposure_prior": True},
+            )
+        )
+        items.append(
+            CorpusItem(
+                id=f"gsm_{i}_exec_1",
+                source="gsm8k",
+                source_id=str(i),
+                track="EXECUTE",
+                family="arithmetic_chain",
+                difficulty=1,
+                problem_text=f"compute {i} * 2",
+                expression=f"{i} * 2",
+                inputs=[],
+                constraints={},
+                allowed_ops=["MUL"],
+                target_answer=float(i * 2),
+                verifier={"method": "guarded_arithmetic"},
+                metadata={"internal_exposure_prior": True},
+            )
+        )
+        items.append(
+            CorpusItem(
+                id=f"gsm_{i}_find",
+                source="gsm8k",
+                source_id=str(i),
+                track="FIND",
+                family="arithmetic_word_problem",
+                difficulty=2,
+                problem_text=f"Problem {i} question",
+                expression=None,
+                inputs=[float(i)],
+                constraints={},
+                allowed_ops=["ADD", "MUL"],
+                target_answer=float(i * 2),
+                verifier={"method": "target_scalar_float"},
+                metadata={"internal_exposure_prior": True},
+            )
+        )
+
+    # 30 unexposed problems (single item each)
+    for i in range(30):
+        items.append(
+            CorpusItem(
+                id=f"numina_{i}_find",
+                source="numinamath",
+                source_id=str(i),
+                track="FIND",
+                family="algebra_numeric",
+                difficulty=2,
+                problem_text=f"Find x such that x + {i} = 100",
+                expression=None,
+                inputs=[float(i)],
+                constraints={},
+                allowed_ops=["SUB"],
+                target_answer=float(100 - i),
+                verifier={"method": "target_scalar_float"},
+                metadata={"internal_exposure_prior": False},
+            )
+        )
+
+    groups, ungroupable = group_items_by_source_and_template(items)
+    assert len(ungroupable) == 0
+    assert len(groups) == 50
+
+    splits, split_groups, seal = isolate_and_split_groups(groups, seed=123)
+    audit = audit_splits_contamination(splits, split_groups, items, seed=123)
+
+    after = audit["after_audit"]
+    assert after["zero_leakage_verified"] is True
+    assert after["source_overlap_train_val"] == 0
+    assert after["source_overlap_train_final_test"] == 0
+    assert after["source_overlap_val_final_test"] == 0
+    assert after["group_overlap_train_val"] == 0
+    assert after["group_overlap_train_final_test"] == 0
+    assert after["group_overlap_val_final_test"] == 0
+    assert after["exposed_items_in_final_test"] == 0
+    assert after["exposed_groups_in_final_test"] == 0
+    assert after["all_pristine_test_unexposed"] is True
+
+    # Check total items conservation
+    total_split_items = len(splits["train"]) + len(splits["val"]) + len(splits["final_test"])
+    assert total_split_items == len(items)
+
+    # Check seal
+    assert seal.sealed is True
+    assert seal.n_items == len(splits["final_test"])
+    assert seal.access_count == 0
+
+
+def test_isolated_corpus_loader_access_control() -> None:
+    item_tr = CorpusItem(
+        id="tr_1",
+        source="test",
+        source_id="1",
+        track="FIND",
+        family="test_fam",
+        difficulty=1,
+        problem_text="train prob",
+        expression=None,
+        inputs=[],
+        constraints={},
+        allowed_ops=[],
+        target_answer=1.0,
+        verifier={},
+        metadata={},
+    )
+    item_te = CorpusItem(
+        id="te_1",
+        source="test",
+        source_id="2",
+        track="FIND",
+        family="test_fam",
+        difficulty=1,
+        problem_text="test prob",
+        expression=None,
+        inputs=[],
+        constraints={},
+        allowed_ops=[],
+        target_answer=2.0,
+        verifier={},
+        metadata={},
+    )
+    seal = HeldOutSeal(sealed=True, n_items=1)
+    loader = IsolatedCorpusLoader(
+        splits={"train": [item_tr], "val": [], "final_test": [item_te], "held_out": [item_te]},
+        seal=seal,
+    )
+
+    # Train and val accessible without restrictions
+    assert len(loader.get_train_items()) == 1
+    assert len(loader.get_val_items()) == 0
+    assert len(loader.load_split("train")) == 1
+
+    # Unauthorized access to final test raises PermissionError
+    import pytest
+
+    with pytest.raises(PermissionError, match="Unauthorized access"):
+        loader.get_final_test_items(caller="researcher", reason="tuning", authorized=False)
+
+    with pytest.raises(PermissionError, match="Unauthorized access"):
+        loader.load_split("final_test")
+
+    with pytest.raises(PermissionError, match="Unauthorized access"):
+        loader.load_split("held_out")
+
+    # Missing caller or reason raises ValueError
+    with pytest.raises(ValueError, match="caller"):
+        loader.get_final_test_items(caller="", reason="eval", authorized=True)
+
+    with pytest.raises(ValueError, match="reason"):
+        loader.get_final_test_items(caller="eval_agent", reason="  ", authorized=True)
+
+    # Authorized access succeeds and logs
+    test_items = loader.get_final_test_items(
+        caller="frozen_eval_runner",
+        reason="p38_independent_reproduction",
+        authorized=True,
+    )
+    assert len(test_items) == 1
+    assert test_items[0].id == "te_1"
+    assert loader.seal.access_count == 1
+    assert len(loader.seal.access_log) == 1
+    assert loader.seal.access_log[0]["caller"] == "frozen_eval_runner"
+
+    # Invalid split name
+    with pytest.raises(ValueError, match="Unknown split name"):
+        loader.load_split("nonexistent_split")
+
+
+def test_isolated_splits_determinism() -> None:
+    items = [
+        CorpusItem(
+            id=f"item_{i}",
+            source="numinamath",
+            source_id=str(i),
+            track="FIND",
+            family="algebra_numeric",
+            difficulty=(i % 3) + 1,
+            problem_text=f"problem {i}",
+            expression=None,
+            inputs=[],
+            constraints={},
+            allowed_ops=[],
+            target_answer=float(i),
+            verifier={"method": "target_scalar_float"},
+            metadata={"internal_exposure_prior": False},
+        )
+        for i in range(25)
+    ]
+    groups, _ = group_items_by_source_and_template(items)
+
+    splits1, _, seal1 = isolate_and_split_groups(groups, seed=999)
+    splits2, _, seal2 = isolate_and_split_groups(groups, seed=999)
+
+    assert [it.id for it in splits1["train"]] == [it.id for it in splits2["train"]]
+    assert [it.id for it in splits1["val"]] == [it.id for it in splits2["val"]]
+    assert [it.id for it in splits1["final_test"]] == [it.id for it in splits2["final_test"]]
+    assert seal1.item_ids_sha256 == seal2.item_ids_sha256
+    assert seal1.content_sha256 == seal2.content_sha256
+
+
+def test_run_corpus_isolation_and_audit_manifest(tmp_path: Path) -> None:
+    manifest_p = tmp_path / "p30-splits.json"
+    manifest = run_corpus_isolation_and_audit(
+        output_path=manifest_p,
+        seed=42,
+    )
+
+    assert manifest_p.exists()
+    assert manifest["phase"] == "p30-corpus-isolation"
+    assert manifest["status"] == "complete"
+    assert manifest["contamination_audit"]["after_audit"]["zero_leakage_verified"] is True
+    assert manifest["held_out_seal"]["sealed"] is True
+    assert manifest["held_out_seal"]["access_count"] == 0
+
+    loader = IsolatedCorpusLoader.from_manifest(manifest_p)
+    assert len(loader.get_train_items()) > 0
+    assert len(loader.get_val_items()) > 0
+    with pytest.raises(PermissionError):
+        loader.load_split("final_test")
+
+    test_items = loader.load_split(
+        "final_test", caller="test_agent", reason="unit_test", authorized=True
+    )
+    assert len(test_items) > 0
+    assert loader.seal.access_count == 1

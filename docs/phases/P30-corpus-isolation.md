@@ -1,8 +1,8 @@
 # P30 — Corpus isolation by original problem and template
 
-**Status:** Proposed.
+**Status:** Done (2026-10-01, zero leakage verified across 1507 groups, 640 GSM8K defects reproduced, experiments/p30-splits.json generated).
 **Prerequisite:** P29 outcome recorded; review evidence frozen. P24–P29 Done labels are historical, not acceptance of the defects under review.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata / EvoByte Agent.
 **Branch:** `codex/p30-corpus-isolation`.
 
 ## Objective
