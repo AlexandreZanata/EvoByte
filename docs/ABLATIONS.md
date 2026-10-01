@@ -46,14 +46,14 @@ The objective remains millions of useful possibilities tested per second
 on the reference hardware, with real rediscovery evidence. Stage numbering
 preserves history; execute prerequisites before returning to P13/P14.
 
-- P15 — Measurement integrity and reproducible harness (phase file pending approval).
-- P16 — Population-parallel GPU interpreter (phase file pending approval).
-- P17 — GPU-resident evolutionary cycle (phase file pending approval).
-- P18 — Streaming GPU cascade and bounded memory (phase file pending approval).
-- P19 — Strict verification and discovery evidence (phase file pending approval).
-- P20 — Sustained throughput and quality experiment (phase file pending approval).
-- P21 — Independent reproduction and usable model (phase file pending approval).
-- P22 — Optional learning across tasks (phase file pending approval).
+- P15 — Measurement integrity and reproducible harness.
+- P16 — Population-parallel GPU interpreter.
+- P17 — GPU-resident evolutionary cycle.
+- P18 — Streaming GPU cascade and bounded memory.
+- P19 — Strict verification and discovery evidence.
+- P20 — Sustained throughput and quality experiment.
+- P21 — Independent reproduction and usable model.
+- P22 — Optional learning across tasks.
 
 Execution order:
 
@@ -91,3 +91,33 @@ P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
   confirmation must also meet >= 80% success on each. Report uncertainty;
   a negative or inconclusive result is valid research, not a failed test to
   weaken. Statistical advantage needs a predeclared comparison procedure.
+
+## Acceptance and new controlled experiments (D014, P30–P39)
+
+P30–P32 correct corpus grouping, exact checking, certificate bounds,
+checkpoint continuation and evidence acceptance before new comparisons.
+See the [phase index](phases/README.md#acceptance-and-specialist-program-p30p39)
+for their Proposed contracts and dependencies. Historical P24–P29 outcomes
+are retained, but do not independently satisfy these corrective gates.
+
+- P33 compares grammatical/dependency-constrained search against matched
+  unrestricted/structured/genetic controls in polynomial arithmetic.
+- P34 compares tracing off/on on the SAME algorithm and workload; add one
+  profiled optimization at a time. Include generation, scoring, selection,
+  deduplication and tracking in full-pipeline time; confirm actual durations.
+- P35 certifies positive training labels and keeps failed candidates as
+  labelled negatives. Source/template groups are isolated before collection.
+- P36 compares distributor, joint-output, sequential and hybrid proposals
+  with genetic controls, billing teacher data, fitting, inference and I/O.
+  Quality and throughput must refer to the same nominated model.
+- P37 changes exactly one sampling mechanism with matched grammar, live-op
+  mix and resources; a probability transform alone is not quantum advantage.
+- P38 freezes selection before fresh final-test scoring and uses at least
+  20 seeds plus a preregistered uncertainty/comparison procedure. P39 then
+  evaluates one bounded mathematical nomination with independent certificates.
+
+Use per-target verified success and censored time-to-solution as primary
+metrics. Distinct bytes, probe behavior buckets and exact mathematical
+equivalence are different quantities. Extra randomness or a mean-MSE gain
+without accepted solutions cannot establish a solution-rate win. Sound
+nulls are publishable; integrity failures block acceptance.

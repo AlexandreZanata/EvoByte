@@ -1,4 +1,4 @@
-# Phases P00–P22 (executable plan)
+# Phases P00–P39 (executable plan)
 
 One file per phase. Each phase states objective, scope (in/out),
 tasks, exit gate (artifact runs + measured), risks, and a **Commit & Push**
@@ -47,20 +47,47 @@ measurement)`.
 - [P28 — New specialist micro-model](P28-specialist-rematch.md).
 - [P29 — Open problems with verifiable certificates](P29-open-problems.md).
 
+## Acceptance and specialist program (P30–P39)
+
+- [P30 — Corpus isolation by original problem and template](P30-corpus-isolation.md).
+- [P31 — Independent answer verification and certificate bounds](P31-verifier-certificates.md).
+- [P32 — Replay, resume and honest evidence acceptance](P32-replay-acceptance.md).
+- [P33 — Structured candidate search for polynomial arithmetic](P33-structured-search.md).
+- [P34 — Profiled full-pipeline throughput and bounded tracing](P34-profiled-throughput.md).
+- [P35 — Certified program corpus for specialist training](P35-verified-training-corpus.md).
+- [P36 — Specialist learning from certified solutions](P36-specialist-learning.md).
+- [P37 — One controlled quantum-inspired sampling hypothesis](P37-controlled-qrand.md).
+- [P38 — Clean-environment confirmation and frozen model export](P38-independent-confirmation.md).
+- [P39 — Bounded mathematical campaign with novelty review](P39-certified-science.md).
+
 ## Execution and acceptance contract
 
 ```text
 P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
                                                         P21 -> P14(mathdb) -> P23 -> P22 (optional)
                                                         P23 -> P24 -> P25 -> P26 -> P27 -> P28 -> P29
+P29 recorded outcome -> P30 -> P31 -> P32 -> P33 -> P34 -> P35 -> P36 -> P37 -> P38 -> P39
 ```
 
-P15 is the next task. Numbers preserve historical references; the dependency
-order above, adopted in D012, replaces numeric ordering. Assign an owner
-and freeze a machine-readable experiment configuration before Building.
+P30 is the next planned task. Numbers preserve historical references; the
+dependency order above, adopted in D013/D014, replaces numeric ordering.
+Assign an owner and freeze a machine-readable experiment configuration
+before Building.
 Proposed CLI flags in new phase files are implementation acceptance
 contracts; adding these documents does not implement those commands.
-No new phase is complete merely because the roadmap was edited.
+No new phase is complete merely because the roadmap was edited. Retain
+P24–P29 records as historical evidence while P30–P32 repair acceptance;
+their Done labels cannot substitute for these corrective gates. A clean
+code revision, full configuration and retrievable raw hashes are required
+for final claims. Diagnostic dirty runs never become final claims merely
+because their code is committed later.
+
+P33–P37 use development train/validation groups; final-test access is
+reserved for frozen confirmation in P38. A valid negative model/sampler
+result completes its experiment and retains the accepted baseline. A
+correctness, isolation, replay or certificate failure blocks advancement.
+P39's discovery criterion is correctness + novelty + independent
+reproduction + appropriate certificate/proof, applied to one bounded target.
 
 Common gates before every implementation commit are `git diff --check`,
 `git status --short`, `python3 -m pytest tests -q` and `make verify`, plus the
