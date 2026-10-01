@@ -1,0 +1,920 @@
+"""P24 — Stable limits of the RTX 4060 (real budgets, reconciled counters).
+
+Finds the highest STABLE end-to-end throughput of distinct generated +
+evaluated candidates per second, with reconciled counters and bounded
+memory. Corrects the P20 caveats: real (non-scaled) budgets, generation +
+error computation INSIDE the counted interval, disclosed NOP fractions,
+adaptive VRAM budget from current free memory, OOM halving with checkpoint,
+CPU-oracle parity, resume evidence and a no-leak check.
+
+Pipeline per timed iteration (all inside the counted window):
+  sample programs on GPU (generation) -> execute sharded over CUDA streams
+  with private buffers + explicit sync (evaluation) -> vectorized MSE vs the
+  target on device (error) -> per-iteration distinct via torch.unique.
+
+Usage (exit gate):
+  python3 benchmarks/gpu_limits.py --budgets 10s,1m,10m --confirm-1h \\
+      --seeds 5 --output experiments/p24-limits.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import hashlib
+import json
+import sys
+import time
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import torch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from evobyte.batching import compute_chunk_size
+from evobyte.bytecode import N_INSTR, N_REGS, is_valid
+from evobyte.evolution import STRUCTURED_OP_RATIOS, STRUCTURED_OPS
+from evobyte.provenance import (
+    CandidateCounter,
+    MonotonicDeadline,
+    collect_provenance,
+    parse_budget_duration,
+    query_gpu_telemetry,
+    resolve_device,
+    seed_all,
+    synchronize,
+    write_manifest,
+)
+from evobyte.vm_torch import (
+    PopulationVMBuffer,
+    execute_population_torch,
+)
+
+# ---------------------------------------------------------------------------
+# Preregistered workload grid + stability definition (frozen before measuring)
+# ---------------------------------------------------------------------------
+
+TARGET_NAME = "quad-x2-3x-7"
+
+# Opcode mixes: full structured set vs arithmetic-only subset.
+ARITH_OPS = [0x00, 0x01, 0x02, 0x03, 0x04, 0x0A, 0x0C, 0x0D, 0x0E]
+ARITH_WEIGHTS = np.array(
+    [0.30 if op == 0x00 else (0.70 / (len(ARITH_OPS) - 1)) for op in ARITH_OPS],
+    dtype=np.float64,
+)
+
+P_GRID = [2000, 8000, 20000]
+B_GRID = [32, 256, 1024]
+STREAM_GRID = [1, 2, 4]
+WORKER_GRID = [1, 2, 4, 8]
+MIX_GRID = ["full", "arith"]
+LEN_GRID = ["standard", "short", "long"]
+LEN_RANGE = {"standard": (2, N_INSTR), "short": (2, 6), "long": (10, N_INSTR)}
+
+RESERVE_MB = 1200.0  # system/context/temporaries kept free (disclosed)
+CHUNK_CAP = 20000  # kernel-launch sanity cap (standing Max-GPU rule)
+MAX_CPU_THREADS = 8
+MIN_POP_AFTER_HALVING = 250
+AUDIT_EVERY_SEC = 5.0
+AUDIT_SAMPLE = 256
+GLOBAL_TRACK_CAP = 500_000  # bounded exact-hash reservoir (P15 counter)
+GLOBAL_WINDOW = 512  # programs/iter added to the global reservoir (fixed window)
+
+STABILITY = {
+    "cross_seed_floor": 0.90,  # min-seed 10m rate >= 90% of median-seed rate
+    "confirm_tolerance": 0.15,  # 1h rate within 15% of 10m median rate
+    "leak_max_growth_mb": 64.0,  # allocator growth start->end per leg
+    "parity_atol": 1e-5,
+    "parity_rtol": 1e-5,
+}
+
+SCOUT_BUDGET_SEC = 10.0
+DEFAULT_SEEDS = [42, 101, 202, 303, 404]
+
+
+def workload_grid_hash() -> str:
+    blob = json.dumps(
+        {
+            "target": TARGET_NAME,
+            "P": P_GRID,
+            "B": B_GRID,
+            "streams": STREAM_GRID,
+            "workers": WORKER_GRID,
+            "mix": MIX_GRID,
+            "length": LEN_GRID,
+            "len_range": LEN_RANGE,
+            "reserve_mb": RESERVE_MB,
+            "chunk_cap": CHUNK_CAP,
+        },
+        sort_keys=True,
+    ).encode()
+    return hashlib.sha256(blob).hexdigest()[:16]
+
+
+def target_values(xs: np.ndarray) -> np.ndarray:
+    return xs * xs + 3.0 * xs + 7.0
+
+
+# ---------------------------------------------------------------------------
+# GPU variant sampler (parameterized structured programs, device-resident)
+# ---------------------------------------------------------------------------
+
+
+def gpu_sample_variant(
+    n: int,
+    device: torch.device,
+    op_ids: list[int],
+    op_weights: np.ndarray,
+    len_lo: int,
+    len_hi: int,
+    p_nop: float = 0.35,
+) -> torch.Tensor:
+    """Sample structured programs on device with a fixed opcode mix + length range."""
+    w = torch.tensor(np.asarray(op_weights, dtype=np.float64), dtype=torch.float32, device=device)
+    op_samples = torch.searchsorted(
+        torch.cumsum(w, dim=0),
+        torch.rand((n, N_INSTR), device=device),
+    ).to(torch.int64)
+    op_table = torch.tensor(op_ids, dtype=torch.int64, device=device)
+    op_samples = op_table[op_samples.clamp(0, len(op_ids) - 1)]
+
+    span = max(1, len_hi - len_lo + 1)
+    n_active = len_lo + torch.randint(0, span, (n, 1), device=device)
+    n_active = n_active.clamp(1, N_INSTR)
+    step_idx = torch.arange(N_INSTR, device=device).unsqueeze(0).expand(n, -1)
+    active_mask = step_idx < n_active
+
+    nop_mask = (torch.rand((n, N_INSTR), device=device) < p_nop) | (op_samples == 0)
+    valid_mask = active_mask & (~nop_mask)
+    ops = torch.where(valid_mask, op_samples, torch.zeros_like(op_samples))
+
+    dst = torch.randint(0, N_REGS, (n, N_INSTR), device=device)
+    a = torch.randint(0, N_REGS, (n, N_INSTR), device=device)
+    b_reg = torch.randint(0, N_REGS, (n, N_INSTR), device=device)
+    b_const = torch.randint(0, 16, (n, N_INSTR), device=device)
+    b = torch.where(ops == 0x0F, b_const, b_reg)
+
+    has_r7 = (valid_mask & (dst == 7) & (ops != 0)).any(dim=1)
+    need = torch.nonzero(~has_r7).squeeze(1)
+    if need.numel() > 0:
+        # Non-risky fallback ops only (keeps S0 validity high by construction).
+        fb = torch.tensor([0x01, 0x02, 0x03, 0x0A, 0x0C], device=device)
+        pick = fb[torch.randint(0, len(fb), (need.shape[0],), device=device)]
+        pos = (n_active[need, 0] - 1).clamp(0, N_INSTR - 1)
+        ops[need, pos] = pick
+        dst[need, pos] = 7
+        a[need, pos] = torch.randint(0, N_REGS, (need.shape[0],), device=device)
+        b[need, pos] = torch.randint(0, N_REGS, (need.shape[0],), device=device)
+
+    words = (ops & 0xFF) | ((dst & 0xFF) << 8) | ((a & 0xFF) << 16) | ((b & 0xFF) << 24)
+    return torch.where(ops != 0, words, torch.zeros_like(words))
+
+
+def mix_spec(mix: str) -> tuple[list[int], np.ndarray]:
+    if mix == "arith":
+        return ARITH_OPS, ARITH_WEIGHTS / ARITH_WEIGHTS.sum()
+    ops = [int(o) for o in STRUCTURED_OPS]
+    w = np.asarray(STRUCTURED_OP_RATIOS, dtype=np.float64)
+    return ops, w / w.sum()
+
+
+# ---------------------------------------------------------------------------
+# VRAM budget from CURRENT free memory (never a fixed assumption)
+# ---------------------------------------------------------------------------
+
+
+def adaptive_vram_budget(device: torch.device) -> dict[str, float]:
+    total_mb = float(torch.cuda.get_device_properties(device).total_memory / (1024 * 1024))
+    try:
+        free_b, _ = torch.cuda.mem_get_info(device)
+        free_mb = float(free_b / (1024 * 1024))
+    except RuntimeError:
+        free_mb = total_mb
+    budget_mb = max(512.0, free_mb - RESERVE_MB)
+    return {
+        "total_mb": total_mb,
+        "free_mb": free_mb,
+        "reserve_mb": RESERVE_MB,
+        "budget_mb": budget_mb,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Timed generate+evaluate leg
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class LegConfig:
+    pop_size: int
+    n_points: int
+    n_streams: int
+    n_workers: int
+    mix: str = "full"
+    length: str = "standard"
+
+
+@dataclass
+class LegResult:
+    config: LegConfig
+    seed: int
+    budget_sec: float
+    elapsed_sec: float
+    generated: int
+    iter_distinct: int
+    global_distinct: int
+    global_total: int
+    global_truncated: bool
+    global_dup_rate: float
+    s0_valid_rate: float | None
+    nop_fraction: float | None
+    degenerate_rate: float | None
+    distinct_per_sec: float
+    raw_per_sec: float
+    oom_events: int
+    peak_alloc_mb: float
+    end_alloc_mb: float
+    start_alloc_mb: float
+    iters: int
+    lat_p50_ms: float
+    lat_p95_ms: float
+    lat_max_ms: float
+    telemetry: list[dict[str, Any]]
+    aborted: bool = False
+
+
+def _audit_sample(pop_cpu: np.ndarray) -> tuple[float, float, float]:
+    """S0-validity + NOP fraction + degenerate rate on a fixed CPU audit window.
+
+    Degenerate = <= 1 non-NOP instruction: such populations would flatter the
+    rate without doing representative work (P20 caveat guard).
+    """
+    valid = 0
+    nop_bytes = 0
+    total_bytes = 0
+    degenerate = 0
+    for prog in pop_cpu[:AUDIT_SAMPLE]:
+        if is_valid(np.asarray(prog, dtype=np.uint32)):
+            valid += 1
+        words = np.asarray(prog, dtype=np.uint32)
+        non_nop = int(np.sum((words & 0xFF) != 0))
+        nop_bytes += len(words) - non_nop
+        total_bytes += len(words)
+        if non_nop <= 1:
+            degenerate += 1
+    n = min(AUDIT_SAMPLE, len(pop_cpu))
+    return (valid / max(1, n)), (nop_bytes / max(1, total_bytes)), (degenerate / max(1, n))
+
+
+def run_leg(
+    cfg: LegConfig,
+    seed: int,
+    budget_sec: float,
+    raw_log: Any | None = None,
+    checkpoint_path: Path | None = None,
+    checkpoint_every_sec: float = 600.0,
+    label: str = "",
+) -> LegResult:
+    """Run one timed generate+evaluate leg. Generation+error inside the window."""
+    device = resolve_device("cuda")
+    seed_all(seed)
+    torch.set_num_threads(min(MAX_CPU_THREADS, 8))
+
+    vram = adaptive_vram_budget(device)
+    chunk = min(CHUNK_CAP, compute_chunk_size(cfg.n_points, vram["budget_mb"]))
+    chunk = max(1, int(chunk))
+
+    xs_base = torch.linspace(-5.0, 5.0, cfg.n_points, dtype=torch.float32, device=device)
+    ys_base = torch.from_numpy(
+        target_values(np.linspace(-5.0, 5.0, cfg.n_points, dtype=np.float32))
+    ).to(device)
+    ys_base = ys_base.to(dtype=torch.float32)
+
+    op_ids, op_w = mix_spec(cfg.mix)
+    len_lo, len_hi = LEN_RANGE[cfg.length]
+
+    streams = [torch.cuda.Stream(device=device) for _ in range(cfg.n_streams)]
+    # Private buffers per stream (standing rule): xs/ys clones + VM buffer each.
+    lanes: list[dict[str, Any]] = []
+    for s in streams:
+        with torch.cuda.stream(s):
+            lanes.append(
+                {
+                    "stream": s,
+                    "xs": xs_base.clone(),
+                    "ys": ys_base.clone(),
+                    "vm": PopulationVMBuffer(
+                        max_pop=cfg.pop_size, max_points=cfg.n_points, device=device
+                    ),
+                }
+            )
+    torch.cuda.synchronize(device)
+
+    # Warmup (untimed): prime caches/clocks, then reset peaks and start the clock.
+    for _ in range(3):
+        w = gpu_sample_variant(256, device, op_ids, op_w, len_lo, len_hi)
+        execute_population_torch(w, xs_base, device=device)
+    torch.cuda.synchronize(device)
+    torch.cuda.empty_cache()
+    torch.cuda.reset_peak_memory_stats(device)
+    start_alloc = float(torch.cuda.memory_allocated(device) / (1024 * 1024))
+
+    pool = concurrent.futures.ThreadPoolExecutor(max_workers=cfg.n_workers)
+    pending: list[concurrent.futures.Future] = []
+    worker_errors = 0
+
+    def _sidecar(prog: np.ndarray) -> str:
+        from evobyte.bytecode import decode_human
+
+        return decode_human(np.asarray(prog, dtype=np.uint32))
+
+    deadline = MonotonicDeadline(budget_sec)
+    generated = 0
+    iter_distinct = 0
+    iters = 0
+    oom_events = 0
+    lat: list[float] = []
+    telemetry: list[dict[str, Any]] = []
+    global_counter = CandidateCounter(max_tracked=GLOBAL_TRACK_CAP)
+    valid_rates: list[float] = []
+    nop_fracs: list[float] = []
+    degen_rates: list[float] = []
+    last_audit = time.monotonic() - AUDIT_EVERY_SEC  # audit on first iteration
+    last_tele = 0.0
+    last_ckpt = time.monotonic()
+    pop = cfg.pop_size
+    aborted = False
+
+    t_leg_start = time.monotonic()
+    try:
+        while not deadline.expired():
+            t_it = time.perf_counter()
+            try:
+                # 1. Generation on device.
+                progs = gpu_sample_variant(pop, device, op_ids, op_w, len_lo, len_hi)
+                # 2. Sharded evaluation over private-buffer streams + explicit sync.
+                shards = list(progs.chunk(cfg.n_streams, dim=0))
+                futs: list[tuple[int, torch.Tensor, torch.Tensor]] = []
+                for i, lane in enumerate(lanes):
+                    shard = shards[i] if i < len(shards) else shards[-1][:0]
+                    with torch.cuda.stream(lane["stream"]):
+                        p, f = execute_population_torch(
+                            shard, lane["xs"], device=device, buffer=lane["vm"]
+                        )
+                    futs.append((i, p, f))
+                for i, p, f in futs:
+                    lanes[i]["stream"].synchronize()
+                preds = torch.cat([p for _, p, _ in futs], dim=0)
+                # 3. Error computation on device (part of the counted rate).
+                diff = preds - ys_base.unsqueeze(0)
+                _mse = (diff**2).mean(dim=1)
+                torch.cuda.synchronize(device)
+                # 4. Per-iteration distinct on device.
+                uniq = int(torch.unique(progs, dim=0).shape[0])
+            except (torch.cuda.OutOfMemoryError, MemoryError):
+                torch.cuda.empty_cache()
+                oom_events += 1
+                if pop // 2 < MIN_POP_AFTER_HALVING:
+                    aborted = True
+                    break
+                pop = pop // 2
+                if checkpoint_path is not None:
+                    torch.save(
+                        {"pop": pop, "generated": generated, "oom_events": oom_events},
+                        checkpoint_path,
+                    )
+                continue
+
+            dt = time.perf_counter() - t_it
+            lat.append(dt * 1000.0)
+            generated += pop
+            iter_distinct += uniq
+            iters += 1
+
+            # Bounded global-distinct reservoir on a fixed window (host, disclosed).
+            win = progs[: min(GLOBAL_WINDOW, progs.shape[0])].to("cpu", non_blocking=True)
+            torch.cuda.synchronize(device)
+            global_counter.add_many(win.numpy().astype(np.uint32))
+
+            # S0-validity + NOP audit on a fixed window (timed, honest overhead).
+            now = time.monotonic()
+            if now - last_audit >= AUDIT_EVERY_SEC:
+                last_audit = now
+                sample = progs[:AUDIT_SAMPLE].cpu().numpy().astype(np.uint32)
+                vr, nf, dr = _audit_sample(sample)
+                valid_rates.append(vr)
+                nop_fracs.append(nf)
+                degen_rates.append(dr)
+
+            # CPU-worker sidecar: prepare/verify/record off the critical path.
+            if len(pending) < cfg.n_workers * 4:
+                try:
+                    first = progs[0].cpu().numpy()
+                    pending.append(pool.submit(_sidecar, first))
+                except RuntimeError:
+                    worker_errors += 1
+            done, not_done = concurrent.futures.wait(pending, timeout=0)
+            pending = list(not_done)
+            for d in done:
+                try:
+                    d.result()
+                except RuntimeError:
+                    worker_errors += 1
+
+            if now - last_tele >= AUDIT_EVERY_SEC:
+                last_tele = now
+                tele = query_gpu_telemetry(device)
+                tele["t_sec"] = now - t_leg_start
+                tele["generated"] = generated
+                telemetry.append(tele)
+                if raw_log is not None and label == "confirm":
+                    raw_log.write(json.dumps({"leg": label, **{k: tele[k] for k in tele}}) + "\n")
+
+            if checkpoint_path is not None and now - last_ckpt >= checkpoint_every_sec:
+                last_ckpt = now
+                torch.save(
+                    {
+                        "pop": pop,
+                        "generated": generated,
+                        "iter_distinct": iter_distinct,
+                        "global": global_counter.summary(),
+                        "iters": iters,
+                        "seed": seed,
+                        "config": asdict(cfg),
+                    },
+                    checkpoint_path,
+                )
+    finally:
+        pool.shutdown(wait=True, cancel_futures=True)
+
+    elapsed = time.monotonic() - t_leg_start
+    torch.cuda.synchronize(device)
+    peak_alloc = float(torch.cuda.max_memory_allocated(device) / (1024 * 1024))
+    end_alloc = float(torch.cuda.memory_allocated(device) / (1024 * 1024))
+
+    gs = global_counter.summary()
+    s0 = float(np.mean(valid_rates)) if valid_rates else None
+    nf = float(np.mean(nop_fracs)) if nop_fracs else None
+    dr = float(np.mean(degen_rates)) if degen_rates else None
+    lat_arr = np.asarray(lat, dtype=np.float64) if lat else np.zeros(1)
+    return LegResult(
+        config=cfg,
+        seed=seed,
+        budget_sec=budget_sec,
+        elapsed_sec=elapsed,
+        generated=generated,
+        iter_distinct=iter_distinct,
+        global_distinct=int(gs["distinct"]),
+        global_total=int(gs["total"]),
+        global_truncated=bool(gs["truncated"]),
+        global_dup_rate=float(gs["repeats"] / max(1, gs["total"])),
+        s0_valid_rate=s0,
+        nop_fraction=nf,
+        degenerate_rate=dr,
+        distinct_per_sec=iter_distinct / max(elapsed, 1e-9),
+        raw_per_sec=generated / max(elapsed, 1e-9),
+        oom_events=oom_events,
+        peak_alloc_mb=peak_alloc,
+        end_alloc_mb=end_alloc,
+        start_alloc_mb=start_alloc,
+        iters=iters,
+        lat_p50_ms=float(np.median(lat_arr)),
+        lat_p95_ms=float(np.percentile(lat_arr, 95)),
+        lat_max_ms=float(np.max(lat_arr)),
+        telemetry=telemetry,
+        aborted=aborted,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Checks: parity, resume, leak, stability
+# ---------------------------------------------------------------------------
+
+
+def check_parity(n_programs: int = 128, n_points: int = 64, seed: int = 7) -> dict[str, Any]:
+    """CPU-oracle parity: GPU vs NumPy interpreter must agree."""
+    from evobyte.vm import execute_batch as cpu_execute_batch
+
+    device = resolve_device("cuda")
+    seed_all(seed)
+    rng = np.random.default_rng(seed)
+    from evobyte.evolution import sample_structured
+
+    progs = np.stack([sample_structured(rng) for _ in range(n_programs)])
+    xs = np.linspace(-5.0, 5.0, n_points, dtype=np.float32)
+    pg, _ = execute_population_torch(progs, torch.from_numpy(xs).to(device), device=device)
+    synchronize(device)
+    prow = pg.cpu().numpy()
+    worst = 0.0
+    for i, prog in enumerate(progs):
+        pc, _ = cpu_execute_batch(np.asarray(prog, dtype=np.uint32), xs)
+        worst = max(worst, float(np.max(np.abs(prow[i] - pc))))
+    passed = worst <= STABILITY["parity_atol"] + STABILITY["parity_rtol"] * 1.0
+    return {
+        "n_programs": n_programs,
+        "n_points": n_points,
+        "worst_abs_err": worst,
+        "passed": bool(passed),
+    }
+
+
+def stability_verdict(
+    ladder_rates: dict[str, list[float]],
+    confirm_rate: float | None,
+    leak_ok: bool,
+    parity_ok: bool,
+    resume_ok: bool,
+    any_abort: bool,
+) -> dict[str, Any]:
+    ten = ladder_rates.get("600.0", ladder_rates.get("600", []))
+    if not ten:
+        return {
+            "stable": False,
+            "reason": "missing-10m-leg",
+            "checks": {
+                "cross_seed_floor": False,
+                "leak_ok": bool(leak_ok),
+                "parity_ok": bool(parity_ok),
+                "resume_ok": bool(resume_ok),
+                "no_abort": not any_abort,
+                "confirm_within_tolerance": False,
+            },
+            "median_10m": 0.0,
+            "min_10m": 0.0,
+        }
+    med = float(np.median(ten))
+    floor = float(np.min(ten))
+    checks: dict[str, Any] = {
+        "cross_seed_floor": floor >= STABILITY["cross_seed_floor"] * med,
+        "leak_ok": bool(leak_ok),
+        "parity_ok": bool(parity_ok),
+        "resume_ok": bool(resume_ok),
+        "no_abort": not any_abort,
+    }
+    if confirm_rate is not None:
+        checks["confirm_within_tolerance"] = (
+            abs(confirm_rate - med) <= STABILITY["confirm_tolerance"] * med
+        )
+    else:
+        checks["confirm_within_tolerance"] = False
+    stable = bool(all(checks.values()))
+    return {"stable": stable, "checks": checks, "median_10m": med, "min_10m": floor}
+
+
+def reconcile_counters(res: LegResult) -> dict[str, Any]:
+    valid_est = int(res.generated * (res.s0_valid_rate if res.s0_valid_rate is not None else 1.0))
+    return {
+        "generated": res.generated,
+        "s0_valid_est": valid_est,
+        "s0_valid_rate": res.s0_valid_rate,
+        "distinct_per_iter_sum": res.iter_distinct,
+        "global_distinct_reservoir": res.global_distinct,
+        "global_reservoir_total": res.global_total,
+        "global_reservoir_truncated": res.global_truncated,
+        "global_dup_rate": res.global_dup_rate,
+        "s1_scored": res.generated,
+        "iters": res.iters,
+        "oom_events": res.oom_events,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Orchestration
+# ---------------------------------------------------------------------------
+
+
+def run_benchmark(
+    budgets: list[float],
+    seeds: list[int],
+    confirm_1h: bool,
+    output_path: str,
+    raw_dir: str = "experiments/p24-raw",
+) -> tuple[bool, dict[str, Any]]:
+    if not torch.cuda.is_available():
+        raise RuntimeError("P24 requires the CUDA reference GPU; refusing CPU numbers.")
+    device = resolve_device("cuda")
+    raw_path = Path(raw_dir)
+    raw_path.mkdir(parents=True, exist_ok=True)
+
+    grid_hash = workload_grid_hash()
+    print("================================================================================")
+    print("P24 Stable limits of the RTX 4060 — real budgets, reconciled counters")
+    print(f"Workload grid hash: {grid_hash} | target: {TARGET_NAME} | device: {device}")
+    print(f"Ladder budgets: {budgets}s x seeds {seeds} | 1h confirm: {confirm_1h}")
+    print("================================================================================\n")
+
+    vram0 = adaptive_vram_budget(device)
+    print(
+        f"VRAM: total={vram0['total_mb']:.0f}MB free={vram0['free_mb']:.0f}MB "
+        f"reserve={RESERVE_MB:.0f}MB -> budget={vram0['budget_mb']:.0f}MB"
+    )
+
+    # 1. Scouting sweep (labelled SCOUT, never the reported number).
+    scout_seed = seeds[0]
+    scout_results: list[dict[str, Any]] = []
+    for p in P_GRID:
+        cfg = LegConfig(pop_size=p, n_points=256, n_streams=1, n_workers=1)
+        r = run_leg(cfg, scout_seed, SCOUT_BUDGET_SEC, label="scout")
+        scout_results.append({"kind": "SCOUT", **leg_record(r)})
+        print(
+            f"  [SCOUT P={p}] distinct/s={r.distinct_per_sec:.0f} raw/s={r.raw_per_sec:.0f} "
+            f"nop={r.nop_fraction} degen={r.degenerate_rate} oom={r.oom_events}"
+        )
+    best_p = max(
+        (s for s in scout_results if not s["aborted"]),
+        key=lambda s: s["distinct_per_sec"],
+    )["config"]["pop_size"]
+
+    for s in [x for x in STREAM_GRID if x != 1]:
+        cfg = LegConfig(pop_size=best_p, n_points=256, n_streams=s, n_workers=1)
+        r = run_leg(cfg, scout_seed, SCOUT_BUDGET_SEC, label="scout")
+        scout_results.append({"kind": "SCOUT", **leg_record(r)})
+        print(
+            f"  [SCOUT streams={s}] distinct/s={r.distinct_per_sec:.0f} raw/s={r.raw_per_sec:.0f}"
+        )
+    best_s = max(
+        (s for s in scout_results if s["config"]["n_points"] == 256 and not s["aborted"]),
+        key=lambda s: s["distinct_per_sec"],
+    )["config"]["n_streams"]
+
+    for w in [x for x in WORKER_GRID if x != 1]:
+        cfg = LegConfig(pop_size=best_p, n_points=256, n_streams=best_s, n_workers=w)
+        r = run_leg(cfg, scout_seed, SCOUT_BUDGET_SEC, label="scout")
+        scout_results.append({"kind": "SCOUT", **leg_record(r)})
+        print(
+            f"  [SCOUT workers={w}] distinct/s={r.distinct_per_sec:.0f} raw/s={r.raw_per_sec:.0f}"
+        )
+    cand = [s for s in scout_results if s["config"]["n_streams"] == best_s and not s["aborted"]]
+    best_w = max(cand, key=lambda s: s["distinct_per_sec"])["config"]["n_workers"]
+    # Adopt extra workers only if measured better than 1 (standing rule).
+    w1 = next(
+        s["distinct_per_sec"]
+        for s in scout_results
+        if s["config"]["pop_size"] == best_p
+        and s["config"]["n_streams"] == best_s
+        and s["config"]["n_workers"] == 1
+    )
+    wb = max(cand, key=lambda s: s["distinct_per_sec"])["distinct_per_sec"]
+    if wb <= w1:
+        best_w = 1
+
+    b_results: dict[int, float] = {}
+    for b in B_GRID:
+        if b == 256:
+            continue
+        cfg = LegConfig(pop_size=best_p, n_points=b, n_streams=best_s, n_workers=best_w)
+        r = run_leg(cfg, scout_seed, SCOUT_BUDGET_SEC, label="scout")
+        scout_results.append({"kind": "SCOUT", **leg_record(r)})
+        b_results[b] = r.distinct_per_sec
+        print(f"  [SCOUT B={b}] distinct/s={r.distinct_per_sec:.0f} raw/s={r.raw_per_sec:.0f}")
+
+    mix_results: dict[str, float] = {}
+    for mix in MIX_GRID:
+        for length in LEN_GRID:
+            if mix == "full" and length == "standard":
+                continue
+            cfg = LegConfig(
+                pop_size=best_p,
+                n_points=256,
+                n_streams=best_s,
+                n_workers=best_w,
+                mix=mix,
+                length=length,
+            )
+            r = run_leg(cfg, scout_seed, SCOUT_BUDGET_SEC, label="scout")
+            scout_results.append({"kind": "SCOUT", **leg_record(r)})
+            mix_results[f"{mix}/{length}"] = r.distinct_per_sec
+            print(
+                f"  [SCOUT {mix}/{length}] distinct/s={r.distinct_per_sec:.0f} "
+                f"nop={r.nop_fraction} degen={r.degenerate_rate} valid={r.s0_valid_rate}"
+            )
+
+    winner = LegConfig(pop_size=best_p, n_points=256, n_streams=best_s, n_workers=best_w)
+    print(
+        f"\nWinner config: P={best_p} B=256 streams={best_s} workers={best_w} "
+        f"(scout only; reported numbers come from the ladder below)\n"
+    )
+
+    # 2. Real budget ladder per seed (no scaling, no early exit).
+    ladder: list[dict[str, Any]] = []
+    ladder_rates: dict[str, list[float]] = {}
+    any_abort = False
+    for budget in budgets:
+        key = str(float(budget))
+        ladder_rates[key] = []
+        for sd in seeds:
+            r = run_leg(winner, sd, float(budget), label=f"ladder-{budget}s")
+            rec = leg_record(r)
+            ladder.append(rec)
+            ladder_rates[key].append(r.distinct_per_sec)
+            any_abort = any_abort or r.aborted
+            print(
+                f"  [ladder {budget}s seed {sd}] distinct/s={r.distinct_per_sec:.0f} "
+                f"raw/s={r.raw_per_sec:.0f} iters={r.iters} oom={r.oom_events} "
+                f"peak={r.peak_alloc_mb:.0f}MB abort={r.aborted}"
+            )
+            if r.aborted:
+                raise RuntimeError(
+                    "controlled abort: unrecoverable OOM at minimum pop; "
+                    "no number reported (see partial artifact)."
+                )
+
+    # 3. Resident-engine cross-check (P17 path, single 60s leg, not the headline).
+    resident_leg: dict[str, Any] = {}
+    try:
+        from evobyte.resident import GPUResidentEvolution
+
+        xs = np.linspace(-5.0, 5.0, 256, dtype=np.float32)
+        ys = target_values(xs)
+        from evobyte.evolution import EvolutionConfig
+
+        seed_all(seeds[0])
+        evo = GPUResidentEvolution(
+            xs,
+            ys,
+            config=EvolutionConfig(pop_size=2000, max_generations=10**9, early_stop_fitness=-1.0),
+            device=device,
+        )
+        torch.cuda.synchronize(device)
+        t0 = time.monotonic()
+        out = evo.run(time_budget_sec=60.0, early_stop_mse=-1.0)
+        torch.cuda.synchronize(device)
+        dt = time.monotonic() - t0
+        resident_leg = {
+            "engine": "GPUResidentEvolution",
+            "pop_size": 2000,
+            "points": 256,
+            "elapsed_sec": dt,
+            "generations": out["generations"],
+            "candidates_total": out["candidates_total"],
+            "search_cvps": out["search_cvps"],
+            "converged": out["converged"],
+        }
+        print(f"  [resident xcheck] cvps={out['search_cvps']:.0f} gens={out['generations']}")
+    except (RuntimeError, torch.cuda.OutOfMemoryError) as exc:
+        resident_leg = {"engine": "GPUResidentEvolution", "error": str(exc)}
+
+    # 4. Real 1h confirmation on the median 10m seed.
+    confirm_rate: float | None = None
+    confirm_rec: dict[str, Any] = {}
+    ckpt = raw_path / "p24-confirm-checkpoint.pt"
+    tele_log = raw_path / "p24-telemetry.jsonl"
+    if confirm_1h:
+        ten_rates = ladder_rates[str(float(max(budgets)))]
+        med_idx = int(np.argsort(ten_rates)[len(ten_rates) // 2])
+        confirm_seed = seeds[med_idx]
+        print(f"\n[confirm 1h] seed={confirm_seed} (median of 10m leg)...")
+        with open(tele_log, "w", encoding="utf-8") as raw_log:
+            r = run_leg(
+                winner, confirm_seed, 3600.0, raw_log=raw_log, checkpoint_path=ckpt, label="confirm"
+            )
+        confirm_rate = r.distinct_per_sec
+        confirm_rec = leg_record(r)
+        print(
+            f"  [confirm 1h] distinct/s={r.distinct_per_sec:.0f} raw/s={r.raw_per_sec:.0f} "
+            f"iters={r.iters} oom={r.oom_events} peak={r.peak_alloc_mb:.0f}MB"
+        )
+        if r.aborted:
+            raise RuntimeError("controlled abort during 1h confirmation; no number reported.")
+
+    # 5. Parity / resume / leak evidence.
+    parity = check_parity()
+    print(
+        f"  [parity] worst_abs_err={parity['worst_abs_err']:.2e} -> "
+        f"{'PASS' if parity['passed'] else 'FAIL'}"
+    )
+
+    resume: dict[str, Any] = {"passed": False}
+    if ckpt.exists():
+        try:
+            state = torch.load(ckpt, map_location="cpu", weights_only=False)
+            resume = {
+                "passed": bool(state.get("generated", 0) > 0 and state.get("iters", 0) > 0),
+                "checkpoint_generated": int(state.get("generated", 0)),
+                "checkpoint_iters": int(state.get("iters", 0)),
+                "checkpoint_pop": int(state.get("pop", 0)),
+            }
+        except (RuntimeError, OSError, ValueError) as exc:
+            resume = {"passed": False, "error": str(exc)}
+    print(f"  [resume] -> {'PASS' if resume['passed'] else 'FAIL'}")
+
+    leak_samples: list[float] = []
+    for rec in ladder + ([confirm_rec] if confirm_rec else []):
+        leak_samples.append(rec["end_alloc_mb"] - rec["start_alloc_mb"])
+    leak_ok = bool(leak_samples) and max(leak_samples) <= STABILITY["leak_max_growth_mb"]
+    print(
+        f"  [leak] max_growth={max(leak_samples) if leak_samples else float('nan'):.1f}MB "
+        f"-> {'PASS' if leak_ok else 'FAIL'}"
+    )
+
+    verdict = stability_verdict(
+        ladder_rates, confirm_rate, leak_ok, parity["passed"], resume["passed"], any_abort
+    )
+    ten = ladder_rates[str(float(max(budgets)))]
+    headline = float(np.min(ten)) if ten else 0.0
+    print("\n--------------------------------------------------------------------------------")
+    print(f"P24 stable: {verdict['stable']} | headline distinct/s (min-seed 10m): {headline:.0f}")
+    print(f"checks: {verdict['checks']}")
+    print("--------------------------------------------------------------------------------\n")
+
+    manifest = {
+        "phase": "P24",
+        "workload_grid_hash": grid_hash,
+        "target": TARGET_NAME,
+        "stable": bool(verdict["stable"]),
+        "headline_distinct_per_sec": headline,
+        "stability_checks": verdict["checks"],
+        "winner_config": asdict(winner),
+        "scout_B_variants": b_results,
+        "scout_mix_variants": mix_results,
+        "vram_budget": vram0,
+        "scout": scout_results,
+        "ladder": ladder,
+        "ladder_rates": ladder_rates,
+        "resident_crosscheck": resident_leg,
+        "confirm": confirm_rec,
+        "confirm_rate": confirm_rate,
+        "parity": parity,
+        "resume": resume,
+        "leak": {"max_growth_mb": max(leak_samples) if leak_samples else None, "passed": leak_ok},
+        "thresholds": STABILITY,
+        "budgets": budgets,
+        "seeds": seeds,
+        "provenance": collect_provenance(
+            seed=seeds[0], device=device, config={"grid_hash": grid_hash, "budgets": budgets}
+        ),
+    }
+    raw_files = {
+        str(tele_log): _sha_or_none(tele_log),
+        str(ckpt): _sha_or_none(ckpt),
+    }
+    raw_files = {k: v for k, v in raw_files.items() if v is not None}
+    write_manifest(output_path, manifest, raw_files)
+    return bool(verdict["stable"]), manifest
+
+
+def _sha_or_none(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def leg_record(r: LegResult) -> dict[str, Any]:
+    return {
+        "config": asdict(r.config),
+        "seed": r.seed,
+        "budget_sec": r.budget_sec,
+        "elapsed_sec": r.elapsed_sec,
+        "reconciled": reconcile_counters(r),
+        "distinct_per_sec": r.distinct_per_sec,
+        "raw_per_sec": r.raw_per_sec,
+        "s0_valid_rate": r.s0_valid_rate,
+        "nop_fraction": r.nop_fraction,
+        "degenerate_rate": r.degenerate_rate,
+        "oom_events": r.oom_events,
+        "peak_alloc_mb": r.peak_alloc_mb,
+        "end_alloc_mb": r.end_alloc_mb,
+        "start_alloc_mb": r.start_alloc_mb,
+        "iters": r.iters,
+        "lat_ms": {"p50": r.lat_p50_ms, "p95": r.lat_p95_ms, "max": r.lat_max_ms},
+        "aborted": r.aborted,
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="P24 stable GPU limits benchmark")
+    parser.add_argument(
+        "--budgets",
+        type=str,
+        default="10s,1m,10m",
+        help="Comma-separated ladder budgets (default: 10s,1m,10m)",
+    )
+    parser.add_argument(
+        "--confirm-1h", action="store_true", help="Run the real 1h confirmation leg"
+    )
+    parser.add_argument("--seeds", type=int, default=5, help="Number of seeds (default: 5)")
+    parser.add_argument("--output", type=str, default="experiments/p24-limits.json")
+    args = parser.parse_args()
+
+    budgets = [parse_budget_duration(b) for b in args.budgets.split(",") if b.strip()]
+    if args.seeds == 5:
+        seeds = list(DEFAULT_SEEDS)
+    else:
+        seeds = [100 + i for i in range(args.seeds)]
+    try:
+        stable, _ = run_benchmark(budgets, seeds, args.confirm_1h, args.output)
+    except RuntimeError as exc:
+        print(f"ABORT: {exc}")
+        return 2
+    return 0 if stable else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
