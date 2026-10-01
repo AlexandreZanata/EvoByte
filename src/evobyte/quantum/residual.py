@@ -8,24 +8,25 @@ under a staged fast -> dense -> high-precision -> strict doctrine.
 from __future__ import annotations
 
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import IntEnum
-from typing import Any, Callable, Sequence
+from typing import Any
 
 import numpy as np
 
-from evobyte.bytecode import OPCODES, decode_human, encode_instr
-from evobyte.evolution import EvolutionConfig, mutate_candidate, sample_structured
+from evobyte.bytecode import decode_human, encode_instr
+from evobyte.evolution import EvolutionConfig, sample_structured
 from evobyte.vm import execute_batch
 
 
 class StrictnessStage(IntEnum):
     """Evaluation stages per Q10 doctrine."""
 
-    FAST = 1           # Coarse grid (32 pts), 2nd-order FD, early rejection
-    DENSE = 2          # Dense grid (128 pts), 4th-order FD, boundary verification
-    HIGH_PRECISION = 3 # High-precision grid (256 pts), 4th-order FD, fine integration
-    STRICT = 4         # Oracle verification: exact analytical comparison
+    FAST = 1  # Coarse grid (32 pts), 2nd-order FD, early rejection
+    DENSE = 2  # Dense grid (128 pts), 4th-order FD, boundary verification
+    HIGH_PRECISION = 3  # High-precision grid (256 pts), 4th-order FD, fine integration
+    STRICT = 4  # Oracle verification: exact analytical comparison
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,7 @@ class ResidualResult:
 # -----------------------------------------------------------------------------
 # Solvable Potentials & Analytic Sanity Solutions
 # -----------------------------------------------------------------------------
+
 
 def qho_potential(xs: np.ndarray, omega: float = 1.0) -> np.ndarray:
     """Harmonic oscillator potential V(x) = 0.5 * omega^2 * x^2."""
@@ -99,6 +101,7 @@ def build_box_ground_program(length: float = np.pi) -> np.ndarray:
 # Hamiltonian Action and Finite Difference
 # -----------------------------------------------------------------------------
 
+
 def hamiltonian_action(
     psi: np.ndarray,
     xs: np.ndarray,
@@ -114,7 +117,9 @@ def hamiltonian_action(
     if order >= 4 and n >= 5:
         # 4th-order central difference interior
         dx2_12 = 12.0 * (dx**2)
-        d2[2:-2] = (-psi[4:] + 16.0 * psi[3:-1] - 30.0 * psi[2:-2] + 16.0 * psi[1:-3] - psi[:-4]) / dx2_12
+        d2[2:-2] = (
+            -psi[4:] + 16.0 * psi[3:-1] - 30.0 * psi[2:-2] + 16.0 * psi[1:-3] - psi[:-4]
+        ) / dx2_12
         # 2nd-order boundary layers
         dx2 = dx**2
         d2[1] = (psi[2] - 2.0 * psi[1] + psi[0]) / dx2
@@ -135,6 +140,7 @@ def hamiltonian_action(
 # -----------------------------------------------------------------------------
 # Schrödinger Residual Evaluation
 # -----------------------------------------------------------------------------
+
 
 def compute_residual(
     psi: np.ndarray,
@@ -172,7 +178,11 @@ def compute_residual(
     psi_norm = psi / norm
 
     # Hamiltonian action
-    order = 4 if stage in (StrictnessStage.DENSE, StrictnessStage.HIGH_PRECISION, StrictnessStage.STRICT) else 2
+    order = (
+        4
+        if stage in (StrictnessStage.DENSE, StrictnessStage.HIGH_PRECISION, StrictnessStage.STRICT)
+        else 2
+    )
     h_psi = hamiltonian_action(psi_norm, xs, potential, order=order)
 
     # Rayleigh quotient expectation <psi|H|psi>
@@ -219,6 +229,7 @@ def compute_residual(
 # Staged Evaluator & Search Loop
 # -----------------------------------------------------------------------------
 
+
 def evaluate_program_staged(
     program: np.ndarray,
     system_name: str,
@@ -259,7 +270,9 @@ def evaluate_program_staged(
         )
 
     res_fast = compute_residual(
-        preds_fast, xs_fast, potential_fn(xs_fast),
+        preds_fast,
+        xs_fast,
+        potential_fn(xs_fast),
         stage=StrictnessStage.FAST,
         target_energy=target_energy,
         w_norm=w_norm,
@@ -286,7 +299,9 @@ def evaluate_program_staged(
         )
 
     res_dense = compute_residual(
-        preds_dense, xs_dense, potential_fn(xs_dense),
+        preds_dense,
+        xs_dense,
+        potential_fn(xs_dense),
         stage=StrictnessStage.DENSE,
         target_energy=target_energy,
         w_norm=w_norm,
@@ -313,7 +328,9 @@ def evaluate_program_staged(
         )
 
     res_hp = compute_residual(
-        preds_hp, xs_hp, potential_fn(xs_hp),
+        preds_hp,
+        xs_hp,
+        potential_fn(xs_hp),
         stage=StrictnessStage.HIGH_PRECISION,
         target_energy=target_energy,
         w_norm=w_norm,
@@ -327,7 +344,9 @@ def evaluate_program_staged(
     # Stage 4: Strict (Golden oracle comparison)
     ana_psi, ana_e = analytic_fn(xs_hp)
     return compute_residual(
-        preds_hp, xs_hp, potential_fn(xs_hp),
+        preds_hp,
+        xs_hp,
+        potential_fn(xs_hp),
         stage=StrictnessStage.STRICT,
         target_energy=target_energy,
         w_norm=w_norm,
@@ -380,7 +399,6 @@ def search_wavefunction_residual(
     t0 = time.perf_counter()
     best_prog = population[0].copy()
     best_score = float("inf")
-    best_gen = 0
     total_evals = 0
 
     for gen in range(generations):
@@ -398,7 +416,6 @@ def search_wavefunction_residual(
         if scores[min_idx] < best_score:
             best_score = float(scores[min_idx])
             best_prog = population[min_idx].copy()
-            best_gen = gen
 
         # Early exit check at dense stage
         dense_res = evaluate_program_staged(
@@ -413,7 +430,9 @@ def search_wavefunction_residual(
     dt = max(time.perf_counter() - t0, 1e-9)
 
     # Final Strict Evaluation on best discovered program
-    final_strict = evaluate_program_staged(best_prog, system_name, target_energy, max_stage=StrictnessStage.STRICT)
+    final_strict = evaluate_program_staged(
+        best_prog, system_name, target_energy, max_stage=StrictnessStage.STRICT
+    )
 
     return {
         "best_program": best_prog,

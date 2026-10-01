@@ -27,5 +27,7 @@ needless copies, LLM APIs.
 
 - Reference: NVIDIA RTX 4060 Laptop, 8 GB VRAM.
 - `benchmarks/hw_probe.py` records GPU, driver, CUDA, VRAM, CPU, RAM.
+- [GPU_ACCESS.md](GPU_ACCESS.md) is the step-by-step runbook for reaching
+  that GPU on this notebook (detection, wake-up, troubleshooting, baseline).
 - All performance claims cite: hardware + driver + commit + seed +
   dataset hash. No exceptions.

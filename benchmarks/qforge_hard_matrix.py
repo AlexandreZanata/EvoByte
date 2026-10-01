@@ -11,15 +11,17 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import math
 import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any
 
 # Ensure project root is in sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
+
+from hw_probe import probe
 
 from evobyte.quantum.scaling import (
     PREREGISTERED_TARGETS,
@@ -27,17 +29,72 @@ from evobyte.quantum.scaling import (
     TargetEvaluationResult,
     run_hard_target_search,
 )
-from hw_probe import probe
 
 
 def get_git_commit() -> str:
     try:
-        out = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5)
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, check=False
+        )
         if out.returncode == 0:
-            return out.stdout.strip()[:12]
-    except Exception:
-        pass
+            return out.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        return "unknown"
     return "unknown"
+
+
+def report_passes(results: list[TargetEvaluationResult]) -> bool:
+    """Check report consistency; this is not a scientific discovery acceptance gate."""
+    if not results:
+        return False
+    for result in results:
+        target = PREREGISTERED_TARGETS.get(result.target_id)
+        if target is None or result.outcome == OutcomeClass.NEEDS_WORK:
+            return False
+        if not all(
+            math.isfinite(value)
+            for value in (
+                result.discovered_energy,
+                result.reference_energy,
+                result.energy_error,
+                result.wall_clock_sec,
+            )
+        ):
+            return False
+        if not (0 < result.evaluations <= target.max_evaluations) or result.wall_clock_sec <= 0:
+            return False
+        if result.energy_error < 0:
+            return False
+        if result.fidelity is not None and (
+            not math.isfinite(result.fidelity) or not 0 <= result.fidelity <= 1.0 + 1e-12
+        ):
+            return False
+        if not math.isclose(
+            result.energy_error,
+            abs(result.discovered_energy - result.reference_energy),
+            rel_tol=1e-9,
+            abs_tol=1e-12,
+        ):
+            return False
+        fidelity_ok = target.fidelity_threshold <= 0 or (
+            result.fidelity is not None
+            and math.isfinite(result.fidelity)
+            and target.fidelity_threshold <= result.fidelity <= 1.0 + 1e-12
+        )
+        meets_thresholds = result.energy_error <= target.energy_tolerance and fidelity_ok
+        budget_exhausted = (
+            result.evaluations >= target.max_evaluations
+            or result.wall_clock_sec >= target.wall_clock_timeout_sec
+        )
+        if result.outcome == OutcomeClass.SUPPORTED:
+            if not meets_thresholds:
+                return False
+        elif result.outcome == OutcomeClass.NULL:
+            if meets_thresholds or not budget_exhausted:
+                return False
+        else:
+            return False
+    return True
 
 
 def main() -> int:
@@ -64,7 +121,7 @@ def main() -> int:
 
     hw_info = probe()
     git_hash = get_git_commit()
-    timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+    timestamp = datetime.datetime.now(datetime.UTC).isoformat()
 
     if args.targets:
         target_keys = [t.strip() for t in args.targets.split(",") if t.strip()]
@@ -127,25 +184,14 @@ def main() -> int:
     for r in results:
         print(f"  [{r.outcome.value:<9}] {r.target_id}: {r.reproduction_cmd}")
 
-    # Integrity Gate Verification:
-    # 1. Supported targets must actually meet tolerance
-    for r in results:
-        target = PREREGISTERED_TARGETS[r.target_id]
-        if r.outcome == OutcomeClass.SUPPORTED:
-            assert r.energy_error <= target.energy_tolerance, f"False positive on {r.target_id}"
-        elif r.outcome == OutcomeClass.NULL:
-            # Verified negative result: energy error exceeded budget tolerance
-            assert (
-                r.energy_error > target.energy_tolerance
-                or r.evaluations >= target.max_evaluations
-                or r.wall_clock_sec >= target.wall_clock_timeout_sec
-            )
+    passed = report_passes(results)
 
     print("\n" + "=" * 135)
-    print("EXIT GATE VERDICT: PASS (Integrity verified; negative and positive outcomes published)")
+    print(f"EXIT GATE VERDICT: {'PASS' if passed else 'FAIL'} (report consistency only)")
+    print("RESEARCH ACCEPTANCE: PROVISIONAL; known seeds and reference-based stopping are used")
     print("=" * 135)
 
-    return 0
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":

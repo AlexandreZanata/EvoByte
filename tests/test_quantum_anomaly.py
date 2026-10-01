@@ -18,11 +18,58 @@ from evobyte.quantum.circuit import (
 from evobyte.quantum.fame import (
     AnomalyVault,
     DiscoveryClass,
-    ExtraVerificationReport,
     QuantumHallOfFame,
     default_quantum_verification_hook,
     validate_discovery_class,
 )
+
+
+@pytest.mark.parametrize("sampler", ["evolution", "evolution_novelty"])
+def test_monkey_verifier_calls_respect_partial_population_budget(monkeypatch, sampler):
+    from benchmarks import qforge_monkey
+
+    calls = []
+
+    def reject_candidate(*args):
+        calls.append(1)
+        return 0.0
+
+    monkeypatch.setattr(qforge_monkey, "state_fidelity", reject_candidate)
+    target = np.array([1, 0, 0, 0], dtype=np.complex128)
+    result = qforge_monkey.run_monkey_search(sampler, target, 2, seed=0, max_candidates=51)
+    assert not result["found"]
+    assert result["tte"] == len(calls) == 51
+
+
+def test_monkey_rejects_unknown_sampler_and_empty_matrix(tmp_path):
+    from benchmarks import qforge_monkey
+
+    target = np.array([1, 0, 0, 0], dtype=np.complex128)
+    with pytest.raises(ValueError, match="Unknown sampler"):
+        qforge_monkey.run_monkey_search("typo", target, 2, seed=0)
+    with pytest.raises(ValueError, match="positive"):
+        qforge_monkey.run_monkey_search("evolution", target, 2, seed=0, max_candidates=0)
+    with pytest.raises(ValueError, match="nonempty"):
+        qforge_monkey.run_monkey_benchmark([], ["micro_model"], [0], fame_log=tmp_path / "fame")
+    assert not (tmp_path / "fame").exists()
+
+
+def test_monkey_reports_heuristic_and_actual_target_hash(tmp_path):
+    from benchmarks import qforge_monkey
+
+    result = qforge_monkey.run_monkey_benchmark(
+        ["bell"],
+        ["micro_model"],
+        [0],
+        max_candidates=1,
+        fame_log=tmp_path / "fame",
+        vault_log=tmp_path / "vault",
+    )
+    record = result["records"][0]
+    assert record["generator_kind"] == "known_motif_heuristic"
+    assert record["learned_model"] is False
+    assert len(record["target_state_sha256"]) == 64
+    assert result["fame_sample_row"]["hamiltonian_hash"] == record["target_state_sha256"]
 
 
 def test_discovery_class_validation():
@@ -30,7 +77,10 @@ def test_discovery_class_validation():
     # Standard valid classes
     assert validate_discovery_class("REDISCOVERY") == DiscoveryClass.REDISCOVERY
     assert validate_discovery_class("NOVEL CANDIDATE") == DiscoveryClass.NOVEL_CANDIDATE
-    assert validate_discovery_class("VERIFIED MATHEMATICAL RESULT") == DiscoveryClass.VERIFIED_MATHEMATICAL_RESULT
+    assert (
+        validate_discovery_class("VERIFIED MATHEMATICAL RESULT")
+        == DiscoveryClass.VERIFIED_MATHEMATICAL_RESULT
+    )
     assert validate_discovery_class("PHYSICAL HYPOTHESIS") == DiscoveryClass.PHYSICAL_HYPOTHESIS
 
     # Automated assignment of NOVEL PHYSICAL RESULT is strictly forbidden
@@ -54,7 +104,7 @@ def test_quantum_hall_of_fame_append_only(tmp_path):
     fame = QuantumHallOfFame(fame_file)
 
     # Entry 1: Bell state discovery
-    e1 = fame.record_discovery(
+    fame.record_discovery(
         problem_id="bell_state_preparation",
         hamiltonian_hash="hash_bell",
         candidate_binary=np.array([1, 2, 3], dtype=np.uint8),
@@ -71,7 +121,7 @@ def test_quantum_hall_of_fame_append_only(tmp_path):
     )
 
     # Entry 2: GHZ state discovery
-    e2 = fame.record_discovery(
+    fame.record_discovery(
         problem_id="ghz_state_preparation",
         hamiltonian_hash="hash_ghz",
         candidate_binary=np.array([4, 5, 6], dtype=np.uint8),
@@ -107,12 +157,16 @@ def test_anomaly_vault_detection_criteria():
     assert "Ultra-compact" in reason1
 
     # Normal candidate: 8 gates, low novelty
-    is_anom2, reason2 = vault.is_anomalous(fidelity=0.95, gate_count=8, circuit_depth=6, novelty=0.5)
+    is_anom2, reason2 = vault.is_anomalous(
+        fidelity=0.95, gate_count=8, circuit_depth=6, novelty=0.5
+    )
     assert not is_anom2
     assert reason2 == ""
 
     # High novelty candidate (> 2.0)
-    is_anom3, reason3 = vault.is_anomalous(fidelity=0.999, gate_count=5, circuit_depth=4, novelty=2.8)
+    is_anom3, reason3 = vault.is_anomalous(
+        fidelity=0.999, gate_count=5, circuit_depth=4, novelty=2.8
+    )
     assert is_anom3
     assert "High structural distance" in reason3
 
@@ -153,7 +207,9 @@ def test_anomaly_vault_with_extra_verification(tmp_path):
         circuit_depth=2,
     )
 
-    vault_res = vault.record_anomaly(entry, "Ultra-compact Bell circuit (2 gates)", verification_report=audit)
+    vault_res = vault.record_anomaly(
+        entry, "Ultra-compact Bell circuit (2 gates)", verification_report=audit
+    )
     assert vault_res["verification"]["verified"] is True
     assert vault_res["anomaly_reason"] == "Ultra-compact Bell circuit (2 gates)"
 

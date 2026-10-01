@@ -1,6 +1,6 @@
 # Q12 — Anomaly Vault, Quantum Hall of Fame, Infinite Monkey Quantum
 
-**Status:** Complete (2026-09-29).
+**Status:** Implementation complete; heuristic comparison pilot (2026-09-29).
 **Goal:** preserve the weird, honor the best, measure the absurd.
 
 ## Objective
@@ -34,6 +34,28 @@ python3 benchmarks/qforge_monkey.py --targets bell,ghz --seeds 3
 Artifact: fame sample row + monkey table (candidates to first solution).
 
 ### Measured Artifacts (`benchmarks/qforge_monkey.py --targets bell,ghz --seeds 3`)
+
+#### Interpretation and provenance correction (2026-10-01)
+
+The legacy sampler name `micro_model` refers to `sample_micro_model`, a
+hand-written H-plus-CNOT motif generator without training or learned
+parameters. Its first-candidate Bell/GHZ successes are a known-motif
+baseline, not evidence that a neural model learned to discover solutions.
+New records explicitly report `known_motif_heuristic` and `learned_model=false`.
+The three-seed comparison is exploratory, not a scientific adoption gate.
+
+Historical sample rows below contain descriptive placeholders such as
+`hash_bell`, not cryptographic hashes. New benchmark records hash the
+actual little-endian complex128 target vector; the legacy Hall of Fame
+field `hamiltonian_hash` holds this state-vector digest for these state
+preparation tasks. Neither a hash nor the vault's NumPy checks constitutes
+a signature, independent reproduction, arbitrary-precision verification
+or a proof of novelty. Old rows remain unchanged as historical samples.
+
+Evolution now stops verification exactly at the declared candidate budget,
+including partial populations; unknown samplers and empty matrices fail
+instead of producing a successful-looking report. Historical default
+budgets were multiples of the population size and their tables are retained.
 
 #### Infinite Monkey Quantum Table (Candidates to First Solution)
 

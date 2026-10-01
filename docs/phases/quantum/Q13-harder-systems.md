@@ -1,6 +1,6 @@
 # Q13 — Harder / less-understood systems (gated)
 
-**Status:** Complete (2026-09-29).
+**Status:** Pilot implemented; scientific acceptance provisional (2026-09-29).
 **Goal:** apply the frozen pipeline to hard regimes with scaling verifiers and mandatory negative-result reporting.
 
 ## Objective
@@ -35,7 +35,36 @@ unproven "discovery" fails.
 
 ### Measured Artifacts (`benchmarks/qforge_hard_matrix.py --preregistered-only`)
 
-#### Pre-Registered Hard Target Matrix
+#### Interpretation and gate correction (2026-10-01)
+
+The three Majumdar-Ghosh successes start with the exact known dimer-product
+ansatz inserted by `build_dimer_product_ansatz`. They validate the
+representation and verifier, not autonomous discovery. The search also
+uses `e_ref` to decide early stopping, so the oracle is not scoring-only.
+New result details record these facts and the seed. The configured catalog
+and legacy `--preregistered-only` option do not by themselves prove that
+the targets and budgets were prospectively registered before any run.
+
+`T6_UNSOLVED_FRUST_N12` is a historical identifier for a finite, budgeted
+negative-reporting test; it is not evidence of a globally unsolved problem.
+Its NULL result applies to the configured search and budget only. All
+historical numbers below remain unchanged and require independent acceptance
+before supporting a new scientific claim.
+
+The CLI now fails for empty or inconsistent reports, nonfinite metrics,
+unsupported positive classifications and `NEEDS_WORK`; valid budgeted
+negative results still pass report consistency. This is a software gate,
+not a discovery acceptance gate. SciPy is a declared runtime dependency,
+and Lanczos now uses its supplied seed for the initial vector. The symmetry
+projection stays sparse and solves only its lowest eigenpair; the previous
+full dense eigendecomposition could exhaust the five-second T6 budget
+before any search evaluation. A run with zero evaluated candidates is now
+`NEEDS_WORK`, not a scientific negative result. Future
+acceptance requires an unseeded arm, oracle-isolated stopping, complete
+verifier-call counts, committed prospective registration and independent
+verification under matched budgets.
+
+#### Historical Configured Hard Target Matrix
 
 | Target ID | Model | N | Dim | Outcome | Evals | Time (s) | E_found | E_ref | Delta E | Fidelity | Verifier Tier |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -51,7 +80,7 @@ unproven "discovery" fails.
 - **NULL:** 3 / 6 (Mandatory negative results upheld; unreached thresholds under budget correctly reported without false claims)
 - **NEEDS_WORK:** 0 / 6
 - **Total Wall-Clock Time:** 3.78 s
-- **Exit Gate Verdict:** PASS (Integrity verified; negative and positive outcomes published)
+- **Historical Exit Gate Verdict:** PASS; scientific acceptance remains provisional for the reasons above.
 
 #### Reproduction Bundles
 - `[SUPPORTED]` `T1_J1J2_MG_N6`: `python3 benchmarks/qforge_hard_matrix.py --targets T1_J1J2_MG_N6 --seed 42`

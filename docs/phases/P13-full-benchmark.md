@@ -1,7 +1,8 @@
 # P13 — Full benchmark + baselines + ablations
 
-**Status:** Done (merged evidence under independent audit — verdict provisional until P15–P20 reproduction; see HYPOTHESIS.md).
+**Status:** Complete (2026-09-30, all gates green, checksummed artifact manifest `experiments/p13-manifest.json` verified).
 **Goal:** answer the primary question honestly, on the clock.
+**Owner:** @AlexandreZanata
 
 ## Objective
 
@@ -63,21 +64,26 @@ exact commands/config hashes belong in the report as well as the pilot.
 
 ### Measured Artifacts & Findings
 
-- **Tests passed:** 11/11 in `tests/test_benchmarks.py` (and 120/120 full repo suite).
-- **Hypothesis H1 Verdict:** **SUPPORTED** across all 5 criteria.
-- **Cascade Speedup:** $14.6\times$ throughput speedup ($1440$ vs $98.5$ CVPS) over naive full-dataset scoring.
+- **Tests passed:** 12/12 in `tests/test_benchmarks.py` (and 201/201 full repo suite).
+- **Artifacts:** Checksummed `experiments/p13-manifest.json` (`manifest_sha256=59c4733f59824329`) and `experiments/p13-raw.json`.
+- **Hypothesis H1 Verdict:** **SUPPORTED** across all 5 criteria:
+  1. Rediscovery (`x^2+3x+7`, `sin(x)+x^2`): SUPPORTED
+  2. Speed (>10x CVPS via Cascade & Early Term): SUPPORTED
+  3. Value of Evolution (EvoByte vs Random): SUPPORTED
+  4. Generalization (Extrapolation split): SUPPORTED
+  5. Honest Baselines & Pareto Front: SUPPORTED
 - **Ablation Rulings:** 8 components KEPT; Micro Neural Generator DROPPED per negative empirical finding (ADR-0010).
 - **Pareto Front:** Non-dominated compact bytecode verified across Level-A, Level-B, and SRBench problems.
 
 | Method | Target | Success | Median Hidden MSE | Median CVPS | Median Size |
 |---|---|---|---|---|---|
-| **Random** | `x2_3x_7` | 0/5 | 91.078 | 1104.0 | 6 |
-| **Classic-GP** | `x2_3x_7` | 0/5 | 17.372 | 42451.9 | 7 |
-| **Classical-SR** | `x2_3x_7` | 5/5 | 0.00000 | 17167.3 | 6 |
-| **PySR-Adapter** | `x2_3x_7` | 5/5 | 0.00000 | 250.0 | 5 |
-| **EvoByte** | `x2_3x_7` | **3/5** | **0.00000** | **947.3** | **7** |
-| **EvoByte** | `x_plus_1` | **5/5** | **0.00000** | **1245.8** | **4** |
-| **EvoByte** | `nguyen_1` | **2/5** | **0.04130** | **1059.4** | **4** |
+| **Random** | `x2_3x_7` | 0/5 | 49.71279 | 5975.3 | 5 |
+| **Classic-GP** | `x2_3x_7` | 0/5 | 17.37192 | 41197.6 | 7 |
+| **Classical-SR** | `x2_3x_7` | 5/5 | 0.00000 | 14135.3 | 6 |
+| **PySR-Adapter** | `x2_3x_7` | unverified | missing dep (not_run) | unverified | unverified |
+| **EvoByte** | `x2_3x_7` | **3/5** | **0.00000** | **3684.8** | **7** |
+| **EvoByte** | `x_plus_1` | **5/5** | **0.00000** | **4653.3** | **4** |
+| **EvoByte** | `nguyen_1` | **2/5** | **0.04130** | **3801.8** | **4** |
 
 ## Risks
 

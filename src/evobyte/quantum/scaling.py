@@ -10,15 +10,17 @@ Provides:
 5. Mandatory outcome reporting (SUPPORTED, NULL, NEEDS_WORK), ensuring negative
    results are recorded with scientific integrity.
 
-Zero leakage doctrine: Reference ground states exist solely for post-hoc scoring.
+Exploratory pilot: known dimer seeds and reference-based early stopping are used.
+This implementation does not satisfy a scoring-only oracle isolation protocol.
 """
 
 from __future__ import annotations
 
 import enum
 import time
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, Callable, Sequence
+from typing import Any
 
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -153,7 +155,7 @@ PREREGISTERED_TARGETS: dict[str, HardTarget] = {
         problem_type="ground_state",
         energy_tolerance=1e-4,  # Intentionally stringent tolerance to test NULL outcome reporting
         fidelity_threshold=0.99,
-        max_evaluations=1500,  # Limited budget ensuring NULL verdict
+        max_evaluations=1500,  # Historical budget for the negative-reporting test
         wall_clock_timeout_sec=5.0,
         symmetry_sector="sz=0",
         description="N=12 Non-dimer frustrated regime under tight budget (tests negative result reporting)",
@@ -261,7 +263,8 @@ def lanczos_ground_state(
     H_sparse = build_sparse_hamiltonian(terms, n_qubits)
 
     # Use scipy ARPACK eigsh for robust extremal eigenvalue calculation
-    evals, evecs = eigsh(H_sparse, k=1, which="SA", tol=tol, maxiter=max_iter * 10)
+    v0 = np.random.default_rng(seed).normal(size=dim)
+    evals, evecs = eigsh(H_sparse, k=1, which="SA", tol=tol, maxiter=max_iter * 10, v0=v0)
     e0 = float(np.real(evals[0]))
     psi0 = evecs[:, 0]
     # Phase convention: make largest component real and positive
@@ -275,6 +278,7 @@ def symmetry_reduced_ground_state(
     terms: list[PauliTerm],
     n_qubits: int,
     sector: str = "sz=0",
+    seed: int = 42,
 ) -> tuple[float, np.ndarray, np.ndarray]:
     """Compute exact ground state within symmetry-reduced subspace.
 
@@ -292,8 +296,10 @@ def symmetry_reduced_ground_state(
     sub_dim = len(sub_basis)
     idx_map = {int(b): i for i, b in enumerate(sub_basis)}
 
-    # Build projected Hamiltonian
-    H_sub = np.zeros((sub_dim, sub_dim), dtype=np.complex128)
+    # Keep the projection sparse: only its lowest eigenpair is needed.
+    rows: list[int] = []
+    cols: list[int] = []
+    values: list[complex] = []
     for t in terms:
         x = t.x_mask
         z = t.z_mask
@@ -307,9 +313,16 @@ def symmetry_reduced_ground_state(
             if row_int in idx_map:
                 i_sub = idx_map[row_int]
                 sign = 1.0 - 2.0 * (((col & z).bit_count()) & 1)
-                H_sub[i_sub, j_sub] += phase_factor * sign
+                rows.append(i_sub)
+                cols.append(j_sub)
+                values.append(phase_factor * sign)
 
-    evals, evecs = np.linalg.eigh(H_sub)
+    H_sub = csr_matrix((values, (rows, cols)), shape=(sub_dim, sub_dim))
+    if sub_dim <= 2:
+        evals, evecs = np.linalg.eigh(H_sub.toarray())
+    else:
+        v0 = np.random.default_rng(seed).normal(size=sub_dim)
+        evals, evecs = eigsh(H_sub, k=1, which="SA", tol=1e-10, v0=v0)
     e0 = float(np.real(evals[0]))
     psi_sub = evecs[:, 0]
 
@@ -381,7 +394,7 @@ def run_hard_target_search(
     target: HardTarget,
     seed: int = 42,
 ) -> TargetEvaluationResult:
-    """Execute pre-registered hard target search and apply scoring-only verification."""
+    """Execute the configured pilot with known seeds and reference-based stopping."""
     rng = np.random.default_rng(seed)
     t0 = time.perf_counter()
 
@@ -390,18 +403,18 @@ def run_hard_target_search(
     dim = 1 << n
 
     # Step 1: Pre-compute reference ground state using appropriate verifier tier
-    # (Scoring-only discipline: reference values are strictly post-hoc)
+    # Reference energies also control early stopping below; this is a pilot.
     if target.symmetry_sector == "sz=0" and n >= 6:
-        e_ref, psi_ref, _ = symmetry_reduced_ground_state(h_terms, n, sector="sz=0")
+        e_ref, psi_ref, _ = symmetry_reduced_ground_state(h_terms, n, sector="sz=0", seed=seed)
         tier = VerifierTier.SYMMETRY_REDUCED
     elif n >= 8:
-        e_ref, psi_ref = lanczos_ground_state(h_terms, n)
+        e_ref, psi_ref = lanczos_ground_state(h_terms, n, seed=seed)
         tier = VerifierTier.SPARSE_LANCZOS
     else:
-        e_ref, psi_ref = lanczos_ground_state(h_terms, n)
+        e_ref, psi_ref = lanczos_ground_state(h_terms, n, seed=seed)
         tier = VerifierTier.FAST
 
-    # Step 2: Search algorithm (variational exploration without oracle knowledge)
+    # Step 2: Search algorithm, including the known dimer motif where applicable
     best_energy = float("inf")
     best_ansatz: list[tuple[float, int, int]] = []
     evals = 0
@@ -458,7 +471,7 @@ def run_hard_target_search(
                 new_m = m
                 for q in range(n):
                     if rng.random() < 0.15:
-                        new_m ^= (1 << q)
+                        new_m ^= 1 << q
                 # Mutate coeff
                 new_c = c * float(rng.choice([1.0, -1.0, 0.5, 2.0])) if rng.random() < 0.2 else c
                 # Mutate phase
@@ -483,7 +496,9 @@ def run_hard_target_search(
         fid = 0.0
 
     # Determine pre-registered outcome classification
-    if energy_err <= target.energy_tolerance and (
+    if evals == 0 or not np.isfinite(best_energy):
+        outcome = OutcomeClass.NEEDS_WORK
+    elif energy_err <= target.energy_tolerance and (
         fid >= target.fidelity_threshold or target.fidelity_threshold <= 0.0
     ):
         outcome = OutcomeClass.SUPPORTED
@@ -492,7 +507,9 @@ def run_hard_target_search(
     else:
         outcome = OutcomeClass.NEEDS_WORK
 
-    repro_cmd = f"python3 benchmarks/qforge_hard_matrix.py --targets {target.target_id} --seed {seed}"
+    repro_cmd = (
+        f"python3 benchmarks/qforge_hard_matrix.py --targets {target.target_id} --seed {seed}"
+    )
 
     return TargetEvaluationResult(
         target_id=target.target_id,
@@ -509,6 +526,10 @@ def run_hard_target_search(
         verifier_tier=tier,
         reproduction_cmd=repro_cmd,
         details={
+            "seed": seed,
+            "seeded_known_ansatz": target.model == "j1j2",
+            "reference_used_for_early_stop": True,
+            "research_acceptance": "provisional",
             "description": target.description,
             "target_energy_tolerance": target.energy_tolerance,
             "target_fidelity_threshold": target.fidelity_threshold,

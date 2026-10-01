@@ -8,8 +8,9 @@ mandatory pre-registered outcome reporting (SUPPORTED / NULL).
 from __future__ import annotations
 
 import math
+from dataclasses import replace
+
 import numpy as np
-import pytest
 
 from evobyte.quantum.hamiltonians import heisenberg, ising, j1j2
 from evobyte.quantum.oracle import exact, to_hamiltonian_matrix
@@ -32,9 +33,9 @@ def test_sparse_hamiltonian_matches_dense_oracle():
     """Verify build_sparse_hamiltonian matches dense to_hamiltonian_matrix exactly."""
     for n in (2, 3, 4):
         for h_fn in (
-            lambda: ising(n, 1.0, 1.0),
-            lambda: heisenberg(n, 1.0),
-            lambda: j1j2(n, 1.0, 0.5) if n >= 3 else ising(n),
+            lambda n=n: ising(n, 1.0, 1.0),
+            lambda n=n: heisenberg(n, 1.0),
+            lambda n=n: j1j2(n, 1.0, 0.5) if n >= 3 else ising(n),
         ):
             terms = h_fn()
             h_dense = to_hamiltonian_matrix(terms, n)
@@ -86,6 +87,8 @@ def test_symmetry_reduced_ground_state():
 
         # Check that psi_full is normalized
         assert np.isclose(np.linalg.norm(psi_full), 1.0, atol=1e-10)
+        h_dense = to_hamiltonian_matrix(terms, n)
+        assert np.linalg.norm(h_dense @ psi_full - e_sub * psi_full) < 1e-8
 
 
 def test_fast_ansatz_energy_evaluation():
@@ -132,10 +135,13 @@ def test_run_hard_target_supported_outcome():
     assert res.energy_error <= target.energy_tolerance
     assert res.fidelity is not None and res.fidelity >= target.fidelity_threshold
     assert res.verifier_tier in (VerifierTier.SYMMETRY_REDUCED, VerifierTier.SPARSE_LANCZOS)
+    assert res.details["seeded_known_ansatz"] is True
+    assert res.details["reference_used_for_early_stop"] is True
+    assert res.details["research_acceptance"] == "provisional"
 
 
 def test_run_hard_target_null_outcome():
-    """Verify negative-result reporting integrity: unsolvable target yields NULL outcome."""
+    """Verify the fixed budgeted pilot honestly reports its unreached thresholds."""
     target = PREREGISTERED_TARGETS["T6_UNSOLVED_FRUST_N12"]
     res = run_hard_target_search(target, seed=42)
 
@@ -143,3 +149,49 @@ def test_run_hard_target_null_outcome():
     assert res.outcome == OutcomeClass.NULL
     assert res.energy_error > target.energy_tolerance
     assert res.evaluations <= target.max_evaluations
+
+
+def test_matrix_report_rejects_incomplete_and_inconsistent_outcomes():
+    from benchmarks.qforge_hard_matrix import report_passes
+
+    target = PREREGISTERED_TARGETS["T1_J1J2_MG_N6"]
+    result = run_hard_target_search(target, seed=42)
+    assert report_passes([result])
+    assert not report_passes([])
+    for invalid in (
+        replace(result, outcome=OutcomeClass.NEEDS_WORK),
+        replace(result, discovered_energy=float("inf")),
+        replace(result, reference_energy=float("nan")),
+        replace(result, fidelity=float("nan")),
+        replace(result, fidelity=0.0),
+        replace(result, evaluations=0),
+        replace(result, evaluations=target.max_evaluations + 1),
+        replace(result, energy_error=1.0),
+        replace(result, outcome=OutcomeClass.NULL),
+    ):
+        assert not report_passes([invalid])
+
+    negative = replace(
+        result,
+        outcome=OutcomeClass.NULL,
+        discovered_energy=result.reference_energy + 1.0,
+        energy_error=1.0,
+        fidelity=0.0,
+        evaluations=target.max_evaluations,
+    )
+    assert report_passes([negative])
+    assert not report_passes([replace(negative, evaluations=1)])
+
+
+def test_matrix_cli_fails_for_needs_work(monkeypatch):
+    from benchmarks import qforge_hard_matrix
+
+    target = PREREGISTERED_TARGETS["T1_J1J2_MG_N6"]
+    result = replace(run_hard_target_search(target, seed=42), outcome=OutcomeClass.NEEDS_WORK)
+    monkeypatch.setattr("sys.argv", ["qforge_hard_matrix", "--targets", target.target_id])
+    monkeypatch.setattr(qforge_hard_matrix, "probe", dict)
+    monkeypatch.setattr(qforge_hard_matrix, "get_git_commit", lambda: "test")
+    monkeypatch.setattr(
+        qforge_hard_matrix, "run_hard_target_search", lambda *args, **kwargs: result
+    )
+    assert qforge_hard_matrix.main() == 1

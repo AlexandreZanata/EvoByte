@@ -8,9 +8,16 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 
-from evobyte.bytecode import MAX_RISKY_CHAIN, N_INSTR, RISKY_OPS, decode_instr, encode_instr, is_valid
+from evobyte.bytecode import (
+    MAX_RISKY_CHAIN,
+    N_INSTR,
+    RISKY_OPS,
+    decode_instr,
+    encode_instr,
+    is_valid,
+)
 from evobyte.evolution import mutate_candidate
 
 MIN_GENERATOR_PARAMS = 100_000
@@ -132,10 +139,26 @@ class BytecodeAutoregressiveModel(nn.Module):
 
         with torch.no_grad():
             k = prefix_ops.shape[1] if prefix_ops is not None else 0
-            curr_ops = prefix_ops.clone().to(dev) if prefix_ops is not None else torch.zeros((n, 0), dtype=torch.long, device=dev)
-            curr_dsts = prefix_dsts.clone().to(dev) if prefix_dsts is not None else torch.zeros((n, 0), dtype=torch.long, device=dev)
-            curr_as = prefix_as.clone().to(dev) if prefix_as is not None else torch.zeros((n, 0), dtype=torch.long, device=dev)
-            curr_bs = prefix_bs.clone().to(dev) if prefix_bs is not None else torch.zeros((n, 0), dtype=torch.long, device=dev)
+            curr_ops = (
+                prefix_ops.clone().to(dev)
+                if prefix_ops is not None
+                else torch.zeros((n, 0), dtype=torch.long, device=dev)
+            )
+            curr_dsts = (
+                prefix_dsts.clone().to(dev)
+                if prefix_dsts is not None
+                else torch.zeros((n, 0), dtype=torch.long, device=dev)
+            )
+            curr_as = (
+                prefix_as.clone().to(dev)
+                if prefix_as is not None
+                else torch.zeros((n, 0), dtype=torch.long, device=dev)
+            )
+            curr_bs = (
+                prefix_bs.clone().to(dev)
+                if prefix_bs is not None
+                else torch.zeros((n, 0), dtype=torch.long, device=dev)
+            )
 
             for step in range(k, N_INSTR):
                 seq_len = step + 1
@@ -149,7 +172,9 @@ class BytecodeAutoregressiveModel(nn.Module):
                         + self.a_embed(curr_as)
                         + self.b_embed(curr_bs)
                     )
-                    x = torch.cat([self.bos_embed.expand(n, 1, -1), prev_emb], dim=1) + self.pos_embed(pos)
+                    x = torch.cat(
+                        [self.bos_embed.expand(n, 1, -1), prev_emb], dim=1
+                    ) + self.pos_embed(pos)
 
                 mask = nn.Transformer.generate_square_subsequent_mask(seq_len, device=dev)
                 h = self.transformer(x, mask=mask, is_causal=True)[:, -1, :]
@@ -369,7 +394,7 @@ class MicroGenerator:
         temp = temperature if temperature is not None else self.config.temperature
 
         if elites is not None and len(elites) > 0 and p_prefix_condition > 0.0:
-            n_cond = int(round(n * p_prefix_condition))
+            n_cond = round(n * p_prefix_condition)
             n_uncond = n - n_cond
 
             batches = []
@@ -449,4 +474,3 @@ class MicroGenerator:
             "candidates_count": len(candidates),
         }
         return np.stack(mutated_candidates), stats
-

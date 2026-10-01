@@ -15,20 +15,23 @@ Quantum Hall of Fame and anomalous compact solutions to the Anomaly Vault.
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 import datetime
+import hashlib
 import json
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
+from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 # Ensure project root is in sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 
 import numpy as np
+from hw_probe import probe
 
 from evobyte.quantum.circuit import (
     ANGLE_BANK,
@@ -39,12 +42,8 @@ from evobyte.quantum.circuit import (
     OPCODE_RX,
     OPCODE_RY,
     OPCODE_RZ,
-    OPCODE_S,
     OPCODE_SWAP,
-    OPCODE_T,
     OPCODE_X,
-    OPCODE_Y,
-    OPCODE_Z,
     CircuitInstruction,
     circuit_depth,
     circuit_to_unitary,
@@ -62,22 +61,24 @@ from evobyte.quantum.fame import (
     QuantumHallOfFame,
     default_quantum_verification_hook,
 )
-from hw_probe import probe
 
 
 def get_git_commit() -> str:
     try:
-        out = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5)
+        out = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, timeout=5, check=False
+        )
         if out.returncode == 0:
-            return out.stdout.strip()[:12]
-    except Exception:
-        pass
+            return out.stdout.strip()
+    except (OSError, subprocess.TimeoutExpired):
+        return "unknown"
     return "unknown"
 
 
 # -----------------------------------------------------------------------------
 # Target States
 # -----------------------------------------------------------------------------
+
 
 def get_target_state(target_name: str) -> tuple[np.ndarray, int, str]:
     """Return (target_state_vector, n_qubits, description)."""
@@ -99,6 +100,7 @@ def get_target_state(target_name: str) -> tuple[np.ndarray, int, str]:
 # -----------------------------------------------------------------------------
 # Monkey Candidate Samplers
 # -----------------------------------------------------------------------------
+
 
 def sample_pure_random(
     rng: np.random.Generator,
@@ -179,6 +181,16 @@ def run_monkey_search(
     target_fidelity: float = 0.999,
 ) -> dict[str, Any]:
     """Run an individual monkey generator until first solution or budget exhausted."""
+    if sampler_name not in (
+        "pure_random",
+        "structured_random",
+        "evolution",
+        "evolution_novelty",
+        "micro_model",
+    ):
+        raise ValueError(f"Unknown sampler: {sampler_name}")
+    if max_candidates <= 0:
+        raise ValueError("max_candidates must be positive")
     rng = np.random.default_rng(seed)
     t0 = time.perf_counter()
 
@@ -236,15 +248,19 @@ def run_monkey_search(
                 }
 
     elif sampler_name in ("evolution", "evolution_novelty"):
-        use_novelty = (sampler_name == "evolution_novelty")
+        use_novelty = sampler_name == "evolution_novelty"
         pop_size = 50
-        pop = [sample_pure_random(rng, n_qubits, circuit_length=circuit_len) for _ in range(pop_size)]
+        pop = [
+            sample_pure_random(rng, n_qubits, circuit_length=circuit_len) for _ in range(pop_size)
+        ]
         novelty_archive: list[np.ndarray] = []
         cands_tested = 0
 
         while cands_tested < max_candidates:
             evaluated = []
             for c in pop:
+                if cands_tested >= max_candidates:
+                    break
                 cands_tested += 1
                 fid = state_fidelity(c, target_state, n_qubits)
 
@@ -252,7 +268,9 @@ def run_monkey_search(
                 nov_score = 0.0
                 if use_novelty and len(novelty_archive) > 0:
                     u_cand = circuit_to_unitary(c, n_qubits)
-                    dists = [float(np.linalg.norm(u_cand - u_arch)) for u_arch in novelty_archive[-20:]]
+                    dists = [
+                        float(np.linalg.norm(u_cand - u_arch)) for u_arch in novelty_archive[-20:]
+                    ]
                     nov_score = float(np.mean(dists)) if dists else 0.0
 
                 score = fid + (0.05 * nov_score if use_novelty else 0.0)
@@ -308,6 +326,8 @@ def run_monkey_benchmark(
     vault_log: Path | None = None,
 ) -> dict[str, Any]:
     """Execute complete Infinite Monkey Quantum benchmark suite."""
+    if not targets or not samplers or not seeds:
+        raise ValueError("targets, samplers and seeds must be nonempty")
     fame = QuantumHallOfFame(fame_log if fame_log else "hall_of_fame/generated/quantum_fame.jsonl")
     vault = AnomalyVault(vault_log if vault_log else "hall_of_fame/generated/anomaly_vault.jsonl")
 
@@ -320,6 +340,7 @@ def run_monkey_benchmark(
     print(f"  Samplers Compared    : {', '.join(samplers)}")
     print(f"  Seeds per Sampler    : {len(seeds)}")
     print(f"  Budget per Run       : {max_candidates:,} candidates")
+    print("  micro_model          : hand-written known-motif heuristic; no learned parameters")
     print("-" * 125)
     print(
         f"{'Target':<6} | {'Sampler':<18} | {'Seed':<5} | {'Found':<6} | "
@@ -330,7 +351,8 @@ def run_monkey_benchmark(
     fame_sample: dict[str, Any] | None = None
 
     for target_name in targets:
-        target_state, n_qubits, target_desc = get_target_state(target_name)
+        target_state, n_qubits, _target_desc = get_target_state(target_name)
+        target_hash = hashlib.sha256(np.asarray(target_state, dtype="<c16").tobytes()).hexdigest()
 
         for sampler_name in samplers:
             for seed in seeds:
@@ -342,7 +364,11 @@ def run_monkey_benchmark(
                     max_candidates=max_candidates,
                 )
 
-                circuit_str = decode_circuit_text(res["circuit"]) if res["found"] else "N/A (Budget exhausted)"
+                circuit_str = (
+                    decode_circuit_text(res["circuit"])
+                    if res["found"]
+                    else "N/A (Budget exhausted)"
+                )
                 found_str = "PASS" if res["found"] else "FAIL"
 
                 print(
@@ -351,17 +377,24 @@ def run_monkey_benchmark(
                     f"{res['fidelity']:<8.4f} | {circuit_str}"
                 )
 
-                records.append({
-                    "target": target_name,
-                    "sampler": sampler_name,
-                    "seed": seed,
-                    "found": res["found"],
-                    "tte": res["tte"],
-                    "time_sec": res["time_sec"],
-                    "qps": res["qps"],
-                    "fidelity": res["fidelity"],
-                    "circuit": circuit_str,
-                })
+                records.append(
+                    {
+                        "target": target_name,
+                        "sampler": sampler_name,
+                        "generator_kind": "known_motif_heuristic"
+                        if sampler_name == "micro_model"
+                        else sampler_name,
+                        "learned_model": False,
+                        "target_state_sha256": target_hash,
+                        "seed": seed,
+                        "found": res["found"],
+                        "tte": res["tte"],
+                        "time_sec": res["time_sec"],
+                        "qps": res["qps"],
+                        "fidelity": res["fidelity"],
+                        "circuit": circuit_str,
+                    }
+                )
 
                 # Register in Quantum Hall of Fame and Anomaly Vault if found
                 if res["found"]:
@@ -372,7 +405,7 @@ def run_monkey_benchmark(
 
                     entry = fame.record_discovery(
                         problem_id=f"monkey_{target_name}",
-                        hamiltonian_hash=f"hash_{target_name}",
+                        hamiltonian_hash=target_hash,
                         candidate_binary=bin_bytes,
                         decoded_candidate=circuit_str,
                         generation=1,
@@ -440,7 +473,7 @@ def main() -> int:
     )
 
     combined = {
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
         "git_commit": get_git_commit(),
         "hardware": probe(),
         "benchmark": res,
