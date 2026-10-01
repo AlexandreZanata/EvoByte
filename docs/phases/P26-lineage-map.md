@@ -1,8 +1,8 @@
 # P26 — Reproducible tracing and exploration map
 
-**Status:** Proposed.
+**Status:** Done (2026-10-01; bit-exact replay verified on 3 seeds; exploration map + ancestry chains; artifact `experiments/p26-lineage.json`; `make verify` + `pytest` green).
 **Prerequisite:** P25 corpus sealed.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** executed on `codex/p26-lineage-map` from `f519a16`.
 
 ## Objective
 
