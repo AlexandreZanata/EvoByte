@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 import torch
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -278,27 +280,69 @@ def test_config_sensitivity() -> None:
     assert res["first_diverged_generation"] >= 0
 
 
+def test_manifest_requires_checksum_and_raw_evidence(tmp_path: Path) -> None:
+    manifest_path = tmp_path / "empty.json"
+    manifest_path.write_text('{"status":"PASS"}')
+    assert verify_manifest_integrity(manifest_path)["reason"] == "missing_manifest_hash"
+    write_manifest(manifest_path, {"status": "PASS"}, {})
+    assert verify_manifest_integrity(manifest_path)["reason"] == "missing_raw_artifacts"
+    manifest_path.write_text("[]")
+    assert verify_manifest_integrity(manifest_path)["passed"] is False
+
+
 def test_generate_claims_audit() -> None:
     audit = generate_claims_audit()
-    assert "p13_p29_classifications" in audit
-    classifications = audit["p13_p29_classifications"]
-    assert len(classifications) >= 17
-
-    # Validate specific phase classifications
-    assert classifications["P13"]["classification"] == "provisional"
-    assert classifications["P14"]["classification"] == "superseded"
-    assert classifications["P15"]["classification"] == "accepted"
-    assert classifications["P22"]["classification"] == "not_run"
-    assert classifications["P24"]["classification"] == "accepted"
-    assert classifications["P26"]["classification"] == "accepted"
-    assert classifications["P30"]["classification"] == "accepted"
-    assert classifications["P31"]["classification"] == "accepted"
-
-    # Validate H1 evaluation
+    assert audit["audit_complete"] is True
+    phases = audit["p13_p29_classifications"]
+    assert set(phases) == {f"P{i}" for i in range(13, 32)}
+    assert "Population-parallel GPU" in phases["P16"]["claim"]
+    assert "Streaming GPU cascade" in phases["P18"]["claim"]
+    assert "Quantum-inspired randomness" in phases["P27"]["claim"]
+    assert phases["P14"]["classification"] == "not_run"
+    assert phases["P22"]["classification"] == "provisional"
+    assert phases["P25"]["classification"] == "superseded"
+    assert phases["P29"]["classification"] == "superseded"
+    quantum = audit["quantum_classifications"]
+    assert set(quantum) == {f"Q{i:02}" for i in range(7, 14)}
+    assert "known ground-state" in quantum["Q10"]["rationale"]
+    assert "not a trained" in quantum["Q12"]["rationale"]
+    assert "oracle" in quantum["Q13"]["rationale"]
+    for entry in [*phases.values(), *quantum.values()]:
+        assert entry["classification"] != "accepted"
+        assert entry["classification_scope"] == "scientific_acceptance"
+        assert entry["evidence"][0]["present"] is True
+        assert len(entry["evidence"][0]["sha256"]) == 64
+        assert entry["independent_confirmation"] == "not_run"
     h1 = audit["hypothesis_h1_evaluation"]
     assert h1["overall_h1_verdict"] == "provisional"
-    assert "criterion_1_rediscovery" in h1["criteria_status"]
-    assert "criterion_2_speed" in h1["criteria_status"]
+    assert set(h1["criteria_status"].values()) == {"provisional"}
+    assert len(h1["criterion_definitions"]) == 5
+    assert "ablation 8–9" in h1["criterion_definitions"]["criterion_2_speed"]
+    assert "1,000,000 distinct" in h1["engineering_goal"]
+
+
+def test_claims_audit_missing_or_forged_evidence_cannot_accept(tmp_path: Path) -> None:
+    missing = generate_claims_audit(repo_root=tmp_path)
+    assert missing["audit_complete"] is False
+    assert all(
+        e["classification"] == "not_run" for e in missing["p13_p29_classifications"].values()
+    )
+    doc = tmp_path / "docs/phases/P16-population-gpu-vm.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text("# P16 — Population-parallel GPU interpreter\n")
+    artifact = tmp_path / "experiments/p16-vm.json"
+    artifact.parent.mkdir()
+    artifact.write_text('{"status":"PASS","classification":"accepted"}')
+    forged = generate_claims_audit(repo_root=tmp_path)
+    p16 = forged["p13_p29_classifications"]["P16"]
+    assert p16["classification"] == "provisional"
+    assert p16["independent_confirmation"] == "not_run"
+    assert forged["audit_complete"] is False
+    previous_sha = p16["evidence"][1]["sha256"]
+    artifact.write_text('{"status":"PASS","throughput":1000000000}')
+    altered = generate_claims_audit(repo_root=tmp_path)
+    assert altered["p13_p29_classifications"]["P16"]["classification"] != "accepted"
+    assert altered["p13_p29_classifications"]["P16"]["evidence"][1]["sha256"] != previous_sha
 
 
 def test_run_acceptance_audit_smoke(tmp_path: Path) -> None:
@@ -320,3 +364,31 @@ def test_run_acceptance_audit_smoke(tmp_path: Path) -> None:
     assert len(manifest["seeds"]) == 2
     assert len(manifest["resume_verification"]) == 2
     assert all(r["bit_exact_resumed"] for r in manifest["resume_verification"]) is True
+    trace_path = out_file.with_suffix(".trace.json")
+    trace = json.loads(trace_path.read_text())
+    assert len(trace["lineage_runs"]) == 2
+    for run in trace["lineage_runs"]:
+        assert len(run["audit_store"]) == run["audit_store_count"]
+        assert len(run["audit_store"]) > 10
+    assert verify_manifest_integrity(out_file)["passed"] is True
+    trace_path.write_text('{"lineage_runs":[]}')
+    assert verify_manifest_integrity(out_file)["reason"] == "artifact_tampered"
+    trace_path.unlink()
+    assert verify_manifest_integrity(out_file)["reason"] == "artifact_missing"
+
+
+def test_acceptance_cannot_pass_without_resume(tmp_path: Path) -> None:
+    manifest = run_acceptance_audit(
+        seeds_count=1,
+        resume=False,
+        output_path=tmp_path / "no-resume.json",
+        device_name="cpu",
+        pop_size=30,
+        n_generations=4,
+        split_at=2,
+        n_points=32,
+    )
+    assert manifest["status"] == "FAIL"
+    assert manifest["mandatory_checks"]["all_resumed_bit_exact"] is False
+    with pytest.raises(ValueError, match="positive"):
+        run_acceptance_audit(seeds_count=0, output_path=tmp_path / "empty.json")

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -37,6 +38,45 @@ from benchmarks.math_corpus import (
     stratify_and_seal,
     verify_item_independently,
 )
+
+
+@pytest.fixture
+def local_corpus_snapshot(tmp_path: Path) -> Path:
+    """Controlled inputs for pipeline tests, independent of research caches."""
+    items = [
+        CorpusItem(
+            id=f"fixture_exec_{idx}",
+            source="ci_fixture",
+            source_id=chr(97 + idx),
+            track="EXECUTE",
+            family="arithmetic_chain",
+            difficulty=1,
+            problem_text=f"Arithmetic case {chr(97 + idx)}",
+            expression=f"{idx} + 3",
+            inputs=[],
+            constraints={},
+            allowed_ops=["ADD"],
+            target_answer=float(idx + 3),
+            verifier={"method": "guarded_arithmetic", "tolerance": 1e-6},
+            metadata={},
+        )
+        for idx in range(20)
+    ]
+    for idx in range(4):
+        item, rejected = generate_symbolic_task("polynomial_arithmetic", idx, seed=42)
+        assert item is not None and rejected is None
+        items.append(item)
+    unsupported, rejected = convert_gsm8k_row(
+        {"question": "How many candles were counted?", "answer": "#### 7"},
+        idx=999,
+    )
+    assert len(unsupported) == 1 and not rejected
+    items.extend(unsupported)
+    snapshot = tmp_path / "controlled-corpus.jsonl"
+    snapshot.write_text(
+        "".join(json.dumps(item.to_dict()) + "\n" for item in items), encoding="utf-8"
+    )
+    return snapshot
 
 
 def test_safe_eval_arithmetic_valid() -> None:
@@ -286,8 +326,32 @@ def test_generate_coverage_report() -> None:
 def test_full_pipeline_fast(tmp_path: Path) -> None:
     out_manifest = tmp_path / "test-manifest.json"
     snapshot_path = tmp_path / "test-snapshot.jsonl"
+    gsm8k_path = tmp_path / "gsm8k.jsonl"
+    numina_path = tmp_path / "numina.jsonl"
+    gsm8k_path.write_text(
+        json.dumps(
+            {
+                "question": "How many apples remain after giving two away?",
+                "answer": "5 - 2 = <<5-2=3>>3. #### 3",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    numina_path.write_text(
+        json.dumps(
+            {
+                "problem": "Evaluate 4 times 5.",
+                "solution": r"\boxed{20}",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     manifest = build_and_verify_corpus(
+        gsm8k_path=gsm8k_path,
+        numina_path=numina_path,
         output_manifest=out_manifest,
         snapshot_path=snapshot_path,
         device_name="cpu",
@@ -698,10 +762,15 @@ def test_isolated_splits_determinism() -> None:
     assert seal1.content_sha256 == seal2.content_sha256
 
 
-def test_run_corpus_isolation_and_audit_manifest(tmp_path: Path) -> None:
+def test_run_corpus_isolation_and_audit_manifest(
+    tmp_path: Path,
+    local_corpus_snapshot: Path,
+) -> None:
     manifest_p = tmp_path / "p30-splits.json"
     manifest = run_corpus_isolation_and_audit(
+        snapshot_path=local_corpus_snapshot,
         output_path=manifest_p,
+        device_name="cpu",
         seed=42,
     )
 
@@ -916,10 +985,21 @@ def test_run_corpus_adversarial_rejection_suite() -> None:
     assert sum(1 for r in results if not r["rejected"]) == 0
 
 
-def test_run_independent_corpus_verification_manifest(tmp_path: Path) -> None:
+def test_run_independent_corpus_verification_manifest(
+    tmp_path: Path, local_corpus_snapshot: Path
+) -> None:
+    split_path = tmp_path / "p30-splits.json"
+    run_corpus_isolation_and_audit(
+        snapshot_path=local_corpus_snapshot,
+        output_path=split_path,
+        device_name="cpu",
+        seed=42,
+    )
     out_p = tmp_path / "p31-verification.json"
     manifest = run_independent_corpus_verification(
-        split_manifest_path=_REPO_ROOT / "experiments" / "p30-splits.json",
+        split_manifest_path=split_path,
+        snapshot_path=local_corpus_snapshot,
+        device_name="cpu",
         certificate_report_path=_REPO_ROOT / "experiments" / "p31-certificates.json",
         output_path=out_p,
     )
@@ -928,17 +1008,34 @@ def test_run_independent_corpus_verification_manifest(tmp_path: Path) -> None:
     assert manifest["status"] == "PASS"
 
     summary = manifest["independent_verification_summary"]
-    assert summary["total_denominator"] == 5864
-    assert summary["verified_items_count"] == 4481
-    assert summary["unsupported_items_count"] == 1383
-    assert summary["verified_coverage_pct"] > 76.0
+    assert summary["total_denominator"] == 25
+    assert summary["verified_items_count"] == 24
+    assert summary["unsupported_items_count"] == 1
+    assert summary["verified_coverage_pct"] == 96.0
     assert summary["soundness_gate_passed"] is True
     assert summary["accepted_false_positives"] == 0
 
-    assert manifest["tracks"]["EXECUTE"]["verified"] == 4281
-    assert manifest["tracks"]["FIND"]["verified"] == 200
-    assert manifest["tracks"]["FIND"]["unsupported_natural_language"] == 1383
+    assert manifest["tracks"]["EXECUTE"]["verified"] == 20
+    assert manifest["tracks"]["FIND"]["verified"] == 4
+    assert manifest["tracks"]["FIND"]["unsupported_natural_language"] == 1
+    assert manifest["numeric_gpu_reduction"]["parity_sum_ok"] is True
+    assert manifest["numeric_gpu_reduction"]["parity_l2_ok"] is True
+    assert manifest["open_problems_certificates"]["strict_certificates"]
 
     assert "final_test" in manifest["splits_breakdown"]
     assert "train" in manifest["splits_breakdown"]
     assert "val" in manifest["splits_breakdown"]
+
+
+def test_recorded_p31_full_corpus_counts() -> None:
+    """Protect the archived denominator; this does not rerun the missing snapshot."""
+    manifest = json.loads((_REPO_ROOT / "experiments/p31-verification.json").read_text())
+    summary = manifest["independent_verification_summary"]
+    assert summary["total_denominator"] == 5864
+    assert summary["verified_items_count"] == 4481
+    assert summary["unsupported_items_count"] == 1383
+    assert summary["verified_coverage_pct"] > 76.0
+    assert summary["accepted_false_positives"] == 0
+    assert manifest["tracks"]["EXECUTE"]["verified"] == 4281
+    assert manifest["tracks"]["FIND"]["verified"] == 200
+    assert manifest["tracks"]["FIND"]["unsupported_natural_language"] == 1383

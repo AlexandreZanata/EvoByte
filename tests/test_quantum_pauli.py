@@ -66,7 +66,20 @@ def test_single_y_matrix_is_true_y():
 
 def test_decode_human_smoke():
     assert decode_human(identity(2)) == "I"
-    assert decode_human(single(1, "Y", 2)) == "i*Y1"
+    assert decode_human(single(1, "Y", 2)) == "Y1"
+
+
+def test_decoded_y_phases_match_standard_matrices():
+    y_matrix = np.array([[0, -1j], [1j, 0]], dtype=np.complex128)
+    for n_qubits, body, matrix in (
+        (1, "Y0", y_matrix),
+        (2, "Y0 Y1", np.kron(y_matrix, y_matrix)),
+    ):
+        mask = (1 << n_qubits) - 1
+        for extra_phase, prefix in enumerate(("", "i*", "-1*", "-i*")):
+            operator = Pauli(mask, mask, (n_qubits + extra_phase) % 4, n_qubits)
+            assert decode_human(operator) == prefix + body
+            np.testing.assert_allclose(to_matrix(operator), (1j**extra_phase) * matrix)
 
 
 def test_64_qubit_algebra():

@@ -5,6 +5,14 @@
 **Owner:** Alexandre Zanata / EvoByte Agent.
 **Branch:** `codex/p30-corpus-isolation`.
 
+Integration note (2026-10-01): CI pipeline tests use controlled local fixtures,
+including arithmetic, symbolic and unsupported-label examples; they never
+download data or open the research final test. The historical 5,864-item
+measurements remain tied to their original snapshot and provenance. Green
+unit tests do not independently reproduce that full corpus. Exposure checks
+enforce the recorded exposure flags; they do not prove absence of external
+model-training contamination. Scientific acceptance still follows D014/D015.
+
 ## Objective
 
 Repair the train/validation/test boundary before any new training or comparison. Keep
