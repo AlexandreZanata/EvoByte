@@ -1,0 +1,131 @@
+{
+  "campaign_summary": {
+    "elapsed_search_sec": 0.16675927400001456,
+    "search_throughput_cvps": 6506948.453133139,
+    "total_candidates_evaluated": 1085094
+  },
+  "certificate_bundle": {
+    "bounded_statement": "Find exact positive integer solutions (x, y, z) for nominated prime instances n in {1009, 10007, 100003} with search bound M <= 10^9.",
+    "certificate_hash": "12cf4ad1faae8d62a13317f3416abfd3a4c91e54ac466ff319e157e5a60ab8a6",
+    "certificate_type": "integer_exact_certificate",
+    "classification": "rediscovery",
+    "classification_rationale": "Verified exact integer solution found via GPU filtering and certified by arbitrary-precision integer arithmetic. Matches known instances in the literature (Mordell 1967, Elsholtz & Tao 2013). Per P29 Discovery Criterion, classified as 'rediscovery'.",
+    "conjecture_statement": "For every integer n >= 2, the equation 4/n = 1/x + 1/y + 1/z has positive integer solutions.",
+    "exact_algebraic_evidence": {
+      "equation": "4*x*y*z == n*(x*y + y*z + x*z)",
+      "lhs": "170066121441100544",
+      "residual": 0,
+      "rhs": "170066121441100544",
+      "verified": true
+    },
+    "independent_reproduction": {
+      "details": {
+        "lhs": "170066121441100544",
+        "n": 1009,
+        "residual": 0,
+        "rhs": "170066121441100544",
+        "verified_exact": true,
+        "x": 253,
+        "y": 85096,
+        "z": 1974822872
+      },
+      "reproduction_hash": "4e1801ad2d7a1df00195087bb0333dd71586fa7ce73bdd8e312e5dcecf2212dd",
+      "reproduction_time_sec": 2.326399999219575e-05,
+      "status": "PASS"
+    },
+    "literature_citations": [
+      "Erd\u0151s, P. (1948). Some problems on unit fractions.",
+      "Mordell, L. J. (1967). Diophantine Equations (Academic Press).",
+      "Elsholtz, C., & Tao, T. (2013). Counting the number of solutions to the Erd\u0151s-Straus equation on unit fractions. J. Aust. Math. Soc."
+    ],
+    "problem_id": "erdos-straus",
+    "solution_data": {
+      "x": 253,
+      "y": 85096,
+      "z": 1974822872
+    },
+    "target_instance": {
+      "n": 1009
+    },
+    "timestamp": "2026-10-01T15:55:41.088262+00:00",
+    "title": "Erd\u0151s-Straus Diophantine Decomposition"
+  },
+  "classification": "rediscovery",
+  "classification_rationale": "Verified exact integer solution found via GPU filtering and certified by arbitrary-precision integer arithmetic. Matches known instances in the literature (Mordell 1967, Elsholtz & Tao 2013). Per P29 Discovery Criterion, classified as 'rediscovery'.",
+  "device": "cuda",
+  "git_commit": "8c70e6a7fd74",
+  "manifest_sha256": "bd9a4117d266918925937f5b8854539e81eb0db9789e63424305c01c34a836f6",
+  "manifest_version": "1.0",
+  "nomination": {
+    "bounded_statement": "Find exact positive integer solutions (x, y, z) for nominated prime instances n in {1009, 10007, 100003} with search bound M <= 10^9.",
+    "certificate_type": "integer_exact_certificate",
+    "classification_rules": {
+      "null-campaign": "Search bounded space exhausted without finding any valid decomposition.",
+      "rediscovery": "Verified exact integer decomposition matching known literature parameterization.",
+      "verified-construction": "New verified instance not previously cataloged."
+    },
+    "conjecture_statement": "For every integer n >= 2, the equation 4/n = 1/x + 1/y + 1/z has positive integer solutions.",
+    "domain": "Diophantine equations / Egyptian fractions",
+    "literature_citations": [
+      "Erd\u0151s, P. (1948). Some problems on unit fractions.",
+      "Mordell, L. J. (1967). Diophantine Equations (Academic Press).",
+      "Elsholtz, C., & Tao, T. (2013). Counting the number of solutions to the Erd\u0151s-Straus equation on unit fractions. J. Aust. Math. Soc."
+    ],
+    "problem_id": "erdos-straus",
+    "title": "Erd\u0151s-Straus Diophantine Decomposition"
+  },
+  "phase": "p29-open-problems",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "8c70e6a7fd745ebca4a7c0d363387acfeea2bed5",
+    "config": {
+      "certificate_type": "integer_exact_certificate",
+      "problem_id": "erdos-straus",
+      "smoke": false
+    },
+    "config_hash": "02645d99efe2a705",
+    "dataset_hashes": {
+      "nomination": "66e6ddd9c77cc5ba9773d8a0523899b1318ae71eaa264eae6eae4c8205c053aa"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "?? benchmarks/open_problems.py\n?? tests/test_open_problems.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/open_problems.py",
+      "--problem",
+      "erdos-straus",
+      "--output",
+      "experiments/p29-erdos-straus.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p29-erdos-straus-certificate.json",
+      "sha256": "2613bb5e10b991e4e1b24830946e7d78bbb953ff180c99cb988063343304e66e"
+    },
+    {
+      "path": "experiments/p29-erdos-straus-raw.json",
+      "sha256": "7cadd7e2b4463b6cffe9af58920a5ad85855d7187d162d55b6e0bb930d3c3f7e"
+    }
+  ],
+  "status": "PASS",
+  "timestamp": "2026-10-01T15:55:41.112561+00:00"
+}
