@@ -1,0 +1,465 @@
+{
+  "corpus_snapshot": {
+    "n_records": 5864,
+    "path": "data/processed/p25_corpus.jsonl",
+    "sha256": "27344a5ea12417f2d50270e37935e21b3802a07afad7ba79d4b4f8e89d8b75c0"
+  },
+  "coverage": {
+    "by_difficulty": {
+      "1": 4164,
+      "2": 628,
+      "3": 486,
+      "4": 340,
+      "5": 246
+    },
+    "by_family": {
+      "algebra_numeric": 4,
+      "arithmetic_chain": 4281,
+      "arithmetic_word_problem": 1319,
+      "combinatorics_numeric": 17,
+      "first_order_ode": 50,
+      "geometry_numeric": 10,
+      "inequalities_numeric": 8,
+      "number_theory_numeric": 25,
+      "polynomial_arithmetic": 50,
+      "symbolic_differentiation": 50,
+      "symbolic_integration": 50
+    },
+    "by_track": {
+      "EXECUTE": 4281,
+      "FIND": 1583
+    },
+    "conversion_rate": 0.9611539091952139,
+    "matrix": {
+      "algebra_numeric__d1": {
+        "convertible": 1,
+        "out_of_scope": 0,
+        "testable": 1,
+        "verified": 1
+      },
+      "algebra_numeric__d3": {
+        "convertible": 2,
+        "out_of_scope": 0,
+        "testable": 2,
+        "verified": 2
+      },
+      "algebra_numeric__d5": {
+        "convertible": 1,
+        "out_of_scope": 0,
+        "testable": 1,
+        "verified": 1
+      },
+      "arithmetic_chain__d1": {
+        "convertible": 4073,
+        "out_of_scope": 0,
+        "testable": 4073,
+        "verified": 4073
+      },
+      "arithmetic_chain__d2": {
+        "convertible": 206,
+        "out_of_scope": 0,
+        "testable": 206,
+        "verified": 206
+      },
+      "arithmetic_chain__d3": {
+        "convertible": 2,
+        "out_of_scope": 0,
+        "testable": 2,
+        "verified": 2
+      },
+      "arithmetic_word_problem__d1": {
+        "convertible": 83,
+        "out_of_scope": 0,
+        "testable": 83,
+        "verified": 83
+      },
+      "arithmetic_word_problem__d2": {
+        "convertible": 357,
+        "out_of_scope": 0,
+        "testable": 357,
+        "verified": 357
+      },
+      "arithmetic_word_problem__d3": {
+        "convertible": 364,
+        "out_of_scope": 0,
+        "testable": 364,
+        "verified": 364
+      },
+      "arithmetic_word_problem__d4": {
+        "convertible": 290,
+        "out_of_scope": 0,
+        "testable": 290,
+        "verified": 290
+      },
+      "arithmetic_word_problem__d5": {
+        "convertible": 225,
+        "out_of_scope": 0,
+        "testable": 225,
+        "verified": 225
+      },
+      "combinatorics_numeric__d2": {
+        "convertible": 2,
+        "out_of_scope": 0,
+        "testable": 2,
+        "verified": 2
+      },
+      "combinatorics_numeric__d3": {
+        "convertible": 6,
+        "out_of_scope": 0,
+        "testable": 6,
+        "verified": 6
+      },
+      "combinatorics_numeric__d4": {
+        "convertible": 1,
+        "out_of_scope": 0,
+        "testable": 1,
+        "verified": 1
+      },
+      "combinatorics_numeric__d5": {
+        "convertible": 8,
+        "out_of_scope": 0,
+        "testable": 8,
+        "verified": 8
+      },
+      "first_order_ode__d3": {
+        "convertible": 50,
+        "out_of_scope": 0,
+        "testable": 50,
+        "verified": 50
+      },
+      "geometry_numeric__d2": {
+        "convertible": 6,
+        "out_of_scope": 0,
+        "testable": 6,
+        "verified": 6
+      },
+      "geometry_numeric__d3": {
+        "convertible": 2,
+        "out_of_scope": 0,
+        "testable": 2,
+        "verified": 2
+      },
+      "geometry_numeric__d5": {
+        "convertible": 2,
+        "out_of_scope": 0,
+        "testable": 2,
+        "verified": 2
+      },
+      "gsm8k__rejected": {
+        "convertible": 0,
+        "out_of_scope": 1,
+        "testable": 0,
+        "verified": 0
+      },
+      "inequalities_numeric__d2": {
+        "convertible": 2,
+        "out_of_scope": 0,
+        "testable": 2,
+        "verified": 2
+      },
+      "inequalities_numeric__d3": {
+        "convertible": 4,
+        "out_of_scope": 0,
+        "testable": 4,
+        "verified": 4
+      },
+      "inequalities_numeric__d4": {
+        "convertible": 1,
+        "out_of_scope": 0,
+        "testable": 1,
+        "verified": 1
+      },
+      "inequalities_numeric__d5": {
+        "convertible": 1,
+        "out_of_scope": 0,
+        "testable": 1,
+        "verified": 1
+      },
+      "number_theory_numeric__d2": {
+        "convertible": 5,
+        "out_of_scope": 0,
+        "testable": 5,
+        "verified": 5
+      },
+      "number_theory_numeric__d3": {
+        "convertible": 6,
+        "out_of_scope": 0,
+        "testable": 6,
+        "verified": 6
+      },
+      "number_theory_numeric__d4": {
+        "convertible": 5,
+        "out_of_scope": 0,
+        "testable": 5,
+        "verified": 5
+      },
+      "number_theory_numeric__d5": {
+        "convertible": 9,
+        "out_of_scope": 0,
+        "testable": 9,
+        "verified": 9
+      },
+      "numinamath__rejected": {
+        "convertible": 0,
+        "out_of_scope": 236,
+        "testable": 0,
+        "verified": 0
+      },
+      "polynomial_arithmetic__d1": {
+        "convertible": 7,
+        "out_of_scope": 0,
+        "testable": 7,
+        "verified": 7
+      },
+      "polynomial_arithmetic__d2": {
+        "convertible": 43,
+        "out_of_scope": 0,
+        "testable": 43,
+        "verified": 43
+      },
+      "symbolic_differentiation__d3": {
+        "convertible": 50,
+        "out_of_scope": 0,
+        "testable": 50,
+        "verified": 50
+      },
+      "symbolic_integration__d2": {
+        "convertible": 7,
+        "out_of_scope": 0,
+        "testable": 7,
+        "verified": 7
+      },
+      "symbolic_integration__d4": {
+        "convertible": 43,
+        "out_of_scope": 0,
+        "testable": 43,
+        "verified": 43
+      }
+    },
+    "rejection_reasons": {
+      "claimed_value_unparseable": 1,
+      "invalid_problem_flag": 8,
+      "invalid_solution_flag": 11,
+      "proof_based_non_numeric": 148,
+      "unsupported_format_or_symbolic": 69
+    },
+    "total_convertible": 5864,
+    "total_out_of_scope": 237
+  },
+  "elapsed_sec": 1.252535709994845,
+  "held_out_seal": {
+    "access_count": 0,
+    "access_log": [],
+    "content_sha256": "8a9beadf9ac2b6ab643153f722d66eeb03882e9542060da1540d2a748269b130",
+    "item_ids_sha256": "30615c7ae9f5e139d9623a00151182c47ee0d2ee5f2ef58da182ed27100e92b9",
+    "n_items": 908,
+    "policy": "Zero reads during development/training/tuning. Any access during authorized post-training evaluation must be logged.",
+    "sealed": true,
+    "sealed_at": "2026-10-01T14:52:53.135793+00:00"
+  },
+  "internal_exposure_disclosure": "GSM8K test split was previously exposed in P14/P23 experiments (experiments/mathdb-*.json); disqualified as an untouched official test set. Included for execution audit and chain reproducibility.",
+  "items_held_out": 908,
+  "items_total": 5864,
+  "items_train": 4091,
+  "items_val": 865,
+  "manifest_sha256": "674cc098b6b0eb6160c50aa8931d265a60aca2785d3bb5453def8c76743f2c32",
+  "out_of_scope_summary": {
+    "by_reason": {
+      "claimed_value_unparseable": 1,
+      "invalid_problem_flag": 8,
+      "invalid_solution_flag": 11,
+      "proof_based_non_numeric": 148,
+      "unsupported_format_or_symbolic": 69
+    },
+    "sample_rejections": [
+      {
+        "detail": "Cannot parse claimed value: 3/4",
+        "problem_id": "gsm8k_319_chain_1",
+        "reason": "claimed_value_unparseable",
+        "snippet": "3/4=3/4",
+        "source": "gsm8k"
+      },
+      {
+        "detail": "Problem answer is an analytical proof without numeric target",
+        "problem_id": "numina_00000",
+        "reason": "proof_based_non_numeric",
+        "snippet": "\nProblem 1. Find all prime numbers $p$ for which there exist positive integers $",
+        "source": "numinamath"
+      },
+      {
+        "detail": "solution_is_valid=Incomplete",
+        "problem_id": "numina_00001",
+        "reason": "invalid_solution_flag",
+        "snippet": "\nSolution. Firstly, we see that\n\n$$\n2019(a-b)=a^{4}-b^{4}=(a-b)(a+b)\\left(a^{2}+",
+        "source": "numinamath"
+      },
+      {
+        "detail": "Problem answer is an analytical proof without numeric target",
+        "problem_id": "numina_00002",
+        "reason": "proof_based_non_numeric",
+        "snippet": "\nProblem 3. Triangle $A B C$ is such that $A B<A C$. The perpendicular bisector ",
+        "source": "numinamath"
+      },
+      {
+        "detail": "Problem answer is an analytical proof without numeric target",
+        "problem_id": "numina_00004",
+        "reason": "proof_based_non_numeric",
+        "snippet": "\nProblem 1. A trapezoid $A B C D(A B \\| C D, A B>C D)$ is circumscribed. The inc",
+        "source": "numinamath"
+      },
+      {
+        "detail": "Problem answer is an analytical proof without numeric target",
+        "problem_id": "numina_00005",
+        "reason": "proof_based_non_numeric",
+        "snippet": "\nProblem 2. Let $a, b$ and $c$ be positive real numbers. Prove that\n\n$$\n\\frac{8}",
+        "source": "numinamath"
+      },
+      {
+        "detail": "Answer cannot be parsed as a verifiable scalar: (,b,)=(k+2,k+1,k),k\\in\\mathbb{Z}",
+        "problem_id": "numina_00006",
+        "reason": "unsupported_format_or_symbolic",
+        "snippet": "(,b,)=(k+2,k+1,k),k\\in\\mathbb{Z}",
+        "source": "numinamath"
+      },
+      {
+        "detail": "Problem answer is an analytical proof without numeric target",
+        "problem_id": "numina_00008",
+        "reason": "proof_based_non_numeric",
+        "snippet": "\nProblem 4. Let $A B C$ be an acute triangle, $A^{\\prime}, B^{\\prime}$ and $C^{\\",
+        "source": "numinamath"
+      },
+      {
+        "detail": "Answer cannot be parsed as a verifiable scalar: =b==\\frac{1}{3}",
+        "problem_id": "numina_00009",
+        "reason": "unsupported_format_or_symbolic",
+        "snippet": "=b==\\frac{1}{3}",
+        "source": "numinamath"
+      },
+      {
+        "detail": "Problem answer is an analytical proof without numeric target",
+        "problem_id": "numina_00011",
+        "reason": "proof_based_non_numeric",
+        "snippet": "## Problem 3\n\nOn a board there are $n$ nails each two connected by a string. Eac",
+        "source": "numinamath"
+      }
+    ],
+    "total_rejected": 237
+  },
+  "phase": "p25-math-corpus",
+  "pins": {
+    "gsm8k": {
+      "dataset_id": "openai/gsm8k",
+      "expected_n": 1319,
+      "expected_sha256": "3730d312f6e3440559ace48831e51066acaca737f6eabec99bccb9e4b3c39d14",
+      "internal_exposure_disclosure": "GSM8K test split was previously exposed in P14/P23 experiments (experiments/mathdb-*.json); disqualified as an untouched official test set. Included for execution audit and chain reproducibility.",
+      "license": "MIT",
+      "source_url": "https://github.com/openai/grade-school-math",
+      "split_default": "test"
+    },
+    "numinamath": {
+      "dataset_id": "AI-MO/NuminaMath-1.5",
+      "license": "Apache-2.0",
+      "source_url": "https://huggingface.co/datasets/AI-MO/NuminaMath-1.5",
+      "subset_definition": "verifiable_numeric_and_algebraic_answers",
+      "validation_rules": [
+        "problem_is_valid == 'Yes'",
+        "solution_is_valid == 'Yes'",
+        "answer != 'proof'",
+        "answer must resolve to scalar integer/rational/float"
+      ]
+    },
+    "symbolic": {
+      "dataset_id": "facebookresearch/SymbolicMathematics",
+      "generator_model": "Lample & Charton (2019) deterministic symbolic task generator",
+      "license": "CC-BY-NC-4.0 / Open Source",
+      "source_url": "https://github.com/facebookresearch/SymbolicMathematics",
+      "task_families": [
+        "symbolic_differentiation",
+        "symbolic_integration",
+        "polynomial_arithmetic",
+        "first_order_ode"
+      ]
+    }
+  },
+  "provenance": {
+    "clean_tree": false,
+    "commit": "66c00dd9ca3b362137ebe09c7e38762f9835b310",
+    "config": {
+      "gsm8k_limit": null,
+      "numina_limit": 300,
+      "symbolic_n": 200
+    },
+    "config_hash": "41a568965765fe86",
+    "dataset_hashes": {
+      "gsm8k": "3730d312f6e34405",
+      "snapshot": "27344a5ea12417f2"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M docs/phases/P25-math-corpus.md\n?? benchmarks/math_corpus.py\n?? experiments/p25-corpus.json\n?? tests/test_math_corpus.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 10,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/math_corpus.py",
+      "--build",
+      "--verify",
+      "--output",
+      "experiments/p25-corpus.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "data/processed/p25_corpus.jsonl",
+      "sha256": "27344a5ea12417f2d50270e37935e21b3802a07afad7ba79d4b4f8e89d8b75c0"
+    }
+  ],
+  "status": "complete",
+  "timestamp": "2026-10-01T14:52:53.846583+00:00",
+  "timing": {
+    "budget_sec": 600.0,
+    "compute_sec": 0.6727928659965983,
+    "elapsed_sec": 1.1947418810013914,
+    "overshoot_sec": 0.0,
+    "setup_sec": 2.9910006560385227e-06,
+    "verification_sec": 2.2659951355308294e-06,
+    "warmup_sec": 0.5219437580090016
+  },
+  "tracks": {
+    "EXECUTE": 4281,
+    "FIND": 1583,
+    "separation_rule": "Passing EXECUTE measures calculation correctness and interpreter safety; passing FIND measures synthesis from problem. Passing first never counts as second."
+  },
+  "verification": {
+    "all_passed": true,
+    "cpu_oracle_l2": 250559348736.0,
+    "cpu_oracle_sum": 350562746368.0,
+    "cpu_verification_sec": 0.29710767201322597,
+    "device": "cuda",
+    "failures": 0,
+    "gpu_l2": 250559347984.75125,
+    "gpu_sum": 350562781275.60767,
+    "gpu_verification_sec": 0.24652708100620657,
+    "n_items_checked": 5864,
+    "n_numeric_points": 6664,
+    "oom_events": 0,
+    "parity_l2_ok": true,
+    "parity_sum_ok": true,
+    "verified_count": 5864
+  }
+}

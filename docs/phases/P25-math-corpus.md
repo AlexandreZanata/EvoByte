@@ -1,8 +1,8 @@
 # P25 — Math corpus consolidation (leak-free benchmark)
 
-**Status:** Proposed.
+**Status:** Done (2026-10-01; verified corpus + sealed test; 5,864 items [4,281 EXECUTE, 1,583 FIND]; artifact `experiments/p25-corpus.json`; `make verify` + `pytest` green).
 **Prerequisite:** P24 stable limits recorded.
-**Owner:** assigned when moving to Building; see the phase index.
+**Owner:** executed on `codex/p25-math-corpus` from `66c00dd`.
 
 ## Objective
 
