@@ -1,8 +1,8 @@
 # P31 — Independent answer verification and certificate bounds
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** Accepted P30 isolation manifest.
-**Owner:** assigned when moving to Building.
+**Owner:** Codex
 **Branch:** `codex/p31-verifier-certificates`.
 
 ## Objective
@@ -75,6 +75,13 @@ costs are disclosed. Record clean revision, full configuration, RNG state,
 actual device, dataset/split/checker hashes and durable raw-artifact hashes.
 
 ## Risks
+
+Integration validation uses the P30 controlled local snapshot in CI, runs the
+independent verifier and retains certificate linkage and adversarial rejection
+checks. Archived counts (5,864 total, 4,481 verified, 1,383 unsupported) have a
+separate artifact regression; checking these records does not reproduce the
+unversioned full corpus. Software CI does not establish scientific acceptance
+or independent reproduction of the historical campaign (D014/D015).
 
 Numeric equality is not a proof of a universal statement. Independent implementations
 can share the same mistaken assumptions; include a specification review and exact

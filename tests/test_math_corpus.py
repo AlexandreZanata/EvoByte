@@ -30,10 +30,13 @@ from benchmarks.math_corpus import (
     normalize_text_for_dedup,
     parse_boxed_or_scalar,
     reproduce_p25_contamination,
+    run_corpus_adversarial_rejection_suite,
     run_corpus_isolation_and_audit,
+    run_independent_corpus_verification,
     run_parallel_verification,
     safe_eval_arithmetic,
     stratify_and_seal,
+    verify_item_independently,
 )
 
 
@@ -789,3 +792,250 @@ def test_run_corpus_isolation_and_audit_manifest(
     )
     assert len(test_items) > 0
     assert loader.seal.access_count == 1
+
+
+def test_verify_item_independently_execute() -> None:
+    # 1. Valid EXECUTE item
+    valid_item = CorpusItem(
+        id="exec_valid_1",
+        source="gsm8k",
+        source_id="1",
+        track="EXECUTE",
+        family="arithmetic_chain",
+        difficulty=1,
+        problem_text="compute 15 * 4",
+        expression="15 * 4",
+        inputs=[],
+        constraints={},
+        allowed_ops=["MUL"],
+        target_answer=60.0,
+        verifier={"method": "guarded_arithmetic"},
+        metadata={},
+    )
+    is_ok, reason, vals, details = verify_item_independently(valid_item)
+    assert is_ok is True
+    assert reason == "verified"
+    assert vals == [60.0]
+    assert details["method"] == "ast_guarded_arithmetic"
+
+    # 2. Corrupted EXECUTE item
+    corrupted_item = CorpusItem(
+        id="exec_bad_1",
+        source="gsm8k",
+        source_id="1",
+        track="EXECUTE",
+        family="arithmetic_chain",
+        difficulty=1,
+        problem_text="compute 15 * 4",
+        expression="15 * 4",
+        inputs=[],
+        constraints={},
+        allowed_ops=["MUL"],
+        target_answer=65.0,  # Wrong target!
+        verifier={"method": "guarded_arithmetic"},
+        metadata={},
+    )
+    is_bad, bad_reason, _, _ = verify_item_independently(corrupted_item)
+    assert is_bad is False
+    assert "mismatch" in bad_reason
+
+
+def test_verify_item_independently_symbolic_tasks() -> None:
+    # 1. Symbolic Differentiation
+    it_diff = CorpusItem(
+        id="sym_diff_1",
+        source="symbolic_math",
+        source_id="1",
+        track="FIND",
+        family="symbolic_differentiation",
+        difficulty=2,
+        problem_text="Differentiate with respect to x: 3*x**2 + 2*sin(x)",
+        expression="3*x**2 + 2*sin(x)",
+        inputs=[0.0, 1.0],
+        constraints={"variable": "x"},
+        allowed_ops=["ADD", "MUL", "POW", "SIN", "COS"],
+        target_answer=2.0,
+        verifier={
+            "method": "symbolic_grid_evaluation",
+            "target_expression": "6*x + 2*cos(x)",
+            "test_points": [0.0, 1.0],
+            "target_values": [2.0, 6.0 + 2.0 * 0.5403023058681398],
+            "tolerance": 1e-4,
+        },
+        metadata={},
+    )
+    ok_d, _, vals_d, det_d = verify_item_independently(it_diff)
+    assert ok_d is True
+    assert len(vals_d) == 2
+    assert det_d["proof_method"] == "analytic_differentiation_identity"
+
+    # 2. Corrupted derivative must fail
+    it_diff_bad = CorpusItem(
+        id="sym_diff_bad",
+        source="symbolic_math",
+        source_id="1",
+        track="FIND",
+        family="symbolic_differentiation",
+        difficulty=2,
+        problem_text="Differentiate with respect to x: 3*x**2",
+        expression="3*x**2",
+        inputs=[0.0, 1.0],
+        constraints={},
+        allowed_ops=[],
+        target_answer=0.0,
+        verifier={
+            "method": "symbolic_grid_evaluation",
+            "target_expression": "5*x",  # Wrong! Expected 6*x
+            "test_points": [0.0, 1.0],
+            "target_values": [0.0, 5.0],
+        },
+        metadata={},
+    )
+    ok_bad_d, bad_r, _, _ = verify_item_independently(it_diff_bad)
+    assert ok_bad_d is False
+    assert "derivative_mismatch" in bad_r
+
+    # 3. Polynomial Expansion
+    it_poly = CorpusItem(
+        id="sym_poly_1",
+        source="symbolic_math",
+        source_id="2",
+        track="FIND",
+        family="polynomial_arithmetic",
+        difficulty=1,
+        problem_text="Expand polynomial expression: (2*x + 1)*(3*x + 2)",
+        expression="(2*x + 1)*(3*x + 2)",
+        inputs=[0.0, 1.0],
+        constraints={},
+        allowed_ops=[],
+        target_answer=2.0,
+        verifier={
+            "method": "symbolic_grid_evaluation",
+            "target_expression": "6*x**2 + 7*x + 2",
+            "test_points": [0.0, 1.0],
+            "target_values": [2.0, 15.0],
+            "tolerance": 1e-4,
+        },
+        metadata={},
+    )
+    ok_p, _, _, det_p = verify_item_independently(it_poly)
+    assert ok_p is True
+    assert det_p["proof_method"] == "polynomial_algebraic_identity"
+
+    # 4. First Order ODE IVP
+    it_ode = CorpusItem(
+        id="sym_ode_1",
+        source="symbolic_math",
+        source_id="3",
+        track="FIND",
+        family="first_order_ode",
+        difficulty=3,
+        problem_text="Solve IVP: dy/dx = 2*y + 1 with y(0) = 3 on x in [-1, 1]",
+        expression="dy/dx = 2*y + 1",
+        inputs=[0.0],
+        constraints={},
+        allowed_ops=[],
+        target_answer=3.0,
+        verifier={
+            "method": "symbolic_grid_evaluation",
+            "target_expression": "3.5*exp(2*x) - 0.5",
+            "test_points": [0.0],
+            "target_values": [3.0],
+            "tolerance": 1e-4,
+        },
+        metadata={},
+    )
+    ok_ode, _, _, det_ode = verify_item_independently(it_ode)
+    assert ok_ode is True
+    assert det_ode["proof_method"] == "ode_ivp_exact_residual_proof"
+
+
+def test_verify_item_independently_unsupported_natural_language() -> None:
+    # Word problem without formal executable witness remains reference_only
+    nl_item = CorpusItem(
+        id="gsm_word_1",
+        source="gsm8k",
+        source_id="1",
+        track="FIND",
+        family="arithmetic_word_problem",
+        difficulty=2,
+        problem_text="Janet has 16 eggs. She sells 3 to Tom and 4 to Alice. How many are left?",
+        expression=None,
+        inputs=[16.0, 3.0, 4.0],
+        constraints={},
+        allowed_ops=["ADD", "SUB"],
+        target_answer=9.0,
+        verifier={"method": "target_scalar_float"},
+        metadata={"internal_exposure_prior": True},
+    )
+    is_ok, reason, vals, details = verify_item_independently(nl_item)
+    assert is_ok is False
+    assert "reference_only" in reason
+    assert len(vals) == 0
+    assert details["status"] == "reference_only"
+    assert details["reason"] == "unsupported_natural_language_lacks_formal_witness"
+
+
+def test_run_corpus_adversarial_rejection_suite() -> None:
+    results = run_corpus_adversarial_rejection_suite()
+    assert len(results) >= 5
+    # All adversarial fixtures must be rejected
+    assert all(r["rejected"] is True for r in results)
+    # Zero accepted false positives
+    assert sum(1 for r in results if not r["rejected"]) == 0
+
+
+def test_run_independent_corpus_verification_manifest(
+    tmp_path: Path, local_corpus_snapshot: Path
+) -> None:
+    split_path = tmp_path / "p30-splits.json"
+    run_corpus_isolation_and_audit(
+        snapshot_path=local_corpus_snapshot,
+        output_path=split_path,
+        device_name="cpu",
+        seed=42,
+    )
+    out_p = tmp_path / "p31-verification.json"
+    manifest = run_independent_corpus_verification(
+        split_manifest_path=split_path,
+        snapshot_path=local_corpus_snapshot,
+        device_name="cpu",
+        certificate_report_path=_REPO_ROOT / "experiments" / "p31-certificates.json",
+        output_path=out_p,
+    )
+    assert out_p.exists()
+    assert manifest["phase"] == "p31-verifier-certificates"
+    assert manifest["status"] == "PASS"
+
+    summary = manifest["independent_verification_summary"]
+    assert summary["total_denominator"] == 25
+    assert summary["verified_items_count"] == 24
+    assert summary["unsupported_items_count"] == 1
+    assert summary["verified_coverage_pct"] == 96.0
+    assert summary["soundness_gate_passed"] is True
+    assert summary["accepted_false_positives"] == 0
+
+    assert manifest["tracks"]["EXECUTE"]["verified"] == 20
+    assert manifest["tracks"]["FIND"]["verified"] == 4
+    assert manifest["tracks"]["FIND"]["unsupported_natural_language"] == 1
+    assert manifest["numeric_gpu_reduction"]["parity_sum_ok"] is True
+    assert manifest["numeric_gpu_reduction"]["parity_l2_ok"] is True
+    assert manifest["open_problems_certificates"]["strict_certificates"]
+
+    assert "final_test" in manifest["splits_breakdown"]
+    assert "train" in manifest["splits_breakdown"]
+    assert "val" in manifest["splits_breakdown"]
+
+
+def test_recorded_p31_full_corpus_counts() -> None:
+    """Protect the archived denominator; this does not rerun the missing snapshot."""
+    manifest = json.loads((_REPO_ROOT / "experiments/p31-verification.json").read_text())
+    summary = manifest["independent_verification_summary"]
+    assert summary["total_denominator"] == 5864
+    assert summary["verified_items_count"] == 4481
+    assert summary["unsupported_items_count"] == 1383
+    assert summary["verified_coverage_pct"] > 76.0
+    assert summary["accepted_false_positives"] == 0
+    assert manifest["tracks"]["EXECUTE"]["verified"] == 4281
+    assert manifest["tracks"]["FIND"]["verified"] == 200
+    assert manifest["tracks"]["FIND"]["unsupported_natural_language"] == 1383
