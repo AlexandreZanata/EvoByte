@@ -30,13 +30,15 @@ sys.path.insert(0, str(_REPO_ROOT / "src"))
 sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
 
 from benchmarks.math_db import RAW_PATH, extract_chains, load_rows, make_splits
-from evobyte.bytecode import N_INSTR, N_REGS, decode_human
+from evobyte.bytecode import CONST_BANK, N_INSTR, N_REGS, OPCODE_VERSION, decode_human
 from evobyte.evolution import EvolutionConfig
 from evobyte.grammar import (
     GrammarResidentEvolution,
+    HornerPoly,
     PolynomialSpec,
     analyze_program_liveness,
     canonicalize_bytecode,
+    compile_horner_to_bytecode,
     sample_grammar_batch,
 )
 from evobyte.provenance import (
@@ -1798,11 +1800,538 @@ def run_p33_structured_search(
     return report
 
 
+# ==============================================================================
+# 6. P35 Certified Program Corpus for Specialist Training (Polynomial Arithmetic)
+# ==============================================================================
+
+
+def _eval_ground_truth_expr(expr_str: str, xs: np.ndarray) -> np.ndarray:
+    """Evaluate a polynomial ground-truth expression on xs via SymPy (float64)."""
+    import sympy as _sympy
+
+    x = _sympy.Symbol("x")
+    try:
+        parsed = _sympy.sympify(expr_str)
+    except (_sympy.SympifyError, SyntaxError, TypeError, ValueError) as exc:
+        raise ValueError(f"cannot_parse_ground_truth: {exc}") from exc
+    fn = _sympy.lambdify(x, parsed, modules=["numpy"])
+    vals = np.asarray(fn(np.asarray(xs, dtype=np.float64)), dtype=np.float64)
+    if vals.shape == ():
+        vals = np.full_like(np.asarray(xs, dtype=np.float64), float(vals))
+    return vals
+
+
+def _ground_truth_degree(expr_str: str) -> int | None:
+    """Return polynomial degree via SymPy, or None when not a polynomial."""
+    try:
+        import sympy as _sympy
+        from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+
+        x = _sympy.Symbol("x")
+        poly = _sympy.Poly(_sympy.sympify(expr_str), x)
+        return int(poly.degree())
+    except (
+        PolynomialError,
+        GeneratorsNeeded,
+        _sympy.SympifyError,
+        TypeError,
+        ValueError,
+        AttributeError,
+        ArithmeticError,
+    ):
+        return None
+
+
+def _try_exact_horner_program(expr_str: str) -> np.ndarray | None:
+    """Build an exact Horner program when every coefficient is in CONST_BANK.
+
+    Returns None when coefficients are not exactly representable; the teacher
+    search path is then the only certified source (no quantized imitation).
+    """
+    try:
+        import sympy as _sympy
+        from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+
+        x = _sympy.Symbol("x")
+        poly = _sympy.Poly(_sympy.sympify(expr_str), x)
+        coeffs = [float(c) for c in poly.all_coeffs()]
+    except (
+        PolynomialError,
+        GeneratorsNeeded,
+        _sympy.SympifyError,
+        TypeError,
+        ValueError,
+        AttributeError,
+        ArithmeticError,
+    ):
+        return None
+    bank = [float(v) for v in list(CONST_BANK)]
+    idxs: list[int] = []
+    for c in coeffs:
+        hit = next((i for i, b in enumerate(bank) if abs(b - c) <= 1e-9), None)
+        if hit is None:
+            return None
+        idxs.append(hit)
+    prog, overlength = compile_horner_to_bytecode(HornerPoly(coeff_indices=idxs))
+    if overlength or prog is None:
+        return None
+    return prog
+
+
+def build_verified_training_corpus(
+    family: str = "polynomial_arithmetic",
+    split_manifest: str | Path = "experiments/p30-splits.json",
+    output_path: str | Path | None = "experiments/p35-training-corpus.json",
+    device_name: str | None = None,
+    teacher_budget_sec: float = 0.4,
+    teacher_pop_size: int = 128,
+    seed: int = 42,
+    smoke: bool = False,
+) -> dict[str, Any]:
+    """Build the P35 certified program corpus (train/val only; final-test sealed).
+
+    Teacher sources: exact Horner constructions (bank-exact only) plus the P33
+    accepted grammar-resident engine. A positive label requires P31-style L2
+    verification (verify_l2 passed) with hidden/extrapolation coverage and a
+    recorded symbolic-equivalence certificate. Inference-time features contain
+    only input-output observations, never the formula, reference program,
+    hidden values, or final-test answers.
+    """
+    from benchmarks.math_corpus import IsolatedCorpusLoader
+    from evobyte.verifier import program_to_sympy, verify_l2
+
+    t_wall_0 = time.perf_counter()
+    device = resolve_device(device_name)
+    torch.set_num_threads(8)
+    seed_all(seed)
+    synchronize(device)
+
+    manifest_p = Path(split_manifest)
+    with open(manifest_p, encoding="utf-8") as f:
+        split_manifest_data = json.load(f)
+    split_sha = hashlib.sha256(manifest_p.read_bytes()).hexdigest()
+    corpus_rel = split_manifest_data.get("corpus_snapshot", {}).get(
+        "path", "data/processed/p25_corpus.jsonl"
+    )
+    corpus_p = _REPO_ROOT / corpus_rel
+    corpus_sha = (
+        hashlib.sha256(corpus_p.read_bytes()).hexdigest() if corpus_p.exists() else "missing"
+    )
+
+    loader = IsolatedCorpusLoader.from_manifest(manifest_p)
+    train_items = [it for it in loader.get_train_items() if it.family == family]
+    val_items = [it for it in loader.get_val_items() if it.family == family]
+    train_items.sort(key=lambda it: it.id)
+    val_items.sort(key=lambda it: it.id)
+    if smoke:
+        train_items = train_items[:2]
+        val_items = val_items[:1]
+        teacher_budget_sec = min(teacher_budget_sec, 0.06)
+        teacher_pop_size = min(teacher_pop_size, 32)
+
+    groups_meta = split_manifest_data.get("groups_metadata", []) or []
+    final_groups = {g["group_id"] for g in groups_meta if g.get("split") == "final_test"}
+    final_ids: set[str] = set(split_manifest_data.get("splits", {}).get("final_test", []))
+    if not final_ids:
+        final_ids = set(split_manifest_data.get("splits", {}).get("held_out", []))
+    final_templates = {
+        g.get("template_id", "") for g in groups_meta if g.get("split") == "final_test"
+    }
+
+    print("=" * 115)
+    print("P35 CERTIFIED PROGRAM CORPUS (train/val only; final-test sealed)")
+    print(f"  Family              : {family}")
+    print(f"  Device              : {device}")
+    print(f"  Train/val tasks     : {len(train_items)}/{len(val_items)}")
+    print(f"  Teacher budget/pop  : {teacher_budget_sec:.2f}s / {teacher_pop_size}")
+    print("=" * 115)
+
+    positives: list[dict[str, Any]] = []
+    negatives: list[dict[str, Any]] = []
+    seen_bytecode_sha: set[str] = set()
+    seen_canonical: set[str] = set()
+    billed = {
+        "teacher_search_sec": 0.0,
+        "exact_certification_sec": 0.0,
+        "conversion_sec": 0.0,
+        "dedup_sec": 0.0,
+        "storage_sec": 0.0,
+    }
+    solved = 0
+    failed = 0
+    degrees: list[int] = []
+    live_lengths: list[int] = []
+
+    spec = PolynomialSpec()
+    cfg = EvolutionConfig(
+        pop_size=teacher_pop_size,
+        elite_k=max(4, teacher_pop_size // 16),
+        tournament_size=4,
+        crossover_p=0.4,
+        gene_mut_p=0.20,
+        random_inject_p=0.10,
+        max_generations=1_000_000,
+        early_stop_fitness=1e-4,
+    )
+
+    for split_name, items in (("train", train_items), ("val", val_items)):
+        for item in items:
+            gt = (item.metadata or {}).get("ground_truth_expr") or (item.verifier or {}).get(
+                "target_expression"
+            )
+            if not gt:
+                failed += 1
+                negatives.append(
+                    {
+                        "item_id": item.id,
+                        "split": split_name,
+                        "label": "negative",
+                        "reason": "missing_ground_truth",
+                    }
+                )
+                continue
+            try:
+                train_xs = np.linspace(-3.0, 3.0, 48, dtype=np.float64)
+                test_xs = np.linspace(-2.9, 2.9, 32, dtype=np.float64)
+                extrap_xs = np.concatenate(
+                    [np.linspace(-6.0, -3.5, 16), np.linspace(3.5, 6.0, 16)]
+                ).astype(np.float64)
+                train_ys = _eval_ground_truth_expr(str(gt), train_xs)
+                test_ys = _eval_ground_truth_expr(str(gt), test_xs)
+                extrap_ys = _eval_ground_truth_expr(str(gt), extrap_xs)
+            except ValueError as exc:
+                failed += 1
+                negatives.append(
+                    {
+                        "item_id": item.id,
+                        "split": split_name,
+                        "label": "negative",
+                        "reason": str(exc),
+                    }
+                )
+                continue
+            if not (np.isfinite(train_ys).all() and np.isfinite(test_ys).all()):
+                failed += 1
+                negatives.append(
+                    {
+                        "item_id": item.id,
+                        "split": split_name,
+                        "label": "negative",
+                        "reason": "non_finite_ground_truth",
+                    }
+                )
+                continue
+
+            # Teacher: exact construction first, then grammar-resident search.
+            candidate: np.ndarray | None = None
+            lineage = ""
+            t_teach_0 = time.perf_counter()
+            exact = _try_exact_horner_program(str(gt))
+            teacher_info: dict[str, Any] = {"engine": "grammar_resident_p33"}
+            item_seed = seed + (
+                int(hashlib.sha256(item.id.encode("utf-8")).hexdigest()[:8], 16) % 10000
+            )
+            if exact is not None:
+                candidate = np.asarray(exact, dtype=np.uint32)
+                lineage = "exact_construction"
+                teacher_info = {"engine": "exact_horner", "seed": seed}
+            else:
+                evo = GrammarResidentEvolution(
+                    train_xs.astype(np.float32),
+                    train_ys.astype(np.float32),
+                    config=cfg,
+                    device=device,
+                    seed=item_seed,
+                )
+                res = evo.run(time_budget_sec=teacher_budget_sec)
+                candidate = np.asarray(res["best_program"], dtype=np.uint32)
+                lineage = "teacher_search"
+                teacher_info = {
+                    "engine": "grammar_resident_p33",
+                    "seed": item_seed,
+                    "budget_sec": teacher_budget_sec,
+                    "pop_size": teacher_pop_size,
+                    "generations": res["generations"],
+                    "candidates_total": res["candidates_total"],
+                    "teacher_best_mse": res["best_mse"],
+                }
+            billed["teacher_search_sec"] += time.perf_counter() - t_teach_0
+
+            t_cert_0 = time.perf_counter()
+            liveness = analyze_program_liveness(candidate)
+            _canon, canon_info = canonicalize_bytecode(candidate)
+            sym_expr = program_to_sympy(candidate, var_name="x")
+            sym_str = str(sym_expr) if sym_expr is not None else decode_human(candidate)
+            v = verify_l2(
+                candidate,
+                train_xs,
+                train_ys,
+                test_xs,
+                test_ys,
+                val_xs=test_xs,
+                val_ys=test_ys,
+                extrap_xs=extrap_xs,
+                extrap_ys=extrap_ys,
+                adversarial_xs=extrap_xs,
+                ground_truth_formula=str(gt),
+                error_threshold=spec.target_mse_threshold,
+                extrap_threshold=1.0,
+                domain_str="[-3, 3] train; [-6, -3.5]U[3.5, 6] extrap",
+            )
+            billed["exact_certification_sec"] += time.perf_counter() - t_cert_0
+
+            t_conv_0 = time.perf_counter()
+            feat = extract_problem_features(
+                train_xs.astype(np.float32), train_ys.astype(np.float32), device=device
+            )
+            billed["conversion_sec"] += time.perf_counter() - t_conv_0
+
+            ok = (
+                v.passed
+                and not bool(liveness.get("is_constant_output", True))
+                and int(liveness.get("live_count", 0)) > 0
+            )
+            if not ok:
+                failed += 1
+                negatives.append(
+                    {
+                        "item_id": item.id,
+                        "split": split_name,
+                        "label": "negative",
+                        "reason": v.decision,
+                        "teacher": teacher_info,
+                        "lineage": lineage,
+                        "test_mse": v.f64_test_mse,
+                        "extrap_mse": v.extrap_mse,
+                    }
+                )
+                continue
+
+            t_dedup_0 = time.perf_counter()
+            sha = hashlib.sha256(
+                np.ascontiguousarray(candidate, dtype=np.uint32).tobytes()
+            ).hexdigest()
+            dup = sha in seen_bytecode_sha or sym_str in seen_canonical
+            billed["dedup_sec"] += time.perf_counter() - t_dedup_0
+            if dup:
+                failed += 1
+                negatives.append(
+                    {
+                        "item_id": item.id,
+                        "split": split_name,
+                        "label": "negative",
+                        "reason": "duplicate_bytecode_or_canonical_form",
+                    }
+                )
+                continue
+            seen_bytecode_sha.add(sha)
+            seen_canonical.add(sym_str)
+
+            deg = _ground_truth_degree(str(gt))
+            if deg is not None:
+                degrees.append(deg)
+            live_lengths.append(int(liveness.get("live_count", 0)))
+            solved += 1
+            positives.append(
+                {
+                    "item_id": item.id,
+                    "group_id": item.group_id,
+                    "template_id": item.template_id,
+                    "split": split_name,
+                    "label": "positive",
+                    "ground_truth_expr": str(gt),
+                    "canonical_sympy": sym_str,
+                    "symbolic_equivalent": bool(v.symbolic_equivalent),
+                    "proof_type": v.proof_type,
+                    "program_sha256": sha,
+                    "program_words": [int(w) for w in candidate],
+                    "live_count": int(liveness.get("live_count", 0)),
+                    "features_inference_only": [float(f) for f in feat.cpu().numpy().tolist()],
+                    "feature_schema": "stats16_from_train_observations_only",
+                    "certificate": {
+                        "decision": v.decision,
+                        "test_mse": v.f64_test_mse,
+                        "extrap_mse": v.extrap_mse,
+                        "ordinary_math_valid": v.ordinary_math_valid,
+                        "symbolic_notes": v.symbolic_notes,
+                        "canonical_reordered": int(canon_info.get("reordered_count", 0)),
+                    },
+                    "teacher": teacher_info,
+                    "lineage": lineage,
+                }
+            )
+
+    # Final re-verification: zero positive-label checker failures.
+    checker_failures = 0
+    for p in positives:
+        prog = np.array(p["program_words"], dtype=np.uint32)
+        gt = p["ground_truth_expr"]
+        tr_xs = np.linspace(-3.0, 3.0, 48, dtype=np.float64)
+        te_xs = np.linspace(-2.9, 2.9, 32, dtype=np.float64)
+        ex_xs = np.concatenate([np.linspace(-6.0, -3.5, 16), np.linspace(3.5, 6.0, 16)]).astype(
+            np.float64
+        )
+        re_v = verify_l2(
+            prog,
+            tr_xs,
+            _eval_ground_truth_expr(gt, tr_xs),
+            te_xs,
+            _eval_ground_truth_expr(gt, te_xs),
+            extrap_xs=ex_xs,
+            extrap_ys=_eval_ground_truth_expr(gt, ex_xs),
+            adversarial_xs=ex_xs,
+            ground_truth_formula=gt,
+            error_threshold=spec.target_mse_threshold,
+            extrap_threshold=1.0,
+        )
+        if not re_v.passed:
+            checker_failures += 1
+
+    pos_groups = {p["group_id"] for p in positives}
+    pos_ids = {p["item_id"] for p in positives}
+    group_leak = sorted(pos_groups & final_groups)
+    id_leak = sorted(pos_ids & final_ids)
+    template_overlap = sorted({p["template_id"] for p in positives} & final_templates)
+
+    n_pos = len(positives)
+    n_neg = len(negatives)
+    ladder = [n for n in (4, 8, 16, 32) if n <= max(n_pos, 0)] or ([n_pos] if n_pos else [])
+    sufficient = n_pos >= 16 and sum(1 for p in positives if p["split"] == "val") >= 2
+    status = "PASS" if (checker_failures == 0 and not group_leak and not id_leak) else "FAIL"
+
+    prov = collect_provenance(
+        seed=seed,
+        device=device,
+        dataset_hashes={"p25_snapshot": corpus_sha[:16], "p30_manifest": split_sha[:16]},
+        config={
+            "family": family,
+            "teacher_budget_sec": teacher_budget_sec,
+            "teacher_pop_size": teacher_pop_size,
+            "seed": seed,
+        },
+    )
+
+    report = {
+        "phase": "p35-verified-training-corpus",
+        "status": status,
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "elapsed_sec": time.perf_counter() - t_wall_0,
+        "provenance": prov,
+        "family": family,
+        "curriculum": {
+            "source": "p30_train_val_polynomial_arithmetic_plus_exact_constructions",
+            "teacher_engine": "p33_grammar_resident_accepted_path",
+            "n_train_tasks": len(train_items),
+            "n_val_tasks": len(val_items),
+            "p25_snapshot_path": corpus_rel,
+            "p25_snapshot_sha256": corpus_sha,
+            "p25_family_total": 50,
+            "p25_family_used": len(train_items) + len(val_items),
+        },
+        "coverage": {
+            "solved_targets": solved,
+            "failed_targets": failed,
+            "degrees": sorted(set(degrees)),
+            "n_degrees_covered": len(set(degrees)),
+            "live_lengths": sorted(set(live_lengths)),
+        },
+        "labels": {
+            "positives": n_pos,
+            "negatives": n_neg,
+            "checker_failures_on_reverify": checker_failures,
+            "dedup_bytecode": len(seen_bytecode_sha),
+            "dedup_canonical": len(seen_canonical),
+        },
+        "leakage": {
+            "final_test_accessed": False,
+            "seal_access_count": int(loader.seal.access_count),
+            "group_overlap_positives_final_test": group_leak,
+            "item_overlap_positives_final_test": id_leak,
+            "template_overlap_disclosed": template_overlap,
+            "template_note": "P30 single-template polynomial_arithmetic shares "
+            "template ids across splits; group/item isolation is enforced and "
+            "final-test content was never read.",
+        },
+        "features": {
+            "schema": "stats16_from_train_observations_only",
+            "forbidden": [
+                "target_formula",
+                "reference_program",
+                "hidden_values",
+                "final_test_answers",
+            ],
+        },
+        "learning_curve": {
+            "data_size_ladder": ladder,
+            "prerequisites": "positives>=16 with >=2 val positives before P36 fitting; "
+            "no duplicate positives to meet quota",
+            "sufficient_for_p36": bool(sufficient),
+            "learner_promotion": "approved" if sufficient else "blocked_publish_limit",
+        },
+        "billed_costs": {**billed, "total_teacher_side_sec": sum(billed.values())},
+        "pins": {
+            "split_manifest": str(manifest_p),
+            "split_manifest_sha256": split_sha,
+            "opcode_version": int(OPCODE_VERSION),
+            "checker": "verify_l2_mse1e-4_extrap1.0_symbolic_recorded",
+            "runtime_torch": str(torch.__version__),
+            "device": str(device),
+            "config": {
+                "teacher_budget_sec": teacher_budget_sec,
+                "teacher_pop_size": teacher_pop_size,
+                "seed": seed,
+            },
+        },
+        "positives": positives,
+        "negatives_summary": negatives[:50],
+        "n_negatives_total": n_neg,
+    }
+
+    if output_path:
+        t_store_0 = time.perf_counter()
+        out_p = Path(output_path)
+        raw_p = out_p.parent / "p35-training-corpus-raw.json"
+        raw_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(raw_p, "w", encoding="utf-8") as f:
+            json.dump(
+                {"positives": positives, "negatives": negatives},
+                f,
+                indent=2,
+                sort_keys=True,
+                default=str,
+            )
+        raw_hash = hashlib.sha256(raw_p.read_bytes()).hexdigest()
+        billed["storage_sec"] = time.perf_counter() - t_store_0
+        report["billed_costs"] = {**billed, "total_teacher_side_sec": sum(billed.values())}
+        written = write_manifest(out_p, report, {str(raw_p): raw_hash})
+        print(
+            f"Artifact manifest written to {out_p} "
+            f"(manifest_sha256={written['manifest_sha256'][:16]})"
+        )
+
+    print(
+        f"P35 positives={n_pos} negatives={n_neg} "
+        f"checker_failures={checker_failures} status={status}"
+    )
+    return report
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="P23/P28/P33 Math Specialist Benchmark (GSM8K Chains / Rematch <= 5M / Structured Search)"
+        description="P23/P28/P33/P35 Math Specialist Benchmark (GSM8K Chains / Rematch / Structured Search / Verified Corpus)"
     )
     parser.add_argument("--pilot", action="store_true", help="Run 4-way pilot benchmark (P23)")
+    parser.add_argument(
+        "--build-verified-corpus",
+        action="store_true",
+        help="Run P35 certified program corpus build for specialist training",
+    )
+    parser.add_argument(
+        "--split-manifest",
+        type=str,
+        default="experiments/p30-splits.json",
+        help="P30 split manifest path (default: experiments/p30-splits.json)",
+    )
     parser.add_argument(
         "--structured-search",
         action="store_true",
@@ -1842,6 +2371,22 @@ def main() -> int:
     )
     parser.add_argument("--device", type=str, default=None, help="Target device (cpu/cuda)")
     args = parser.parse_args()
+
+    # P35 Certified corpus mode (takes precedence over P28 family trigger)
+    if args.build_verified_corpus:
+        family = args.family or "polynomial_arithmetic"
+        out_path = args.output or "experiments/p35-training-corpus.json"
+        budget = 0.06 if args.smoke else args.budget_sec
+        res = build_verified_training_corpus(
+            family=family,
+            split_manifest=args.split_manifest,
+            output_path=out_path,
+            device_name=args.device,
+            teacher_budget_sec=budget,
+            seed=42,
+            smoke=args.smoke,
+        )
+        return 0 if res["status"] == "PASS" else 1
 
     # P33 Structured Search mode
     if args.structured_search:

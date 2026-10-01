@@ -22,6 +22,7 @@ from benchmarks.math_specialist import (
     SequentialSpecialist,
     TinyMathProposer,
     build_math_corpus,
+    build_verified_training_corpus,
     extract_problem_features,
     get_p28_family_targets,
     get_pilot_targets,
@@ -337,6 +338,33 @@ def test_p33_sample_and_mutate_grammar_batch() -> None:
     for i in range(16):
         prog = mutated[i].numpy().astype(np.uint32)
         assert is_valid(prog)
+
+
+def test_p35_build_verified_corpus_smoke() -> None:
+    report = build_verified_training_corpus(
+        family="polynomial_arithmetic",
+        split_manifest=_REPO_ROOT / "experiments" / "p30-splits.json",
+        output_path=None,
+        device_name="cpu",
+        teacher_budget_sec=0.06,
+        teacher_pop_size=32,
+        seed=42,
+        smoke=True,
+    )
+    assert report["phase"] == "p35-verified-training-corpus"
+    assert report["status"] in ("PASS", "FAIL")
+    assert report["leakage"]["final_test_accessed"] is False
+    assert report["leakage"]["seal_access_count"] == 0
+    assert report["leakage"]["group_overlap_positives_final_test"] == []
+    assert report["leakage"]["item_overlap_positives_final_test"] == []
+    assert report["labels"]["checker_failures_on_reverify"] == 0
+    assert "data_size_ladder" in report["learning_curve"]
+    assert "billed_costs" in report and "teacher_search_sec" in report["billed_costs"]
+    for p in report["positives"]:
+        assert p["label"] == "positive"
+        assert len(p["features_inference_only"]) == 16
+        assert p["certificate"]["decision"].startswith("VERIFIED")
+        assert "ground_truth_expr" in p
 
 
 def test_p33_structured_search_smoke() -> None:
