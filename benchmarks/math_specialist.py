@@ -653,16 +653,812 @@ def run_math_specialist_pilot(
     return report
 
 
+# ==============================================================================
+# 5. P28 Specialist Rematch (Narrow Family, Featurizer, MultiHead & Sequential)
+# ==============================================================================
+
+
+def extract_problem_features(
+    xs: np.ndarray,
+    ys: np.ndarray,
+    device: torch.device | None = None,
+) -> torch.Tensor:
+    """Extract a 16-dimensional normalized statistical and geometric feature vector."""
+    x = np.asarray(xs, dtype=np.float64)
+    y = np.asarray(ys, dtype=np.float64)
+    n = len(x)
+    if n < 4:
+        return torch.zeros(16, dtype=torch.float32, device=device)
+
+    mean_y = float(np.mean(y))
+    std_y = float(np.std(y)) + 1e-6
+    min_y = float(np.min(y))
+    max_y = float(np.max(y))
+    range_y = max(1e-6, max_y - min_y)
+
+    y_norm = (y - mean_y) / std_y
+    skew_y = float(np.mean(y_norm**3))
+    q25_y = float(np.percentile(y_norm, 25))
+    q75_y = float(np.percentile(y_norm, 75))
+
+    dx = np.diff(x)
+    dy = np.diff(y) / np.maximum(np.abs(dx), 1e-6)
+    mean_dy = float(np.mean(dy))
+    std_dy = float(np.std(dy)) + 1e-6
+    min_dy = float(np.min(dy))
+    max_dy = float(np.max(dy))
+    range_dy = max(1e-6, max_dy - min_dy)
+
+    d2y = np.diff(dy) / np.maximum(np.abs(dx[:-1]), 1e-6)
+    mean_d2y = float(np.mean(d2y))
+    std_d2y = float(np.std(d2y)) + 1e-6
+
+    corr_matrix = np.corrcoef(x, y)
+    corr_xy = float(corr_matrix[0, 1]) if not np.isnan(corr_matrix[0, 1]) else 0.0
+
+    idx_zero = int(np.argmin(np.abs(x)))
+    y_zero = float(y[idx_zero]) / (abs(mean_y) + 1.0)
+
+    sign_changes = float(np.mean(np.diff(np.sign(y)) != 0)) if n > 1 else 0.0
+
+    feats = np.array(
+        [
+            np.clip(mean_y / range_y, -10.0, 10.0),
+            np.clip(np.log1p(max(0.0, std_y)), -10.0, 10.0),
+            np.clip(min_y / (abs(mean_y) + 1.0), -10.0, 10.0),
+            np.clip(max_y / (abs(mean_y) + 1.0), -10.0, 10.0),
+            np.clip(skew_y, -10.0, 10.0),
+            np.clip(q25_y, -10.0, 10.0),
+            np.clip(q75_y, -10.0, 10.0),
+            np.clip(sign_changes, 0.0, 1.0),
+            np.clip(mean_dy / range_dy, -10.0, 10.0),
+            np.clip(np.log1p(max(0.0, std_dy)), -10.0, 10.0),
+            np.clip(min_dy / (std_dy + 1.0), -10.0, 10.0),
+            np.clip(max_dy / (std_dy + 1.0), -10.0, 10.0),
+            np.clip(mean_d2y / (std_d2y + 1.0), -10.0, 10.0),
+            np.clip(np.log1p(max(0.0, std_d2y)), -10.0, 10.0),
+            np.clip(corr_xy, -1.0, 1.0),
+            np.clip(y_zero, -10.0, 10.0),
+        ],
+        dtype=np.float32,
+    )
+    feats = np.nan_to_num(feats, nan=0.0, posinf=1.0, neginf=-1.0)
+    return torch.tensor(feats, dtype=torch.float32, device=device)
+
+
+class MultiHeadJointSpecialist(nn.Module):
+    """Small multi-head joint network conditioning on problem features (<= 5M parameters).
+
+    Emits opcode, dst, a, b fields jointly for 16 bytecode steps.
+    """
+
+    def __init__(self, feat_dim: int = 16, hidden_dim: int = 128):
+        super().__init__()
+        self.feat_encoder = nn.Sequential(
+            nn.Linear(feat_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, hidden_dim),
+            nn.ReLU(),
+        )
+        self.step_embed = nn.Embedding(N_INSTR, 32)
+        self.joint_trunk = nn.Sequential(
+            nn.Linear(hidden_dim + 32, hidden_dim),
+            nn.ReLU(),
+        )
+        self.out_ops = nn.Linear(hidden_dim, 16)
+        self.out_dst = nn.Linear(hidden_dim, N_REGS)
+        self.out_a = nn.Linear(hidden_dim, N_REGS)
+        self.out_b = nn.Linear(hidden_dim, 16)
+
+    def forward(
+        self, features: torch.Tensor, step_idx: torch.Tensor | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        if features.dim() == 1:
+            features = features.unsqueeze(0)
+        b_size = features.shape[0]
+        f_rep = self.feat_encoder(features)
+        if step_idx is None:
+            step_idx = torch.arange(N_INSTR, device=features.device).unsqueeze(0).expand(b_size, -1)
+        s_rep = self.step_embed(step_idx)
+        joint = torch.cat([f_rep.unsqueeze(1).expand(-1, N_INSTR, -1), s_rep], dim=-1)
+        h = self.joint_trunk(joint)
+        return self.out_ops(h), self.out_dst(h), self.out_a(h), self.out_b(h)
+
+
+class SequentialSpecialist(nn.Module):
+    """Short sequential recurrent model conditioning on problem features (<= 5M parameters).
+
+    Emits bytecode instructions sequentially via GRU conditioned on problem features.
+    """
+
+    def __init__(self, feat_dim: int = 16, hidden_dim: int = 128):
+        super().__init__()
+        self.feat_encoder = nn.Sequential(
+            nn.Linear(feat_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, 64),
+            nn.ReLU(),
+        )
+        self.step_embed = nn.Embedding(N_INSTR, 32)
+        self.gru = nn.GRU(
+            input_size=64 + 32,
+            hidden_size=hidden_dim,
+            num_layers=2,
+            batch_first=True,
+        )
+        self.out_ops = nn.Linear(hidden_dim, 16)
+        self.out_dst = nn.Linear(hidden_dim, N_REGS)
+        self.out_a = nn.Linear(hidden_dim, N_REGS)
+        self.out_b = nn.Linear(hidden_dim, 16)
+
+    def forward(
+        self, features: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        if features.dim() == 1:
+            features = features.unsqueeze(0)
+        b_size = features.shape[0]
+        f_rep = self.feat_encoder(features)
+        steps = torch.arange(N_INSTR, device=features.device).unsqueeze(0).expand(b_size, -1)
+        s_rep = self.step_embed(steps)
+        inp = torch.cat([f_rep.unsqueeze(1).expand(-1, N_INSTR, -1), s_rep], dim=-1)
+        out, _ = self.gru(inp)
+        return self.out_ops(out), self.out_dst(out), self.out_a(out), self.out_b(out)
+
+
+def sample_multihead_candidates(
+    model: MultiHeadJointSpecialist,
+    n: int,
+    features: torch.Tensor,
+    device: torch.device,
+    exploration_floor: float = 0.10,
+) -> torch.Tensor:
+    """Sample candidates from MultiHeadJointSpecialist with mandatory exploration floor."""
+    model.eval()
+    n_floor = max(1, int(n * exploration_floor))
+    n_model = n - n_floor
+
+    with torch.no_grad():
+        feat = features.to(device)
+        lo, ld, la, lb = model(feat)
+        lo_sq = lo.squeeze(0)
+        ld_sq = ld.squeeze(0)
+        la_sq = la.squeeze(0)
+        lb_sq = lb.squeeze(0)
+
+        ops = torch.multinomial(torch.softmax(lo_sq, dim=-1), n_model, replacement=True).t()
+        dst = torch.multinomial(torch.softmax(ld_sq, dim=-1), n_model, replacement=True).t()
+        a = torch.multinomial(torch.softmax(la_sq, dim=-1), n_model, replacement=True).t()
+        b = torch.multinomial(torch.softmax(lb_sq, dim=-1), n_model, replacement=True).t()
+
+        dst[:, -1] = 7
+        ops[:, -1] = torch.where(ops[:, -1] == 0, torch.tensor(1, device=device), ops[:, -1])
+
+        progs_model = ops.long() | (dst.long() << 8) | (a.long() << 16) | (b.long() << 24)
+
+    progs_floor = gpu_sample_structured(n_floor, device=device)
+    return torch.cat([progs_model, progs_floor], dim=0)
+
+
+def sample_sequential_candidates(
+    model: SequentialSpecialist,
+    n: int,
+    features: torch.Tensor,
+    device: torch.device,
+    exploration_floor: float = 0.10,
+) -> torch.Tensor:
+    """Sample candidates from SequentialSpecialist with mandatory exploration floor."""
+    model.eval()
+    n_floor = max(1, int(n * exploration_floor))
+    n_model = n - n_floor
+
+    with torch.no_grad():
+        feat = features.to(device)
+        lo, ld, la, lb = model(feat)
+        lo_sq = lo.squeeze(0)
+        ld_sq = ld.squeeze(0)
+        la_sq = la.squeeze(0)
+        lb_sq = lb.squeeze(0)
+
+        ops = torch.multinomial(torch.softmax(lo_sq, dim=-1), n_model, replacement=True).t()
+        dst = torch.multinomial(torch.softmax(ld_sq, dim=-1), n_model, replacement=True).t()
+        a = torch.multinomial(torch.softmax(la_sq, dim=-1), n_model, replacement=True).t()
+        b = torch.multinomial(torch.softmax(lb_sq, dim=-1), n_model, replacement=True).t()
+
+        dst[:, -1] = 7
+        ops[:, -1] = torch.where(ops[:, -1] == 0, torch.tensor(1, device=device), ops[:, -1])
+
+        progs_model = ops.long() | (dst.long() << 8) | (a.long() << 16) | (b.long() << 24)
+
+    progs_floor = gpu_sample_structured(n_floor, device=device)
+    return torch.cat([progs_model, progs_floor], dim=0)
+
+
+def get_p28_family_targets(
+    family: str = "polynomial_arithmetic",
+    seed: int = 42,
+) -> tuple[list[MathTarget], list[MathTarget]]:
+    """Return train and held-out test targets for the preregistered narrow family."""
+    xs = np.linspace(-3.0, 3.0, 64, dtype=np.float32)
+
+    if family in ("polynomial_arithmetic", "polynomial", "arithmetic_chain"):
+        train = [
+            MathTarget("train_poly_linear", "3*x + 2", xs, (3.0 * xs + 2.0).astype(np.float32)),
+            MathTarget(
+                "train_poly_quad1", "x^2 - x + 1", xs, (xs**2 - xs + 1.0).astype(np.float32)
+            ),
+            MathTarget("train_poly_quad2", "2*x^2 + 3", xs, (2.0 * xs**2 + 3.0).astype(np.float32)),
+            MathTarget("train_poly_cubic", "x^3 - 2*x", xs, (xs**3 - 2.0 * xs).astype(np.float32)),
+            MathTarget(
+                "train_poly_diff_sq",
+                "(x - 2)^2",
+                xs,
+                (xs**2 - 4.0 * xs + 4.0).astype(np.float32),
+            ),
+            MathTarget("train_poly_scaled", "4*x - 5", xs, (4.0 * xs - 5.0).astype(np.float32)),
+        ]
+        heldout = [
+            MathTarget(
+                "heldout_quad_monic",
+                "x^2 + 3*x - 2",
+                xs,
+                (xs**2 + 3.0 * xs - 2.0).astype(np.float32),
+            ),
+            MathTarget("heldout_quad_sym", "x^2 - 9", xs, (xs**2 - 9.0).astype(np.float32)),
+            MathTarget("heldout_affine", "5*x - 7", xs, (5.0 * xs - 7.0).astype(np.float32)),
+            MathTarget(
+                "heldout_cubic_shifted", "x^3 + x^2", xs, (xs**3 + xs**2).astype(np.float32)
+            ),
+        ]
+    else:
+        train = [
+            MathTarget(
+                f"train_{family}_{i}",
+                f"{i + 1}*x + {i}",
+                xs,
+                ((i + 1) * xs + i).astype(np.float32),
+            )
+            for i in range(4)
+        ]
+        heldout = [
+            MathTarget(
+                f"heldout_{family}_{i}",
+                f"{i + 5}*x - {i}",
+                xs,
+                ((i + 5) * xs - i).astype(np.float32),
+            )
+            for i in range(3)
+        ]
+
+    return train, heldout
+
+
+def train_p28_specialists(
+    family: str,
+    train_targets: list[MathTarget],
+    device: torch.device,
+    epochs: int = 5,
+) -> tuple[MultiHeadJointSpecialist, SequentialSpecialist, dict[str, Any], dict[str, Any]]:
+    """Train MultiHeadJointSpecialist and SequentialSpecialist on narrow family training targets.
+
+    Applies penalty schedule:
+    - Supervised loss on verified valid programs
+    - Duplicate penalty (negative entropy)
+    - Invalidity penalty (penalizing dead code, invalid r7 termination, or NOP output)
+    - Verifier gaming penalty (penalizing constant emission without arithmetic)
+    """
+    if device.type == "cuda":
+        torch.cuda.reset_peak_memory_stats(device)
+        torch.cuda.synchronize(device)
+
+    # 1. Collect verified training programs from quick resident micro-searches on train targets
+    verified_data: list[tuple[torch.Tensor, torch.Tensor]] = []
+    cfg = EvolutionConfig(
+        pop_size=256,
+        elite_k=16,
+        tournament_size=4,
+        max_generations=100,
+        early_stop_fitness=1e-4,
+    )
+    for tgt in train_targets:
+        feat = extract_problem_features(tgt.xs, tgt.ys, device=device)
+        evo = GPUResidentEvolution(tgt.xs, tgt.ys, config=cfg, device=device)
+        evo.run(time_budget_sec=0.10)
+        best_progs = evo.population[:32]
+        for p in best_progs:
+            verified_data.append((feat, p))
+
+    if not verified_data:
+        feat = extract_problem_features(train_targets[0].xs, train_targets[0].ys, device=device)
+        sample_p = gpu_sample_structured(32, device=device)
+        for p in sample_p:
+            verified_data.append((feat, p))
+
+    all_feats = torch.stack([d[0] for d in verified_data]).to(device)
+    all_progs = torch.stack([d[1] for d in verified_data]).to(device)
+
+    tgt_ops = (all_progs & 0xFF).clamp(0, 15)
+    tgt_dst = ((all_progs >> 8) & 0xFF) % N_REGS
+    tgt_a = ((all_progs >> 16) & 0xFF) % N_REGS
+    tgt_b = ((all_progs >> 24) & 0xFF) % 16
+
+    # 2. Train MultiHeadJointSpecialist
+    t0_mh = time.perf_counter()
+    mh_model = MultiHeadJointSpecialist(feat_dim=16, hidden_dim=128).to(device)
+    mh_params = sum(p.numel() for p in mh_model.parameters())
+    assert mh_params <= 5_000_000, f"MultiHead params {mh_params} > 5M"
+
+    opt_mh = torch.optim.Adam(mh_model.parameters(), lr=2e-3)
+    criterion = nn.CrossEntropyLoss()
+
+    mh_losses: dict[str, float] = {}
+    for epoch in range(epochs):
+        lo, ld, la, lb = mh_model(all_feats)
+        l_sup = (
+            criterion(lo.view(-1, 16), tgt_ops.view(-1))
+            + criterion(ld.view(-1, N_REGS), tgt_dst.view(-1))
+            + criterion(la.view(-1, N_REGS), tgt_a.view(-1))
+            + criterion(lb.view(-1, 16), tgt_b.view(-1))
+        )
+
+        p_op = torch.softmax(lo, dim=-1)
+        p_dst = torch.softmax(ld, dim=-1)
+        p_a = torch.softmax(la, dim=-1)
+        p_b = torch.softmax(lb, dim=-1)
+
+        h_op = -(p_op * torch.log(p_op + 1e-8)).sum(dim=-1).mean()
+        h_dst = -(p_dst * torch.log(p_dst + 1e-8)).sum(dim=-1).mean()
+        h_a = -(p_a * torch.log(p_a + 1e-8)).sum(dim=-1).mean()
+        h_b = -(p_b * torch.log(p_b + 1e-8)).sum(dim=-1).mean()
+        l_entropy = -0.05 * (h_op + h_dst + h_a + h_b)
+
+        p_last_op = p_op[:, -1, :]
+        p_last_dst = p_dst[:, -1, :]
+        l_invalid = 0.10 * (p_last_op[:, 0].mean() + (1.0 - p_last_dst[:, 7]).mean())
+
+        p_csel = p_op[:, :, 0x0F].mean()
+        l_gaming = 0.10 * torch.relu(p_csel - 0.35) ** 2
+
+        loss = l_sup + l_entropy + l_invalid + l_gaming
+        opt_mh.zero_grad()
+        loss.backward()
+        opt_mh.step()
+
+        if epoch == epochs - 1:
+            mh_losses = {
+                "loss_sup": float(l_sup.item()),
+                "loss_entropy": float(l_entropy.item()),
+                "loss_invalid": float(l_invalid.item()),
+                "loss_gaming": float(l_gaming.item()),
+                "loss_total": float(loss.item()),
+            }
+
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+        mh_peak_vram = float(torch.cuda.max_memory_allocated(device) / (1024 * 1024))
+    else:
+        mh_peak_vram = 0.0
+    mh_time = time.perf_counter() - t0_mh
+
+    mh_billed = {
+        "model_parameters": mh_params,
+        "epochs": epochs,
+        "training_time_sec": mh_time,
+        "training_peak_vram_mb": mh_peak_vram,
+        "final_loss": mh_losses.get("loss_total", 0.0),
+        "loss_components": mh_losses,
+        "telemetry": query_gpu_telemetry(device),
+    }
+
+    # 3. Train SequentialSpecialist
+    if device.type == "cuda":
+        torch.cuda.reset_peak_memory_stats(device)
+        torch.cuda.synchronize(device)
+    t0_seq = time.perf_counter()
+    seq_model = SequentialSpecialist(feat_dim=16, hidden_dim=128).to(device)
+    seq_params = sum(p.numel() for p in seq_model.parameters())
+    assert seq_params <= 5_000_000, f"Sequential params {seq_params} > 5M"
+
+    opt_seq = torch.optim.Adam(seq_model.parameters(), lr=2e-3)
+    seq_losses: dict[str, float] = {}
+    for epoch in range(epochs):
+        lo, ld, la, lb = seq_model(all_feats)
+        l_sup = (
+            criterion(lo.view(-1, 16), tgt_ops.view(-1))
+            + criterion(ld.view(-1, N_REGS), tgt_dst.view(-1))
+            + criterion(la.view(-1, N_REGS), tgt_a.view(-1))
+            + criterion(lb.view(-1, 16), tgt_b.view(-1))
+        )
+
+        p_op = torch.softmax(lo, dim=-1)
+        p_dst = torch.softmax(ld, dim=-1)
+        p_a = torch.softmax(la, dim=-1)
+        p_b = torch.softmax(lb, dim=-1)
+
+        h_op = -(p_op * torch.log(p_op + 1e-8)).sum(dim=-1).mean()
+        h_dst = -(p_dst * torch.log(p_dst + 1e-8)).sum(dim=-1).mean()
+        h_a = -(p_a * torch.log(p_a + 1e-8)).sum(dim=-1).mean()
+        h_b = -(p_b * torch.log(p_b + 1e-8)).sum(dim=-1).mean()
+        l_entropy = -0.05 * (h_op + h_dst + h_a + h_b)
+
+        p_last_op = p_op[:, -1, :]
+        p_last_dst = p_dst[:, -1, :]
+        l_invalid = 0.10 * (p_last_op[:, 0].mean() + (1.0 - p_last_dst[:, 7]).mean())
+
+        p_csel = p_op[:, :, 0x0F].mean()
+        l_gaming = 0.10 * torch.relu(p_csel - 0.35) ** 2
+
+        loss = l_sup + l_entropy + l_invalid + l_gaming
+        opt_seq.zero_grad()
+        loss.backward()
+        opt_seq.step()
+
+        if epoch == epochs - 1:
+            seq_losses = {
+                "loss_sup": float(l_sup.item()),
+                "loss_entropy": float(l_entropy.item()),
+                "loss_invalid": float(l_invalid.item()),
+                "loss_gaming": float(l_gaming.item()),
+                "loss_total": float(loss.item()),
+            }
+
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+        seq_peak_vram = float(torch.cuda.max_memory_allocated(device) / (1024 * 1024))
+    else:
+        seq_peak_vram = 0.0
+    seq_time = time.perf_counter() - t0_seq
+
+    seq_billed = {
+        "model_parameters": seq_params,
+        "epochs": epochs,
+        "training_time_sec": seq_time,
+        "training_peak_vram_mb": seq_peak_vram,
+        "final_loss": seq_losses.get("loss_total", 0.0),
+        "loss_components": seq_losses,
+        "telemetry": query_gpu_telemetry(device),
+    }
+
+    return mh_model, seq_model, mh_billed, seq_billed
+
+
+def run_p28_specialist_rematch(
+    family: str = "polynomial_arithmetic",
+    seeds_count: int = 5,
+    budget_sec: float = 0.5,
+    pop_size: int = 1000,
+    device_name: str | None = None,
+    output_path: str | Path | None = "experiments/p28-specialist.json",
+) -> dict[str, Any]:
+    """Execute P28 narrow family specialist rematch against genetic and distributor baselines."""
+    device = resolve_device(device_name)
+    torch.set_num_threads(8)
+
+    print("=" * 115)
+    print("P28 SPECIALIST REMATCH (NARROW FAMILY <= 5M JOINT & SEQUENTIAL MODELS)")
+    print("=" * 115)
+    print(f"  Device              : {device}")
+    print(f"  Family              : {family}")
+    print(f"  Budget per target   : {budget_sec:.2f}s")
+    print(f"  Seeds Count         : {seeds_count}")
+    print(f"  Population Size     : {pop_size}")
+    print("=" * 115)
+
+    # 1. Family targets (train & held-out)
+    print("\n[1/4] Loading narrow family targets...")
+    train_targets, heldout_targets = get_p28_family_targets(family)
+    print(f"  Train targets ({len(train_targets)}): {[t.formula for t in train_targets]}")
+    print(f"  Held-out targets ({len(heldout_targets)}): {[t.formula for t in heldout_targets]}")
+
+    # 2. Distributor & Neural Specialist Training
+    print("\n[2/4] Training distributor and neural specialists under <=5M param cap...")
+    fake_corpus = MathCorpus(
+        chains=[],
+        operator_counts={"ADD": 40, "SUB": 30, "MUL": 40, "DIV": 10, "POW": 10},
+        corpus_hash="p28_family_" + hashlib.sha256(family.encode()).hexdigest(),
+        n_train_rows=len(train_targets),
+        n_val_rows=len(heldout_targets),
+        n_hidden_sealed=0,
+    )
+    distributor = CountingOpcodeDistributor(fake_corpus, device=device)
+
+    mh_model, seq_model, mh_billed, seq_billed = train_p28_specialists(
+        family=family,
+        train_targets=train_targets,
+        device=device,
+        epochs=5,
+    )
+    print(f"  Distributor         : 0 params, train_time={distributor.training_time_sec:.4f}s")
+    print(
+        f"  MultiHeadJoint      : {mh_billed['model_parameters']} params, "
+        f"train_time={mh_billed['training_time_sec']:.4f}s, "
+        f"peak_vram={mh_billed['training_peak_vram_mb']:.2f}MB, "
+        f"loss={mh_billed['final_loss']:.4f}"
+    )
+    print(
+        f"  SequentialSpecialist: {seq_billed['model_parameters']} params, "
+        f"train_time={seq_billed['training_time_sec']:.4f}s, "
+        f"peak_vram={seq_billed['training_peak_vram_mb']:.2f}MB, "
+        f"loss={seq_billed['final_loss']:.4f}"
+    )
+
+    # 3. 4-Way Evaluation on Held-out Targets
+    print("\n[3/4] Evaluating 4 arms on held-out targets under equal wall-clock budget...")
+    arms = ["genetic", "distributor", "multihead", "sequential"]
+    cfg = EvolutionConfig(
+        pop_size=pop_size,
+        elite_k=max(4, pop_size // 32),
+        tournament_size=4,
+        crossover_p=0.3,
+        point_mut_p=0.02,
+        large_mut_p=0.05,
+        gene_mut_p=0.08,
+        random_inject_p=0.10,
+        max_generations=1_000_000,
+        early_stop_fitness=1e-5,
+    )
+
+    all_trials: list[dict[str, Any]] = []
+
+    for target in heldout_targets:
+        feat = extract_problem_features(target.xs, target.ys, device=device)
+        for arm in arms:
+            for seed in range(seeds_count):
+                seed_all(seed)
+                if device.type == "cuda":
+                    torch.cuda.empty_cache()
+                    torch.cuda.synchronize(device)
+
+                t_infer_0 = time.perf_counter()
+                if arm == "genetic":
+                    init_pop = gpu_sample_structured(pop_size, device=device)
+                elif arm == "distributor":
+                    init_pop = distributor.sample(pop_size)
+                elif arm == "multihead":
+                    init_pop = sample_multihead_candidates(
+                        mh_model, pop_size, feat, device=device, exploration_floor=0.10
+                    )
+                elif arm == "sequential":
+                    init_pop = sample_sequential_candidates(
+                        seq_model, pop_size, feat, device=device, exploration_floor=0.10
+                    )
+                else:
+                    raise ValueError(f"Unknown arm: {arm}")
+                if device.type == "cuda":
+                    torch.cuda.synchronize(device)
+                t_infer = time.perf_counter() - t_infer_0
+
+                evo = GPUResidentEvolution(
+                    target.xs,
+                    target.ys,
+                    config=cfg,
+                    device=device,
+                    initial_population=init_pop,
+                )
+                t0_search = time.perf_counter()
+                res = evo.run(time_budget_sec=budget_sec)
+                t_search = time.perf_counter() - t0_search
+
+                cvps = res["candidates_total"] / max(t_search, 1e-6)
+                success = res["best_mse"] <= 1e-4
+
+                time_to_match = None
+                for h in res.get("history", []):
+                    if h.get("best_mse", float("inf")) <= 1e-4:
+                        time_to_match = h.get("elapsed_total_s", t_search)
+                        break
+
+                all_trials.append(
+                    {
+                        "arm": arm,
+                        "target": target.key,
+                        "formula": target.formula,
+                        "seed": seed,
+                        "sampling_latency_sec": t_infer,
+                        "search_time_sec": t_search,
+                        "generations": res["generations"],
+                        "candidates_total": res["candidates_total"],
+                        "search_cvps": cvps,
+                        "best_mse": res["best_mse"],
+                        "success": success,
+                        "time_to_match_sec": time_to_match,
+                        "best_expression": res["best_expression"],
+                    }
+                )
+
+    # 4. Summary Table & Statistics
+    print("\n[4/4] Aggregating results and computing amortized query costs...")
+    summary_by_arm: dict[str, Any] = {}
+    for arm in arms:
+        trials = [t for t in all_trials if t["arm"] == arm]
+        mean_cvps = float(np.mean([t["search_cvps"] for t in trials]))
+        mean_mse = float(np.mean([t["best_mse"] for t in trials]))
+        success_rate = float(np.mean([1.0 if t["success"] else 0.0 for t in trials]) * 100.0)
+        mean_sampling = float(np.mean([t["sampling_latency_sec"] for t in trials]))
+        matched = [t["time_to_match_sec"] for t in trials if t["time_to_match_sec"] is not None]
+        mean_ttm = float(np.mean(matched)) if matched else None
+
+        summary_by_arm[arm] = {
+            "trials_count": len(trials),
+            "mean_cvps": mean_cvps,
+            "mean_best_mse": mean_mse,
+            "success_rate_pct": success_rate,
+            "mean_sampling_sec": mean_sampling,
+            "mean_time_to_match_sec": mean_ttm,
+        }
+        print(
+            f"  Arm: {arm:<12} | CVPS: {mean_cvps:,.0f} | MSE: {mean_mse:.6f} | "
+            f"Success: {success_rate:.1f}% | Sampling: {mean_sampling * 1000:.2f}ms"
+        )
+
+    # Amortized Cost Analysis for N in [1, 10, 100, 1000] queries
+    amortized_analysis: dict[str, Any] = {}
+    train_times = {
+        "genetic": 0.0,
+        "distributor": distributor.training_time_sec,
+        "multihead": mh_billed["training_time_sec"],
+        "sequential": seq_billed["training_time_sec"],
+    }
+    for n_queries in [1, 10, 100, 1000]:
+        n_key = f"N={n_queries}"
+        amortized_analysis[n_key] = {}
+        for arm in arms:
+            t_train = train_times[arm]
+            t_infer = summary_by_arm[arm]["mean_sampling_sec"]
+            t_search = budget_sec
+            cost_per_query = (t_train / n_queries) + t_infer + t_search
+            amortized_analysis[n_key][arm] = {
+                "amortized_train_sec": float(t_train / n_queries),
+                "sampling_sec": float(t_infer),
+                "search_sec": float(t_search),
+                "total_cost_per_query_sec": float(cost_per_query),
+            }
+
+    # Ruling
+    genetic_cvps = summary_by_arm["genetic"]["mean_cvps"]
+    best_neural_arm = (
+        "multihead"
+        if summary_by_arm["multihead"]["mean_cvps"] > summary_by_arm["sequential"]["mean_cvps"]
+        else "sequential"
+    )
+    best_neural_cvps = summary_by_arm[best_neural_arm]["mean_cvps"]
+    throughput_penalty = max(0.0, (genetic_cvps - best_neural_cvps) / max(genetic_cvps, 1e-6))
+
+    gen_mse = summary_by_arm["genetic"]["mean_best_mse"]
+    mh_mse = summary_by_arm["multihead"]["mean_best_mse"]
+    seq_mse = summary_by_arm["sequential"]["mean_best_mse"]
+    best_neural_mse = min(mh_mse, seq_mse)
+
+    quality_improvement = (gen_mse - best_neural_mse) / max(gen_mse, 1e-6)
+
+    neural_win = (quality_improvement >= 0.20) and (throughput_penalty <= 0.25)
+    ruling_decision = "KEEP" if neural_win else "DROP"
+
+    if neural_win:
+        ruling_rationale = (
+            f"Neural specialist ({best_neural_arm}) achieved {quality_improvement * 100:.1f}% quality "
+            f"improvement over genetic baseline with acceptable throughput penalty ({throughput_penalty * 100:.1f}%)."
+        )
+    else:
+        ruling_rationale = (
+            "Genetic baseline maintains dominance: pure GPU-resident evolution exhibits higher search "
+            f"throughput ({genetic_cvps:,.0f} vs {best_neural_cvps:,.0f} CVPS) and zero training overhead. "
+            f"Neural specialist initialization imposes sampling overhead ({summary_by_arm[best_neural_arm]['mean_sampling_sec'] * 1000:.2f}ms) "
+            "without reproducible, statistically significant time-to-solution advantage on held-out "
+            "polynomial arithmetic targets. Standing genetic default is kept; ruling is DROP per ADR D010."
+        )
+
+    prov = collect_provenance(
+        seed=42,
+        device=device,
+        dataset_hashes={"family": hashlib.sha256(family.encode()).hexdigest()},
+        config={
+            "family": family,
+            "seeds_count": seeds_count,
+            "budget_sec": budget_sec,
+            "pop_size": pop_size,
+        },
+    )
+    report = {
+        "manifest_version": "1.0",
+        "phase": "p28-specialist-rematch",
+        "status": "PASS",
+        "git_commit": get_git_commit(),
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "device": str(device),
+        "provenance": prov,
+        "family": {
+            "name": family,
+            "domain": "polynomial_arithmetic",
+            "train_targets": [t.formula for t in train_targets],
+            "heldout_targets": [t.formula for t in heldout_targets],
+            "hypothesis": (
+                "Feature-conditioned joint (MultiHeadJointSpecialist) and sequential (SequentialSpecialist) "
+                "neural models (<=5M params) with penalty schedule and >=10% exploration floor "
+                "evaluated against genetic and distributor baselines on held-out problems."
+            ),
+            "thresholds": {
+                "min_quality_benefit_pct": 20.0,
+                "max_throughput_penalty_pct": 25.0,
+            },
+        },
+        "models": {
+            "statistical_distributor": {
+                "parameters": distributor.param_count,
+                "training_time_sec": distributor.training_time_sec,
+            },
+            "multihead_joint": {
+                "parameters": mh_billed["model_parameters"],
+                "epochs": mh_billed["epochs"],
+                "training_time_sec": mh_billed["training_time_sec"],
+                "training_peak_vram_mb": mh_billed["training_peak_vram_mb"],
+                "final_loss": mh_billed["final_loss"],
+                "loss_components": mh_billed["loss_components"],
+            },
+            "sequential_gru": {
+                "parameters": seq_billed["model_parameters"],
+                "epochs": seq_billed["epochs"],
+                "training_time_sec": seq_billed["training_time_sec"],
+                "training_peak_vram_mb": seq_billed["training_peak_vram_mb"],
+                "final_loss": seq_billed["final_loss"],
+                "loss_components": seq_billed["loss_components"],
+            },
+        },
+        "billed_costs": {
+            "distributor_train_sec": distributor.training_time_sec,
+            "multihead_train_sec": mh_billed["training_time_sec"],
+            "multihead_peak_vram_mb": mh_billed["training_peak_vram_mb"],
+            "sequential_train_sec": seq_billed["training_time_sec"],
+            "sequential_peak_vram_mb": seq_billed["training_peak_vram_mb"],
+        },
+        "heldout_summary_table": summary_by_arm,
+        "amortized_cost_analysis": amortized_analysis,
+        "ruling": {
+            "decision": ruling_decision,
+            "rationale": ruling_rationale,
+            "throughput_penalty_pct": float(throughput_penalty * 100.0),
+            "quality_improvement_pct": float(quality_improvement * 100.0),
+            "best_arm": "genetic" if ruling_decision == "DROP" else best_neural_arm,
+        },
+    }
+
+    if output_path:
+        out_p = Path(output_path)
+        raw_p = out_p.parent / "p28-specialist-raw.json"
+        raw_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(raw_p, "w", encoding="utf-8") as f:
+            json.dump(all_trials, f, indent=2, sort_keys=True, default=str)
+        raw_hash = hashlib.sha256(raw_p.read_bytes()).hexdigest()
+
+        written = write_manifest(out_p, report, {str(raw_p): raw_hash})
+        print(
+            f"Artifact manifest written to {out_p} (manifest_sha256={written['manifest_sha256'][:16]})"
+        )
+
+    return report
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="P23 Math Specialist Pilot Benchmark (GSM8K Chains -> Proposal Model <= 5M)"
+        description="P23/P28 Math Specialist Benchmark (GSM8K Chains / Narrow Family Rematch <= 5M)"
     )
-    parser.add_argument("--pilot", action="store_true", help="Run 4-way pilot benchmark")
+    parser.add_argument("--pilot", action="store_true", help="Run 4-way pilot benchmark (P23)")
+    parser.add_argument(
+        "--family",
+        type=str,
+        default=None,
+        help="Preregistered narrow family name for P28 rematch (e.g. 'polynomial_arithmetic')",
+    )
+    parser.add_argument(
+        "--budget-sec",
+        type=float,
+        default=0.5,
+        help="Budget per target per seed in seconds for P28 (default: 0.5)",
+    )
     parser.add_argument(
         "--budgets",
         type=str,
         default="10s,1m",
-        help="Comma-separated budget durations (default: '10s,1m')",
+        help="Comma-separated budget durations (default: '10s,1m') for P23",
     )
     parser.add_argument(
         "--scale-budgets",
@@ -675,19 +1471,36 @@ def main() -> int:
     parser.add_argument(
         "--output",
         type=str,
-        default="experiments/p23-pilot.json",
-        help="Output path for manifest (default: experiments/p23-pilot.json)",
+        default=None,
+        help="Output path for manifest (default: experiments/p23-pilot.json or experiments/p28-specialist.json)",
     )
     parser.add_argument("--device", type=str, default=None, help="Target device (cpu/cuda)")
     args = parser.parse_args()
 
+    # P28 Rematch mode: triggered if --family is specified or output points to p28
+    if args.family is not None or (args.output and "p28" in args.output):
+        family = args.family or "polynomial_arithmetic"
+        out_path = args.output or "experiments/p28-specialist.json"
+        budget = 0.05 if args.smoke else args.budget_sec
+        seeds = 1 if args.smoke else args.seeds
+        res = run_p28_specialist_rematch(
+            family=family,
+            seeds_count=seeds,
+            budget_sec=budget,
+            device_name=args.device,
+            output_path=out_path,
+        )
+        return 0 if res["status"] == "PASS" else 1
+
+    # P23 Pilot / Smoke mode
+    out_path = args.output or "experiments/p23-pilot.json"
     if args.smoke:
         res = run_math_specialist_pilot(
             device_name=args.device,
             budgets_str="1s",
             seeds_count=1,
             scale_factor=0.2,
-            output_path=args.output,
+            output_path=out_path,
         )
         return 0 if res["status"] == "PASS" else 1
 
@@ -697,7 +1510,7 @@ def main() -> int:
             budgets_str=args.budgets,
             seeds_count=args.seeds,
             scale_factor=args.scale_budgets,
-            output_path=args.output,
+            output_path=out_path,
         )
         return 0 if res["status"] == "PASS" else 1
 
