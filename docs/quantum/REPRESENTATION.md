@@ -65,7 +65,7 @@ Hamiltonian: PauliTerm[N]
 This permits mutating terms, adding/removing terms, swapping operators, and
 retuning coefficients with zero symbolic parsing.
 
-## Quantum circuit bytecode (Q7+)
+## Quantum circuit bytecode (Q07+)
 
 Fixed-width instructions, never QASM text in the hot path:
 
@@ -75,10 +75,26 @@ Fixed-width instructions, never QASM text in the hot path:
 ...
 ```
 
-v0 gate table (frozen by its phase gate): `H, X, Y, Z, RX, RY, RZ, CNOT, CZ,
-SWAP, ...` with opcodes `00, 01, ...`. Parameterized gates reference the
-quantized coefficient bank; free-angle fitting follows the constants ladder
-(P11 doctrine) on promoted circuits only.
+### Frozen v0 Gate Table (`CIRCUIT_BYTECODE_VERSION = 0`)
+
+| Opcode | Name | Arity (Qubits) | Parameterized | Description |
+|:---:|:---:|:---:|:---:|:---|
+| 0 | `NOP` | 0 | No | No-operation (padding / identity) |
+| 1 | `H` | 1 | No | Hadamard gate |
+| 2 | `X` | 1 | No | Pauli-X gate |
+| 3 | `Y` | 1 | No | Pauli-Y gate |
+| 4 | `Z` | 1 | No | Pauli-Z gate |
+| 5 | `S` | 1 | No | Phase gate ($S = Z^{1/2}$) |
+| 6 | `T` | 1 | No | $\pi/8$ gate ($T = Z^{1/4}$) |
+| 7 | `RX` | 1 | Yes | Rotation around X by angle `PARAM` |
+| 8 | `RY` | 1 | Yes | Rotation around Y by angle `PARAM` |
+| 9 | `RZ` | 1 | Yes | Rotation around Z by angle `PARAM` |
+| 10 | `CNOT` | 2 | No | Controlled-NOT (control=`QUBIT_A`, target=`QUBIT_B`) |
+| 11 | `CZ` | 2 | No | Controlled-Z (`QUBIT_A`, `QUBIT_B`) |
+| 12 | `SWAP` | 2 | No | Swap gate (`QUBIT_A`, `QUBIT_B`) |
+
+Parameterized gates reference the quantized angle bank (`ANGLE_BANK`);
+free-angle fitting follows the constants ladder (P11 doctrine) on promoted circuits only.
 
 ## Alternatives considered
 
