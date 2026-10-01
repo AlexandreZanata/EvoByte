@@ -1,0 +1,448 @@
+{
+  "adversarial_rejection_suite": [
+    {
+      "description": "Erd\u0151s-Straus candidate with z coordinate off by 1",
+      "fixture_id": "adv_es_wrong_answer",
+      "rejected": true,
+      "rejection_reason": "both_checkers_detected_nonzero_residual",
+      "target_problem": "erdos-straus",
+      "tested_condition": "exact_identity_and_fractions"
+    },
+    {
+      "description": "Erd\u0151s-Straus valid identity but z=1974822872 exceeds 10^9 bound",
+      "fixture_id": "adv_es_out_of_bound",
+      "rejected": true,
+      "rejection_reason": "coordinate_exceeds_declared_bound_1e9",
+      "target_problem": "erdos-straus",
+      "tested_condition": "coordinate_bound_strictness"
+    },
+    {
+      "description": "Erd\u0151s-Straus with n=1 or negative coordinate",
+      "fixture_id": "adv_es_domain_violation",
+      "rejected": true,
+      "rejection_reason": "rejected_by_domain_guardrails",
+      "target_problem": "erdos-straus",
+      "tested_condition": "domain_n_ge_2_and_positivity"
+    },
+    {
+      "description": "Taxicab sum_val=1730 is not equal to cube pairs",
+      "fixture_id": "adv_taxicab_wrong_sum",
+      "rejected": true,
+      "rejection_reason": "both_checkers_detected_sum_mismatch",
+      "target_problem": "taxicab",
+      "tested_condition": "cube_sum_and_factorization"
+    },
+    {
+      "description": "Taxicab where pair_1 == pair_2",
+      "fixture_id": "adv_taxicab_duplicate_pairs",
+      "rejected": true,
+      "rejection_reason": "rejected_identical_pairs",
+      "target_problem": "taxicab",
+      "tested_condition": "distinct_pairs_requirement"
+    },
+    {
+      "description": "Diophantine quintuple invalid extension candidate e=5",
+      "fixture_id": "adv_quintuple_non_square",
+      "rejected": true,
+      "rejection_reason": "non_square_pairwise_products",
+      "target_problem": "diophantine-quintuple",
+      "tested_condition": "all_pairs_product_plus_one_square"
+    },
+    {
+      "description": "Diophantine quintuple with duplicate elements",
+      "fixture_id": "adv_quintuple_duplicate_elements",
+      "rejected": true,
+      "rejection_reason": "rejected_duplicate_or_invalid_count",
+      "target_problem": "diophantine-quintuple",
+      "tested_condition": "distinct_5_elements_requirement"
+    },
+    {
+      "description": "Tampered certificate payload with mismatching checksum",
+      "fixture_id": "adv_altered_artifact_hash",
+      "rejected": true,
+      "rejection_reason": "sha256_checksum_mismatch_detected",
+      "target_problem": "integrity",
+      "tested_condition": "sha256_canonical_checksum_verification"
+    }
+  ],
+  "audit_summary": {
+    "accepted_false_positives": 0,
+    "adversarial_fixtures_rejected": 8,
+    "adversarial_fixtures_tested": 8,
+    "historical_certificates_audited": 1,
+    "historical_reclassified": 1,
+    "soundness_gate_passed": true,
+    "strict_certificates_generated": 3
+  },
+  "bounds_strict": true,
+  "device": "cuda",
+  "elapsed_sec": 0.44268856500002585,
+  "historical_certificates_audit": [
+    {
+      "artifact_path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/experiments/p29-erdos-straus-certificate.json",
+      "coordinate_bounds_audit": {
+        "constrained_coordinates": [
+          "x",
+          "y",
+          "z"
+        ],
+        "declared_bound": 1000000000,
+        "max_coordinate_value": 1974822872,
+        "rule": "max(x, y, z) <= 1000000000",
+        "within_bounds": false
+      },
+      "dual_checker_results": {
+        "checker_1_integer_identity": {
+          "residual": 0,
+          "valid": true
+        },
+        "checker_2_rational_fractions": {
+          "diff": "0",
+          "valid": true
+        },
+        "mathematical_identity_verified": true
+      },
+      "historical_classification": "rediscovery",
+      "preserved_as_superseded_diagnostic": true,
+      "problem_id": "erdos-straus",
+      "reclassification_rationale": "Mathematical identity is verified bit-exact by dual independent checkers (Mordell integer identity and exact rational fractions), but maximum coordinate z exceeds the declared bound M <= 10^9. Reclassified as 'exceeds_declared_coordinate_bound' without disputing mathematical validity.",
+      "reclassified_status": "exceeds_declared_coordinate_bound",
+      "solution_data": {
+        "x": 253,
+        "y": 85096,
+        "z": 1974822872
+      },
+      "target_instance": {
+        "n": 1009
+      }
+    }
+  ],
+  "manifest_sha256": "41c5fccc33260735240bc30e88211322c777a90a1f06528a5675ce9af0428dd8",
+  "manifest_version": "1.0",
+  "phase": "p31-verifier-certificates",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "26bb8ad68429f691582c1735daebdee0840e8987",
+    "config": {
+      "bounds_strict": true,
+      "max_coord_erdos_straus": 1000000000,
+      "quintuple_bound": 250000,
+      "taxicab_bound": 50000
+    },
+    "config_hash": "cdf0386101f6112a",
+    "dataset_hashes": {
+      "diophantine_quintuple": "0fa43bea50c0c7c6",
+      "erdos_straus": "cd52e6bf2f948c81",
+      "taxicab": "fb52acea08615d50"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/math_corpus.py\n M benchmarks/open_problems.py\n M docs/phases/P31-verifier-certificates.md\n M tests/test_math_corpus.py\n M tests/test_open_problems.py\n?? experiments/p31-certificates.json\n?? experiments/p31-verification.json",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/open_problems.py",
+      "--audit-certificates",
+      "--bounds-strict",
+      "--output",
+      "experiments/p31-certificates.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [],
+  "status": "PASS",
+  "strict_certificates": {
+    "diophantine-quintuple": {
+      "classification": "exhaustive_null",
+      "classification_rationale": "Exhaustive candidate-by-candidate domain replay confirmed 0 extensions in [121, 250,000], consistent with He-Togb\u00e9-Ziegler 2019 theorem.",
+      "coordinate_bounds": {
+        "declared_bound": 500000,
+        "max_coordinate_value": 250000,
+        "within_bounds": true
+      },
+      "independent_reproduction": {
+        "details": {
+          "coordinate_bounds": {
+            "constrained_coordinates": [
+              "e_candidate"
+            ],
+            "declared_bound": 500000,
+            "max_coordinate_value": 250000,
+            "rule": "e <= 500000",
+            "within_bounds": true
+          },
+          "null_verified": true,
+          "replay_summary": {
+            "candidates_checked": 249880,
+            "counterexamples": [],
+            "elapsed_sec": 0.0005327130002115155,
+            "method": "complete_domain_replay_exact_independent",
+            "null_verified": true,
+            "range": [
+              121,
+              250000
+            ],
+            "status": "exhaustive_null",
+            "total_domain_size": 249880
+          }
+        },
+        "reproduction_hash": "b6e1c8f1ea68115c56c8960b323303e0178022a5cc67b23f68b1ce8bf23b4fa5",
+        "reproduction_time_sec": 0.0005474509998748545,
+        "status": "PASS"
+      },
+      "problem_id": "diophantine-quintuple",
+      "replay_verification": {
+        "candidates_checked": 249880,
+        "counterexamples": [],
+        "elapsed_sec": 0.022064443999624928,
+        "method": "complete_domain_replay_exact_independent",
+        "null_verified": true,
+        "range": [
+          121,
+          250000
+        ],
+        "status": "exhaustive_null",
+        "total_domain_size": 249880
+      },
+      "search_bounds": [
+        121,
+        250000
+      ],
+      "target_instance": {
+        "base_quadruple": [
+          1,
+          3,
+          8,
+          120
+        ]
+      }
+    },
+    "erdos-straus": {
+      "bounded_statement": "Find exact positive integer solutions (x, y, z) for n in {1009, 10007, 100003} with search bound M <= 10^9.",
+      "classification": "rediscovery",
+      "classification_rationale": "Verified bit-exact solution strictly bounded by M <= 10^9 and checked by dual independent mathematical checkers.",
+      "coordinate_bounds": {
+        "declared_bound": 1000000000,
+        "max_coordinate_value": 944524900,
+        "within_bounds": true
+      },
+      "dual_checker_evidence": {
+        "checker_1_integer_identity": true,
+        "checker_2_rational_fractions": true
+      },
+      "independent_reproduction": {
+        "details": {
+          "checker_1_integer_identity": {
+            "lhs": "81343617817880000",
+            "n": 1009,
+            "residual": 0,
+            "rhs": "81343617817880000",
+            "verified_exact": true,
+            "x": 253,
+            "y": 85100,
+            "z": 944524900
+          },
+          "checker_2_rational_fractions": {
+            "formulation": "exact_rational_decomposition",
+            "fraction_diff": "0",
+            "lhs_fraction": "4/1009",
+            "n": 1009,
+            "rhs_fraction": "4/1009",
+            "verified_exact_fraction": true,
+            "x": 253,
+            "y": 85100,
+            "z": 944524900
+          },
+          "classification": "rediscovery",
+          "coordinate_bounds": {
+            "constrained_coordinates": [
+              "x",
+              "y",
+              "z"
+            ],
+            "declared_bound": 1000000000,
+            "max_coordinate_value": 944524900,
+            "rule": "max(x, y, z) <= 1000000000",
+            "within_bounds": true
+          },
+          "within_declared_bounds": true
+        },
+        "reproduction_hash": "0856088520e7a0505974d4d681ccf0673371524fab188397dbcc11dbbfdf4d25",
+        "reproduction_time_sec": 5.744699956267141e-05,
+        "status": "PASS"
+      },
+      "instances_summary": [
+        {
+          "details": {
+            "coordinate_bounds": {
+              "declared_bound": 1000000000,
+              "max_coordinate_value": 944524900,
+              "within_bounds": true
+            },
+            "dual_checker_exact_fractions": {
+              "formulation": "exact_rational_decomposition",
+              "fraction_diff": "0",
+              "lhs_fraction": "4/1009",
+              "n": 1009,
+              "rhs_fraction": "4/1009",
+              "verified_exact_fraction": true,
+              "x": 253,
+              "y": 85100,
+              "z": 944524900
+            },
+            "lhs": "81343617817880000",
+            "n": 1009,
+            "residual": 0,
+            "rhs": "81343617817880000",
+            "verified_exact": true,
+            "x": 253,
+            "y": 85100,
+            "z": 944524900
+          },
+          "elapsed_sec": 0.22297200199955114,
+          "found": true,
+          "n": 1009,
+          "status": "PASS"
+        },
+        {
+          "details": {
+            "coordinate_bounds": {
+              "declared_bound": 1000000000,
+              "max_coordinate_value": 438506740,
+              "within_bounds": true
+            },
+            "dual_checker_exact_fractions": {
+              "formulation": "exact_rational_decomposition",
+              "fraction_diff": "0",
+              "lhs_fraction": "4/10007",
+              "n": 10007,
+              "rhs_fraction": "4/10007",
+              "verified_exact_fraction": true,
+              "x": 2504,
+              "y": 2801960,
+              "z": 438506740
+            },
+            "lhs": "12306442305627366400",
+            "n": 10007,
+            "residual": 0,
+            "rhs": "12306442305627366400",
+            "verified_exact": true,
+            "x": 2504,
+            "y": 2801960,
+            "z": 438506740
+          },
+          "elapsed_sec": 0.002848989999620244,
+          "found": true,
+          "n": 10007,
+          "status": "PASS"
+        },
+        {
+          "details": null,
+          "elapsed_sec": 0.011665775999972539,
+          "found": false,
+          "n": 100003,
+          "status": "budget_exhausted"
+        }
+      ],
+      "problem_id": "erdos-straus",
+      "solution_data": {
+        "x": 253,
+        "y": 85100,
+        "z": 944524900
+      },
+      "target_instance": {
+        "n": 1009
+      }
+    },
+    "taxicab": {
+      "classification": "rediscovery",
+      "classification_rationale": "Matches Hardy-Ramanujan 1729 taxicab number certified by dual formulations.",
+      "coordinate_bounds": {
+        "declared_bound": 50000,
+        "max_coordinate_value": 1729,
+        "within_bounds": true
+      },
+      "dual_checker_evidence": {
+        "checker_1_sum_of_cubes": true,
+        "checker_2_factorization": true
+      },
+      "independent_reproduction": {
+        "details": {
+          "checker_1_sum_of_cubes": {
+            "pair_1": [
+              1,
+              12
+            ],
+            "pair_2": [
+              9,
+              10
+            ],
+            "residual": 0,
+            "sum1": 1729,
+            "sum2": 1729,
+            "sum_val": 1729,
+            "verified_exact": true
+          },
+          "checker_2_factorization": {
+            "factored_sum1": 1729,
+            "factored_sum2": 1729,
+            "formulation": "sum_of_cubes_factorization",
+            "pair_1": [
+              1,
+              12
+            ],
+            "pair_2": [
+              9,
+              10
+            ],
+            "residual": 0,
+            "sum_val": 1729,
+            "verified_algebraic_identity": true
+          },
+          "coordinate_bounds": {
+            "constrained_coordinates": [
+              "sum_val"
+            ],
+            "declared_bound": 50000,
+            "max_coordinate_value": 1729,
+            "rule": "sum_val <= 50000",
+            "within_bounds": true
+          }
+        },
+        "reproduction_hash": "354059b83bb98cb89a7e5836e89cfbc9413f567ad1a5a4f1c2a5a71039e03e07",
+        "reproduction_time_sec": 2.4497000595147256e-05,
+        "status": "PASS"
+      },
+      "problem_id": "taxicab",
+      "solution_data": {
+        "pair_1": [
+          1,
+          12
+        ],
+        "pair_2": [
+          9,
+          10
+        ]
+      },
+      "target_instance": {
+        "sum_val": 1729
+      }
+    }
+  },
+  "timestamp": "2026-10-01T17:16:26.066777+00:00"
+}

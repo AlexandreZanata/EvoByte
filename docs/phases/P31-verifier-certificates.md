@@ -1,8 +1,8 @@
 # P31 — Independent answer verification and certificate bounds
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** Accepted P30 isolation manifest.
-**Owner:** assigned when moving to Building.
+**Owner:** Codex
 **Branch:** `codex/p31-verifier-certificates`.
 
 ## Objective
