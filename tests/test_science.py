@@ -144,6 +144,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P47",
         "P48",
         "P49",
+        "P50",
     )
     import subprocess as _sp
 
@@ -152,7 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P50",
+            "P51",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -164,7 +165,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P50'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P51'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -498,3 +499,54 @@ def test_p49_compact_audit_smoke(tmp_path):
     assert all(f["ok"] for f in report["findings"])
     assert report["counters"]["reconstructed"] == report["counters"]["reconstructed_total"] > 0
     assert "grammar-defined only" in report["coverage"]
+
+
+def test_p50_search_controls_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p50_search_controls_audit
+
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p50-config.json").read_text()
+    )
+    cfg["seeds"] = [42, 101]
+    cfg["budget_sec_per_task"] = 0.3
+    cfg["pop_size"] = 32
+    cfg_p = tmp_path / "p50-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p50-acceptance.json"
+    report = run_p50_search_controls_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P50"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["criterion"]["same_for_all_arms"] is True
+    assert all(v["rediscovered"] for v in report["tasks_known"].values())
+    assert all(c["rejected"] for c in report["false_controls"])
+    assert report["counters"]["certified"] >= len(report["tasks_known"])
+    assert report["counters"]["false_rejected"] == report["counters"]["false_total"] == 4
+    assert report["budgets"]["actual_search_sec"] > 0
+    assert report["budgets"]["actual_verification_sec"] >= 0
+
+
+def test_p50_classical_baseline_is_deterministic():
+    import numpy as _np
+    import torch as _torch
+
+    from benchmarks.math_specialist import check_p50_false_controls, run_p50_arm_trial
+    from evobyte.grammar import classical_interpolate_program, count_batch_stats
+
+    xs = _np.linspace(-3.0, 3.0, 64, dtype=_np.float32)
+    ys = (xs**2 + 3.0 * xs + 7.0).astype(_np.float32)
+    rec = run_p50_arm_trial(
+        "classical", "x**2 + 3*x + 7", xs, ys, 0.3, 42, _torch.device("cpu"), 32
+    )
+    assert rec["candidates_total"] >= 1
+    assert rec["elapsed_sec"] < 0.3
+    assert rec["best_mse"] == 0.0
+    prog, _info = classical_interpolate_program(xs, ys, max_degree=2)
+    assert prog is not None
+    stats = count_batch_stats([prog, prog])
+    assert stats == {"n": 2, "duplicates": 1, "invalid": 0}
+    false = check_p50_false_controls()
+    assert len(false) == 4
+    assert all(c["rejected"] for c in false)

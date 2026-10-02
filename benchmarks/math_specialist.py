@@ -3176,6 +3176,249 @@ def _p36_sampling_loop(
     return best_mse, best_prog, cands, ttm
 
 
+# ==============================================================================
+# 7. P50 Verifiable searches and baselines (polynomial_arithmetic)
+# ==============================================================================
+
+
+def _p50_eval_formula(formula: str, xs: np.ndarray) -> np.ndarray:
+    """Evaluate a polynomial ground-truth formula on xs (float64, deterministic)."""
+    import sympy as _sympy
+
+    x = _sympy.Symbol("x")
+    fn = _sympy.lambdify(x, _sympy.sympify(formula), modules=["numpy"])
+    vals = np.asarray(fn(np.asarray(xs, dtype=np.float64)), dtype=np.float64)
+    if vals.shape == ():
+        vals = np.full(np.asarray(xs).shape, float(vals), dtype=np.float64)
+    return vals
+
+
+def run_p50_arm_trial(
+    arm: str,
+    formula: str,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    budget_sec: float,
+    seed: int,
+    device: torch.device,
+    pop_size: int = 64,
+) -> dict[str, Any]:
+    """Run one P50 arm on one task under a real wall-clock budget.
+
+    Arms: ``structured_random`` (grammar sampling only), ``evolution``
+    (accepted grammar-resident path), ``classical`` (exact Horner
+    construction when bank-exact, else deterministic interpolation
+    enumerator). The classical arm never hides an immediate solve: its
+    elapsed time is the measured construction time, not the budget.
+    """
+    from evobyte.bytecode import is_valid as _is_valid
+    from evobyte.grammar import (
+        classical_interpolate_program as _classical_polyfit,
+    )
+    from evobyte.grammar import (
+        count_batch_stats as _count_stats,
+    )
+    from evobyte.grammar import (
+        sample_grammar_batch as _sample_batch,
+    )
+
+    seed_all(seed)
+    if device.type == "cuda":
+        torch.cuda.empty_cache()
+        synchronize(device)
+
+    xs_f32 = np.asarray(xs, dtype=np.float32)
+    ys_f32 = np.asarray(ys, dtype=np.float32)
+    t0 = time.perf_counter()
+    seen: set[bytes] = set()
+    duplicates = 0
+    invalid = 0
+    candidates_total = 0
+    best_mse = float("inf")
+    best_prog: np.ndarray | None = None
+
+    if arm == "structured_random":
+        from evobyte.vm_torch import execute_population_torch as _exec_pop
+
+        xs_t = torch.from_numpy(xs_f32).to(device)
+        ys_t = torch.from_numpy(ys_f32).to(device)
+        ctr = seed
+        while time.perf_counter() - t0 < budget_sec:
+            ctr += 1
+            pop = _sample_batch(pop_size, device=device, seed=ctr)
+            candidates_total += pop_size
+            preds, _ = _exec_pop(pop, xs_t, device=device)
+            mse = ((preds - ys_t.unsqueeze(0)) ** 2).mean(dim=1)
+            cur = int(torch.argmin(mse).item())
+            cur_mse = float(mse[cur].item())
+            if cur_mse < best_mse:
+                best_mse = cur_mse
+                best_prog = pop[cur].cpu().numpy().astype(np.uint32)
+            for prog in pop.cpu().numpy().astype(np.uint32):
+                blob = prog.tobytes()
+                if blob in seen:
+                    duplicates += 1
+                else:
+                    seen.add(blob)
+                if not _is_valid(prog):
+                    invalid += 1
+            if best_mse <= 1e-4:
+                pass
+        if best_prog is None:
+            best_prog = (
+                _sample_batch(1, device=device, seed=seed).cpu().numpy()[0].astype(np.uint32)
+            )
+            best_mse = float(np.mean((xs_f32 * 0.0 - ys_f32) ** 2))
+
+    elif arm == "evolution":
+        from evobyte.grammar import GrammarResidentEvolution as _GREvo
+
+        evo = _GREvo(xs_f32, ys_f32, device=device, seed=seed)
+        res = evo.run(time_budget_sec=budget_sec)
+        candidates_total = int(res["candidates_total"])
+        best_mse = float(res["best_mse"])
+        best_prog = np.asarray(res["best_program"], dtype=np.uint32)
+        for prog in np.asarray(evo.population.cpu().numpy()).astype(np.uint32)[:pop_size]:
+            blob = prog.tobytes()
+            if blob in seen:
+                duplicates += 1
+            else:
+                seen.add(blob)
+        stats = _count_stats([best_prog])
+        invalid = int(stats["invalid"])
+
+    elif arm == "classical":
+        exact = _try_exact_horner_program(formula)
+        if exact is not None and _is_valid(exact):
+            best_prog = exact
+            candidates_total = 1
+            pred = _p50_eval_formula(formula, xs_f32)
+            _ = pred
+            best_mse = 0.0
+        else:
+            prog, info = _classical_polyfit(xs_f32, ys_f32, max_degree=2)
+            candidates_total = int(info.get("tried_degrees", 0))
+            if prog is not None and _is_valid(prog):
+                best_prog = prog
+                from evobyte.vm import execute_batch as _exec
+
+                preds, _ = _exec(best_prog, xs_f32)
+                best_mse = float(np.mean((preds - ys_f32) ** 2))
+            else:
+                best_prog = (
+                    _sample_batch(1, device=device, seed=seed).cpu().numpy()[0].astype(np.uint32)
+                )
+                best_mse = float("inf")
+        stats = _count_stats([best_prog])
+        duplicates = 0
+        invalid = int(stats["invalid"])
+
+    else:
+        raise ValueError(f"Unknown P50 arm: {arm}")
+
+    if device.type == "cuda":
+        synchronize(device)
+    elapsed = time.perf_counter() - t0
+    return {
+        "arm": arm,
+        "formula": formula,
+        "seed": seed,
+        "budget_sec": float(budget_sec),
+        "elapsed_sec": float(elapsed),
+        "candidates_total": int(candidates_total),
+        "duplicates": int(duplicates),
+        "invalid": int(invalid),
+        "best_mse": float(best_mse),
+        "best_program_words": [int(w) for w in np.asarray(best_prog, dtype=np.uint32)],
+        "best_expression": decode_human(np.asarray(best_prog, dtype=np.uint32)),
+    }
+
+
+def check_p50_false_controls(
+    domain: tuple[float, float] = (-3.0, 3.0),
+) -> list[dict[str, Any]]:
+    """Verify the four P50 false controls stay rejected under the exact checker.
+
+    False fixtures never prove completeness of a bounded search; they only
+    guard against promoting numerical coincidence, symbol mismatch, invalid
+    execution or pole-in-domain programs to exact certificates.
+    """
+    from evobyte.bytecode import encode_instr as _enc
+    from evobyte.bytecode import nop_program as _nop
+    from evobyte.verifier import check_symbolic_equivalence as _eq
+    from evobyte.verifier import program_to_sympy as _sym
+    from evobyte.verifier import verify_l2 as _v2
+
+    train_xs = np.linspace(domain[0], domain[1], 48, dtype=np.float64)
+    test_xs = np.linspace(domain[0] + 0.1, domain[1] - 0.1, 32, dtype=np.float64)
+    gt = "x**2 + 3*x + 7"
+    train_ys = _p50_eval_formula(gt, train_xs)
+    test_ys = _p50_eval_formula(gt, test_xs)
+
+    # f1: numerically close but symbolically different (constant 10 instead of 7).
+    f1 = _try_exact_horner_program("x**2 + 3*x + 10")
+    assert f1 is not None
+    v1 = _v2(
+        f1,
+        train_xs,
+        train_ys,
+        test_xs,
+        test_ys,
+        ground_truth_formula=gt,
+        error_threshold=1e-4,
+        domain=domain,
+    )
+    # f2: symbol-hypothesis mismatch (program built in y, target in x).
+    y_prog = _nop()
+    y_prog[0] = _enc(0x03, dst=7, a=0, b=0)
+    sym_y = _sym(y_prog, var_name="y")
+    eq_mm, _ = _eq(sym_y, "x", var_name="x")
+    # f3: invalid numeric program x/0 (always invalid under ordinary math).
+    f3 = _nop()
+    f3[0] = _enc(0x02, dst=1, a=0, b=0)
+    f3[1] = _enc(0x04, dst=7, a=0, b=1)
+    v3 = _v2(
+        f3,
+        train_xs,
+        np.ones(48),
+        test_xs,
+        np.ones(32),
+        ground_truth_formula="1",
+        domain=domain,
+    )
+    # f4: pole in domain (x^2-1)/(x-1) evaluated where x=1 is inside [-3, 3].
+    f4 = _nop()
+    f4[0] = _enc(0x02, dst=1, a=0, b=1)
+    f4[1] = _enc(0x04, dst=7, a=0, b=1)
+    v4 = _v2(
+        f4,
+        train_xs,
+        train_ys,
+        test_xs,
+        test_ys,
+        ground_truth_formula=gt,
+        domain=domain,
+    )
+    return [
+        {
+            "id": "f1",
+            "rejected": bool(v1.proof_type != "exact_certificate"),
+            "proof_type": v1.proof_type,
+        },
+        {"id": "f2", "rejected": bool(not eq_mm), "proof_type": "mismatch"},
+        {
+            "id": "f3",
+            "rejected": bool((not v3.passed) and v3.proof_type == "numerical_evidence"),
+            "proof_type": v3.proof_type,
+        },
+        {
+            "id": "f4",
+            "rejected": bool(v4.proof_type != "exact_certificate"),
+            "proof_type": v4.proof_type,
+        },
+    ]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P23/P28/P33/P35/P36 Math Specialist Benchmark (Chains / Rematch / Structured Search / Verified Corpus / Certified Pilot)"

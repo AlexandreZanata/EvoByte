@@ -765,3 +765,63 @@ def checkpoint_resume_worker(
     with open(out, "w", encoding="utf-8") as f:
         _json.dump(summary, f, indent=2, sort_keys=True)
     return summary
+
+
+def classical_interpolate_program(
+    xs: np.ndarray,
+    ys: np.ndarray,
+    max_degree: int = 2,
+) -> tuple[np.ndarray | None, dict[str, Any]]:
+    """Deterministic classical baseline: exact symbolic construction first.
+
+    Tries, in fixed order: bank-exact Horner construction from the target
+    coefficients is attempted by the caller; here a degree-bounded rational
+    interpolation (numpy polyfit + nearest CONST_BANK snap + Horner compile)
+    acts as the matched deterministic enumerator for polynomial_arithmetic.
+    No randomness, no learning, no GPU. Returns (program_or_None, info).
+    """
+    x = np.asarray(xs, dtype=np.float64)
+    y = np.asarray(ys, dtype=np.float64)
+    bank = [float(c) for c in list(CONST_BANK)]
+    tried = 0
+    for deg in range(max(0, max_degree) + 1):
+        tried += 1
+        try:
+            coeffs = np.polyfit(x, y, deg)
+        except (TypeError, ValueError, np.linalg.LinAlgError):
+            continue
+        idxs: list[int] = []
+        ok = True
+        for c in coeffs:
+            hit = min(range(len(bank)), key=lambda i: abs(bank[i] - float(c)))
+            if abs(bank[hit] - float(c)) > 1e-6:
+                ok = False
+                break
+            idxs.append(hit)
+        if not ok:
+            continue
+        prog, overlength = compile_horner_to_bytecode(HornerPoly(coeff_indices=idxs))
+        if overlength or prog is None:
+            continue
+        return prog, {"degree": deg, "tried_degrees": tried, "snapped": True}
+    return None, {"degree": None, "tried_degrees": tried, "snapped": False}
+
+
+def count_batch_stats(programs: list[np.ndarray]) -> dict[str, int]:
+    """Count duplicates and S0-invalid programs in a finished batch.
+
+    Pure CPU reference used to bill every search arm with the same counters;
+    verification time is measured separately by the caller.
+    """
+    seen: set[bytes] = set()
+    duplicates = 0
+    invalid = 0
+    for prog in programs:
+        blob = np.ascontiguousarray(np.asarray(prog, dtype=np.uint32)).tobytes()
+        if blob in seen:
+            duplicates += 1
+        else:
+            seen.add(blob)
+        if not is_valid(np.asarray(prog, dtype=np.uint32)):
+            invalid += 1
+    return {"n": len(programs), "duplicates": duplicates, "invalid": invalid}

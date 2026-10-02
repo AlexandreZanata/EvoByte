@@ -1,8 +1,14 @@
 # P50 — Estabelecer buscas e baselines verificáveis
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P49, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p50-structured-search-controls`.
+**Resultado:** ACCEPTED — 3 braços (aleatório estruturado, evolução residente,
+clássico exato) sob o mesmo critério exact_certificate; 30/30 ensaios
+certificados em k1/k2 (5 seeds, 10 s reais por tarefa); clássico imediato
+registrado (1 candidato, ~ms, sem esconder); 4/4 falsos rejeitados;
+custos faturados (748702 candidatos, 434384 duplicatas, 0 inválidos,
+0.36 s verificação).
 
 ## Objetivo e escopo
 

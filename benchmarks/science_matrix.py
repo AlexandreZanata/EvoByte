@@ -677,7 +677,201 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47", "P48", "P49")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47", "P48", "P49", "P50")
+
+
+def run_p50_search_controls_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P50 audit: structured random vs evolution vs classical on known tasks.
+
+    Same mathematical criterion (P42 exact_certificate) and recorded costs
+    for every arm. Known controls must be reencountered at least once and
+    every false control must stay rejected. No gain is inferred from the
+    isolated generator; the report only records certified rates and costs.
+    """
+    import numpy as _np
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.verifier import verify_l2
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P50":
+        raise ValueError(f"Config {cfg_p} is not a P50 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    domain = tuple(config.get("domain", [-3.0, 3.0]))
+    seeds = list(config.get("seeds", [42, 101, 202, 303, 404]))
+    budget = float(config.get("budget_sec_per_task", 10.0))
+    pop_size = int(config.get("pop_size", 64))
+    err_thr = float(config.get("error_threshold", 1e-4))
+    known = list(config.get("tasks_known", []))
+    if not known:
+        raise ValueError("P50 config needs at least one known task")
+    arms = ("structured_random", "evolution", "classical")
+
+    print("=" * 115)
+    print("P50 SEARCH-CONTROLS AUDIT (same criterion, billed costs, no isolated win)")
+    print("=" * 115)
+
+    from math_specialist import check_p50_false_controls, run_p50_arm_trial
+
+    device = _torch.device(config.get("device", "cpu"))
+    if device.type == "cuda" and not _torch.cuda.is_available():
+        raise RuntimeError("P50 requested cuda but torch.cuda.is_available() is False")
+
+    import sympy as _sympy
+
+    _x = _sympy.Symbol("x")
+    trials: list[dict[str, Any]] = []
+    for task in known:
+        formula = str(task["formula"])
+        fn = _sympy.lambdify(_x, _sympy.sympify(formula), modules=["numpy"])
+        xs_search = _np.linspace(domain[0], domain[1], 64, dtype=_np.float32)
+        ys_search = _np.asarray(fn(xs_search), dtype=_np.float32)
+        train_xs = _np.linspace(domain[0], domain[1], 48, dtype=_np.float64)
+        train_ys = _np.asarray(fn(train_xs), dtype=_np.float64)
+        test_xs = _np.linspace(domain[0] + 0.1, domain[1] - 0.1, 32, dtype=_np.float64)
+        test_ys = _np.asarray(fn(test_xs), dtype=_np.float64)
+        for arm in arms:
+            for seed in seeds:
+                rec = run_p50_arm_trial(
+                    arm, formula, xs_search, ys_search, budget, seed, device, pop_size
+                )
+                prog = _np.array(rec["best_program_words"], dtype=_np.uint32)
+                t_v0 = time.perf_counter()
+                v = verify_l2(
+                    prog,
+                    train_xs,
+                    train_ys,
+                    test_xs,
+                    test_ys,
+                    ground_truth_formula=formula,
+                    error_threshold=err_thr,
+                    extrap_threshold=1.0,
+                    domain=domain,
+                )
+                v_sec = time.perf_counter() - t_v0
+                rec.update(
+                    {
+                        "task": task["id"],
+                        "certified": bool(v.proof_type == "exact_certificate"),
+                        "proof_type": v.proof_type,
+                        "verify_passed": bool(v.passed),
+                        "verification_sec": float(v_sec),
+                    }
+                )
+                trials.append(rec)
+                print(
+                    f"  {task['id']} {arm:<17} seed={seed:<3} "
+                    f"cert={int(rec['certified'])} mse={rec['best_mse']:.2e} "
+                    f"cands={rec['candidates_total']} t={rec['elapsed_sec']:.2f}s"
+                )
+
+    false_controls = check_p50_false_controls(domain)
+    for c in false_controls:
+        print(f"  false {c['id']}: {'rejected' if c['rejected'] else 'NOT REJECTED'}")
+
+    by_task: dict[str, Any] = {}
+    for task in known:
+        recs = [t for t in trials if t["task"] == task["id"]]
+        by_task[task["id"]] = {
+            "certified_trials": sum(1 for r in recs if r["certified"]),
+            "trials": len(recs),
+            "rediscovered": any(r["certified"] for r in recs),
+        }
+    known_ok = all(v["rediscovered"] for v in by_task.values()) and bool(by_task)
+    false_ok = all(c["rejected"] for c in false_controls) and bool(false_controls)
+    verdict = "ACCEPTED" if (known_ok and false_ok) else "MIXED"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=int(seeds[0]) if seeds else 42,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p50_config": config_sha[:16]},
+        config={"acceptance_phase": "P50"},
+    )
+    requested = len(known) * len(arms) * len(seeds) * budget
+    actual_search = float(sum(t["elapsed_sec"] for t in trials))
+    actual_verify = float(sum(t["verification_sec"] for t in trials))
+    report = {
+        "phase": "P50",
+        "verdict": verdict,
+        "claim_scope": "search arms under one exact criterion; no isolated-generator win claimed",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "tasks_known": by_task,
+        "false_controls": false_controls,
+        "arms": list(arms),
+        "criterion": {
+            "checker": "verify_l2 exact_certificate",
+            "error_threshold": err_thr,
+            "domain": list(domain),
+            "same_for_all_arms": True,
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P50",
+        },
+        "seeds_rng": f"fixed seeds {seeds}; deterministic classical, seeded sampling/evolution",
+        "budgets": {
+            "requested_search_sec": requested,
+            "actual_search_sec": actual_search,
+            "actual_verification_sec": actual_verify,
+            "budget_sec_per_task": budget,
+        },
+        "certificate_references": [
+            {
+                "task": t["task"],
+                "arm": t["arm"],
+                "seed": t["seed"],
+                "proof_type": t["proof_type"],
+                "certified": t["certified"],
+            }
+            for t in trials
+            if t["certified"]
+        ],
+        "counters": {
+            "trials": len(trials),
+            "candidates_total": sum(t["candidates_total"] for t in trials),
+            "duplicates": sum(t["duplicates"] for t in trials),
+            "invalid": sum(t["invalid"] for t in trials),
+            "certified": sum(1 for t in trials if t["certified"]),
+            "false_rejected": sum(1 for c in false_controls if c["rejected"]),
+            "false_total": len(false_controls),
+        },
+        "limitations": [
+            "Classical solving immediately is recorded, never hidden; it does not prove generality.",
+            "False controls guard promotion; they never prove a bounded search complete.",
+            "A narrow-family comparison does not authorize model training or discovery claims.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P50 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p49_compact_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -3196,6 +3390,8 @@ def main() -> int:
             run_p48_formal_audit(args.config, args.output)
         elif args.acceptance_phase == "P49":
             run_p49_compact_audit(args.config, args.output)
+        elif args.acceptance_phase == "P50":
+            run_p50_search_controls_audit(args.config, args.output)
         return 0
 
     seeds = (
