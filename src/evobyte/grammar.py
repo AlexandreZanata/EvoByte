@@ -17,8 +17,10 @@ import torch
 
 from evobyte.bytecode import (
     CONST_BANK,
+    MAX_RISKY_CHAIN,
     N_INSTR,
     N_REGS,
+    RISKY_OPS,
     decode_instr,
     encode_instr,
     is_valid,
@@ -484,7 +486,11 @@ def grammar_mutate_batch(
     p_mut: float = 0.25,
     seed: int = 42,
 ) -> torch.Tensor:
-    """Apply grammar-aware mutation across a population tensor resident on device."""
+    """Deterministic CPU reference for grammar-aware mutation (P44 conformance baseline).
+
+    The resident engine uses grammar_mutate_batch_torch; this per-individual
+    Python path is preserved for validity and semantic-conformance testing only.
+    """
     rng = random.Random(seed)
     pop_cpu = population.cpu().numpy().astype(np.uint32)
     n_pop = pop_cpu.shape[0]
@@ -494,6 +500,89 @@ def grammar_mutate_batch(
         mutated_pop[i] = grammar_mutate_program(pop_cpu[i], rng, p_mut=p_mut)
 
     return torch.from_numpy(mutated_pop.astype(np.int64)).to(device)
+
+
+def _const_negation_map() -> torch.Tensor:
+    """Bank index of the negated constant, identity where absent (CPU tensor)."""
+    bank = [float(c) for c in list(CONST_BANK)]
+    table = []
+    for i, c in enumerate(bank):
+        hit = next((j for j, d in enumerate(bank) if abs(d + c) < 1e-4), i)
+        table.append(hit)
+    return torch.tensor(table, dtype=torch.int64)
+
+
+_CONST_NEG_MAP = _const_negation_map()
+_CONST_CHOICES = torch.tensor(PREREGISTERED_CONST_INDICES, dtype=torch.int64)
+_RISKY_MASK = torch.zeros(16, dtype=torch.bool)
+for _op in RISKY_OPS:
+    _RISKY_MASK[int(_op)] = True
+
+
+def batch_is_valid_torch(population: torch.Tensor) -> torch.Tensor:
+    """Batched S0 validity on device: ranges, output write, risky-chain rule."""
+    w = population.to(dtype=torch.int64)
+    op = w & 0xFF
+    dst = (w >> 8) & 0xFF
+    n_pop = w.shape[0]
+    ok = torch.ones((n_pop,), dtype=torch.bool, device=w.device)
+    ok &= (op <= 0x0F).all(dim=1)
+    ok &= (dst < N_REGS).all(dim=1)
+    non_nop = op != 0x00
+    ok &= non_nop.any(dim=1)
+    ok &= (non_nop & (dst == 7)).any(dim=1)
+    zero = torch.zeros((), dtype=torch.int64, device=w.device)
+    run = torch.zeros((n_pop,), dtype=torch.int64, device=w.device)
+    risky_lut = _RISKY_MASK.to(w.device)
+    for j in range(N_INSTR):
+        slot_risky = risky_lut[op[:, j]] & non_nop[:, j]
+        slot_bounded = non_nop[:, j] & ~risky_lut[op[:, j]]
+        run = torch.where(slot_risky, run + 1, torch.where(slot_bounded, zero, run))
+        ok &= ~(run > MAX_RISKY_CHAIN)
+    return ok
+
+
+def grammar_mutate_batch_torch(
+    population: torch.Tensor,
+    device: torch.device,
+    p_mut: float = 0.25,
+) -> torch.Tensor:
+    """Batched grammar-aware mutation with pure Torch ops on resident tensors.
+
+    Same mutation family as the CPU reference (per-slot probability, CSEL
+    reindex / ADD-SUB swap / CSEL negation on matching slots, validity-gated
+    fallback to the original). No host round-trip; consumes the device RNG
+    stream saved by P43 checkpoints.
+    """
+    dev = torch.device(device) if device is not None else population.device
+    w = population.to(dtype=torch.int64, device=dev)
+    n_pop = w.shape[0]
+    op = w & 0xFF
+    dst = (w >> 8) & 0xFF
+    a = (w >> 16) & 0xFF
+    b = (w >> 24) & 0xFF
+
+    gene = torch.rand((n_pop, N_INSTR), device=dev) < p_mut
+    mutable = gene & (op != 0x00)
+    kind = torch.randint(0, 3, (n_pop, N_INSTR), device=dev)
+
+    is_csel = op == 0x0F
+    is_addsub = (op == 0x01) | (op == 0x02)
+    choices = _CONST_CHOICES.to(dev)
+    new_const = choices[torch.randint(0, len(choices), (n_pop, N_INSTR), device=dev)]
+    neg_map = _CONST_NEG_MAP.to(dev)
+    new_neg = neg_map[(b & 0x0F).clamp_max(15)]
+
+    w_coeff = (op.to(torch.int64) | (dst << 8) | (a << 16) | (new_const << 24)).to(torch.int64)
+    w_swap = ((3 - op) | (dst << 8) | (a << 16) | (b << 24)).to(torch.int64)
+    w_neg = (op.to(torch.int64) | (dst << 8) | (a << 16) | (new_neg << 24)).to(torch.int64)
+
+    mutated = torch.where((kind == 0) & mutable & is_csel, w_coeff, w)
+    mutated = torch.where((kind == 1) & mutable & is_addsub, w_swap, mutated)
+    mutated = torch.where((kind == 2) & mutable & is_csel, w_neg, mutated)
+
+    valid = batch_is_valid_torch(mutated)
+    return torch.where(valid.unsqueeze(1), mutated, w).to(dtype=torch.int64)
 
 
 class GrammarResidentEvolution(GPUResidentEvolution):
@@ -513,6 +602,14 @@ class GrammarResidentEvolution(GPUResidentEvolution):
         super().__init__(xs, ys, config=cfg, device=dev, initial_population=init_pop)
         self.seed = seed
         self.rng_counter = seed
+        self._best_row: torch.Tensor | None = None
+        self._best_stale = False
+
+    def sync_best_to_host(self) -> None:
+        """Materialize the tracked best program on host (off-cycle only)."""
+        if self._best_stale and self._best_row is not None:
+            self.best_program = self._best_row.cpu().numpy().astype(np.uint32)
+            self._best_stale = False
 
     def _extra_checkpoint_state(self) -> dict[str, Any]:
         """Grammar determinism state: seeded sampling/mutation counters (P43)."""
@@ -546,7 +643,9 @@ class GrammarResidentEvolution(GPUResidentEvolution):
         if gen_best_fit < self.best_fitness:
             self.best_fitness = gen_best_fit
             self.best_mse = gen_best_mse
-            self.best_program = sorted_pop[0].cpu().numpy().astype(np.uint32)
+            # Device-side best tracking; host materialization is off-cycle only.
+            self._best_row = sorted_pop[0].detach().clone()
+            self._best_stale = True
 
         pop_size = self.config.pop_size
         k_elites = min(self.config.elite_k, pop_size)
@@ -570,12 +669,11 @@ class GrammarResidentEvolution(GPUResidentEvolution):
         c1, c2 = gpu_crossover_single_point(p1, p2, crossover_p=self.config.crossover_p)
         offspring = torch.cat([c1, c2], dim=0)[:n_offspring]
 
-        # Grammar-constrained mutation
-        mutated_offspring = grammar_mutate_batch(
+        # Grammar-constrained mutation: batched Torch ops, resident tensors only.
+        mutated_offspring = grammar_mutate_batch_torch(
             offspring,
             device=self.device,
             p_mut=self.config.gene_mut_p,
-            seed=self.rng_counter,
         )
 
         # Grammar-constrained injections

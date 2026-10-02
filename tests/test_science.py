@@ -133,7 +133,7 @@ def test_science_matrix_smoke():
 
 
 def test_p40_acceptance_registry_rejects_unknown_phases():
-    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43")
+    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44")
     import subprocess as _sp
 
     proc = _sp.run(
@@ -141,7 +141,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P44",
+            "P45",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -153,7 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P44'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P45'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -285,3 +285,21 @@ def test_p43_resume_audit_smoke(tmp_path):
     assert all(report["equality"]["fields"].values())
     assert all(r["refused"] for r in report["refusals"])
     assert report["resumed"]["worker"].get("generations") == 60
+
+
+def test_p44_resident_audit_smoke(tmp_path):
+    import torch as _torch
+
+    from benchmarks.science_matrix import run_p44_resident_audit
+
+    out_p = tmp_path / "p44-acceptance.json"
+    report = run_p44_resident_audit("experiments/p44-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P44"
+    assert report["verdict"] in ("ACCEPTED", "MIXED", "NOT_MEASURED")
+    assert report["determinism"]["cpu"]["equal"] is True
+    assert all(report["conformance"].values())
+    assert report["invalidity"]["rejected"] is True
+    if _torch.cuda.is_available():
+        assert report["verdict"] == "ACCEPTED"
+        assert report["profile_cuda"]["measured"] is True

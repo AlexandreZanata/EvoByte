@@ -1,8 +1,11 @@
 # P44 — Manter a evolução estruturada na GPU
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P43, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p44-resident-grammar`.
+**Resultado:** ACCEPTED — mutação em lote Torch residente, determinismo por
+backend, 0 transferências ao host no ciclo, inválidos rejeitados; perfil CUDA
+exec 77% / geração 14% / mutação 8% / seleção <1%.
 
 ## Objetivo e escopo
 
