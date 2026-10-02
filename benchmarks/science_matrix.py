@@ -677,7 +677,207 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47", "P48")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47", "P48", "P49")
+
+
+def run_p49_compact_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P49 audit: frozen compact profile, codec round-trip, certificate reconstruction."""
+    import numpy as _np
+    import torch as _torch
+
+    from evobyte.bytecode import (
+        compact_candidate_profile,
+        compact_decode,
+        compact_encode,
+        nop_program,
+        validate_compact_candidate,
+    )
+    from evobyte.grammar import batch_is_valid_torch, sample_grammar_batch
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.verifier import program_to_sympy, verify_l2
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P49":
+        raise ValueError(f"Config {cfg_p} is not a P49 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    pins = config.get("profile_pins", {})
+    seed = int(config.get("seed", 7))
+    n_samples = int(config.get("roundtrip_samples", 64))
+    domain = tuple(config.get("domain", [-3.0, 3.0]))
+
+    print("=" * 115)
+    print("P49 COMPACT-CANDIDATE AUDIT (frozen profile; no codec change)")
+    print("=" * 115)
+
+    findings: list[dict[str, Any]] = []
+
+    def _record(check: str, ok: bool, detail: str = "") -> None:
+        findings.append({"check": check, "ok": bool(ok), "detail": detail})
+        print(f"  {check}: {'ok' if ok else 'FAILED'} {detail}")
+
+    profile = compact_candidate_profile()
+    _record(
+        "profile_name", profile.get("profile") == config.get("profile"), profile.get("profile", "")
+    )
+    _record("profile_revision", profile.get("profile_revision") == pins.get("profile_revision"), "")
+    _record(
+        "opcode_version_unbumped",
+        profile.get("opcode_version") == 0 == pins.get("opcode_version"),
+        "v0 frozen, no ADR needed",
+    )
+    dims_ok = (
+        profile.get("word_count") == pins.get("word_count")
+        and profile.get("program_bytes") == pins.get("program_bytes")
+        and profile.get("registers") == pins.get("registers")
+        and profile.get("output_register") == pins.get("output_register")
+        and [o["code"] for o in profile.get("allowed_ops", [])] == pins.get("allowed_ops")
+    )
+    _record("profile_dimensions", dims_ok, "")
+    const_blob = json.dumps(
+        {
+            "allowed_ops": profile["allowed_ops"],
+            "constants": profile["constants"],
+            "registers": profile["registers"],
+            "word_count": profile["word_count"],
+            "program_bytes": profile["program_bytes"],
+            "output_register": profile["output_register"],
+        },
+        sort_keys=True,
+        default=str,
+    ).encode()
+    const_hash = hashlib.sha256(const_blob).hexdigest()
+    _record("const_table_hash", const_hash == pins.get("const_table_sha256"), const_hash[:16])
+
+    dev = _torch.device("cpu")
+    pop = sample_grammar_batch(n_samples, device=dev, seed=seed)
+    gate = batch_is_valid_torch(pop).cpu().numpy()
+    prof_ok = []
+    for prog in pop.cpu().numpy().astype(_np.uint32):
+        prof_ok.append(validate_compact_candidate(prog)["ok"])
+    _record(
+        "valid_by_construction",
+        bool(gate.all()) and all(prof_ok),
+        f"{int(gate.sum())}/{n_samples} S0-valid and profile-conformant",
+    )
+
+    rt_ok = True
+    for prog in pop.cpu().numpy().astype(_np.uint32):
+        if not _np.array_equal(compact_decode(compact_encode(prog)), prog):
+            rt_ok = False
+            break
+    _record("roundtrip_bytes", rt_ok, f"{n_samples} programs, 64B each")
+
+    bad_reg = nop_program()
+    bad_reg[0] = _np.uint32(0x01 | (9 << 8))
+    bad_op = nop_program()
+    bad_op[0] = _np.uint32(0xFF | (7 << 8))
+    good = nop_program()
+    from evobyte.bytecode import encode_instr as _enc
+
+    good[0] = _enc(0x01, dst=7, a=0, b=1)
+    invalid_ok = (
+        not validate_compact_candidate(bad_reg)["ok"]
+        and not validate_compact_candidate(bad_op)["ok"]
+        and validate_compact_candidate(good)["ok"]
+        and not validate_compact_candidate(good, opcode_version=999)["ok"]
+    )
+    try:
+        compact_decode(b"short")
+        invalid_ok = False
+    except ValueError:
+        pass
+    _record("invalid_refs_rejected", invalid_ok, "bad reg, unknown op, unknown version, short blob")
+
+    corpus_p = _REPO_ROOT / config.get("corpus_manifest", "experiments/p35-training-corpus.json")
+    with open(corpus_p, encoding="utf-8") as f:
+        corpus = json.load(f)
+    reconstructed = 0
+    reconstructed_total = 0
+    for entry in corpus.get("positives", []):
+        prog = _np.array(entry["program_words"], dtype=_np.uint32)
+        if not validate_compact_candidate(prog)["ok"]:
+            continue
+        grids = _p42_grids(entry["ground_truth_expr"])
+        sym = program_to_sympy(prog)
+        v = verify_l2(
+            prog,
+            grids["train_xs"],
+            grids["train_ys"],
+            grids["test_xs"],
+            grids["test_ys"],
+            ground_truth_formula=entry["ground_truth_expr"],
+            error_threshold=1e-4,
+            extrap_threshold=1.0,
+            domain=domain,
+        )
+        reconstructed_total += 1
+        if sym is not None and v.proof_type == "exact_certificate":
+            reconstructed += 1
+    _record(
+        "certificate_reconstruction",
+        reconstructed_total > 0 and reconstructed == reconstructed_total,
+        f"{reconstructed}/{reconstructed_total} compact words rebuild exact certificates",
+    )
+
+    ok_all = all(f["ok"] for f in findings)
+    verdict = "ACCEPTED" if ok_all else "MIXED"
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p49_config": config_sha[:16]},
+        config={"acceptance_phase": "P49"},
+    )
+    report = {
+        "phase": "P49",
+        "verdict": verdict,
+        "claim_scope": "compact representation conformance; coverage is the defined grammar only",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "coverage": config.get("coverage"),
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P49",
+        },
+        "seeds_rng": f"fixed seed {seed}; deterministic sampling, no search",
+        "budgets": "fixed sample counts; wall-clock recorded, never a claim",
+        "counters": {
+            "checks": len(findings),
+            "checks_ok": sum(1 for f in findings if f["ok"]),
+            "reconstructed": reconstructed,
+            "reconstructed_total": reconstructed_total,
+        },
+        "limitations": [
+            "Compactness claims nothing about universality and reduces no search complexity.",
+            "Off-profile v0 opcodes stay globally valid; the profile only scopes the family.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P49 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p48_formal_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -2994,6 +3194,8 @@ def main() -> int:
             run_p47_nomination_audit(args.config, args.output)
         elif args.acceptance_phase == "P48":
             run_p48_formal_audit(args.config, args.output)
+        elif args.acceptance_phase == "P49":
+            run_p49_compact_audit(args.config, args.output)
         return 0
 
     seeds = (
