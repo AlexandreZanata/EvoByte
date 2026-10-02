@@ -133,7 +133,7 @@ def test_science_matrix_smoke():
 
 
 def test_p40_acceptance_registry_rejects_unknown_phases():
-    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44")
+    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44", "P45")
     import subprocess as _sp
 
     proc = _sp.run(
@@ -141,7 +141,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P45",
+            "P46",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -153,7 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P45'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P46'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -303,3 +303,37 @@ def test_p44_resident_audit_smoke(tmp_path):
     if _torch.cuda.is_available():
         assert report["verdict"] == "ACCEPTED"
         assert report["profile_cuda"]["measured"] is True
+
+
+def test_p45_envelope_audit_smoke(tmp_path):
+    import json as _json
+
+    import torch as _torch
+
+    from benchmarks.science_matrix import run_p45_envelope_audit
+
+    if not _torch.cuda.is_available():
+        return
+    cfg = {
+        "phase": "P45",
+        "formula": "x**2 + 3*x + 7",
+        "pop_size": 32,
+        "durations_60s": [3],
+        "durations_600s": [4],
+        "tracing_modes_60s": [True],
+        "seed": 42,
+        "verify_every_gens": 5,
+        "checkpoint_every_sec": 2,
+        "device": "cuda",
+        "selection_rule": "smoke rule",
+    }
+    cfg_p = tmp_path / "p45-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p45-acceptance.json"
+    report = run_p45_envelope_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P45"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert len(report["matrix_60s"]["tiers"]) == 1
+    assert report["envelope_600s"] is not None
+    assert all(t["counter_check"] for t in report["envelope_600s"]["tiers"])

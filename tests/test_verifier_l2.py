@@ -442,3 +442,14 @@ def test_p42_pole_in_domain_rejected() -> None:
     assert "pole_in_domain" in detail
     eq_free, _ = check_symbolic_equivalence(cand, x + 1, domain=(2.0, 3.0))
     assert eq_free is True
+
+
+def test_p42_variable_exponent_never_crashes_verifier() -> None:
+    import sympy as _sympy
+
+    from evobyte.verifier import check_exact_identity
+
+    x = _sympy.Symbol("x", real=True)
+    eq, detail = check_exact_identity(x**x, "x**2 + 1")
+    assert eq is False
+    assert isinstance(detail, str) and detail

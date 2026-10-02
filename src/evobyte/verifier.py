@@ -20,6 +20,21 @@ except ImportError:
     sympy = None  # type: ignore
     _HAS_SYMPY = False
 
+_POLY_ERRORS: tuple[type, ...] = (
+    TypeError,
+    ValueError,
+    AttributeError,
+    ArithmeticError,
+    KeyError,
+)
+if _HAS_SYMPY:
+    try:
+        from sympy.polys.polyerrors import PolificationFailed, PolynomialError
+
+        _POLY_ERRORS = _POLY_ERRORS + (PolificationFailed, PolynomialError)
+    except ImportError:
+        pass
+
 W_ERR = 1.0
 W_COMPLEXITY = 1e-3
 W_INVALID = 1.0
@@ -334,7 +349,7 @@ def program_to_sympy(
                 regs[dst] = sympy.Min(ra, rb)
             elif op == 0x0E:  # MAX
                 regs[dst] = sympy.Max(ra, rb)
-        except (TypeError, ValueError, AttributeError, ArithmeticError):
+        except _POLY_ERRORS:
             regs[dst] = sympy.nan
 
     out = regs[7]
@@ -344,20 +359,8 @@ def program_to_sympy(
 
     try:
         return sympy.simplify(out)
-    except (TypeError, ValueError, AttributeError, ArithmeticError):
+    except _POLY_ERRORS:
         return out
-
-
-try:
-    _POLY_ERRORS: tuple[type, ...] = (
-        TypeError,
-        ValueError,
-        AttributeError,
-        ArithmeticError,
-        sympy.PolificationFailed,
-    )
-except AttributeError:
-    _POLY_ERRORS = (TypeError, ValueError, AttributeError, ArithmeticError)
 
 
 def check_exact_identity(
@@ -406,6 +409,10 @@ def check_exact_identity(
         non_rational = (sympy.sin, sympy.cos, sympy.exp, sympy.log, sympy.Abs, sympy.Min, sympy.Max)
         if cand.has(*non_rational) or target.has(*non_rational):
             return False, "non_rational_operators: exact identity not decidable here"
+        for side in (cand, target):
+            for power in side.atoms(sympy.Pow):
+                if not power.exp.is_number:
+                    return False, "non_polynomial_power: variable exponent is not exactly decidable"
         diff = sympy.together(sympy.expand(cand - target))
         num, den = sympy.fraction(diff)
         if not sympy.Poly(num, x).is_zero:
@@ -429,7 +436,7 @@ def check_exact_identity(
         if inside:
             return False, f"pole_in_domain: {inside} inside [{lo}, {hi}]"
         return True, f"exact_identity_on_domain [{lo}, {hi}]"
-    except (TypeError, ValueError, AttributeError, ArithmeticError) as e:
+    except _POLY_ERRORS as e:
         return False, f"exact_check_failed: {e}"
 
 
