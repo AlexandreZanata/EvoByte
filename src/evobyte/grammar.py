@@ -26,8 +26,10 @@ from evobyte.bytecode import (
 from evobyte.evolution import EvolutionConfig
 from evobyte.resident import (
     GPUResidentEvolution,
+    IncompatibleCheckpointError,
     gpu_crossover_single_point,
     gpu_tournament_selection,
+    state_fingerprint,
 )
 from evobyte.vm_torch import execute_population_torch
 
@@ -512,6 +514,16 @@ class GrammarResidentEvolution(GPUResidentEvolution):
         self.seed = seed
         self.rng_counter = seed
 
+    def _extra_checkpoint_state(self) -> dict[str, Any]:
+        """Grammar determinism state: seeded sampling/mutation counters (P43)."""
+        return {"seed": int(self.seed), "rng_counter": int(self.rng_counter)}
+
+    def _apply_extra_checkpoint_state(self, extra: dict[str, Any]) -> None:
+        if "seed" in extra:
+            self.seed = int(extra["seed"])
+        if "rng_counter" in extra:
+            self.rng_counter = int(extra["rng_counter"])
+
     def step(self) -> dict[str, Any]:
         self.generation += 1
         self.rng_counter += 1
@@ -584,3 +596,74 @@ class GrammarResidentEvolution(GPUResidentEvolution):
             "step_time_s": t_step,
             "candidates_per_sec": pop_size / max(t_step, 1e-6),
         }
+
+
+def rebuild_from_checkpoint(
+    path: str,
+    device: torch.device | str | None = None,
+    expected: dict[str, Any] | None = None,
+) -> GrammarResidentEvolution:
+    """Rebuild a grammar evolution engine from its checkpoint file alone.
+
+    The new instance carries no memory of the saving process: problem data,
+    config, population and RNG states all come from the file, so a fresh OS
+    process continues bit-identically (P43 kill-and-restore proof).
+    """
+    import torch as _torch
+
+    from evobyte.resident import CHECKPOINT_FORMAT
+
+    dev = _torch.device(device) if device is not None else _torch.device("cpu")
+    try:
+        state = _torch.load(path, map_location=dev, weights_only=False)
+    except Exception as exc:
+        raise IncompatibleCheckpointError(
+            f"truncated_or_unreadable_checkpoint {path}: {exc}"
+        ) from exc
+    if not isinstance(state, dict) or state.get("format") != CHECKPOINT_FORMAT:
+        raise IncompatibleCheckpointError("legacy_or_foreign_checkpoint: exact P43 format required")
+    if state.get("engine") != "GrammarResidentEvolution":
+        raise IncompatibleCheckpointError(f"engine_mismatch: checkpoint is {state.get('engine')!r}")
+    problem = state.get("problem", {})
+    xs = np.asarray(problem["xs"], dtype=np.float32)
+    ys = np.asarray(problem["ys"], dtype=np.float32)
+    cfg = EvolutionConfig()
+    for key, value in (state.get("config") or {}).items():
+        if key.startswith("__"):
+            continue
+        try:
+            setattr(cfg, key, value)
+        except (AttributeError, TypeError, ValueError):
+            raise IncompatibleCheckpointError(
+                f"config_mismatch: cannot restore {key}={value!r}"
+            ) from None
+    evo = GrammarResidentEvolution(xs, ys, config=cfg, device=dev, seed=0)
+    evo.load_checkpoint(path, expected=expected)
+    return evo
+
+
+def checkpoint_resume_worker(
+    checkpoint_path: str,
+    output_path: str,
+    extra_generations: int,
+    device: str | None = None,
+) -> dict[str, Any]:
+    """Fresh-process continuation entry point: load, run N generations, report."""
+    import json as _json
+    from pathlib import Path as _Path
+
+    evo = rebuild_from_checkpoint(checkpoint_path, device=device)
+    result = evo.run(max_generations=extra_generations, early_stop_mse=0.0)
+    summary = {
+        "fingerprint": state_fingerprint(evo),
+        "generations": result["generations"],
+        "candidates_total": result["candidates_total"],
+        "best_fitness": result["best_fitness"],
+        "best_mse": result["best_mse"],
+        "best_program": [int(w) for w in np.asarray(result["best_program"], dtype=np.uint32)],
+    }
+    out = _Path(output_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
+        _json.dump(summary, f, indent=2, sort_keys=True)
+    return summary

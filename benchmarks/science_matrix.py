@@ -6,6 +6,7 @@ import argparse
 import contextlib
 import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -674,7 +675,197 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43")
+
+
+def run_p43_resume_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P43 audit: 40 gens + killed process + restored 60 gens == straight 100 gens."""
+    import random as _random
+    import subprocess as _sp
+    import tempfile
+
+    import numpy as _np
+    import torch as _torch
+
+    from evobyte.evolution import EvolutionConfig
+    from evobyte.grammar import GrammarResidentEvolution
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.resident import IncompatibleCheckpointError, state_fingerprint
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P43":
+        raise ValueError(f"Config {cfg_p} is not a P43 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    seed = int(config.get("seed", 7))
+    pop_size = int(config.get("pop_size", 32))
+    gens = config.get("generations", {})
+    split_at, resumed_gens = int(gens.get("restore_at", 40)), int(gens.get("resumed", 60))
+    total_gens = int(gens.get("total", split_at + resumed_gens))
+    dev = _torch.device(config.get("device", "cpu"))
+    xs = _np.linspace(-3.0, 3.0, 48, dtype=_np.float32)
+
+    import sympy as _sympy
+
+    _x = _sympy.Symbol("x")
+    _fn = _sympy.lambdify(
+        _x, _sympy.sympify(config.get("formula", "x**2 + 3*x + 7")), modules=["numpy"]
+    )
+    ys = _np.asarray(_fn(xs), dtype=_np.float32)
+
+    def _fresh() -> GrammarResidentEvolution:
+        _random.seed(seed)
+        _np.random.seed(seed)
+        _torch.manual_seed(seed)
+        cfg = EvolutionConfig(pop_size=pop_size, elite_k=4, random_inject_p=0.10)
+        return GrammarResidentEvolution(xs, ys, config=cfg, device=dev, seed=seed)
+
+    def _run(evo: GrammarResidentEvolution, n: int) -> dict[str, Any]:
+        return evo.run(max_generations=n, early_stop_mse=0.0)
+
+    print("=" * 115)
+    print("P43 REAL-CHECKPOINT-RESUME AUDIT (kill + fresh-process restore)")
+    print("=" * 115)
+
+    scratch = Path(tempfile.mkdtemp(prefix="evobyte-p43-"))
+    ckpt = scratch / "p43-exact.pt"
+
+    # Arm A (straight): uninterrupted total_gens run.
+    t_a_0 = time.perf_counter()
+    straight = _fresh()
+    _run(straight, total_gens)
+    ref = state_fingerprint(straight)
+    t_a = time.perf_counter() - t_a_0
+
+    # Arm B (resumed): split_at gens, save, drop everything, fresh OS process continues.
+    t_b_0 = time.perf_counter()
+    part = _fresh()
+    _run(part, split_at)
+    part.save_checkpoint(ckpt)
+    pre_kill = state_fingerprint(part)
+    del part
+    worker_out = scratch / "worker-result.json"
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join(
+        [str(_REPO_ROOT / "src"), str(_REPO_ROOT / "benchmarks"), env.get("PYTHONPATH", "")]
+    )
+    worker_snippet = (
+        "from evobyte.grammar import checkpoint_resume_worker; "
+        f"checkpoint_resume_worker({str(ckpt)!r}, {str(worker_out)!r}, {resumed_gens})"
+    )
+    proc = _sp.run(
+        [sys.executable, "-c", worker_snippet],
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+        cwd=str(_REPO_ROOT),
+    )
+    t_b = time.perf_counter() - t_b_0
+    worker: dict[str, Any] = {}
+    if proc.returncode == 0 and worker_out.exists():
+        with open(worker_out, encoding="utf-8") as f:
+            worker = json.load(f)
+    else:
+        worker = {"error": (proc.stderr or proc.stdout)[-2000:]}
+    got = worker.get("fingerprint", {})
+
+    # Live refusal probes on copies (never on the proof checkpoint).
+    refusals: list[dict[str, Any]] = []
+    trunc = scratch / "trunc.pt"
+    trunc.write_bytes(ckpt.read_bytes()[: max(64, ckpt.stat().st_size // 2)])
+    probe_evo = _fresh()
+    for label, fn in (
+        ("truncated", lambda: probe_evo.load_checkpoint(trunc)),
+        ("version", lambda: probe_evo.load_checkpoint(ckpt, expected={"torch_version": "0.0.0"})),
+        ("config", lambda: probe_evo.load_checkpoint(ckpt, expected={"config": {"pop_size": -1}})),
+    ):
+        try:
+            fn()
+            refusals.append({"probe": label, "refused": False})
+        except IncompatibleCheckpointError as exc:
+            refusals.append({"probe": label, "refused": True, "reason": str(exc)[:120]})
+
+    keys = (
+        "generation",
+        "population_sha256",
+        "best_program_sha256",
+        "torch_cpu_rng_sha256",
+        "numpy_rng_sha256",
+        "best_fitness",
+        "best_mse",
+    )
+    matches = {k: (got.get(k) == ref.get(k)) for k in keys}
+    counters_match = got.get("counters") == ref.get("counters")
+    equality = all(matches.values()) and counters_match
+    refusals_ok = all(r["refused"] for r in refusals)
+    verdict = (
+        "ACCEPTED"
+        if (equality and refusals_ok and worker.get("generations") == resumed_gens)
+        else "MIXED"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p43_config": config_sha[:16]},
+        config={"acceptance_phase": "P43"},
+    )
+    report = {
+        "phase": "P43",
+        "verdict": verdict,
+        "claim_scope": "kill-and-restore continuation equals the straight run in the pinned environment",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "straight": {"wall_sec": t_a, "fingerprint": ref},
+        "resumed": {"wall_sec": t_b, "pre_kill": pre_kill, "worker": worker},
+        "equality": {
+            "fields": matches,
+            "counters_match": counters_match,
+            "worker_generations": worker.get("generations"),
+        },
+        "refusals": refusals,
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P43",
+        },
+        "seeds_rng": f"fixed seed {seed} both arms; post-run RNG states compared byte-identical",
+        "budgets": f"fixed generation counts {split_at}+{resumed_gens} vs {total_gens}; "
+        "wall-clock recorded, never an equality criterion",
+        "counters": {
+            "comparisons": len(matches) + 1,
+            "matched": sum(matches.values()) + int(counters_match),
+        },
+        "limitations": [
+            "Equality holds in the same pinned environment; cross-GPU/version binary equality is not promised.",
+            "Problem data travels inside the checkpoint by design (fresh process has no other source).",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P43 audit {verdict}: equality={equality} refusals_ok={refusals_ok}; report -> {out_p}")
+    return report
 
 
 def _p42_grids(formula: str) -> dict[str, Any]:
@@ -1548,6 +1739,8 @@ def main() -> int:
             run_p41_immutable_audit(args.config, args.output)
         elif args.acceptance_phase == "P42":
             run_p42_exact_audit(args.config, args.output)
+        elif args.acceptance_phase == "P43":
+            run_p43_resume_audit(args.config, args.output)
         return 0
 
     seeds = (

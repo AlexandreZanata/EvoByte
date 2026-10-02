@@ -1,8 +1,11 @@
 # P43 — Demonstrar continuação real de checkpoint
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P42, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p43-real-checkpoint-resume`.
+**Resultado:** ACCEPTED — 40 gerações + processo encerrado + 60 restauradas
+coincidem bit a bit com 100 diretas (população, elites, contadores, RNGs);
+truncado/versão/config recusados explicitamente.
 
 ## Objetivo e escopo
 
