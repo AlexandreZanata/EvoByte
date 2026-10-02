@@ -340,16 +340,26 @@ def test_p45_envelope_audit_smoke(tmp_path):
 
 
 def test_p46_catalogue_audit_smoke(tmp_path):
+    import json as _json
+
     from benchmarks.science_matrix import run_p46_catalogue_audit
 
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p46-config.json").read_text()
+    )
+    cfg["independent_refetch"] = False  # offline smoke; the frozen run re-fetches sources
+    cfg_p = tmp_path / "p46-offline-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
     out_p = tmp_path / "p46-acceptance.json"
-    report = run_p46_catalogue_audit("experiments/p46-config.json", out_p)
+    report = run_p46_catalogue_audit(cfg_p, out_p)
     assert out_p.exists()
+    assert report["independent_refetch"] is None
+    checks = {k: v for k, v in report["checks"].items() if v is not None}
     assert report["status"] == "PASS"
     assert report["verdict"] == "PENDING_HUMAN_REVIEW"
     assert report["counts"]["open_confirmed"] >= 100
-    assert report["counts"]["finite_search_candidates"] == 40
-    assert all(report["checks"].values())
+    assert report["counts"]["finite_search_candidates"] == 34
+    assert all(checks.values())
     assert report["errors"] == []
     assert report["human_review"]["required"] is True
     assert report["human_review"]["status"] == "pending"
@@ -407,3 +417,13 @@ def test_p46_catalogue_rejects_bad_entries(tmp_path):
     assert any("missing field consulted_at" in e for e in report["errors"])
     assert any("duplicate statement hashes" in e for e in report["errors"])
     assert any("below the frozen minimum" in e for e in report["errors"])
+
+
+def test_p46_normalized_statement_dedup():
+    from benchmarks.science_matrix import _p46_normalize_statement
+
+    a = _p46_normalize_statement("If $A\\subseteq \\mathbb{N}$ then must ...")
+    b = _p46_normalize_statement("if a subseteq mathbb n then must")
+    assert a == b == "if a subseteq mathbb n then must"
+    c = _p46_normalize_statement("Is there an odd covering system?")
+    assert c != a

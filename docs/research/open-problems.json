@@ -7,7 +7,8 @@
     "dataset": "github.com/Teorth/erdosproblems data/problems.yaml",
     "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1",
     "dataset_commit_date": "2026-09-28T09:49:46Z",
-    "license": "Apache-2.0 (dataset metadata); statements stored as short excerpts with citation"
+    "license": "Apache-2.0 (dataset metadata); statements stored as short excerpts with citation",
+    "dataset_file_sha256": "cd3f949a23c6597078c4207987b30e817effaea43501406e49daf0c1c923dfeb"
   },
   "method": {
     "selection": "dataset open problems in ascending number order, live-page confirmed",
@@ -15,14 +16,28 @@
     "excerpt_limit_chars": 320,
     "certificate_type_rule": "keyword rule (are there/is there/exist/find -> construction_or_impossibility; else proof_or_counterexample); human review validates",
     "dedup": "unique identifiers plus statement sha256 uniqueness among confirmed entries",
-    "finite_search_candidates_note": "Dataset states falsifiable/verifiable/decidable are unsolved but settleable by a finite search; kept as a separate bucket (not counted toward the 100 open-confirmed) because the primary source reserves OPEN for problems not resolvable by finite computation."
+    "finite_search_candidates_note": "Dataset states falsifiable/verifiable/decidable are unsolved but settleable by a finite search; kept as a separate bucket (not counted toward the 100 open-confirmed) because the primary source reserves OPEN for problems not resolvable by finite computation.",
+    "independent_validation": {
+      "date": "2026-10-02",
+      "entries_reverified": 134,
+      "open_confirmed_reproduced": 100,
+      "dataset_stale_solved_detected": [
+        19,
+        506,
+        551,
+        556,
+        742,
+        848
+      ],
+      "note": "Independent re-fetch of the pinned dataset and every live page reproduced statements, hashes, tags, references and statuses; six dataset-decidable entries were solved after the pin and moved to the solved bucket."
+    }
   },
   "counts": {
     "open_confirmed": 100,
     "checked": 100,
     "status_unconfirmed": 0,
-    "solved_encountered": 3,
-    "finite_search_candidates": 40,
+    "solved_encountered": 9,
+    "finite_search_candidates": 34,
     "not_counted_toward_100": [
       "finite_search_candidates",
       "solved_examples",
@@ -3556,6 +3571,60 @@
       "page_state": "solved",
       "category": "solved",
       "source": "https://www.erdosproblems.com/4"
+    },
+    {
+      "number": 19,
+      "dataset_state": "decidable",
+      "page_state": "solved",
+      "category": "solved",
+      "solved_after_pin": true,
+      "source": "https://www.erdosproblems.com/19",
+      "note": "Pinned dataset commit listed this as finitely settleable; live source showed solved during the 2026-10-02 independent re-validation; live source is authoritative."
+    },
+    {
+      "number": 506,
+      "dataset_state": "decidable",
+      "page_state": "solved",
+      "category": "solved",
+      "solved_after_pin": true,
+      "source": "https://www.erdosproblems.com/506",
+      "note": "Pinned dataset commit listed this as finitely settleable; live source showed solved during the 2026-10-02 independent re-validation; live source is authoritative."
+    },
+    {
+      "number": 551,
+      "dataset_state": "decidable",
+      "page_state": "solved",
+      "category": "solved",
+      "solved_after_pin": true,
+      "source": "https://www.erdosproblems.com/551",
+      "note": "Pinned dataset commit listed this as finitely settleable; live source showed solved during the 2026-10-02 independent re-validation; live source is authoritative."
+    },
+    {
+      "number": 556,
+      "dataset_state": "decidable",
+      "page_state": "solved",
+      "category": "solved",
+      "solved_after_pin": true,
+      "source": "https://www.erdosproblems.com/556",
+      "note": "Pinned dataset commit listed this as finitely settleable; live source showed solved during the 2026-10-02 independent re-validation; live source is authoritative."
+    },
+    {
+      "number": 742,
+      "dataset_state": "decidable",
+      "page_state": "solved",
+      "category": "solved",
+      "solved_after_pin": true,
+      "source": "https://www.erdosproblems.com/742",
+      "note": "Pinned dataset commit listed this as finitely settleable; live source showed solved during the 2026-10-02 independent re-validation; live source is authoritative."
+    },
+    {
+      "number": 848,
+      "dataset_state": "decidable",
+      "page_state": "solved",
+      "category": "solved",
+      "solved_after_pin": true,
+      "source": "https://www.erdosproblems.com/848",
+      "note": "Pinned dataset commit listed this as finitely settleable; live source showed solved during the 2026-10-02 independent re-validation; live source is authoritative."
     }
   ],
   "human_review": {
@@ -3605,48 +3674,6 @@
         "Er97c"
       ],
       "statement_sha256": "4c3a40eff83b3477"
-    },
-    {
-      "id": "erdos-19",
-      "title": "Erdos Problem #19",
-      "statement_excerpt": "If $G$ is an edge-disjoint union of $n$ copies of $K_n$ then is $\\chi(G)=n$?",
-      "statement_chars_total": 76,
-      "area": "graph theory",
-      "areas": [
-        "graph theory",
-        "chromatic number"
-      ],
-      "prize": "$500",
-      "primary_source": {
-        "citation": "Thomas Bloom, Erdos Problems database, Problem 19",
-        "url": "https://www.erdosproblems.com/19",
-        "dataset": "Teorth/erdosproblems data/problems.yaml (Apache-2.0)",
-        "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1"
-      },
-      "consulted_at": "2026-10-02",
-      "state": "finitely-settleable-unsolved",
-      "dataset_state": "decidable",
-      "state_evidence": "dataset informal_status=decidable; live page id=solved (not open-bucket, unsolved)",
-      "source_status_note": "Resolved up to a finite check.",
-      "finite_resolution_possible": true,
-      "certificate_type": "proof_or_counterexample",
-      "verifiability": "exact_statement_checkable",
-      "formalized_statement": "yes",
-      "partial_refs": [
-        "Er76b",
-        "Er76c",
-        "Er78",
-        "Er81",
-        "Er90",
-        "Er92b",
-        "Er93",
-        "Er95",
-        "Er97c",
-        "Er97d",
-        "Er97f",
-        "Va99"
-      ],
-      "statement_sha256": "f52acebba8ed55c6"
     },
     {
       "id": "erdos-23",
@@ -4266,108 +4293,6 @@
       "statement_sha256": "62fe72de7af06bbc"
     },
     {
-      "id": "erdos-506",
-      "title": "Erdos Problem #506",
-      "statement_excerpt": "What is the minimum number of circles determined by any $n$ points in $\\mathbb{R}^2$, not all on a circle?",
-      "statement_chars_total": 106,
-      "area": "geometry",
-      "areas": [
-        "geometry"
-      ],
-      "prize": "no",
-      "primary_source": {
-        "citation": "Thomas Bloom, Erdos Problems database, Problem 506",
-        "url": "https://www.erdosproblems.com/506",
-        "dataset": "Teorth/erdosproblems data/problems.yaml (Apache-2.0)",
-        "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1"
-      },
-      "consulted_at": "2026-10-02",
-      "state": "finitely-settleable-unsolved",
-      "dataset_state": "decidable",
-      "state_evidence": "dataset informal_status=decidable; live page id=solved (not open-bucket, unsolved)",
-      "source_status_note": "Resolved up to a finite check.",
-      "finite_resolution_possible": true,
-      "certificate_type": "proof_or_counterexample",
-      "verifiability": "exact_statement_checkable",
-      "formalized_statement": "yes",
-      "partial_refs": [
-        "Er61",
-        "El67",
-        "PuSm",
-        "BaBa94"
-      ],
-      "statement_sha256": "0ede0a0a248a465a"
-    },
-    {
-      "id": "erdos-551",
-      "title": "Erdos Problem #551",
-      "statement_excerpt": "Prove that\\[R(C_k,K_n)=(k-1)(n-1)+1\\]for $k\\geq n\\geq 3$ (except when $n=k=3$).",
-      "statement_chars_total": 79,
-      "area": "graph theory",
-      "areas": [
-        "graph theory",
-        "ramsey theory"
-      ],
-      "prize": "no",
-      "primary_source": {
-        "citation": "Thomas Bloom, Erdos Problems database, Problem 551",
-        "url": "https://www.erdosproblems.com/551",
-        "dataset": "Teorth/erdosproblems data/problems.yaml (Apache-2.0)",
-        "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1"
-      },
-      "consulted_at": "2026-10-02",
-      "state": "finitely-settleable-unsolved",
-      "dataset_state": "decidable",
-      "state_evidence": "dataset informal_status=decidable; live page id=solved (not open-bucket, unsolved)",
-      "source_status_note": "Resolved up to a finite check.",
-      "finite_resolution_possible": true,
-      "certificate_type": "proof_or_counterexample",
-      "verifiability": "exact_statement_checkable",
-      "formalized_statement": "yes",
-      "partial_refs": [
-        "EFRS78",
-        "BoEr73",
-        "Ni05",
-        "KLS21"
-      ],
-      "statement_sha256": "ef20ba73464acd17"
-    },
-    {
-      "id": "erdos-556",
-      "title": "Erdos Problem #556",
-      "statement_excerpt": "Let $R_3(G)$ denote the minimal $m$ such that if the edges of $K_m$ are $3$-coloured then there must be a monochromatic copy of $G$. Show that\\[R_3(C_n) \\leq 4n-3.\\]",
-      "statement_chars_total": 165,
-      "area": "graph theory",
-      "areas": [
-        "graph theory",
-        "ramsey theory"
-      ],
-      "prize": "no",
-      "primary_source": {
-        "citation": "Thomas Bloom, Erdos Problems database, Problem 556",
-        "url": "https://www.erdosproblems.com/556",
-        "dataset": "Teorth/erdosproblems data/problems.yaml (Apache-2.0)",
-        "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1"
-      },
-      "consulted_at": "2026-10-02",
-      "state": "finitely-settleable-unsolved",
-      "dataset_state": "decidable",
-      "state_evidence": "dataset informal_status=decidable; live page id=solved (not open-bucket, unsolved)",
-      "source_status_note": "Resolved up to a finite check.",
-      "finite_resolution_possible": true,
-      "certificate_type": "proof_or_counterexample",
-      "verifiability": "exact_statement_checkable",
-      "formalized_statement": "no",
-      "partial_refs": [
-        "Er81",
-        "Er81c",
-        "Lu99",
-        "KSS05",
-        "BeSk09"
-      ],
-      "statement_sha256": "68690f5dfc93fdb2"
-    },
-    {
       "id": "erdos-580",
       "title": "Erdos Problem #580",
       "statement_excerpt": "Let $G$ be a graph on $n$ vertices such that at least $n/2$ vertices have degree at least $n/2$. Must $G$ contain every tree on at most $n/2$ vertices?",
@@ -4641,38 +4566,6 @@
       "statement_sha256": "7ed436042dc060b3"
     },
     {
-      "id": "erdos-742",
-      "title": "Erdos Problem #742",
-      "statement_excerpt": "Let $G$ be a graph on $n$ vertices with diameter $2$, such that deleting any edge increases the diameter of $G$. Is it true that $G$ has at most $n^2/4$ edges?",
-      "statement_chars_total": 159,
-      "area": "graph theory",
-      "areas": [
-        "graph theory"
-      ],
-      "prize": "no",
-      "primary_source": {
-        "citation": "Thomas Bloom, Erdos Problems database, Problem 742",
-        "url": "https://www.erdosproblems.com/742",
-        "dataset": "Teorth/erdosproblems data/problems.yaml (Apache-2.0)",
-        "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1"
-      },
-      "consulted_at": "2026-10-02",
-      "state": "finitely-settleable-unsolved",
-      "dataset_state": "decidable",
-      "state_evidence": "dataset informal_status=decidable; live page id=solved (not open-bucket, unsolved)",
-      "source_status_note": "Resolved up to a finite check.",
-      "finite_resolution_possible": true,
-      "certificate_type": "proof_or_counterexample",
-      "verifiability": "exact_statement_checkable",
-      "formalized_statement": "yes",
-      "partial_refs": [
-        "Er81",
-        "CaHa79",
-        "Fu92"
-      ],
-      "statement_sha256": "21e923cdbf5b3d51"
-    },
-    {
       "id": "erdos-743",
       "title": "Erdos Problem #743",
       "statement_excerpt": "Let $T_2,\\ldots,T_n$ be a collection of trees such that $T_k$ has $k$ vertices. Can we always write $K_n$ as the edge disjoint union of the $T_k$?",
@@ -4769,36 +4662,6 @@
         "Er74d"
       ],
       "statement_sha256": "d795b7b081cfaee8"
-    },
-    {
-      "id": "erdos-848",
-      "title": "Erdos Problem #848",
-      "statement_excerpt": "Is the maximum size of a set $A\\subseteq \\{1,\\ldots,N\\}$ such that $ab+1$ is never squarefree (for all $a,b\\in A$) achieved by taking those $n\\equiv 7\\pmod{25}$?",
-      "statement_chars_total": 161,
-      "area": "number theory",
-      "areas": [
-        "number theory"
-      ],
-      "prize": "no",
-      "primary_source": {
-        "citation": "Thomas Bloom, Erdos Problems database, Problem 848",
-        "url": "https://www.erdosproblems.com/848",
-        "dataset": "Teorth/erdosproblems data/problems.yaml (Apache-2.0)",
-        "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1"
-      },
-      "consulted_at": "2026-10-02",
-      "state": "finitely-settleable-unsolved",
-      "dataset_state": "decidable",
-      "state_evidence": "dataset informal_status=decidable; live page id=solved (not open-bucket, unsolved)",
-      "source_status_note": "Resolved up to a finite check.",
-      "finite_resolution_possible": true,
-      "certificate_type": "proof_or_counterexample",
-      "verifiability": "exact_statement_checkable",
-      "formalized_statement": "yes",
-      "partial_refs": [
-        "Er92b"
-      ],
-      "statement_sha256": "e9ebcf7365fee14d"
     },
     {
       "id": "erdos-982",

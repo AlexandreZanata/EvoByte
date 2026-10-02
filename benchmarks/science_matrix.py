@@ -744,12 +744,168 @@ def _p46_check_entry(entry: Any, bucket: str) -> list[str]:
     return errs
 
 
-def run_p46_catalogue_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+def _p46_normalize_statement(text: str) -> str:
+    """Normalize a statement for near-duplicate detection (not for display)."""
+    norm = text.lower().replace("$", " ").replace("\\", " ")
+    norm = re.sub(r"[^a-z0-9]+", " ", norm)
+    return re.sub(r"\s+", " ", norm).strip()
+
+
+def _p46_fetch(url: str, timeout: int = 30) -> str:
+    import urllib.request
+
+    req = urllib.request.Request(
+        url, headers={"User-Agent": "EvoByte-P46-validation/1.0 (research; contact via repo)"}
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode("utf-8", "replace")
+
+
+def _p46_strip_tags(html: str) -> str:
+    text = re.sub(r"<br\s*/?>", " ", html)
+    text = re.sub(r"<[^>]+>", "", text)
+    for a, b in (
+        ("&amp;", "&"),
+        ("&lt;", "<"),
+        ("&gt;", ">"),
+        ("&quot;", '"'),
+        ("&#39;", "'"),
+        ("&nbsp;", " "),
+    ):
+        text = text.replace(a, b)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _p46_independent_refetch(cat: dict[str, Any], sleep_sec: float = 0.35) -> dict[str, Any]:
+    """Re-verify every catalogue entry against the pinned dataset and live pages.
+
+    Independent pass: downloads the dataset at the pinned commit (recording its
+    file hash), re-derives tags/states, re-fetches every page recording status,
+    statement, excerpt reproduction, hash, partial refs, then runs a normalized
+    near-duplicate sweep across all buckets.
+    """
+    import yaml
+
+    result: dict[str, Any] = {"errors": [], "entries": {}, "near_duplicates": []}
+    commit = str((cat.get("source") or {}).get("dataset_commit", ""))
+    yaml_url = f"https://raw.githubusercontent.com/Teorth/erdosproblems/{commit}/data/problems.yaml"
+    try:
+        yaml_text = _p46_fetch(yaml_url)
+    except (OSError, ValueError) as exc:
+        result["errors"].append(f"dataset fetch failed at pinned commit: {exc}")
+        return result
+    result["dataset_file_sha256"] = hashlib.sha256(yaml_text.encode()).hexdigest()
+    records = {
+        int(e["number"]): e for e in yaml.safe_load(yaml_text) if str(e.get("number", "")).isdigit()
+    }
+
+    def _one(entry: dict[str, Any], bucket: str, expect_states: tuple[str, ...]) -> dict[str, Any]:
+        number = int(str(entry["id"]).split("-", 1)[1])
+        meta = records.get(number)
+        rec: dict[str, Any] = {"number": number, "bucket": bucket, "ok": True, "problems": []}
+        if meta is None:
+            rec["problems"].append("number absent from the pinned dataset")
+        else:
+            ds_state = (meta.get("informal_status") or {}).get("state")
+            rec["dataset_state"] = ds_state
+            if ds_state not in expect_states:
+                rec["problems"].append(f"dataset state {ds_state!r} outside {expect_states}")
+            if [str(t) for t in (meta.get("tags") or [])] != [
+                str(t) for t in entry.get("areas", [])
+            ]:
+                rec["problems"].append("dataset tags differ from stored areas")
+        try:
+            html = _p46_fetch(f"https://www.erdosproblems.com/{number}")
+        except (OSError, ValueError) as exc:
+            rec["problems"].append(f"page fetch failed: {exc}")
+            rec["ok"] = False
+            return rec
+        m = re.search(r'<div class="problem-text" id="([^"]+)"', html)
+        rec["page_state"] = m.group(1).strip().lower() if m else "unknown"
+        cm = re.search(r'<div id="content">(.*?)</div>', html, re.DOTALL)
+        statement = _p46_strip_tags(cm.group(1)) if cm else ""
+        expected_excerpt = statement[:320] + (" ..." if len(statement) > 320 else "")
+        if expected_excerpt != entry.get("statement_excerpt"):
+            rec["problems"].append("stored excerpt does not reproduce from the live statement")
+        if hashlib.sha256(statement.encode()).hexdigest()[:16] != entry.get("statement_sha256"):
+            rec["problems"].append("statement hash does not reproduce")
+        page_refs = set(re.findall(r"addNewBox\('([^']+)'", html))
+        missing = [r for r in entry.get("partial_refs", []) if r not in page_refs]
+        if missing:
+            rec["problems"].append(f"partial refs absent from page: {missing[:3]}")
+        if bucket == "open_confirmed" and rec["page_state"] != "open":
+            rec["problems"].append(f"live page state is {rec['page_state']!r}, expected open")
+        if bucket == "finite_search_candidates" and rec["page_state"] != "open":
+            rec["problems"].append(
+                f"live page state is {rec['page_state']!r}, expected open marker"
+            )
+        rec["ok"] = not rec["problems"]
+        return rec
+
+    buckets = (
+        ("open_confirmed", cat.get("open_confirmed") or [], ("open",)),
+        (
+            "finite_search_candidates",
+            cat.get("finite_search_candidates") or [],
+            ("falsifiable", "verifiable", "decidable"),
+        ),
+    )
+    seen_norm: dict[str, str] = {}
+    for name, entries, states in buckets:
+        checked: list[dict[str, Any]] = []
+        for entry in entries:
+            rec = _one(entry, name, states)
+            checked.append(rec)
+            if not rec["ok"]:
+                result["errors"].append(f"{entry.get('id')}: {'; '.join(rec['problems'])}")
+            norm = _p46_normalize_statement(str(entry.get("statement_excerpt", "")))
+            if norm in seen_norm and seen_norm[norm] != entry.get("id"):
+                result["near_duplicates"].append([seen_norm[norm], entry.get("id")])
+            seen_norm.setdefault(norm, str(entry.get("id")))
+            time.sleep(sleep_sec)
+        result["entries"][name] = {
+            "checked": len(checked),
+            "ok": sum(1 for r in checked if r["ok"]),
+            "problems": [r for r in checked if not r["ok"]],
+        }
+    for ex in cat.get("solved_examples") or []:
+        number = int(ex["number"])
+        meta = records.get(number)
+        ds_state = ((meta or {}).get("informal_status") or {}).get("state")
+        try:
+            html = _p46_fetch(f"https://www.erdosproblems.com/{number}")
+            m = re.search(r'<div class="problem-text" id="([^"]+)"', html)
+            page_state = m.group(1).strip().lower() if m else "unknown"
+        except (OSError, ValueError) as exc:
+            result["errors"].append(f"solved example {number}: fetch failed: {exc}")
+            continue
+        if page_state == "open":
+            result["errors"].append(f"solved example {number}: live page still open")
+        if ds_state not in ("proved", "disproved", "solved") and not (
+            ex.get("solved_after_pin") and page_state == "solved"
+        ):
+            result["errors"].append(
+                f"solved example {number}: dataset state {ds_state!r} not solved "
+                "and no solved-after-pin evidence"
+            )
+        time.sleep(sleep_sec)
+    result["near_duplicate_count"] = len(result["near_duplicates"])
+    result["ok"] = not result["errors"] and result["near_duplicate_count"] == 0
+    return result
+
+
+def run_p46_catalogue_audit(
+    config_path: str | Path,
+    output_path: str | Path,
+    independent_refetch: bool | None = None,
+) -> dict[str, Any]:
     """P46 audit: validate the sourced open-problem catalogue (schema + counts + dedup).
 
     Technical validation only; the phase exit gate additionally requires a
     human mathematical review of the curation before P47, which this audit
-    reports as pending and cannot grant.
+    reports as pending and cannot grant. With ``independent_refetch`` (or the
+    config flag) the audit re-downloads the pinned dataset and every live page,
+    reproducing statements, hashes, tags, references and statuses.
     """
     t0 = time.perf_counter()
     cfg_p = Path(config_path)
@@ -828,6 +984,22 @@ def run_p46_catalogue_audit(config_path: str | Path, output_path: str | Path) ->
 
     review = cat.get("human_review") or {}
     review_required = bool(review.get("required", True))
+
+    refetch = (
+        bool(config.get("independent_refetch", False))
+        if independent_refetch is None
+        else bool(independent_refetch)
+    )
+    independent: dict[str, Any] | None = None
+    if refetch and not errors:
+        print("  independent re-fetch: pinned dataset + every live page ...")
+        independent = _p46_independent_refetch(cat)
+        for bucket, stats in independent.get("entries", {}).items():
+            print(f"    {bucket}: {stats['ok']}/{stats['checked']} reproduced")
+        if independent.get("errors"):
+            errors.extend(f"independent: {e}" for e in independent["errors"][:20])
+    report["independent_refetch"] = independent
+
     schema_ok = not errors
     technical = "PASS" if schema_ok else "FAIL"
     verdict = "PENDING_HUMAN_REVIEW" if schema_ok else "REJECTED"
@@ -858,6 +1030,9 @@ def run_p46_catalogue_audit(config_path: str | Path, output_path: str | Path) ->
                 "count_ok": len(open_conf) >= min_open,
                 "dedup_ok": not id_dupes and not sha_dupes,
                 "source_pinned": bool(source.get("dataset_commit")),
+                "independent_refetch_ok": (
+                    None if independent is None else bool(independent.get("ok"))
+                ),
             },
             "errors": errors[:50],
             "human_review": {
