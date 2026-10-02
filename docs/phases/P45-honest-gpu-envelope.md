@@ -1,8 +1,11 @@
 # P45 — Medir o ciclo inteiro dentro de limites seguros
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P44, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p45-honest-gpu-envelope`.
+**Resultado:** ACCEPTED — matriz 60s estável, envelope 600s limpo (18998
+gerações, 4.86M avaliados, 1898 certificados exatos, 3 soluções distintas,
+5 checkpoints, sem OOM); taxas publicadas separadas, sem alegação de 1h.
 
 ## Objetivo e escopo
 

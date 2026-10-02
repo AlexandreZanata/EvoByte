@@ -675,7 +675,165 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45")
+
+
+def run_p45_envelope_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P45 audit: 60s tracing matrix, frozen selection, 600s envelope on the winner."""
+    import tempfile
+
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P45":
+        raise ValueError(f"Config {cfg_p} is not a P45 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P45 HONEST-ENVELOPE AUDIT (real budgets, exclusive dirs, no OOM tolerated)")
+    print("=" * 115)
+
+    report: dict[str, Any] = {
+        "phase": "P45",
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P45",
+        },
+    }
+    if not _torch.cuda.is_available():
+        report.update(
+            {
+                "verdict": "NOT_MEASURED",
+                "reason": "no CUDA reference GPU; resident envelope claims blocked",
+            }
+        )
+        out_p = Path(output_path)
+        out_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_p, "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2, sort_keys=True, default=str)
+        print("P45 audit NOT_MEASURED: no CUDA device.")
+        return report
+
+    from gpu_limits import run_p45_envelope_measurement
+
+    scratch = Path(tempfile.mkdtemp(prefix="evobyte-p45-"))
+    seed = int(config.get("seed", 42))
+    common = {
+        "formula": config.get("formula", "x**2 + 3*x + 7"),
+        "pop_size": int(config.get("pop_size", 256)),
+        "seed": seed,
+        "smoke": False,
+        "scale_factor": 1.0,
+        "verify_every_gens": int(config.get("verify_every_gens", 10)),
+        "checkpoint_every_sec": float(config.get("checkpoint_every_sec", 120.0)),
+        "device_name": config.get("device", "cuda"),
+    }
+    matrix = run_p45_envelope_measurement(
+        durations_sec=list(config.get("durations_60s", [60])),
+        tracing_modes=list(config.get("tracing_modes_60s", [False, True])),
+        output_path=str(scratch / "p45-matrix.json"),
+        raw_root=str(scratch / "matrix-raw"),
+        **common,
+    )
+    cells = matrix["tiers"]
+    base_ok = len(cells) > 0 and all(c["status"] == "ok" and c["counter_check"] for c in cells)
+    selected: bool | None = None
+    if base_ok:
+        best = max(cells, key=lambda c: (c["verified_exact"], c["tracing"]))
+        selected = bool(best["tracing"])
+    print(f"  60s matrix stable={base_ok}; selected tracing={selected}")
+
+    envelope: dict[str, Any] | None = None
+    if base_ok and selected is not None:
+        envelope = run_p45_envelope_measurement(
+            durations_sec=list(config.get("durations_600s", [600])),
+            tracing_modes=[selected],
+            output_path=str(scratch / "p45-envelope.json"),
+            raw_root=str(scratch / "envelope-raw"),
+            **common,
+        )
+        print(f"  600s envelope verdict={envelope['verdict']}")
+
+    if not base_ok or envelope is None:
+        verdict = "MIXED"
+    elif envelope["verdict"] == "ACCEPTED" and all(
+        t["status"] == "ok" and t["counter_check"] for t in envelope["tiers"]
+    ):
+        verdict = "ACCEPTED"
+    else:
+        verdict = "MIXED"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p45_config": config_sha[:16]},
+        config={"acceptance_phase": "P45"},
+    )
+    report.update(
+        {
+            "verdict": verdict,
+            "claim_scope": "full-pipeline envelope at real budgets; no hour-stability claim",
+            "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+            "revision": revision,
+            "dirty": dirty,
+            "matrix_60s": {
+                "verdict": matrix["verdict"],
+                "tiers": matrix["tiers"],
+                "stages_per_sec": matrix["stages_per_sec"],
+            },
+            "selection_rule": config.get("selection_rule"),
+            "selected_tracing": selected,
+            "envelope_600s": (
+                {
+                    "verdict": envelope["verdict"],
+                    "tiers": envelope["tiers"],
+                    "stages_per_sec": envelope["stages_per_sec"],
+                    "batch_policy": envelope.get("batch_policy"),
+                }
+                if envelope
+                else None
+            ),
+            "hardware": prov["hardware"],
+            "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+            "package_versions": {
+                "python": prov["hardware"].get("python"),
+                "numpy": prov["hardware"].get("numpy"),
+                "torch": prov["hardware"].get("torch"),
+                "cuda": prov["hardware"].get("cuda_version"),
+            },
+            "seeds_rng": f"fixed seed {seed} (+101 per cell); deterministic rebuilds, not bit-compared",
+            "budgets": "requested 60s x2 + 600s x1 wall-clock at scale 1.0; observed per tier",
+            "counters": {
+                "cells_60s": len(cells),
+                "cells_60s_ok": sum(1 for c in cells if c["status"] == "ok"),
+                "long_tier_ok": bool(envelope)
+                and all(t["status"] == "ok" for t in envelope["tiers"]),
+            },
+            "limitations": [
+                "No 3600s confirmation run; hour-stability is not claimed.",
+                "VRAM headroom accounts coarsely for other processes (nvidia-smi snapshots).",
+            ],
+            "elapsed_sec": time.perf_counter() - t0,
+        }
+    )
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P45 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def _p44_profile_components(evo: Any, iters: int) -> dict[str, Any]:
@@ -2025,6 +2183,8 @@ def main() -> int:
             run_p43_resume_audit(args.config, args.output)
         elif args.acceptance_phase == "P44":
             run_p44_resident_audit(args.config, args.output)
+        elif args.acceptance_phase == "P45":
+            run_p45_envelope_audit(args.config, args.output)
         return 0
 
     seeds = (

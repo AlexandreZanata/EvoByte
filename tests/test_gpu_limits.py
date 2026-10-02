@@ -268,3 +268,70 @@ def test_write_manifest_exclusive_seals_before_manifest(tmp_path: Path) -> None:
     with open(raw_p, "ab") as f:
         f.write(b" ")
     assert verify_manifest_integrity(manifest_p)["ok"] is False
+
+
+def test_p45_measurement_refuses_scaled_budgets() -> None:
+    import pytest
+    from gpu_limits import run_p45_envelope_measurement
+
+    with pytest.raises(ValueError, match="refuses scale_factor"):
+        run_p45_envelope_measurement(scale_factor=0.5, output_path=None, raw_root=None)
+
+
+def test_p45_vram_policy_math() -> None:
+    from gpu_limits import p45_vram_policy
+
+    full = p45_vram_policy(8_000_000_000, 7_700_000_000)
+    assert full["reserve_bytes"] == 1_600_000_000
+    assert full["may_start"] is True
+    tight = p45_vram_policy(8_000_000_000, 1_000_000_000)
+    assert tight["may_start"] is False
+    small = p45_vram_policy(2_000_000_000, 1_900_000_000)
+    assert small["reserve_bytes"] == 1 << 30
+
+
+def test_p45_smoke_measurement_tmp(tmp_path: Path) -> None:
+    if not torch.cuda.is_available():
+        return
+    from gpu_limits import run_p45_envelope_measurement
+
+    from evobyte.provenance import verify_manifest_integrity
+
+    out_p = tmp_path / "p45-smoke.json"
+    manifest = run_p45_envelope_measurement(
+        durations_sec=[3],
+        tracing_modes=[True],
+        pop_size=32,
+        seed=42,
+        smoke=True,
+        verify_every_gens=5,
+        checkpoint_every_sec=2,
+        output_path=str(out_p),
+        raw_root=str(tmp_path / "raw"),
+    )
+    assert manifest["verdict"] in ("ACCEPTED", "MIXED")
+    assert manifest["smoke"] is True
+    assert set(manifest["stages_per_sec"]) >= {
+        "generation_per_sec",
+        "filter_per_sec",
+        "select_per_sec",
+        "evolve_per_sec",
+        "verify_per_sec",
+    }
+    assert len(manifest["tiers"]) == 1
+    assert manifest["tiers"][0]["counter_check"] is True
+    assert verify_manifest_integrity(out_p)["ok"] is True
+    assert all(r["size_bytes"] > 0 for r in manifest["raw_inventory"])
+    # A second seal into the same manifest path is refused, never replaced.
+    import pytest as _pytest
+
+    with _pytest.raises(FileExistsError, match="Refusing to overwrite"):
+        run_p45_envelope_measurement(
+            durations_sec=[3],
+            tracing_modes=[True],
+            pop_size=32,
+            seed=42,
+            smoke=True,
+            output_path=str(out_p),
+            raw_root=str(tmp_path / "raw2"),
+        )
