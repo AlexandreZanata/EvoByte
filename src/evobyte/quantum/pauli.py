@@ -107,5 +107,7 @@ def decode_human(p: Pauli) -> str:
         if kind != "I":
             parts.append(f"{kind}{q}")
     body = " ".join(parts) if parts else "I"
-    coeff = {0: "", 1: "i*", 2: "-1*", 3: "-i*"}[p.phase]
+    # The printed Y already includes iXZ; remove that phase from the prefix.
+    relative_phase = (p.phase - (p.x_mask & p.z_mask).bit_count()) % 4
+    coeff = {0: "", 1: "i*", 2: "-1*", 3: "-i*"}[relative_phase]
     return f"{coeff}{body}"

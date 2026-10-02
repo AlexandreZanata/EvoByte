@@ -946,8 +946,13 @@ def verify_manifest_integrity(
             "path": str(p),
         }
 
-    # Verify manifest hash if present
+    if not isinstance(data, dict):
+        return {"passed": False, "reason": "invalid_manifest_object"}
+
+    # A missing checksum cannot be treated as a valid manifest.
     stored_hash = data.get("manifest_sha256")
+    if not isinstance(stored_hash, str) or len(stored_hash) != 64:
+        return {"passed": False, "reason": "missing_manifest_hash"}
     if stored_hash:
         unhashed = dict(data)
         unhashed.pop("manifest_sha256", None)
@@ -963,7 +968,11 @@ def verify_manifest_integrity(
 
     # Verify all declared raw artifacts
     raw_artifacts = data.get("raw_artifacts", [])
+    if not isinstance(raw_artifacts, list) or not raw_artifacts:
+        return {"passed": False, "reason": "missing_raw_artifacts"}
     for art in raw_artifacts:
+        if not isinstance(art, dict):
+            return {"passed": False, "reason": "malformed_raw_artifact_entry"}
         art_path_str = art.get("path")
         expected_sha = art.get("sha256")
         if not art_path_str or not expected_sha:
@@ -1053,126 +1062,244 @@ def verify_config_sensitivity(
 # ==============================================================================
 
 
-def generate_claims_audit() -> dict[str, Any]:
-    """Produce a claim-to-evidence audit of retained P13–P31 conclusions with
+def generate_claims_audit(repo_root: Path | None = None) -> dict[str, Any]:
+    """Inventory historical evidence without promoting software PASS to science.
 
-    accepted/provisional/superseded/not_run classifications, plus H1 re-evaluation.
+    Classifications concern scientific acceptance under D013/D014/D015. File
+    presence and a checksum establish availability, not independent confirmation.
     """
+    root = _REPO_ROOT if repo_root is None else Path(repo_root)
+    phases = {
+        "P13": (
+            "full-benchmark",
+            "p13-manifest.json",
+            "Full-matrix verdict contested by D013; clean confirmation pending.",
+        ),
+        "P14": (
+            "scientific-datasets",
+            None,
+            "Scientific-dataset entry remains gated; corpus pilots do not replace it.",
+        ),
+        "P15": (
+            "measurement-integrity",
+            "p15-audit.json",
+            "Harness checks do not validate all historical throughput claims.",
+        ),
+        "P16": (
+            "population-gpu-vm",
+            "p16-vm.json",
+            "Population-parallel PyTorch VM; no accepted Triton superiority claim.",
+        ),
+        "P17": (
+            "resident-evolution",
+            "p17-loop.json",
+            "Resident-cycle pilot; acceptance requires matched measured controls.",
+        ),
+        "P18": (
+            "streaming-cascade",
+            "p18-cascade.json",
+            "Streaming cascade and bounded memory, not a grammar experiment.",
+        ),
+        "P19": (
+            "strict-verification",
+            "p19-l2.json",
+            "Strict discovery verification, not analytical constant fitting.",
+        ),
+        "P20": (
+            "sustained-throughput",
+            "p20-throughput.json",
+            "Sustained throughput pilot; preserve the distinct scored-S1 target.",
+        ),
+        "P21": (
+            "independent-reproduction",
+            "p21-reproduction.json",
+            "Recorded reproduction pilot does not unlock H1/P14 automatically.",
+        ),
+        "P22": (
+            "cross-task-learning",
+            "p22-transfer.json",
+            "Recorded cross-task learning DROP pilot; not an unrun island model.",
+        ),
+        "P23": (
+            "math-specialist-pilot",
+            "p23-pilot.json",
+            "Specialist DROP pilot; proposed P35 does not supersede a measured result.",
+        ),
+        "P24": (
+            "stable-limits",
+            "p24-limits.json",
+            "Historical stability pilot has NOP-heavy distribution and bounded uniqueness window.",
+        ),
+        "P25": (
+            "math-corpus",
+            "p25-corpus.json",
+            "Original isolation and scalar-label acceptance superseded by P30/P31; archive retained.",
+        ),
+        "P26": (
+            "lineage-map",
+            "p26-lineage.json",
+            "Probe buckets are not exact semantic classes; historical traces lack full durable replay evidence.",
+        ),
+        "P27": (
+            "qrand-hypotheses",
+            "p27-qrand-amplitude-distribution.json",
+            "Amplitude-distribution null is scoped to its recorded controls, budgets and seeds.",
+        ),
+        "P28": (
+            "specialist-rematch",
+            "p28-specialist.json",
+            "Specialist DROP pilot used unverified training positives; no model superiority established.",
+        ),
+        "P29": (
+            "open-problems",
+            "p29-erdos-straus.json",
+            "Original bounded-certificate eligibility superseded by P31; exact identities are not new theorems.",
+        ),
+        "P30": (
+            "corpus-isolation",
+            "p30-splits.json",
+            "Internal exposure flags and group isolation do not prove absence of external training contamination.",
+        ),
+        "P31": (
+            "verifier-certificates",
+            "p31-verification.json",
+            "Independent-checker pilot; full unversioned corpus is not reproduced by software CI.",
+        ),
+    }
+    quantum = {
+        "Q07": (
+            "circuit-bytecode",
+            None,
+            "Circuit primitives and unit parity establish software behavior, not scientific novelty.",
+        ),
+        "Q08": (
+            "circuit-evolution",
+            "q08_superoptimize.py",
+            "Known-circuit equivalence pilot; linked script is not an archived measurement.",
+        ),
+        "Q09": (
+            "formula-from-observables",
+            "q09_observable_formula.py",
+            "Simulated-observable formula pilot; finite numerical agreement is not a universal proof.",
+        ),
+        "Q10": (
+            "schrodinger-residual",
+            "q10_residual_search.py",
+            "QHO starts from the known ground-state program; finite-grid tolerances are not exact proofs.",
+        ),
+        "Q11": (
+            "hamiltonian-rediscovery",
+            "q11_hamiltonian_rediscovery.py",
+            "Synthetic recovery; historical Y/YY labels corrected and counters omit local coefficient refinement.",
+        ),
+        "Q12": (
+            "anomaly-fame-monkey",
+            None,
+            "Legacy micro_model is a hand-written motif heuristic, not a trained neural model.",
+        ),
+        "Q13": (
+            "harder-systems",
+            None,
+            "Known dimer seeds and oracle energy stopping require unseeded controls; finite negative fixtures are not globally open problems.",
+        ),
+    }
+
+    def inventory(entries: dict, quantum_track: bool = False) -> dict[str, Any]:
+        result = {}
+        for phase, (slug, artifact, limitation) in entries.items():
+            folder = "docs/phases/quantum" if quantum_track else "docs/phases"
+            doc = f"{folder}/{phase}-{slug}.md"
+            paths = [doc] + ([f"experiments/{artifact}"] if artifact else [])
+            evidence = []
+            for rel in paths:
+                path = root / rel
+                present = path.is_file()
+                evidence.append(
+                    {
+                        "path": rel,
+                        "present": present,
+                        "sha256": hashlib.sha256(path.read_bytes()).hexdigest()
+                        if present
+                        else None,
+                        "kind": "phase_document"
+                        if rel == doc
+                        else (
+                            "experiment_source" if rel.endswith(".py") else "historical_manifest"
+                        ),
+                    }
+                )
+            doc_path = root / doc
+            heading = (
+                doc_path.read_text().splitlines()[0].removeprefix("# ")
+                if doc_path.is_file()
+                else phase
+            )
+            classification = "provisional" if doc_path.is_file() else "not_run"
+            if phase == "P14":
+                classification = "not_run"
+            elif phase in {"P25", "P29"} and doc_path.is_file():
+                classification = "superseded"
+            result[phase] = {
+                "claim": heading,
+                "classification": classification,
+                "classification_scope": "scientific_acceptance",
+                "rationale": limitation,
+                "evidence": evidence,
+                "independent_confirmation": "not_run",
+            }
+        return result
+
+    primary = inventory(phases)
+    qclaims = inventory(quantum, quantum_track=True)
+    hypothesis_path = root / "docs/HYPOTHESIS.md"
+    criterion_keys = [
+        "criterion_1_rediscovery",
+        "criterion_2_speed",
+        "criterion_3_value_of_evolution",
+        "criterion_4_generalization",
+        "criterion_5_honest_baselines",
+    ]
+    definitions: dict[str, str] = {}
+    if hypothesis_path.is_file():
+        original = (
+            hypothesis_path.read_text()
+            .split("## Falsifiable criteria", 1)[-1]
+            .split("H1 is **weakened**", 1)[0]
+        )
+        current = None
+        for line in original.splitlines():
+            if len(line) > 2 and line[:3] in {f"{i}. " for i in range(1, 6)}:
+                current = criterion_keys[int(line[0]) - 1]
+                definitions[current] = line[3:]
+            elif current and line.startswith("   "):
+                definitions[current] += " " + line.strip()
+    complete = (
+        len(definitions) == 5
+        and all(entry["evidence"][0]["present"] for entry in [*primary.values(), *qclaims.values()])
+        and all(
+            entry["classification"] != "accepted"
+            for entry in [*primary.values(), *qclaims.values()]
+        )
+    )
     return {
         "clean_revision": get_git_commit(),
         "clean_tree": get_git_status() == "",
-        "p13_p29_classifications": {
-            "P13": {
-                "claim": "Full benchmark matrix across budgets and baselines",
-                "classification": "provisional",
-                "rationale": "D013 audit keeps P13 provisional pending final clean confirmation in P38",
-            },
-            "P14": {
-                "claim": "Scientific datasets benchmark",
-                "classification": "superseded",
-                "rationale": "Superseded by P25 and P30 strict corpus isolation",
-            },
-            "P15": {
-                "claim": "Measurement integrity, GPU synchronization, and clean provenance",
-                "classification": "accepted",
-                "rationale": "Monotonic deadlines, GPU synchronization, and REPRODUCIBILITY provenance verified",
-            },
-            "P16": {
-                "claim": "Triton VM fused interpreter and baseline comparison",
-                "classification": "accepted",
-                "rationale": "Triton kernel verified against PyTorch VM reference",
-            },
-            "P17": {
-                "claim": "Chunked execution and VRAM operating envelope",
-                "classification": "accepted",
-                "rationale": "Chunked batch execution bounded within RTX 4060 operating envelope",
-            },
-            "P18": {
-                "claim": "Structured opcode sampler and prefix grammar",
-                "classification": "accepted",
-                "rationale": "Pure and structured sampling operational with guaranteed syntactic validity",
-            },
-            "P19": {
-                "claim": "Analytical constant fitting via linear least squares",
-                "classification": "accepted",
-                "rationale": "Closed-form least-squares solve integrated and verified",
-            },
-            "P20": {
-                "claim": "Multi-tier cascade evaluation",
-                "classification": "accepted",
-                "rationale": "Cascade screening (S0/S1/S2/S3) operational and throughput measured",
-            },
-            "P21": {
-                "claim": "GPU resident genetic operators (mutation, crossover)",
-                "classification": "accepted",
-                "rationale": "In-place resident GPU mutation and crossover verified",
-            },
-            "P22": {
-                "claim": "Island model and asynchronous migration",
-                "classification": "not_run",
-                "rationale": "Deferred to multi-GPU / isolated environment per D013/D014",
-            },
-            "P23": {
-                "claim": "Symbolic regression benchmark suite",
-                "classification": "superseded",
-                "rationale": "Early benchmarks superseded by P35 benchmark suite",
-            },
-            "P24": {
-                "claim": "GPU resident evolution loop and checkpointing",
-                "classification": "accepted",
-                "rationale": "Resident evolution loop operational; checkpointing audited and upgraded in P32 to bit-exact resume",
-            },
-            "P25": {
-                "claim": "Corpus isolation pilot",
-                "classification": "superseded",
-                "rationale": "Superseded by strict P30 SHA-256 problem manifests and zero-leakage splits",
-            },
-            "P26": {
-                "claim": "Lineage tracing and exploration map",
-                "classification": "accepted",
-                "rationale": "Full lineage and bit-exact replay verified; behavioral signatures clarified as probe buckets",
-            },
-            "P27": {
-                "claim": "Analytical vs numerical constant fitting comparison",
-                "classification": "accepted",
-                "rationale": "Falsification of naive constant search accepted as sound negative result",
-            },
-            "P28": {
-                "claim": "Benchmark harness optimization",
-                "classification": "superseded",
-                "rationale": "Superseded by P35 benchmark suite",
-            },
-            "P29": {
-                "claim": "Dynamic coordinate bounds",
-                "classification": "superseded",
-                "rationale": "Superseded by P31 strict coordinate certificates and independent answer verification",
-            },
-            "P30": {
-                "claim": "Corpus isolation and leak-free split generation",
-                "classification": "accepted",
-                "rationale": "Cryptographic corpus isolation with SHA-256 problem manifests accepted",
-            },
-            "P31": {
-                "claim": "Independent answer verification and certificate bounds",
-                "classification": "accepted",
-                "rationale": "Dual-engine verification (AST + SymPy) with coordinate certificate bounds accepted",
-            },
-        },
+        "audit_complete": complete,
+        # Preserve the old key for consumers; its true scope is P13-P31.
+        "p13_p29_classifications": primary,
+        "quantum_classifications": qclaims,
         "hypothesis_h1_evaluation": {
             "hypothesis": "H1 — Massively parallel stochastic search with autoevolution",
-            "criteria_status": {
-                "criterion_1_rediscovery": "provisional (supported in pilot runs; awaiting P38 clean confirmation)",
-                "criterion_2_speed": "accepted (CVPS > 1,000 verified with monotonic deadlines)",
-                "criterion_3_value_of_evolution": "accepted (genetic + QD beats random search at equal budget)",
-                "criterion_4_generalization": "provisional (anti-memorization verified on pilot splits)",
-                "criterion_5_honest_baselines": "provisional (Pareto front established; final baseline matrix in P38)",
-            },
+            "criteria_source": "docs/HYPOTHESIS.md#falsifiable-criteria",
+            "criteria_source_sha256": hashlib.sha256(hypothesis_path.read_bytes()).hexdigest()
+            if hypothesis_path.is_file()
+            else None,
+            "criterion_definitions": definitions,
+            "criteria_status": {key: "provisional" for key in criterion_keys},
             "overall_h1_verdict": "provisional",
-            "evaluation_note": (
-                "Evaluated under unchanged original criteria per D013 and D014. "
-                "H1 remains provisional until clean confirmation across 20+ independent seeds in P38; "
-                "no premature unlock without meeting full registered criteria."
-            ),
+            "engineering_goal": ">= 1,000,000 distinct S0-valid candidates completing scored S1 at 32 points/s, <= 16 v0 slots; explicit uniqueness window and nontrivial opcode distribution",
+            "engineering_goal_status": "provisional",
+            "evaluation_note": "Original criteria unchanged. Checksums/CI do not establish scientific acceptance; D013/D014/D015 require clean independent confirmation and matched controls. No automatic H1/P14/P22 or harder-quantum unlock.",
         },
     }
 
@@ -1439,6 +1566,10 @@ def run_acceptance_audit(
     n_points: int = 64,
 ) -> dict[str, Any]:
     """Execute complete P32 Replay, Resume and Honest Evidence Acceptance Audit."""
+    if seeds_count < 1 or pop_size < 1 or n_generations < 1:
+        raise ValueError("Acceptance audit requires positive seeds, population and generations")
+    if resume and not 0 < split_at < n_generations:
+        raise ValueError("Resume split must lie strictly inside the trajectory")
     t_start = time.monotonic()
     device = resolve_device(device_name)
     synchronize(device)
@@ -1549,8 +1680,20 @@ def run_acceptance_audit(
     )
 
     # 10. Retained claims audit & H1 re-evaluation
-    print("Generating claims-to-evidence audit for P13-P31...")
+    print("Generating claims-to-evidence audit for P13-P31 and Q07-Q13...")
     claims_audit = generate_claims_audit()
+
+    # Persist the complete replay input, including candidates beyond the report sample.
+    trace_path = Path(output_path).with_suffix(".trace.json").resolve()
+    trace_path.parent.mkdir(parents=True, exist_ok=True)
+    trace_path.write_text(
+        json.dumps(
+            {"lineage_runs": [{**r.to_dict(), "audit_store": r.audit_store} for r in records]},
+            sort_keys=True,
+        ),
+        encoding="utf-8",
+    )
+    raw_artifacts_to_record[str(trace_path)] = hashlib.sha256(trace_path.read_bytes()).hexdigest()
 
     synchronize(device)
     deadline.mark_compute_done()
@@ -1562,13 +1705,15 @@ def run_acceptance_audit(
     mandatory_checks = {
         "all_replayed_bit_exact": all(r["bit_exact_reproducible"] for r in replay_results),
         "all_resumed_bit_exact": (
-            all(r["bit_exact_resumed"] for r in resume_results) if resume else True
+            resume
+            and len(resume_results) == seeds_count
+            and all(r["bit_exact_resumed"] for r in resume_results)
         ),
         "parent_ordering_valid": all(po["valid"] for po in parent_ordering_results),
         "counters_consistent": all(hc["consistent"] for hc in counter_consistency_results),
         "config_sensitivity_diverged": bool(config_sens["diverged"]),
         "manifest_fail_closed_verified": fail_closed_test_passed,
-        "retained_claims_audited": len(claims_audit["p13_p29_classifications"]) >= 17,
+        "retained_claims_audited": claims_audit["audit_complete"],
         "deadline_respected": overshoot_sec == 0.0,
     }
     overall_passed = all(mandatory_checks.values())
@@ -1620,6 +1765,9 @@ def run_acceptance_audit(
     }
 
     written = write_manifest(output_path, manifest_data, raw_artifacts_to_record)
+    integrity = verify_manifest_integrity(output_path)
+    if not integrity["passed"]:
+        raise ValueError(f"Saved acceptance evidence failed integrity verification: {integrity}")
     return written
 
 

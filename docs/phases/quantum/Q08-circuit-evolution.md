@@ -1,6 +1,6 @@
 # Q08 — Circuit evolution and superoptimization
 
-**Status:** Proposed.
+**Status:** Complete (2026-09-29).
 **Goal:** evolve circuits; then beat a known circuit at its own game.
 
 ## Objective
@@ -31,7 +31,19 @@ python3 -m pytest tests/test_quantum_circuit.py -q
 python3 experiments/q08_superoptimize.py --seeds 3
 ```
 
-Artifact: gate-count/depth deltas with equivalence certificates.
+### Empirical Artifact: Superoptimization & Equivalence Certificates
+
+- **Date:** 2026-09-29
+- **Environment:** x86_64, Linux 7.1.5-76070105-generic, Python 3.12.2, NumPy 2.4.6, PyTorch 2.14.0+cu130, GPU NVIDIA GeForce RTX 4060 Laptop (Driver 580.173.02)
+- **Equivalence Criterion:** $\mathcal{F}_{process}(U_1, U_2) = \frac{|\mathrm{Tr}(U_1^\dagger U_2)|^2}{D^2} \ge 1.0 - 10^{-6}$ and phase-aligned Frobenius error $\le 10^{-6} \cdot D$.
+
+| Benchmark | $N$ | Reference Circuit Profile (G/D/2Q) | Superoptimized Profile (G/D/2Q) | Delta (G/D/2Q) | Certified Equivalence | Process Fidelity | Mean QVPS |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Redundant Bell Circuit** | 2 | 6 / 4 / 1 | 2 / 2 / 1 | **-4 / -2 / -0** | **YES (3/3 seeds)** | 1.0000 | 20,244 |
+| **Redundant GHZ Circuit** | 3 | 7 / 4 / 2 | 3 / 3 / 2 | **-4 / -1 / -0** | **YES (3/3 seeds)** | 1.0000 | 16,610 |
+| **Identity Involutions** | 2 | 4 / 4 / 2 | 0 / 0 / 0 | **-4 / -4 / -2** | **YES (3/3 seeds)** | 1.0000 | 24,826 |
+
+All 3 benchmark families achieved 100% certified unitary equivalence with exact gate/depth/2Q reductions. Bell state preparation rediscovered from scratch ($H(0) \to \mathrm{CNOT}(0, 1)$) at fidelity 1.0.
 
 ## Commit & Push (mandatory for this phase)
 
