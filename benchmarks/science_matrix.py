@@ -674,7 +674,191 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40",)
+ACCEPTANCE_PHASES = ("P40", "P41")
+
+
+def _p41_snapshot(paths: list[str]) -> dict[str, str | None]:
+    """Hash-snapshot historical artifacts (None when missing)."""
+    from evobyte.provenance import hash_file
+
+    snap: dict[str, str | None] = {}
+    for ref in paths:
+        cand = _REPO_ROOT / ref
+        try:
+            snap[ref] = hash_file(cand) if cand.is_file() else None
+        except OSError:
+            snap[ref] = None
+    return snap
+
+
+def run_p41_immutable_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P41 audit: exclusive-dir smoke, before/after immutability proof, tamper demos."""
+    import tempfile
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+        verify_manifest_integrity,
+        write_manifest_exclusive,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P41":
+        raise ValueError(f"Config {cfg_p} is not a P41 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    inventory = config.get("inventory", [])
+    watched = [e["path"] for e in inventory]
+
+    print("=" * 115)
+    print("P41 IMMUTABLE-ARTIFACTS AUDIT (exclusive dirs; history read-only)")
+    print("=" * 115)
+
+    before = _p41_snapshot(watched)
+
+    # Smoke in a fresh exclusive directory (never a historical raw dir).
+    smoke = config.get("smoke", {})
+    scratch = Path(tempfile.mkdtemp(prefix="evobyte-p41-"))
+    smoke_manifest = scratch / "p41-smoke.json"
+    smoke_record: dict[str, Any] = {"ran": False}
+    try:
+        from gpu_limits import run_p34_profiled_benchmark
+
+        t_smoke_0 = time.perf_counter()
+        stable, _ = run_p34_profiled_benchmark(
+            budgets_str=smoke.get("budgets_str", "0.05s"),
+            seeds_count=int(smoke.get("seeds_count", 1)),
+            confirm_1h=True,
+            tracing=True,
+            scale_factor=float(smoke.get("scale_factor", 0.05)),
+            output_path=str(smoke_manifest),
+            raw_dir=str(scratch / "p41-raw"),
+            smoke=True,
+        )
+        smoke_record = {
+            "ran": True,
+            "stable": bool(stable),
+            "requested": smoke,
+            "actual_sec": time.perf_counter() - t_smoke_0,
+            "manifest": str(smoke_manifest),
+        }
+        smoke_record["manifest_verifies"] = bool(verify_manifest_integrity(smoke_manifest)["ok"])
+    except RuntimeError as exc:
+        smoke_record = {"ran": False, "reason": f"smoke unavailable: {exc}"}
+    print(f"  smoke ran={smoke_record['ran']} manifest={smoke_manifest}")
+
+    after = _p41_snapshot(watched)
+    untouched = {ref: (before[ref] == after[ref]) for ref in watched}
+    changed = sorted(ref for ref, same in untouched.items() if not same)
+
+    # Pinned inventory vs manifest-recorded expectations (drift recorded, never rebuilt).
+    items: list[dict[str, Any]] = []
+    for entry in inventory:
+        ref, want = entry["path"], entry["expected_sha256"]
+        got = after.get(ref)
+        if got is None:
+            items.append({**entry, "verdict": "unavailable", "actual_sha256": None})
+        elif got == want:
+            items.append({**entry, "verdict": "ok", "actual_sha256": got})
+        else:
+            items.append(
+                {
+                    **entry,
+                    "verdict": "rejected",
+                    "actual_sha256": got,
+                    "note": "post-seal drift; recorded, not rebuilt",
+                }
+            )
+
+    # Active demonstrations on scratch fixtures (never on historical data).
+    demo_dir = scratch / "demo"
+    demo_dir.mkdir(parents=True, exist_ok=True)
+    demo_manifest = demo_dir / "demo.json"
+    demo_raw = demo_dir / "demo-evidence.jsonl"
+    write_manifest_exclusive(demo_manifest, {"phase": "P41-demo"}, {str(demo_raw): b'{"n": 1}\n'})
+    try:
+        write_manifest_exclusive(demo_manifest, {"phase": "P41-demo"}, {str(demo_raw): b"{}"})
+        overwrite_refused = False
+    except FileExistsError:
+        overwrite_refused = True
+    with open(demo_raw, "ab") as f:
+        f.write(b" ")
+    tamper_detected = not verify_manifest_integrity(demo_manifest)["ok"]
+
+    rejected_inventory = sum(1 for i in items if i["verdict"] == "rejected")
+    if (
+        not smoke_record.get("ran")
+        or changed
+        or not overwrite_refused
+        or not tamper_detected
+        or rejected_inventory
+    ):
+        verdict = "MIXED"
+    else:
+        verdict = "ACCEPTED"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=42,
+        device=torch.device("cpu"),
+        dataset_hashes={"p41_config": config_sha[:16]},
+        config={"acceptance_phase": "P41"},
+    )
+    report = {
+        "phase": "P41",
+        "verdict": verdict,
+        "claim_scope": "P41 immutability mechanism; historical inventory recorded, not repaired",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "smoke": smoke_record,
+        "historical_untouched_by_smoke": {"compared": len(watched), "changed": changed},
+        "inventory": items,
+        "demonstrations": {
+            "overwrite_refused": overwrite_refused,
+            "one_byte_tamper_detected": tamper_detected,
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P41",
+        },
+        "seeds_rng": "not-applicable: audit performs no search (reason: deterministic inspection + fixed smoke seed)",
+        "budgets": {"smoke_requested": smoke, "smoke_actual_sec": smoke_record.get("actual_sec")},
+        "counters": {
+            "inventory": len(items),
+            "inventory_ok": sum(1 for i in items if i["verdict"] == "ok"),
+            "inventory_rejected": rejected_inventory,
+            "historical_changed_by_smoke": len(changed),
+        },
+        "limitations": [
+            "P41 audits the mechanism and records inventory; divergent history (P34 telemetry) is rejected, not rebuilt.",
+            "Smoke requires the CUDA reference GPU; otherwise recorded unavailable.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(
+        f"P41 audit {verdict}: inventory "
+        f"{sum(1 for i in items if i['verdict'] == 'ok')}/{len(items)} ok; "
+        f"historical changes by smoke: {len(changed)}; report -> {out_p}"
+    )
+    return report
 
 
 def _p40_has_path(doc: Any, dotted: str) -> bool:
@@ -1128,7 +1312,10 @@ def main() -> int:
             )
         if not args.config or not args.output:
             raise SystemExit("Acceptance mode requires --config and --output.")
-        run_p40_evidence_audit(args.config, args.output)
+        if args.acceptance_phase == "P40":
+            run_p40_evidence_audit(args.config, args.output)
+        elif args.acceptance_phase == "P41":
+            run_p41_immutable_audit(args.config, args.output)
         return 0
 
     seeds = (
