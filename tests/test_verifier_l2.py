@@ -453,3 +453,46 @@ def test_p42_variable_exponent_never_crashes_verifier() -> None:
     eq, detail = check_exact_identity(x**x, "x**2 + 1")
     assert eq is False
     assert isinstance(detail, str) and detail
+
+
+def test_p48_lean_source_scanner() -> None:
+    from evobyte.verifier import lean_normalize_signature, lean_scan_source
+
+    clean = "import Mathlib.Tactic.Ring\ntheorem t : ∀ x : ℚ, x = x := by\n  rfl\n"
+    scan = lean_scan_source(clean)
+    assert scan["sorry_hits"] == []
+    assert scan["axiom_declarations"] == []
+    assert scan["disallowed_imports"] == []
+
+    sneaky = "import Mathlib.Tactic.Ring\nimport Sneaky.Helper\ntheorem t := by\n  sorry\n"
+    scan = lean_scan_source(sneaky)
+    assert scan["sorry_hits"] == ["sorry"]
+    assert scan["disallowed_imports"] == ["Sneaky.Helper"]
+
+    axiom_src = "axiom myOracle : ∀ x : ℚ, x = x\ntheorem t : ∀ x : ℚ, x = x := myOracle\n"
+    scan = lean_scan_source(axiom_src)
+    assert scan["axiom_declarations"] == ["myOracle"]
+
+    parsed = lean_normalize_signature(clean)
+    assert parsed is not None and parsed[0] == "t"
+    assert lean_normalize_signature(clean, theorem="other") is None
+    assert lean_normalize_signature("no theorem here") is None
+
+
+def test_p48_missing_toolchain_refuses_explicitly(tmp_path) -> None:
+    import unittest.mock as _mock
+
+    from evobyte.verifier import LeanToolchainUnavailable, run_lean_checker
+
+    proof = tmp_path / "p.lean"
+    proof.write_text("theorem t : True := trivial\n")
+    with (
+        _mock.patch.object(Path, "is_file", return_value=False),
+        _mock.patch("shutil.which", return_value=None),
+    ):
+        try:
+            run_lean_checker(proof, project_dir=tmp_path)
+        except LeanToolchainUnavailable as exc:
+            assert "not found" in str(exc)
+        else:
+            raise AssertionError("missing toolchain must refuse, never simulate")

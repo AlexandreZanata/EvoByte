@@ -133,7 +133,7 @@ def test_science_matrix_smoke():
 
 
 def test_p40_acceptance_registry_rejects_unknown_phases():
-    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47")
+    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47", "P48")
     import subprocess as _sp
 
     proc = _sp.run(
@@ -141,7 +141,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P48",
+            "P49",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -153,7 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P48'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P49'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():

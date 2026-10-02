@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import math
+import os
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -746,3 +749,223 @@ def verify_l2(
         domain=domain_str,
         exported_candidate=exported,
     )
+
+
+LEAN_PINNED_TOOLCHAIN = "leanprover/lean4:v4.34.0"
+LEAN_ALLOWED_IMPORT_PREFIXES = ("Mathlib",)
+LEAN_SORRY_TOKENS = ("sorry", "admit", "sorryAx")
+
+
+class LeanToolchainUnavailable(Exception):
+    """Refusal: the pinned Lean toolchain is not installed here (P48)."""
+
+
+def lean_normalize_signature(source: str, theorem: str | None = None) -> tuple[str, str] | None:
+    """Extract (theorem_name, normalized_statement) from a Lean proof source.
+
+    With ``theorem`` set, extracts that named theorem; otherwise the first one.
+    """
+    import re as _re
+
+    pattern = (
+        rf"theorem\s+({_re.escape(theorem)})\s*:(.*?):="
+        if theorem is not None
+        else r"theorem\s+(\w+)\s*:(.*?):="
+    )
+    match = _re.search(pattern, source, _re.DOTALL)
+    if not match:
+        return None
+    name = match.group(1)
+    stmt = _re.sub(r"\s+", " ", match.group(2)).strip()
+    return name, stmt
+
+
+def lean_scan_source(source: str) -> dict[str, Any]:
+    """Source-level prohibitions: sorry/admit tokens, extra axioms, imports.
+
+    Static pre-check only; never a substitute for compilation.
+    """
+    import re as _re
+
+    lowered = source
+    sorry_hits = sorted({tok for tok in LEAN_SORRY_TOKENS if _re.search(rf"\b{tok}\b", lowered)})
+    axiom_names = _re.findall(r"(?m)^\s*axiom\s+(\w+)", lowered)
+    imports = _re.findall(r"(?m)^\s*import\s+([\w.]+)", lowered)
+    bad_imports = [i for i in imports if not i.startswith(LEAN_ALLOWED_IMPORT_PREFIXES)]
+    return {
+        "sorry_hits": sorry_hits,
+        "axiom_declarations": axiom_names,
+        "imports": imports,
+        "disallowed_imports": bad_imports,
+    }
+
+
+def lean_resolve_binaries(project_dir: str | Path | None = None) -> dict[str, str]:
+    """Locate lake/lean binaries and verify the pinned toolchain is present."""
+    import shutil as _shutil
+
+    _ = project_dir
+    candidates = [str(Path.home() / ".elan" / "bin")]
+    candidates.extend(os.environ.get("PATH", "").split(os.pathsep))
+    found: dict[str, str] = {}
+    for name in ("lake", "lean", "elan"):
+        hit = next(
+            (
+                entry + os.sep + name
+                for entry in candidates
+                if entry and Path(entry, name).is_file()
+            ),
+            None,
+        )
+        if hit is None:
+            hit = _shutil.which(name)
+        if hit is None:
+            raise LeanToolchainUnavailable(
+                f"Lean binary {name!r} not found; install the pinned toolchain "
+                f"{LEAN_PINNED_TOOLCHAIN} (P48 stays BLOCKED until then)."
+            )
+        found[name] = hit
+    return found
+
+
+def run_lean_checker(
+    proof_file: str | Path,
+    *,
+    project_dir: str | Path | None = None,
+    expected_theorem: str | None = None,
+    expected_statement_sha256: str | None = None,
+    timeout_sec: float = 900.0,
+    repeat_check: bool = True,
+) -> dict[str, Any]:
+    """Out-of-cycle Lean boundary: compile in a separate process, verify the match.
+
+    Refuses (never accepts) on: missing toolchain, timeout, compiler errors,
+    sorry/admit tokens, extra axiom declarations, disallowed imports, or a
+    proven statement that differs from the frozen challenge. Repeats the
+    compile once to rule out transient passes when supported.
+    """
+    import re as _re
+    import subprocess as _sp
+
+    t_start = time.perf_counter()
+    proof_p = Path(proof_file)
+    if project_dir is not None:
+        proj = Path(project_dir).resolve()
+        if not proof_p.is_absolute():
+            candidate = proj / proof_p
+            proof_p = candidate if candidate.exists() else (Path.cwd() / proof_p).resolve()
+    else:
+        proj = proof_p.resolve().parent
+        proof_p = proof_p.resolve()
+    bins = lean_resolve_binaries(proj)
+
+    result: dict[str, Any] = {
+        "proof_file": str(proof_p),
+        "toolchain_pin": LEAN_PINNED_TOOLCHAIN,
+        "binaries": bins,
+        "accepted": False,
+        "reasons": [],
+    }
+
+    ver = _sp.run(
+        [bins["lean"], "--version"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+        cwd=str(proj),
+    )
+    result["toolchain_version"] = (ver.stdout or ver.stderr).strip().splitlines()[0:1]
+    want_version = LEAN_PINNED_TOOLCHAIN.split(":")[-1].lstrip("v")
+    if want_version not in " ".join(result["toolchain_version"]):
+        result["reasons"].append(
+            f"toolchain_mismatch: expected {LEAN_PINNED_TOOLCHAIN}, "
+            f"got {result['toolchain_version']}"
+        )
+        result["elapsed_sec"] = time.perf_counter() - t_start
+        return result
+
+    try:
+        source = proof_p.read_text(encoding="utf-8")
+    except OSError as exc:
+        result["reasons"].append(f"unreadable_proof: {exc}")
+        result["elapsed_sec"] = time.perf_counter() - t_start
+        return result
+    scan = lean_scan_source(source)
+    result["scan"] = scan
+    if scan["sorry_hits"]:
+        result["reasons"].append(f"sorry_tokens: {scan['sorry_hits']}")
+    if scan["axiom_declarations"]:
+        result["reasons"].append(f"extra_axioms: {scan['axiom_declarations']}")
+    if scan["disallowed_imports"]:
+        result["reasons"].append(f"disallowed_imports: {scan['disallowed_imports']}")
+
+    parsed = lean_normalize_signature(source, theorem=expected_theorem)
+    if parsed is None and expected_theorem is not None:
+        fallback = lean_normalize_signature(source)
+        if fallback is not None:
+            result["reasons"].append(
+                f"theorem_mismatch: file proves {fallback[0]!r}, challenged {expected_theorem!r}"
+            )
+            parsed = fallback
+    if parsed is None:
+        result["reasons"].append("unparseable_theorem_signature")
+    else:
+        name, stmt = parsed
+        result["theorem_name"] = name
+        digest = hashlib.sha256(f"{name} : {stmt}".encode()).hexdigest()
+        result["statement_sha256"] = digest
+        if expected_theorem is not None and name != expected_theorem:
+            result["reasons"].append(
+                f"theorem_mismatch: proved {name!r}, challenged {expected_theorem!r}"
+            )
+        if expected_statement_sha256 is not None and not digest.startswith(
+            expected_statement_sha256
+        ):
+            result["reasons"].append("statement_mismatch: proven statement differs from challenge")
+
+    def _compile_once() -> tuple[int, str]:
+        try:
+            proc = _sp.run(
+                [bins["lake"], "env", "lean", str(proof_p)],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+                check=False,
+                cwd=str(proj),
+            )
+        except _sp.TimeoutExpired:
+            return -1, "TIMEOUT"
+        return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+
+    if not result["reasons"]:
+        code, output = _compile_once()
+        result["compile_returncode"] = code
+        result["compile_output_tail"] = output[-2000:]
+        if code == -1:
+            result["reasons"].append(f"compile_timeout_after_{timeout_sec}s")
+        elif code != 0:
+            first_err = next(
+                (ln.strip()[:160] for ln in output.splitlines() if "error" in ln.lower()),
+                "unknown compile error",
+            )
+            result["reasons"].append(f"compile_rejected: {first_err}")
+        elif _re.search(r"declaration uses `sorry`", output):
+            result["reasons"].append("compiler_reports_sorry")
+        else:
+            result["compiled_ok"] = True
+            if repeat_check:
+                code2, _ = _compile_once()
+                result["repeat_returncode"] = code2
+                if code2 != 0:
+                    result["reasons"].append("repeat_compile_disagrees")
+                else:
+                    result["repeat_match"] = True
+
+    result["axioms_recorded"] = sorted(
+        set(scan.get("axiom_declarations", []))
+        | ({"sorryAx"} if "sorry" in scan.get("sorry_hits", []) else set())
+    )
+    result["accepted"] = not result["reasons"]
+    result["elapsed_sec"] = time.perf_counter() - t_start
+    return result
