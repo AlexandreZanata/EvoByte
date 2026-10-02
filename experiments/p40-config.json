@@ -1,0 +1,84 @@
+{
+  "phase": "P40",
+  "note": "Complete frozen configuration. No search budgets: the audit performs no search (deterministic manifest inspection). No TBD values.",
+  "base": {
+    "ancestor_branch_vs_origin_main": "ab2cc0c6291c1e30ffb6ebd52d713481a443112b",
+    "branch_tip_at_plan": "3cdafbb feat(science): complete p39 certified-science",
+    "merges_allowed_this_cycle": false,
+    "missing_accepted_merges": [
+      "PR #54 P30-P39 research phases consolidation",
+      "PR #55 P30 cache-independence test",
+      "PR #56 P31 CI isolation test",
+      "PR #57 P32 durable-evidence acceptance"
+    ],
+    "origin_main_at_plan": "17860957d1a65bf10d877bc67eb844a38e239846"
+  },
+  "manifests": [
+    {
+      "path": "experiments/p33-structured-search.json",
+      "status_ok": ["PASS"],
+      "required_fields": ["ruling", "summary_by_arm", "finalists_verification", "elapsed_sec", "provenance"],
+      "certificate_evidence": ["finalists_verification"],
+      "budgets": {"nominal": "10s,1m", "scale": 0.05, "effective_recorded": true}
+    },
+    {
+      "path": "experiments/p34-throughput.json",
+      "status_ok": ["PASS"],
+      "required_fields": ["elapsed_sec", "provenance", "budgets", "vram_budget"],
+      "certificate_evidence": [],
+      "certificate_na_reason": "throughput-only phase; no certificate claimed",
+      "budgets": {"nominal": "10s,1m,10m", "scale": 1.0, "effective_recorded": true}
+    },
+    {
+      "path": "experiments/p35-training-corpus.json",
+      "status_ok": ["PASS"],
+      "required_fields": ["labels", "leakage", "learning_curve", "positives", "elapsed_sec", "provenance"],
+      "certificate_evidence": ["labels.checker_failures_on_reverify", "positives[].certificate"],
+      "budgets": {"nominal": "teacher 0.5s/target", "scale": 1.0, "effective_recorded": true}
+    },
+    {
+      "path": "experiments/p36-specialist.json",
+      "status_ok": ["PASS"],
+      "required_fields": ["verdict", "coverage", "elapsed_sec"],
+      "certificate_evidence": [],
+      "certificate_na_reason": "INCONCLUSIVE with no training run; no certificate claimed",
+      "budgets": {"nominal": "none (blocked path)", "scale": 1.0, "effective_recorded": true}
+    },
+    {
+      "path": "experiments/p37-qrand-dependency-correlated.json",
+      "status_ok": ["complete"],
+      "required_fields": ["verdict", "comparisons", "aggregates_by_arm", "elapsed_sec", "provenance", "preregistration"],
+      "certificate_evidence": ["raw genetic.certificate", "raw matched-classical.certificate", "raw dependency-correlated.certificate"],
+      "budgets": {"nominal": "10s,1m,10m", "scale": 0.05, "effective_recorded": true}
+    },
+    {
+      "path": "experiments/p38-confirmation.json",
+      "status_ok": ["PASS"],
+      "required_fields": ["verdict", "confirmation", "access", "frozen_config", "elapsed_sec", "provenance"],
+      "certificate_evidence": ["raw trials[].certificate", "access.log"],
+      "budgets": {"nominal": "5s/trial frozen", "scale": 1.0, "effective_recorded": true}
+    },
+    {
+      "path": "experiments/p39-science.json",
+      "status_ok": ["PASS"],
+      "required_fields": ["classification", "instances", "soundness", "elapsed_sec", "provenance"],
+      "certificate_evidence": ["instances[?certificate].certificate.certificate_hash", "soundness.accepted_false_positives"],
+      "budgets": {"nominal": "filter windows (no wall budget)", "scale": 1.0, "effective_recorded": true}
+    }
+  ],
+  "claims": [
+    {"id": "base-clean-revision", "rule": "every audited manifest provenance.clean_tree must be true"},
+    {"id": "base-integration", "rule": "origin/main accepted merges #54-#57 integrated before P41"},
+    {"id": "p33-adopt-grammar", "rule": "ADOPT verdict backed by finalists_verification; scale disclosed as diagnostic"},
+    {"id": "p34-envelope-diagnostic", "rule": "envelope measured; no fabricated speedup claim"},
+    {"id": "p35-insufficient-published", "rule": "insufficient corpus published with promotion blocked"},
+    {"id": "p36-inconclusive-no-training", "rule": "no training ran and no weights exist"},
+    {"id": "p37-null-frozen-rule", "rule": "NULL under the frozen rule; nothing nominated"},
+    {"id": "p38-provisional-bounded", "rule": "0.20 reported with intervals; H1 not replaced"},
+    {"id": "p39-rediscovery-capped", "rule": "weaker label retained; finite miss is budget_exhausted"},
+    {"id": "scale-is-diagnostic", "rule": "reduced-scale runs labeled diagnostic, never stability proof"},
+    {"id": "mse-is-not-proof", "rule": "no manifest promotes raw MSE to a discovery claim"},
+    {"id": "checkpoint-is-not-resume", "rule": "P39 checkpoint has continuation evidence (artifact + resume test); loading alone never counted as resume"},
+    {"id": "sampling-is-not-evolution", "rule": "P33 arms kept distinct; sampling arm never credited with evolutionary search"}
+  ]
+}

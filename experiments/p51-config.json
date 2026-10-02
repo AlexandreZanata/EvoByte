@@ -1,0 +1,11 @@
+{
+  "device": "cpu",
+  "formula": "x2_3x_7",
+  "max_nodes": 100000,
+  "n_generations": 6,
+  "n_points": 64,
+  "note": "Complete frozen configuration. Bounded sampled map plus all elites/certs; declared segments rebuild from seed plus checkpoint; caps 100k nodes, 64 MiB I/O queue, 1 GiB raw disk. No TBD values.",
+  "phase": "P51",
+  "pop_size": 32,
+  "seed": 42
+}

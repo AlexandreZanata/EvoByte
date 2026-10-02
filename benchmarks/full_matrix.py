@@ -7,6 +7,7 @@ import contextlib
 import datetime
 import hashlib
 import json
+import math
 import subprocess
 import sys
 import time
@@ -1758,6 +1759,504 @@ def run_reproduce_manifest(
     return report
 
 
+P38_PREREGISTRATION_SPEC = """
+P38 CLEAN-ENVIRONMENT CONFIRMATION (frozen before measurement):
+SELECTED METHOD: P33 grammar-resident genetic baseline (P36 INCONCLUSIVE produced
+no model; P37 NULL nominated nothing; losers revert to the accepted baseline).
+No algorithm change during final scoring; no weights exist, so the exported
+proposer is the frozen search configuration plus the independent checker.
+PROBLEM SET (registered before opening): every P30 final-test item with
+family == polynomial_arithmetic (10 items, 9 source-problem groups). No
+selection, no substitution. PAIRED DEV SET: every P30 val item with
+family == polynomial_arithmetic (7 items), same seeds, for the dev-vs-final
+paired generalization check.
+SEEDS: 20 independent seeds [2000..2019]; engine seed = seed + 101*task_index.
+BUDGETS: equal 5.0 s wall-clock per (task, seed) trial, pop_size 256, early-stop
+fitness 1e-4, device as resolved (recorded). PASS/FAIL honesty: timeouts and
+misses are censored failures, never successes.
+CHECKER: P31-style verify_l2 (mse<=1e-4, extrap<=1.0, symbolic recorded),
+independent of the search loop; text conversion and checking billed outside it.
+STATISTICS (predeclared): per-problem Wilson 95% CIs on verified success over
+seeds; paired percentile bootstrap 95% CI (2000 resamples, seed 0) on per-seed
+dev-minus-final certified-rate differences.
+FAMILY VERDICT RULE (single frozen rule): CONFIRMED iff overall verified
+fraction >= 0.50; PROVISIONAL iff >= 0.20; otherwise REJECTED. H1 VERDICT:
+NOT_CONFIRMED (H1 named targets x2_3x_7/sin_x2 are absent from this
+confirmation; a narrow-family result cannot replace H1).
+DETERMINISM: fixed-step resume repeats must reproduce identical best-program
+hashes or integrity fails. TIMING VARIANCE: repeated subset reports wall-clock
+CV; P34 envelope confirmed descriptively for the frozen workload.
+ACCESS: P30 final test opened exactly once with authorized caller/reason;
+access log recorded; seal must be pristine (0 prior accesses) or integrity fails.
+"""
+
+P38_PREREGISTRATION_HASH = hashlib.sha256(
+    P38_PREREGISTRATION_SPEC.strip().encode("utf-8")
+).hexdigest()
+
+P38_SEEDS = [2000 + i for i in range(20)]
+P38_TASK_BUDGET_SEC = 5.0
+P38_POP_SIZE = 256
+
+
+def _p38_wilson_ci(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """Wilson 95% score interval for a success fraction."""
+    if n == 0:
+        return 0.0, 0.0
+    p = k / n
+    denom = 1.0 + z * z / n
+    center = (p + z * z / (2.0 * n)) / denom
+    half = z * math.sqrt(p * (1.0 - p) / n + z * z / (4.0 * n * n)) / denom
+    return max(0.0, center - half), min(1.0, center + half)
+
+
+def _p38_bootstrap_ci(diffs: np.ndarray, resamples: int = 2000) -> tuple[float, float]:
+    """Deterministic percentile bootstrap 95% CI of paired mean differences."""
+    rng = np.random.default_rng(0)
+    n = len(diffs)
+    means = np.empty(resamples, dtype=np.float64)
+    for i in range(resamples):
+        means[i] = float(np.mean(rng.choice(diffs, size=n, replace=True)))
+    return float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))
+
+
+def _p38_grids_from_item(item: Any) -> dict[str, Any] | None:
+    """Deterministic scoring grids from a sealed task's ground truth (authorized use)."""
+    import sympy as _sympy
+
+    gt = (item.metadata or {}).get("ground_truth_expr") or (item.verifier or {}).get(
+        "target_expression"
+    )
+    if not gt:
+        return None
+    try:
+        x = _sympy.Symbol("x")
+        fn = _sympy.lambdify(x, _sympy.sympify(str(gt)), modules=["numpy"])
+    except (_sympy.SympifyError, SyntaxError, TypeError, ValueError):
+        return None
+    train_xs = np.linspace(-3.0, 3.0, 48, dtype=np.float64)
+    test_xs = np.linspace(-2.9, 2.9, 32, dtype=np.float64)
+    extrap_xs = np.concatenate([np.linspace(-6.0, -3.5, 16), np.linspace(3.5, 6.0, 16)]).astype(
+        np.float64
+    )
+    return {
+        "formula": str(gt),
+        "train_xs": train_xs,
+        "train_ys": np.asarray(fn(train_xs), dtype=np.float64),
+        "test_xs": test_xs,
+        "test_ys": np.asarray(fn(test_xs), dtype=np.float64),
+        "extrap_xs": extrap_xs,
+        "extrap_ys": np.asarray(fn(extrap_xs), dtype=np.float64),
+    }
+
+
+def run_confirm_program(
+    *,
+    freeze_manifest: str | Path = "experiments/p37-qrand-dependency-correlated.json",
+    split_manifest: str | Path = "experiments/p30-splits.json",
+    seeds_count: int = 20,
+    task_budget_sec: float = P38_TASK_BUDGET_SEC,
+    pop_size: int = P38_POP_SIZE,
+    device_name: str | None = None,
+    output_path: str | Path | None = "experiments/p38-confirmation.json",
+    smoke: bool = False,
+) -> dict[str, Any]:
+    """P38 clean-environment confirmation of the frozen baseline on the sealed final test."""
+    from math_corpus import IsolatedCorpusLoader
+
+    from evobyte.grammar import GrammarResidentEvolution
+    from evobyte.verifier import verify_l2
+
+    t_wall_0 = time.perf_counter()
+    device = resolve_device(device_name)
+    torch.set_num_threads(8)
+    seed_all(42)
+    synchronize(device)
+
+    freeze_p = Path(freeze_manifest)
+    with open(freeze_p, encoding="utf-8") as f:
+        freeze = json.load(f)
+    freeze_sha = hashlib.sha256(freeze_p.read_bytes()).hexdigest()
+    split_p = Path(split_manifest)
+    with open(split_p, encoding="utf-8") as f:
+        splits = json.load(f)
+    split_sha = hashlib.sha256(split_p.read_bytes()).hexdigest()
+    p34_p = _REPO_ROOT / "experiments" / "p34-throughput.json"
+    p34_sha = hashlib.sha256(p34_p.read_bytes()).hexdigest() if p34_p.exists() else "missing"
+
+    print("=" * 115)
+    print("P38 CLEAN-ENVIRONMENT CONFIRMATION (frozen baseline, sealed final test)")
+    print(f"  Device              : {device}")
+    print(f"  Freeze manifest     : {freeze_p} (verdict={freeze.get('verdict')})")
+    print("=" * 115)
+
+    base = {
+        "phase": "p38-independent-confirmation",
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "freeze_manifest": str(freeze_p),
+        "freeze_manifest_sha256": freeze_sha,
+        "split_manifest": str(split_p),
+        "split_manifest_sha256": split_sha,
+        "p34_envelope_sha256": p34_sha,
+        "preregistration_hash": P38_PREREGISTRATION_HASH,
+    }
+
+    def _finish(
+        report: dict[str, Any], raw: dict[str, Any], extra: dict[str, str]
+    ) -> dict[str, Any]:
+        report["elapsed_sec"] = time.perf_counter() - t_wall_0
+        if output_path:
+            out_p = Path(output_path)
+            raw_p = out_p.parent / "p38-confirmation-raw.json"
+            raw_p.parent.mkdir(parents=True, exist_ok=True)
+            with open(raw_p, "w", encoding="utf-8") as f:
+                json.dump(raw, f, indent=2, sort_keys=True, default=str)
+            artifacts = {str(raw_p): hashlib.sha256(raw_p.read_bytes()).hexdigest()}
+            artifacts.update(extra)
+            written = write_manifest(out_p, report, artifacts)
+            print(
+                f"Artifact manifest written to {out_p} "
+                f"(manifest_sha256={written['manifest_sha256'][:16]})"
+            )
+        return report
+
+    # Prerequisite gate: frozen selection must be a valid completed report.
+    if freeze.get("status") not in ("complete", "PASS"):
+        report = {
+            **base,
+            "status": "FAIL",
+            "verdict": {
+                "family": "BLOCKED",
+                "rationale": "Freeze manifest is not a "
+                "completed/accepted report; advancement blocked.",
+            },
+        }
+        print("P38 BLOCKED: freeze prerequisite not met.")
+        return _finish(report, {"trials": []}, {})
+    verdict = freeze.get("verdict")
+    if isinstance(verdict, dict):
+        verdict_name = verdict.get("decision", str(verdict))
+    else:
+        verdict_name = str(verdict)
+    if verdict_name == "GAIN":
+        selected = "nominated_mechanism_pending_confirmation"
+    else:
+        selected = "grammar_resident_p33_accepted_baseline"
+
+    # Integrity gate: the seal must be pristine; this run opens it exactly once.
+    seal = splits.get("held_out_seal", {})
+    if seal.get("access_count", 0) != 0 or seal.get("access_log"):
+        report = {
+            **base,
+            "status": "FAIL",
+            "verdict": {
+                "family": "BLOCKED",
+                "rationale": "P30 final-test seal is not "
+                "pristine (prior access recorded); integrity fails, P39 blocked.",
+            },
+        }
+        print("P38 BLOCKED: final-test seal not pristine.")
+        return _finish(report, {"trials": []}, {})
+
+    # Preregister the problem set from metadata only (no content read).
+    groups = splits.get("groups_metadata", []) or []
+    final_ids = sorted(
+        g["group_id"]
+        for g in groups
+        if g.get("split") == "final_test" and g.get("family") == "polynomial_arithmetic"
+    )
+    dev_ids = sorted(
+        g["group_id"]
+        for g in groups
+        if g.get("split") == "val" and g.get("family") == "polynomial_arithmetic"
+    )
+    problem_set_hash = hashlib.sha256(
+        json.dumps({"final": final_ids, "dev": dev_ids}, sort_keys=True).encode()
+    ).hexdigest()
+    print(
+        f"  Preregistered problems : {len(final_ids)} final + {len(dev_ids)} dev "
+        f"(set_hash={problem_set_hash[:16]})"
+    )
+
+    seeds = P38_SEEDS[:seeds_count] if not smoke else [42, 43]
+    budget = 0.3 if smoke else task_budget_sec
+    pop = 32 if smoke else pop_size
+    if smoke:
+        final_ids = final_ids[:2]
+        dev_ids = dev_ids[:1]
+
+    # Open the final test exactly once for authorized scoring (access recorded).
+    loader = IsolatedCorpusLoader.from_manifest(split_p)
+    final_items_all = loader.get_final_test_items(
+        caller="p38-confirmation", reason="authorized frozen final scoring", authorized=True
+    )
+    wanted_groups = set(final_ids)
+    final_items = sorted(
+        [
+            it
+            for it in final_items_all
+            if it.family == "polynomial_arithmetic" and it.group_id in wanted_groups
+        ],
+        key=lambda it: it.id,
+    )
+    opened_groups = sorted({it.group_id for it in final_items})
+    assert opened_groups == sorted(final_ids), (
+        "Opened final-test groups differ from the preregistered set"
+    )
+    wanted_dev = set(dev_ids)
+    dev_items = sorted(
+        [
+            it
+            for it in loader.get_val_items()
+            if it.family == "polynomial_arithmetic" and it.group_id in wanted_dev
+        ],
+        key=lambda it: it.id,
+    )
+    access_log = list(loader.seal.access_log)
+    assert len(access_log) == 1, "Final test must be opened exactly once"
+
+    cfg = EvolutionConfig(
+        pop_size=pop,
+        elite_k=max(4, pop // 16),
+        tournament_size=4,
+        crossover_p=0.4,
+        gene_mut_p=0.20,
+        random_inject_p=0.10,
+        max_generations=1_000_000,
+        early_stop_fitness=1e-4,
+    )
+    frozen_cfg = {
+        "engine": "GrammarResidentEvolution",
+        "pop_size": pop,
+        "elite_k": cfg.elite_k,
+        "budget_sec": budget,
+        "seeds": seeds,
+        "early_stop_fitness": 1e-4,
+        "device": str(device),
+    }
+
+    def _score(item: Any, seed: int, task_idx: int) -> dict[str, Any]:
+        grids = _p38_grids_from_item(item)
+        if grids is None or not np.isfinite(grids["train_ys"]).all():
+            return {
+                "item_id": item.id,
+                "seed": seed,
+                "scored": False,
+                "reason": "missing_or_nonfinite_ground_truth",
+            }
+        seed_all(seed + 101 * task_idx)
+        evo = GrammarResidentEvolution(
+            grids["train_xs"].astype(np.float32),
+            grids["train_ys"].astype(np.float32),
+            config=cfg,
+            device=device,
+            seed=seed + 101 * task_idx,
+        )
+        res = evo.run(time_budget_sec=budget)
+        prog = np.asarray(res["best_program"], dtype=np.uint32)
+        v = verify_l2(
+            prog,
+            grids["train_xs"],
+            grids["train_ys"],
+            grids["test_xs"],
+            grids["test_ys"],
+            val_xs=grids["test_xs"],
+            val_ys=grids["test_ys"],
+            extrap_xs=grids["extrap_xs"],
+            extrap_ys=grids["extrap_ys"],
+            adversarial_xs=grids["extrap_xs"],
+            ground_truth_formula=grids["formula"],
+            error_threshold=1e-4,
+            extrap_threshold=1.0,
+            domain_str="[-3, 3] train; [-6, -3.5]U[3.5, 6] extrap",
+        )
+        sha = hashlib.sha256(np.ascontiguousarray(prog, dtype=np.uint32).tobytes()).hexdigest()
+        ttm = next(
+            (
+                h.get("elapsed_total_s", budget)
+                for h in res.get("history", [])
+                if h.get("best_mse", float("inf")) <= 1e-4
+            ),
+            budget,
+        )
+        ok = bool(v.passed)
+        return {
+            "item_id": item.id,
+            "group_id": item.group_id,
+            "seed": seed,
+            "scored": True,
+            "verified": ok,
+            "certificate": v.decision,
+            "test_mse": v.f64_test_mse,
+            "program_sha256": sha,
+            "disassembly": decode_human(prog),
+            "time_to_certified_sec": ttm if ok else None,
+            "censored": not ok,
+            "candidates_total": res["candidates_total"],
+            "search_cvps": res["candidates_total"] / max(budget, 1e-6),
+        }
+
+    trials: list[dict[str, Any]] = []
+    for s in seeds:
+        for t_idx, it in enumerate(final_items):
+            r = _score(it, s, t_idx)
+            r["split"] = "final_test"
+            trials.append(r)
+        for t_idx, it in enumerate(dev_items):
+            r = _score(it, s, 1000 + t_idx)
+            r["split"] = "dev_val"
+            trials.append(r)
+        print(
+            f"  seed={s}: final "
+            f"{sum(1 for r in trials if r.get('split') == 'final_test' and r.get('seed') == s and r.get('verified'))}"
+            f"/{len(final_items)} certified"
+        )
+
+    # Deterministic fixed-step resume: repeat a subset, hashes must match.
+    resume_ok = True
+    repeat_secs: list[float] = []
+    for it in final_items[:2]:
+        for s in seeds[:3]:
+            a = _score(it, s, 0)
+            t_rep_0 = time.perf_counter()
+            b = _score(it, s, 0)
+            repeat_secs.append(time.perf_counter() - t_rep_0)
+            if a.get("program_sha256") != b.get("program_sha256"):
+                resume_ok = False
+    timing_cv = (
+        (float(np.std(repeat_secs)) / max(float(np.mean(repeat_secs)), 1e-9))
+        if repeat_secs
+        else 0.0
+    )
+
+    fin = [r for r in trials if r.get("split") == "final_test" and r.get("scored")]
+    dev = [r for r in trials if r.get("split") == "dev_val" and r.get("scored")]
+    per_problem: dict[str, Any] = {}
+    for it in final_items:
+        recs = [r for r in fin if r["item_id"] == it.id]
+        k = sum(1 for r in recs if r["verified"])
+        lo, hi = _p38_wilson_ci(k, len(recs))
+        ttcs = [r["time_to_certified_sec"] for r in recs if r["time_to_certified_sec"] is not None]
+        per_problem[it.id] = {
+            "n": len(recs),
+            "verified": k,
+            "fraction": k / max(len(recs), 1),
+            "wilson95": [lo, hi],
+            "median_ttc_sec": float(np.median(ttcs)) if ttcs else None,
+            "censored": sum(1 for r in recs if r["censored"]),
+        }
+    overall = sum(1 for r in fin if r["verified"]) / max(len(fin), 1)
+    # Paired dev-vs-final per-seed certified-rate differences.
+    diffs = []
+    for s in seeds:
+        f = [r for r in fin if r["seed"] == s]
+        d = [r for r in dev if r["seed"] == s]
+        if f and d:
+            diffs.append(
+                float(np.mean([1.0 if r["verified"] else 0.0 for r in d]))
+                - float(np.mean([1.0 if r["verified"] else 0.0 for r in f]))
+            )
+    ci_lo, ci_hi = _p38_bootstrap_ci(np.array(diffs, dtype=np.float64)) if diffs else (0.0, 0.0)
+
+    if not resume_ok:
+        status, fam_verdict, fam_why = (
+            "FAIL",
+            "BLOCKED",
+            ("Fixed-step resume produced different best programs; determinism integrity fails."),
+        )
+    elif overall >= 0.50:
+        status, fam_verdict, fam_why = (
+            "PASS",
+            "CONFIRMED",
+            (
+                f"Overall verified fraction {overall:.2f} meets the frozen >= 0.50 bar on the "
+                f"sealed final-test polynomial slice; dev-final paired gap CI [{ci_lo:.3f}, {ci_hi:.3f}]."
+            ),
+        )
+    elif overall >= 0.20:
+        status, fam_verdict, fam_why = (
+            "PASS",
+            "PROVISIONAL",
+            (
+                f"Overall verified fraction {overall:.2f} is mixed (0.20-0.50); reported with "
+                "intervals, no promotion beyond the baseline."
+            ),
+        )
+    else:
+        status, fam_verdict, fam_why = (
+            "PASS",
+            "REJECTED",
+            (
+                f"Overall verified fraction {overall:.2f} misses the frozen bar; baseline "
+                "retained, negative finding recorded."
+            ),
+        )
+
+    prov = collect_provenance(
+        seed=seeds[0],
+        device=device,
+        dataset_hashes={"p30_splits": split_sha[:16], "p37_freeze": freeze_sha[:16]},
+        config={
+            "seeds": seeds,
+            "budget_sec": budget,
+            "pop_size": pop,
+            "problems_hash": problem_set_hash[:16],
+        },
+    )
+    report = {
+        **base,
+        "status": status,
+        "provenance": prov,
+        "selected_method": selected,
+        "frozen_config": frozen_cfg,
+        "problem_set": {
+            "final_ids": [it.id for it in final_items],
+            "dev_ids": [it.id for it in dev_items],
+            "set_hash": problem_set_hash,
+        },
+        "access": {
+            "openings": len(access_log),
+            "log": access_log,
+            "retune_against_final_test": False,
+        },
+        "confirmation": {
+            "n_seeds": len(seeds),
+            "n_final_tasks": len(final_items),
+            "n_dev_tasks": len(dev_items),
+            "overall_verified_fraction": overall,
+            "per_problem": per_problem,
+            "paired_dev_minus_final_ci95": [ci_lo, ci_hi],
+            "timing_cv_repeat_subset": timing_cv,
+            "deterministic_resume": bool(resume_ok),
+        },
+        "verdict": {
+            "family": fam_verdict,
+            "rationale": fam_why,
+            "h1": "NOT_CONFIRMED",
+            "h1_rationale": "H1 named targets (x2_3x_7, sin_x2) are absent from this "
+            "confirmation; a narrow-family result cannot replace H1.",
+        },
+    }
+
+    proposer = {
+        "kind": "frozen_search_proposer_no_weights",
+        "engine": frozen_cfg["engine"],
+        "config": frozen_cfg,
+        "bytecode_schema": "v0_16word_r7_output",
+        "constants": "CONST_BANK_pinned_opcode_v0",
+        "domains": {"train": "[-3, 3]", "extrap": "[-6, -3.5]U[3.5, 6]"},
+        "propose_command": "sample_grammar_batch(n, device, seed) then GrammarResidentEvolution",
+        "verify_command": "verify_l2(program, train/test/extrap grids, ground_truth_formula, 1e-4, 1.0)",
+    }
+    extra: dict[str, str] = {}
+    if output_path:
+        out_p = Path(output_path)
+        prop_p = out_p.parent / "p38-frozen-proposer.json"
+        prop_p.write_text(json.dumps(proposer, indent=2, sort_keys=True, default=str))
+        extra[str(prop_p)] = hashlib.sha256(prop_p.read_bytes()).hexdigest()
+    return _finish(report, {"trials": trials, "proposer": proposer}, extra)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P13 Full Benchmark Matrix (P15 audit & P21 reproduction included)"
@@ -1794,12 +2293,41 @@ def main() -> int:
         help="P21: reproduce experiment from manifest and verify models without search",
     )
     parser.add_argument(
+        "--confirm-program",
+        action="store_true",
+        help="P38: confirm the frozen baseline on the sealed final test",
+    )
+    parser.add_argument(
+        "--freeze-manifest",
+        type=str,
+        default="experiments/p37-qrand-dependency-correlated.json",
+        help="P38: freeze manifest recording the selected method",
+    )
+    parser.add_argument(
+        "--split-manifest",
+        type=str,
+        default="experiments/p30-splits.json",
+        help="P38: P30 corpus isolation manifest with the sealed final test",
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default=None,
         help="Output path for manifest / audit / reproduction bundle",
     )
     args = parser.parse_args()
+
+    if args.confirm_program:
+        out_p = args.output if args.output else "experiments/p38-confirmation.json"
+        res = run_confirm_program(
+            freeze_manifest=args.freeze_manifest,
+            split_manifest=args.split_manifest,
+            seeds_count=args.seeds,
+            device_name=args.device,
+            output_path=out_p,
+            smoke=args.smoke,
+        )
+        return 0 if res["status"] == "PASS" else 1
 
     if args.reproduce_manifest:
         out_p = args.output if args.output else "experiments/p21-reproduction.json"

@@ -116,6 +116,98 @@ def is_valid(program: np.ndarray) -> bool:
     return seen_non_nop and output_written
 
 
+COMPACT_PROFILE_REVISION = 0
+COMPACT_ALLOWED_OPS = (0x00, 0x01, 0x02, 0x03, 0x0F)  # NOP, ADD, SUB, MUL, CSEL
+
+
+def _exact_rational(value: float) -> str:
+    """Exact rational of the stored binary float value.
+
+    Same rule the P42 checker applies, so profile constants and certified
+    objects agree. Decimal slots (0.1, 0.01, 0.001) are NOT 1/10-style
+    ideals; only integer slots reduce to small integers.
+    """
+    from fractions import Fraction as _Fraction
+
+    return str(_Fraction(str(float(value))))
+
+
+def compact_candidate_profile() -> dict:
+    """Frozen P49 compact-candidate profile for polynomial_arithmetic.
+
+    The existing v0 codec already satisfies the family (integer ids, allowed
+    ops, register refs, bounded rational constants), so no codec change, no
+    OPCODE_VERSION bump and no interpreter fork. Announced coverage is the
+    defined grammar only, never universal mathematics.
+    """
+    bank = [float(c) for c in list(CONST_BANK)]
+    approximate = {i for i, c in enumerate(bank) if i in (5, 6)}
+    return {
+        "profile": "p49-compact-polynomial",
+        "profile_revision": COMPACT_PROFILE_REVISION,
+        "opcode_version": int(OPCODE_VERSION),
+        "word_count": int(N_INSTR),
+        "word_bits": 32,
+        "program_bytes": int(BYTES_PER_CANDIDATE),
+        "registers": int(N_REGS),
+        "output_register": 7,
+        "allowed_ops": [{"code": int(op), "name": OPCODES[op]} for op in COMPACT_ALLOWED_OPS],
+        "constants": [
+            {
+                "index": i,
+                "float32": c,
+                "exact": (
+                    "approximate-transcendental-slot" if i in approximate else _exact_rational(c)
+                ),
+            }
+            for i, c in enumerate(bank)
+        ],
+        "coverage": "grammar-defined only: Horner degree<=3 / expression trees "
+        "depth<=3 over bank rationals; text/Lean/SymPy live only at the "
+        "certification boundary",
+    }
+
+
+def compact_encode(program: np.ndarray) -> bytes:
+    """Encode validated words to the 64-byte compact form."""
+    words = np.ascontiguousarray(np.asarray(program, dtype=np.uint32))
+    if words.shape != (N_INSTR,):
+        raise ValueError(f"compact form needs exactly {N_INSTR} words")
+    return words.tobytes()
+
+
+def compact_decode(blob: bytes) -> np.ndarray:
+    """Decode the 64-byte compact form back to words (length-checked)."""
+    if len(blob) != BYTES_PER_CANDIDATE:
+        raise ValueError(f"compact form needs exactly {BYTES_PER_CANDIDATE} bytes, got {len(blob)}")
+    return np.frombuffer(bytes(blob), dtype=np.uint32).copy()
+
+
+def validate_compact_candidate(program: np.ndarray, opcode_version: int = OPCODE_VERSION) -> dict:
+    """Validate a compact candidate: version, shape, refs, S0 rules."""
+    reasons: list[str] = []
+    if int(opcode_version) != int(OPCODE_VERSION):
+        reasons.append(
+            f"unknown_opcode_version: got {opcode_version!r}, frozen codec is {int(OPCODE_VERSION)}"
+        )
+        return {"ok": False, "reasons": reasons}
+    words = np.asarray(program)
+    if words.shape != (N_INSTR,) or words.dtype != np.uint32:
+        reasons.append(f"bad_shape_or_dtype: {words.shape}/{words.dtype}")
+        return {"ok": False, "reasons": reasons}
+    for i, word in enumerate(words):
+        op, dst, a, _b = decode_instr(word)
+        if op not in OPCODES:
+            reasons.append(f"slot {i}: unknown opcode {op:#x}")
+        if dst >= N_REGS or a >= N_REGS:
+            reasons.append(f"slot {i}: register out of range dst={dst} a={a}")
+        if op not in COMPACT_ALLOWED_OPS and op in OPCODES:
+            reasons.append(f"slot {i}: opcode {OPCODES[op]} outside the compact profile")
+    if not is_valid(words):
+        reasons.append("s0_validity_failed")
+    return {"ok": not reasons, "reasons": reasons}
+
+
 def decode_human(program: np.ndarray) -> str:
     """Human-readable form for logs only. Never used in the hot path."""
     parts = []

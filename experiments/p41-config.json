@@ -1,0 +1,56 @@
+{
+  "phase": "P41",
+  "note": "Complete frozen configuration. Expected hashes are manifest-recorded values (not current file content), so post-seal drift is detected, never repaired. No TBD values.",
+  "inventory": [
+    {
+      "path": "experiments/p33-structured-search-raw.json",
+      "expected_sha256": "d9bd0b6fdd73231351dbb19a44a5dab02fe7877b8d2ff3ad6f38a7a9a8ed7b80",
+      "source_manifest": "experiments/p33-structured-search.json"
+    },
+    {
+      "path": "experiments/p34-raw/ckpt-p34.pt",
+      "expected_sha256": "5647d615f8e25c0dd2f1906753133df51933f9c817890ebb34b10a700fef7172",
+      "source_manifest": "experiments/p34-throughput.json"
+    },
+    {
+      "path": "experiments/p34-raw/telemetry-p34.jsonl",
+      "expected_sha256": "52b554cdfe819c6a56c0f9ede91373fd41613751c6623fc0161cc5c516de4fcc",
+      "source_manifest": "experiments/p34-throughput.json"
+    },
+    {
+      "path": "experiments/p35-training-corpus-raw.json",
+      "expected_sha256": "1506d04014ca417534dd36f888041c142e0220aef2dd42afdf41f55ae2f78c22",
+      "source_manifest": "experiments/p35-training-corpus.json"
+    },
+    {
+      "path": "experiments/p36-specialist-raw.json",
+      "expected_sha256": "d7b6a8dad8120858105695644f691bad2223c00cc43cb2d2c98babe1fb96eba3",
+      "source_manifest": "experiments/p36-specialist.json"
+    },
+    {
+      "path": "experiments/p37-qrand-dependency-correlated-raw.json",
+      "expected_sha256": "5e290bf98df9c2a27b6cbf29ce9cc84e1206a30d296394b60d3384eb21607190",
+      "source_manifest": "experiments/p37-qrand-dependency-correlated.json"
+    },
+    {
+      "path": "experiments/p38-confirmation-raw.json",
+      "expected_sha256": "83342ab776d973979de15e04da2491547ace747ed1947656ac9dc96cb5aba8ee",
+      "source_manifest": "experiments/p38-confirmation.json"
+    },
+    {
+      "path": "experiments/p38-frozen-proposer.json",
+      "expected_sha256": "4ee3aefbecb16ef56b5dce3e3d4acf40f88148622b5bef4a3863fb00b55f0efd",
+      "source_manifest": "experiments/p38-confirmation.json"
+    },
+    {
+      "path": "experiments/p39-science-raw.json",
+      "expected_sha256": "a36c422ee85f546be564c712b5b60b601d8f2afc7d70573f60a2659e12583c3e",
+      "source_manifest": "experiments/p39-science.json"
+    }
+  ],
+  "smoke": {
+    "budgets_str": "0.05s",
+    "scale_factor": 0.05,
+    "seeds_count": 1
+  }
+}

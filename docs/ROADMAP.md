@@ -48,6 +48,7 @@ P36 specialist learning with fully billed comparisons
 P37 one controlled quantum-inspired sampling hypothesis
 P38 clean-environment confirmation + frozen model export
 P39 bounded mathematical campaign + novelty review
+P40–P57 guided formal-search program (see executor runbook and phase index)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -74,7 +75,7 @@ narrow-family specialist with its own hypothesis (P28), and certified open
 problems (P29). No validated novel mathematical discovery exists to date;
 P29 defines the binding discovery criterion.
 
-P30 is the next planned micro-task, beginning with corpus isolation.
+P30 was the entry micro-task of D014, beginning with corpus isolation.
 P24–P29 outcomes are historical inputs to the acceptance review, not proof
 that all of their documented gates were enforced. P30 repairs split
 boundaries, P31 repairs mathematical acceptance and P32 establishes the
@@ -112,6 +113,27 @@ artifact runs, is measured, is committed, and is pushed to GitHub.
 The original sequence put the hardware probe before bytecode freezing and
 batching before the archive. D013 adds explicit corrective gates because
 those earlier milestones alone do not demonstrate resident massive search.
+
+## Guided search extension (D017)
+
+[The executor runbook](FORMAL_SEARCH_PLAN.md) and
+[P40–P57 contracts](phases/README.md#guided-formal-search-program-p40p57)
+define the next proposed program. First audit and reconcile P33–P39
+evidence (P40); repair artifact isolation, exact checking, real resume,
+GPU residency and actual full-pipeline timing (P41–P45). Then curate 100
+open problems without claiming to have formalized or searched all of them.
+
+Freeze one development family, formal-checker boundary, compact candidates,
+honest controls and bounded replay. Train one small conditional proposer
+only with sufficient certified data. Compare fully billed costs and keep
+the classical baseline if learning or sampling loses. Final scoring uses
+a fresh sealed test and an unchanged accepted implementation. End with one
+bounded campaign and human novelty review, not a universal theorem claim
+based on tested instances.
+
+P40 is next, subject to accepted-base reconciliation; none of P40–P57 has
+been executed by adding this plan. No historical H1, P14 or cross-family
+claim is unlocked. The existing quantum roadmap is preserved.
 
 ## Quantum track (experimental, deferred expansion)
 

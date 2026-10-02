@@ -1,8 +1,8 @@
 # P33 — Structured candidate search for polynomial arithmetic
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** Accepted P32 baseline and P31 exact verifier.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata
 **Branch:** `codex/p33-structured-search`.
 
 ## Objective
