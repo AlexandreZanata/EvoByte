@@ -677,7 +677,156 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47", "P48", "P49", "P50")
+ACCEPTANCE_PHASES = (
+    "P40",
+    "P41",
+    "P42",
+    "P43",
+    "P44",
+    "P45",
+    "P46",
+    "P47",
+    "P48",
+    "P49",
+    "P50",
+    "P51",
+)
+
+
+def run_p51_replay_map_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P51 audit: bounded replay map over a traced search run.
+
+    The map stores sampled nodes plus every elite/finalist and certificate,
+    declares full vs partial coverage, stays within the node / I-O / disk
+    caps, and its declared segments rebuild bit-exactly from the recorded
+    seed plus a compatible checkpoint. No universe completeness is claimed.
+    """
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P51":
+        raise ValueError(f"Config {cfg_p} is not a P51 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P51 BOUNDED-REPLAY-MAP AUDIT (sampled map; replay rebuilds declared segments)")
+    print("=" * 115)
+
+    from evo_trace import run_p51_bounded_replay
+
+    device = _torch.device(config.get("device", "cpu"))
+    if device.type == "cuda" and not _torch.cuda.is_available():
+        raise RuntimeError("P51 requested cuda but torch.cuda.is_available() is False")
+
+    exp = run_p51_bounded_replay(
+        seed=int(config.get("seed", 42)),
+        pop_size=int(config.get("pop_size", 32)),
+        n_generations=int(config.get("n_generations", 6)),
+        n_points=int(config.get("n_points", 64)),
+        formula=str(config.get("formula", "x2_3x_7")),
+        device_name=config.get("device", "cpu"),
+        max_nodes=int(config.get("max_nodes", 100_000)),
+    )
+    replay_map = exp["map"]
+    checks = {
+        "replay_rebuilds_segments": bool(exp["replay"]["segments_match"]),
+        "no_certificate_lost": (
+            replay_map["certificates"] == replay_map["certificates_expected"]
+            and exp["validation"]["ok"]
+        ),
+        "nodes_bounded": replay_map["nodes"] <= replay_map["max_nodes"],
+        "io_queue_bounded": replay_map["io_bytes"] <= replay_map["io_cap_bytes"],
+        "raw_disk_bounded": replay_map["raw_bytes"] < replay_map["raw_cap_bytes"],
+        "parent_ordering_valid": bool(exp["parent_ordering_valid"]),
+        "counters_consistent": bool(exp["counters_consistent"]),
+        "coverage_declared": replay_map["coverage"] in ("full", "partial_sampled"),
+        "tracing_cost_published": bool(exp["overhead"]["audit_sec"] > 0),
+    }
+    verdict = "ACCEPTED" if all(checks.values()) else "MIXED"
+    for name, ok in checks.items():
+        print(f"  {name}: {'ok' if ok else 'FAILED'}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p51_config": config_sha[:16]},
+        config={"acceptance_phase": "P51"},
+    )
+    report = {
+        "phase": "P51",
+        "verdict": verdict,
+        "claim_scope": "bounded sampled map with replayable segments; no universe claim",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "checks": checks,
+        "map": replay_map,
+        "sampling_rate": replay_map["sampling_rate"],
+        "coverage": replay_map["coverage"],
+        "dropped_samples": replay_map["dropped_samples"],
+        "replay": exp["replay"],
+        "validation": exp["validation"],
+        "tracing_overhead": {
+            "baseline_sec": exp["overhead"]["baseline_sec"],
+            "aggregate_sec": exp["overhead"]["aggregate_sec"],
+            "audit_sec": exp["overhead"]["audit_sec"],
+            "aggregate_overhead_pct": exp["overhead"]["aggregate_overhead_pct"],
+            "audit_overhead_pct": exp["overhead"]["audit_overhead_pct"],
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P51",
+        },
+        "seeds_rng": f"fixed seed {config.get('seed', 42)}; replay rebuilds from seed+config",
+        "budgets": {
+            "experiment_sec": exp["elapsed_sec"],
+            "pop_size": config.get("pop_size", 32),
+            "n_generations": config.get("n_generations", 6),
+        },
+        "counters": {
+            "total_candidates": exp["total_candidates"],
+            "nodes": replay_map["nodes"],
+            "dropped_samples": replay_map["dropped_samples"],
+            "certificates": replay_map["certificates"],
+            "segments_declared": exp["replay"]["segments_declared"],
+            "segments_matched": (
+                exp["replay"]["segments_declared"] if exp["replay"]["segments_match"] else 0
+            ),
+        },
+        "certificate_references": [{"sha256": sha} for sha in exp["certificate_shas"]],
+        "limitations": [
+            "The map stores samples plus all elites/certs; unstored generations need seed+checkpoint replay.",
+            "Partial coverage never proves a bounded search complete; misses are sampling losses.",
+            "Tracing cost is published; per-candidate CPU logging is not claimed free.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P51 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p50_search_controls_audit(
@@ -3392,6 +3541,8 @@ def main() -> int:
             run_p49_compact_audit(args.config, args.output)
         elif args.acceptance_phase == "P50":
             run_p50_search_controls_audit(args.config, args.output)
+        elif args.acceptance_phase == "P51":
+            run_p51_replay_map_audit(args.config, args.output)
         return 0
 
     seeds = (

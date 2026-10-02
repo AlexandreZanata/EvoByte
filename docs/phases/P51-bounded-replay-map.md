@@ -1,8 +1,13 @@
 # P51 — Rastrear a busca sem guardar um universo infinito
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P50, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p51-bounded-replay-map`.
+**Resultado:** ACCEPTED — mapa amostrado com todos os elites/certificados,
+cobertura declarada full (192/192 nós, taxa 1.0, 0 perdas); 6/6 segmentos
+reconstruídos bit-exatos do seed+checkpoint; buffers limitados (41 KiB I/O
+e disco bruto, tetos 64 MiB/1 GiB); custo do tracing publicado (audit
++59.2% vs baseline CPU).
 
 ## Objetivo e escopo
 

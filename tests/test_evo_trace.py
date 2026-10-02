@@ -392,3 +392,72 @@ def test_acceptance_cannot_pass_without_resume(tmp_path: Path) -> None:
     assert manifest["mandatory_checks"]["all_resumed_bit_exact"] is False
     with pytest.raises(ValueError, match="positive"):
         run_acceptance_audit(seeds_count=0, output_path=tmp_path / "empty.json")
+
+
+def test_p51_bounded_map_caps_and_partial_coverage() -> None:
+    from benchmarks.evo_trace import build_bounded_replay_map, run_lineage_evolution
+    from evobyte.archive import validate_bounded_replay_map
+
+    record = run_lineage_evolution(
+        seed=7,
+        pop_size=16,
+        n_generations=3,
+        n_points=32,
+        formula="x2_3x_7",
+        audit_mode=True,
+        device_name="cpu",
+    )
+    full = build_bounded_replay_map(record, max_nodes=100_000, checkpoint_ref="ckpt")
+    assert full.coverage == "full"
+    assert full.sampling_rate == 1.0
+    assert full.dropped_samples == 0
+
+    small = build_bounded_replay_map(record, max_nodes=20, checkpoint_ref="ckpt")
+    assert small.coverage == "partial_sampled"
+    assert len(small.nodes) <= 20
+    assert small.io_bytes <= small.io_queue_bytes
+    assert small.raw_bytes < small.raw_disk_bytes
+    expected = [a.bytecode_sha256 for a in record.promoted_ancestry]
+    assert validate_bounded_replay_map(small, expected_certificates=expected)["ok"] is True
+
+
+def test_p51_bounded_map_replay_and_validation() -> None:
+    from benchmarks.evo_trace import (
+        build_bounded_replay_map,
+        replay_bounded_map_segments,
+        run_lineage_evolution,
+        run_p51_bounded_replay,
+    )
+    from evobyte.archive import (
+        new_bounded_replay_map,
+        replay_map_add_sample,
+        validate_bounded_replay_map,
+    )
+
+    exp = run_p51_bounded_replay(
+        seed=7, pop_size=16, n_generations=3, device_name="cpu", max_nodes=20
+    )
+    assert exp["replay"]["segments_match"] is True
+    assert exp["validation"]["ok"] is True
+    assert exp["parent_ordering_valid"] is True
+    assert exp["counters_consistent"] is True
+    assert exp["overhead"]["audit_sec"] > 0
+
+    record = run_lineage_evolution(
+        seed=7,
+        pop_size=16,
+        n_generations=3,
+        n_points=32,
+        formula="x2_3x_7",
+        audit_mode=True,
+        device_name="cpu",
+    )
+    replay_map = build_bounded_replay_map(record, max_nodes=20, checkpoint_ref="ckpt")
+    replay = replay_bounded_map_segments(record, replay_map, device_name="cpu")
+    assert replay["segments_match"] is True
+    assert replay["nodes_compared"] == len(replay_map.nodes)
+
+    broken = new_bounded_replay_map(7, "ckpt")
+    assert replay_map_add_sample(broken, 1, "c_g1_o0", "b" * 64, ["c_g9_nope"], "elite") is True
+    assert validate_bounded_replay_map(broken)["ok"] is False
+    assert validate_bounded_replay_map(replay_map, expected_certificates=["0" * 64])["ok"] is False

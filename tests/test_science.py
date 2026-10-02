@@ -145,6 +145,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P48",
         "P49",
         "P50",
+        "P51",
     )
     import subprocess as _sp
 
@@ -153,7 +154,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P51",
+            "P52",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -165,7 +166,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P51'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P52'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -550,3 +551,29 @@ def test_p50_classical_baseline_is_deterministic():
     false = check_p50_false_controls()
     assert len(false) == 4
     assert all(c["rejected"] for c in false)
+
+
+def test_p51_replay_map_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p51_replay_map_audit
+
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p51-config.json").read_text()
+    )
+    cfg["seed"] = 7
+    cfg["pop_size"] = 16
+    cfg["n_generations"] = 3
+    cfg["max_nodes"] = 20
+    cfg_p = tmp_path / "p51-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p51-acceptance.json"
+    report = run_p51_replay_map_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P51"
+    assert report["verdict"] == "ACCEPTED"
+    assert all(report["checks"].values())
+    assert report["coverage"] == "partial_sampled"
+    assert report["map"]["nodes"] <= 20
+    assert report["counters"]["segments_matched"] == report["counters"]["segments_declared"] > 0
+    assert report["counters"]["certificates"] == len(report["certificate_references"]) > 0
