@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import datetime
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -675,7 +677,208 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46")
+
+
+P46_CERTIFICATE_TYPES = ("proof_or_counterexample", "construction_or_impossibility")
+P46_ENTRY_FIELDS = (
+    "id",
+    "title",
+    "statement_excerpt",
+    "area",
+    "primary_source",
+    "consulted_at",
+    "state",
+    "certificate_type",
+    "verifiability",
+    "partial_refs",
+    "statement_sha256",
+)
+P46_SOURCE_FIELDS = ("citation", "url", "dataset", "dataset_commit")
+
+
+def _p46_check_entry(entry: Any, bucket: str) -> list[str]:
+    """Return schema violations for one catalogue record (empty when valid)."""
+    errs: list[str] = []
+    if not isinstance(entry, dict):
+        return [f"{bucket}: entry is not an object"]
+    tag = entry.get("id", f"{bucket}[?]")
+    for required in P46_ENTRY_FIELDS:
+        if required not in entry:
+            errs.append(f"{tag}: missing field {required}")
+    src = entry.get("primary_source")
+    if not isinstance(src, dict):
+        errs.append(f"{tag}: primary_source is not an object")
+    else:
+        for field in P46_SOURCE_FIELDS:
+            if not src.get(field):
+                errs.append(f"{tag}: primary_source missing {field}")
+        commit = str(src.get("dataset_commit", ""))
+        if commit and (len(commit) != 40 or any(c not in "0123456789abcdef" for c in commit)):
+            errs.append(f"{tag}: dataset_commit is not a pinned 40-hex commit")
+        url = str(src.get("url", ""))
+        if url and not re.fullmatch(r"https://www\.erdosproblems\.com/\d+", url):
+            errs.append(f"{tag}: source URL is not a problem page")
+    if entry.get("certificate_type") not in P46_CERTIFICATE_TYPES:
+        errs.append(f"{tag}: certificate_type outside frozen vocabulary")
+    if not isinstance(entry.get("partial_refs"), list):
+        errs.append(f"{tag}: partial_refs must be a list")
+    if not str(entry.get("statement_excerpt", "")).strip():
+        errs.append(f"{tag}: empty statement_excerpt")
+    if not str(entry.get("verifiability", "")).strip():
+        errs.append(f"{tag}: empty verifiability")
+    sha = str(entry.get("statement_sha256", ""))
+    if len(sha) != 16 or any(c not in "0123456789abcdef" for c in sha):
+        errs.append(f"{tag}: statement_sha256 is not 16 hex chars")
+    try:
+        datetime.date.fromisoformat(str(entry.get("consulted_at")))
+    except ValueError:
+        errs.append(f"{tag}: consulted_at is not an ISO date")
+    entry_id = str(entry.get("id", ""))
+    if (
+        entry_id.startswith("erdos-")
+        and isinstance(src, dict)
+        and not str(src.get("url", "")).endswith("/" + entry_id.split("-", 1)[1])
+    ):
+        errs.append(f"{tag}: id and source URL disagree")
+    return errs
+
+
+def run_p46_catalogue_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P46 audit: validate the sourced open-problem catalogue (schema + counts + dedup).
+
+    Technical validation only; the phase exit gate additionally requires a
+    human mathematical review of the curation before P47, which this audit
+    reports as pending and cannot grant.
+    """
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P46":
+        raise ValueError(f"Config {cfg_p} is not a P46 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    catalogue_p = _REPO_ROOT / config.get("catalogue_path", "docs/research/open-problems.json")
+    min_open = int(config.get("min_open_confirmed", 100))
+
+    print("=" * 115)
+    print("P46 OPEN-PROBLEM CATALOGUE AUDIT (schema, sources, counts, dedup)")
+    print("=" * 115)
+
+    report: dict[str, Any] = {
+        "phase": "P46",
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P46",
+            "catalogue_path": str(catalogue_p),
+        },
+    }
+    try:
+        with open(catalogue_p, encoding="utf-8") as f:
+            cat = json.load(f)
+    except (OSError, ValueError) as exc:
+        report.update(
+            {"status": "FAIL", "verdict": "REJECTED", "errors": [f"unreadable catalogue: {exc}"]}
+        )
+        print(f"P46 REJECTED: unreadable catalogue: {exc}")
+        return report
+
+    errors: list[str] = []
+    if cat.get("phase") != "p46-open-problem-catalogue":
+        errors.append("catalogue phase marker is wrong")
+    source = cat.get("source") or {}
+    for required in ("primary", "dataset", "dataset_commit", "license"):
+        if not source.get(required):
+            errors.append(f"source missing {required}")
+    open_conf = cat.get("open_confirmed")
+    if not isinstance(open_conf, list):
+        errors.append("open_confirmed must be a list")
+        open_conf = []
+    candidates = cat.get("finite_search_candidates") or []
+    if not isinstance(candidates, list):
+        errors.append("finite_search_candidates must be a list")
+        candidates = []
+
+    for entry in open_conf:
+        errors.extend(_p46_check_entry(entry, "open_confirmed"))
+        if entry.get("state") != "open-confirmed":
+            errors.append(f"{entry.get('id', '?')}: open bucket entry state is not open-confirmed")
+    for entry in candidates:
+        errors.extend(_p46_check_entry(entry, "finite_search_candidates"))
+        if entry.get("finite_resolution_possible") is not True:
+            errors.append(f"{entry.get('id', '?')}: candidate must be finite-resolution possible")
+
+    ids = [str(e.get("id")) for e in open_conf + candidates]
+    id_dupes = sorted({i for i in ids if ids.count(i) > 1})
+    if id_dupes:
+        errors.append(f"duplicate ids: {id_dupes[:5]}")
+    shas = [str(e.get("statement_sha256")) for e in open_conf + candidates]
+    sha_dupes = sorted({s for s in shas if shas.count(s) > 1})
+    if sha_dupes:
+        errors.append(f"duplicate statement hashes: {sha_dupes[:5]}")
+
+    counts = cat.get("counts") or {}
+    if counts.get("open_confirmed") != len(open_conf):
+        errors.append("counts.open_confirmed disagrees with the entries")
+    if counts.get("finite_search_candidates") != len(candidates):
+        errors.append("counts.finite_search_candidates disagrees with the entries")
+    if len(open_conf) < min_open:
+        errors.append(f"open_confirmed={len(open_conf)} below the frozen minimum {min_open}")
+
+    review = cat.get("human_review") or {}
+    review_required = bool(review.get("required", True))
+    schema_ok = not errors
+    technical = "PASS" if schema_ok else "FAIL"
+    verdict = "PENDING_HUMAN_REVIEW" if schema_ok else "REJECTED"
+
+    area_dist: dict[str, int] = {}
+    for entry in open_conf:
+        area = str(entry.get("area", "unsorted"))
+        area_dist[area] = area_dist.get(area, 0) + 1
+    report.update(
+        {
+            "status": "PASS" if schema_ok else "FAIL",
+            "verdict": verdict,
+            "claim_scope": "catalogue metadata validation; curation approval is a human gate",
+            "catalogue_sha256": hashlib.sha256(catalogue_p.read_bytes()).hexdigest(),
+            "source": source,
+            "counts": {
+                "open_confirmed": len(open_conf),
+                "finite_search_candidates": len(candidates),
+                "status_unconfirmed": len(cat.get("status_unconfirmed") or []),
+                "solved_examples": len(cat.get("solved_examples") or []),
+                "unsuitable": len(cat.get("unsuitable") or []),
+                "min_open_confirmed": min_open,
+            },
+            "area_distribution": dict(sorted(area_dist.items(), key=lambda kv: -kv[1])),
+            "sample_ids": [e.get("id") for e in open_conf[:5]],
+            "checks": {
+                "schema_ok": schema_ok,
+                "count_ok": len(open_conf) >= min_open,
+                "dedup_ok": not id_dupes and not sha_dupes,
+                "source_pinned": bool(source.get("dataset_commit")),
+            },
+            "errors": errors[:50],
+            "human_review": {
+                "required": review_required,
+                "status": review.get("status", "pending"),
+                "scope": review.get("scope", "curation before P47"),
+                "gate_note": "P47 is blocked until a mathematician approves this curation; "
+                "this audit cannot grant approval.",
+            },
+            "elapsed_sec": time.perf_counter() - t0,
+        }
+    )
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(
+        f"P46 technical={technical} verdict={verdict}: {len(open_conf)} open-confirmed, "
+        f"{len(candidates)} finite-search candidates; report -> {out_p}"
+    )
+    return report
 
 
 def run_p45_envelope_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -2185,6 +2388,8 @@ def main() -> int:
             run_p44_resident_audit(args.config, args.output)
         elif args.acceptance_phase == "P45":
             run_p45_envelope_audit(args.config, args.output)
+        elif args.acceptance_phase == "P46":
+            run_p46_catalogue_audit(args.config, args.output)
         return 0
 
     seeds = (

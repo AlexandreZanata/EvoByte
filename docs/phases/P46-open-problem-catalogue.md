@@ -1,8 +1,14 @@
 # P46 — Catalogar 100 problemas com fontes
 
-**Status:** Proposed.
+**Status:** Built — pending human mathematical review (P47 blocked).
 **Pré-requisito:** P45, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p46-open-problem-catalogue`.
+**Resultado:** 100 open-confirmed (fonte: banco Erdős Problems, commit de dataset
+pinado, conferidos na página viva) + 40 candidatos finitamente decidíveis em
+bucket separado que não conta para os 100; esquema validado sem campos
+ausentes, 0 duplicatas, 0 status-unconfirmed; veredito técnico
+PENDING_HUMAN_REVIEW — a aprovação matemática humana da curadoria é o gate
+restante antes de P47.
 
 ## Objetivo e escopo
 
