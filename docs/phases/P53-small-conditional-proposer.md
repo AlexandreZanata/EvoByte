@@ -1,8 +1,13 @@
 # P53 — Treinar um único proponente pequeno
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P52, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p53-small-conditional-proposer`.
+**Resultado:** ACCEPTED — um SequentialHistoryProposer (28184 params,
+condicional a features+histórico+máscara), 20 épocas em ~2 s, checkpoint
+pela val (época 19, 0.128); export e reload independente com 32/32 válidos
+e piso de 12.5%; treino e amostragem bit-reproduzíveis. Sem KEEP: P54
+decide utilidade.
 
 ## Objetivo e escopo
 

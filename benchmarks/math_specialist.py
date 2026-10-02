@@ -3537,6 +3537,225 @@ def build_p52_certified_data(
 # ==============================================================================
 
 
+# ==============================================================================
+# 9. P53 Small conditional proposer (single history-conditional model)
+# ==============================================================================
+
+
+def run_p53_proposer_training(
+    corpus_manifest: str | Path = "experiments/p52-certified-data.json",
+    output_path: str | Path | None = "experiments/p53-proposer-manifest.json",
+    weights_path: str | Path | None = "experiments/p53-proposer.pt",
+    device_name: str | None = None,
+    seed: int = 42,
+    batch_size: int = 32,
+    max_epochs: int = 20,
+    max_train_min: float = 30.0,
+    exploration_floor: float = 0.10,
+    gru_width: int = 64,
+    lr: float = 3e-3,
+    n_sample: int = 32,
+    smoke: bool = False,
+) -> dict[str, Any]:
+    """Train one small history-conditional proposer on the P52 corpus.
+
+    Single SequentialHistoryProposer (<=1M params), checkpoint by validation,
+    mandatory structured-random floor at sampling. Missing or insufficient
+    data, or invalid training, yields INCONCLUSIVE: promotion blocked, the
+    accepted baseline is preserved. No KEEP/DROP here; P54 decides utility.
+    """
+    from evobyte.bytecode import is_valid as _is_valid
+    from evobyte.generator import (
+        P53_MAX_PARAMS as _P53_MAX,
+    )
+    from evobyte.generator import (
+        load_proposer as _load,
+    )
+    from evobyte.generator import (
+        p53_proposer_schema as _schema,
+    )
+    from evobyte.generator import (
+        sample_proposer_standalone as _sample,
+    )
+    from evobyte.generator import (
+        save_proposer as _save,
+    )
+    from evobyte.generator import (
+        train_sequential_proposer as _train,
+    )
+
+    t_wall_0 = time.perf_counter()
+    device = resolve_device(device_name)
+    torch.set_num_threads(8)
+    seed_all(seed)
+
+    if smoke:
+        max_epochs = min(max_epochs, 2)
+        n_sample = min(n_sample, 8)
+
+    corpus_p = Path(corpus_manifest)
+    if not corpus_p.is_file():
+        return {
+            "phase": "p53-proposer-training",
+            "status": "INCONCLUSIVE",
+            "reason": f"corpus manifest missing: {corpus_p}",
+            "elapsed_sec": time.perf_counter() - t_wall_0,
+        }
+    with open(corpus_p, encoding="utf-8") as f:
+        corpus = json.load(f)
+    positives = corpus.get("positives", [])
+    train_pos = [p for p in positives if p.get("split") == "train"]
+    val_pos = [p for p in positives if p.get("split") == "val"]
+    if corpus.get("status") != "PASS" or not train_pos or not val_pos:
+        return {
+            "phase": "p53-proposer-training",
+            "status": "INCONCLUSIVE",
+            "reason": "corpus insufficient or not PASS; training blocked, baseline preserved",
+            "corpus_status": corpus.get("status"),
+            "elapsed_sec": time.perf_counter() - t_wall_0,
+        }
+
+    def _arr(items: list[dict[str, Any]]) -> tuple[np.ndarray, np.ndarray]:
+        feats = np.array([p["features_inference_only"] for p in items], dtype=np.float32)
+        progs = np.array([p["program_words"] for p in items], dtype=np.uint32)
+        return feats, progs
+
+    tr_f, tr_p = _arr(train_pos)
+    va_f, va_p = _arr(val_pos)
+    result = _train(
+        train_features=tr_f,
+        train_programs=tr_p,
+        val_features=va_f,
+        val_programs=va_p,
+        seed=seed,
+        batch_size=batch_size,
+        max_epochs=max_epochs,
+        max_train_sec=max_train_min * 60.0,
+        lr=lr,
+        gru_width=gru_width,
+        device=device,
+    )
+    schema = _schema(
+        feat_width=32,
+        gru_width=int(gru_width),
+        feature_mean=result["feature_mean"],
+        feature_std=result["feature_std"],
+    )
+    mu = np.array(result["feature_mean"], dtype=np.float64)
+    sigma = np.array(result["feature_std"], dtype=np.float64)
+    norm_val = ((va_f.astype(np.float64) - mu) / sigma).astype(np.float32)
+
+    train_finite = all(np.isfinite(result["train_curve"])) and all(np.isfinite(result["val_curve"]))
+    invalid = (not train_finite) or result["best_epoch"] < 0
+
+    sample_seed = seed + 1000
+    progs, origins = _sample(
+        result["model"],
+        norm_val[: max(1, min(len(norm_val), 4))],
+        n_sample,
+        seed=sample_seed,
+        exploration_floor=exploration_floor,
+        device=device,
+    )
+    valid_rate = float(np.mean([_is_valid(p) for p in progs])) if len(progs) else 0.0
+    floor_frac = float(sum(o == "floor" for o in origins) / max(1, len(origins)))
+    if valid_rate <= 0.0:
+        invalid = True
+
+    weights_sha = ""
+    if output_path and weights_path and not invalid:
+        weights_sha = _save(weights_path, result["model"])
+        reloaded = _load(weights_path, schema, device)
+        reprogs, _ = _sample(
+            reloaded,
+            norm_val[: max(1, min(len(norm_val), 4))],
+            n_sample,
+            seed=sample_seed,
+            exploration_floor=exploration_floor,
+            device=device,
+        )
+        assert len(reprogs) == len(progs) and all((a == b).all() for a, b in zip(reprogs, progs)), (
+            "independent reload must reproduce standalone proposals"
+        )
+
+    status = "INCONCLUSIVE" if invalid else "PASS"
+    elapsed = time.perf_counter() - t_wall_0
+    teacher = corpus.get("teacher", {})
+    report = {
+        "phase": "p53-proposer-training",
+        "status": status,
+        "device": str(device),
+        "seed": seed,
+        "corpus": {
+            "manifest": str(corpus_p),
+            "train_positives": len(train_pos),
+            "val_positives": len(val_pos),
+            "collection_construction_sec": float(teacher.get("construction_sec", 0.0)),
+            "collection_verification_sec": float(teacher.get("verification_sec", 0.0)),
+        },
+        "model": {
+            "architecture": "SequentialHistoryProposer",
+            "param_count": result["param_count"],
+            "param_cap": _P53_MAX,
+            "gru_width": int(gru_width),
+        },
+        "training": {
+            "batch_requested": result["batch_requested"],
+            "batch_used": result["batch_used"],
+            "max_epochs": int(max_epochs),
+            "epochs_run": result["epochs_run"],
+            "stopped_by": result["stopped_by"],
+            "max_train_min": float(max_train_min),
+            "train_sec": result["train_sec"],
+            "lr": float(lr),
+            "train_curve": result["train_curve"],
+            "val_curve": result["val_curve"],
+            "best_val_loss": result["best_val_loss"],
+            "best_epoch": result["best_epoch"],
+            "checkpoint_rule": "lowest validation loss",
+        },
+        "schema": schema,
+        "weights": {"path": str(weights_path), "sha256": weights_sha},
+        "sampling": {
+            "n_sample": int(n_sample),
+            "sample_seed": sample_seed,
+            "valid_rate": valid_rate,
+            "exploration_floor": float(exploration_floor),
+            "floor_fraction": floor_frac,
+            "standalone": True,
+        },
+        "total_cost_sec": {
+            "collection_sec": float(teacher.get("construction_sec", 0.0))
+            + float(teacher.get("verification_sec", 0.0)),
+            "train_sec": result["train_sec"],
+            "elapsed_sec": elapsed,
+        },
+        "promotion": "undecided_here",
+        "git_commit": get_git_commit(),
+    }
+    if output_path:
+        out_p = Path(output_path)
+        raw_p = out_p.parent / "p53-proposer-raw.json"
+        raw_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(raw_p, "w", encoding="utf-8") as f:
+            json.dump(
+                {"training_curves": {"train": result["train_curve"], "val": result["val_curve"]}},
+                f,
+                indent=2,
+                sort_keys=True,
+                default=str,
+            )
+        raw_hash = hashlib.sha256(raw_p.read_bytes()).hexdigest()
+        raws = {str(raw_p): raw_hash}
+        if weights_sha and Path(str(weights_path)).is_file():
+            raws[str(weights_path)] = weights_sha
+        written = write_manifest(out_p, report, raws)
+        print(
+            f"Artifact manifest written to {out_p} (manifest_sha256={written['manifest_sha256'][:16]})"
+        )
+    return report
+
+
 def _p50_eval_formula(formula: str, xs: np.ndarray) -> np.ndarray:
     """Evaluate a polynomial ground-truth formula on xs (float64, deterministic)."""
     import sympy as _sympy

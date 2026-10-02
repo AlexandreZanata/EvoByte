@@ -691,7 +691,214 @@ ACCEPTANCE_PHASES = (
     "P50",
     "P51",
     "P52",
+    "P53",
 )
+
+
+def run_p53_proposer_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P53 audit: real reproducible training and export of one small proposer.
+
+    Checks the hard caps (params, epochs, wall time), validation-chosen
+    checkpoint, independent reload generating valid standalone candidates
+    with the exploration floor kept, bit-exact reproducibility of training
+    and sampling, and billed collection/training costs. Invalid training or
+    insufficient data yields INCONCLUSIVE (promotion blocked); no KEEP here.
+    """
+    import numpy as _np
+    import torch as _torch
+
+    from evobyte.bytecode import is_valid as _is_valid
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+        verify_manifest_integrity,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P53":
+        raise ValueError(f"Config {cfg_p} is not a P53 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P53 PROPOSER AUDIT (one small model; real training; independent reload)")
+    print("=" * 115)
+
+    from math_specialist import run_p53_proposer_training
+
+    train_kwargs: dict[str, Any] = {
+        "corpus_manifest": config.get("corpus_manifest", "experiments/p52-certified-data.json"),
+        "device_name": config.get("device", "cpu"),
+        "seed": int(config.get("seed", 42)),
+        "batch_size": int(config.get("batch_size", 32)),
+        "max_epochs": int(config.get("max_epochs", 20)),
+        "max_train_min": float(config.get("max_train_min", 30.0)),
+        "exploration_floor": float(config.get("exploration_floor", 0.10)),
+        "gru_width": int(config.get("gru_width", 64)),
+        "lr": float(config.get("lr", 3e-3)),
+        "n_sample": int(config.get("n_sample", 32)),
+    }
+    tmp_dir = Path(output_path).parent
+    run_a = run_p53_proposer_training(
+        output_path=tmp_dir / "p53-audit-manifest.json",
+        weights_path=tmp_dir / "p53-audit-proposer.pt",
+        **train_kwargs,
+    )
+    if run_a.get("status") != "PASS":
+        report_blocked = {
+            "phase": "P53",
+            "verdict": "INCONCLUSIVE",
+            "claim_scope": "training blocked; baseline preserved; P54 decides utility",
+            "reason": run_a.get("reason", "invalid training or insufficient data"),
+            "elapsed_sec": time.perf_counter() - t0,
+        }
+        out_p = Path(output_path)
+        out_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_p, "w", encoding="utf-8") as f:
+            json.dump(report_blocked, f, indent=2, sort_keys=True, default=str)
+        print(f"P53 audit INCONCLUSIVE ({report_blocked['reason']}); report -> {out_p}")
+        return report_blocked
+
+    run_b = run_p53_proposer_training(output_path=None, weights_path=None, **train_kwargs)
+    reproducible = (
+        run_b.get("status") == "PASS"
+        and run_b["training"]["val_curve"] == run_a["training"]["val_curve"]
+        and run_b["training"]["best_val_loss"] == run_a["training"]["best_val_loss"]
+    )
+
+    from evobyte.generator import P53_MAX_PARAMS as _P53_MAX
+    from evobyte.generator import load_proposer as _load
+    from evobyte.generator import sample_proposer_standalone as _sample
+
+    manifest_ok = verify_manifest_integrity(tmp_dir / "p53-audit-manifest.json")
+    schema = run_a["schema"]
+    fresh = _load(tmp_dir / "p53-audit-proposer.pt", schema, train_kwargs["device_name"])
+    val_feats = _np.array(
+        [
+            p["features_inference_only"]
+            for p in json.loads((_REPO_ROOT / train_kwargs["corpus_manifest"]).read_text())[
+                "positives"
+            ]
+            if p.get("split") == "val"
+        ],
+        dtype=_np.float32,
+    )
+    mu = _np.array(schema["feature_mean"], dtype=_np.float64)
+    sigma = _np.array(schema["feature_std"], dtype=_np.float64)
+    norm_val = ((val_feats.astype(_np.float64) - mu) / sigma).astype(_np.float32)
+    probe = norm_val[: max(1, min(len(norm_val), 4))]
+    s1, o1 = _sample(
+        fresh,
+        probe,
+        int(train_kwargs["n_sample"]),
+        seed=int(train_kwargs["seed"]) + 1000,
+        exploration_floor=float(train_kwargs["exploration_floor"]),
+        device=train_kwargs["device_name"],
+    )
+    s2, _ = _sample(
+        fresh,
+        probe,
+        int(train_kwargs["n_sample"]),
+        seed=int(train_kwargs["seed"]) + 1000,
+        exploration_floor=float(train_kwargs["exploration_floor"]),
+        device=train_kwargs["device_name"],
+    )
+    sampling_reproducible = len(s1) == len(s2) and all((a == b).all() for a, b in zip(s1, s2))
+    valid_rate = float(_np.mean([_is_valid(p) for p in s1])) if len(s1) else 0.0
+    floor_frac = float(sum(o == "floor" for o in o1) / max(1, len(o1)))
+
+    curves = run_a["training"]
+    best_pos = int(_np.argmin(_np.array(curves["val_curve"], dtype=float)))
+    checks = {
+        "params_within_cap": run_a["model"]["param_count"] <= _P53_MAX,
+        "epochs_within_cap": curves["epochs_run"] <= int(train_kwargs["max_epochs"]),
+        "time_within_cap": curves["train_sec"] <= float(train_kwargs["max_train_min"]) * 60.0,
+        "checkpoint_by_validation": curves["best_epoch"] == best_pos,
+        "manifest_sealed": bool(manifest_ok["ok"]),
+        "training_reproducible": bool(reproducible),
+        "independent_reload_samples": sampling_reproducible and len(s1) > 0,
+        "all_sampled_valid": valid_rate == 1.0,
+        "exploration_floor_kept": floor_frac >= float(train_kwargs["exploration_floor"]) - 1e-9,
+        "single_model": True,
+    }
+    verdict = "ACCEPTED" if all(checks.values()) else "MIXED"
+    for name, ok in checks.items():
+        print(f"  {name}: {'ok' if ok else 'FAILED'}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=int(train_kwargs["seed"]),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p53_config": config_sha[:16]},
+        config={"acceptance_phase": "P53"},
+    )
+    report = {
+        "phase": "P53",
+        "verdict": verdict,
+        "claim_scope": "one trained proposer, reproducible export; utility decided by P54",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "checks": checks,
+        "model": run_a["model"],
+        "training": {
+            "epochs_run": curves["epochs_run"],
+            "best_epoch": curves["best_epoch"],
+            "best_val_loss": curves["best_val_loss"],
+            "train_sec": curves["train_sec"],
+            "stopped_by": curves["stopped_by"],
+            "batch_used": curves["batch_used"],
+            "reproducible": bool(reproducible),
+        },
+        "sampling": {
+            "n_sample": len(s1),
+            "valid_rate": valid_rate,
+            "floor_fraction": floor_frac,
+            "sampling_reproducible": sampling_reproducible,
+        },
+        "weights": run_a["weights"],
+        "total_cost_sec": run_a["total_cost_sec"],
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P53",
+        },
+        "seeds_rng": f"fixed seed {train_kwargs['seed']}; seeded retrain and resample compared",
+        "budgets": {
+            "max_epochs": int(train_kwargs["max_epochs"]),
+            "max_train_min": float(train_kwargs["max_train_min"]),
+        },
+        "certificate_references": [],
+        "counters": {
+            "params": run_a["model"]["param_count"],
+            "epochs_run": curves["epochs_run"],
+            "sampled": len(s1),
+        },
+        "limitations": [
+            "Validity is a decoder property; solution quality is P54 business.",
+            "No architecture search ran; a single small model was trained once.",
+            "No KEEP/DROP here: promotion is decided by measured utility in P54.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P53 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p52_certified_data_audit(
@@ -3788,6 +3995,8 @@ def main() -> int:
             run_p51_replay_map_audit(args.config, args.output)
         elif args.acceptance_phase == "P52":
             run_p52_certified_data_audit(args.config, args.output)
+        elif args.acceptance_phase == "P53":
+            run_p53_proposer_audit(args.config, args.output)
         return 0
 
     seeds = (

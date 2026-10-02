@@ -147,6 +147,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P50",
         "P51",
         "P52",
+        "P53",
     )
     import subprocess as _sp
 
@@ -155,7 +156,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P53",
+            "P54",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -167,7 +168,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P53'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P54'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -610,3 +611,26 @@ def test_p52_certified_data_audit_smoke(tmp_path):
     assert report["negatives_rejected"] == report["negatives_total"] == 6
     assert report["minimums_met"] is True
     assert report["splits"]["group_overlap"] == []
+
+
+def test_p53_proposer_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p53_proposer_audit
+
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p53-config.json").read_text()
+    )
+    cfg["max_epochs"] = 2
+    cfg["n_sample"] = 8
+    cfg_p = tmp_path / "p53-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p53-acceptance.json"
+    report = run_p53_proposer_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P53"
+    assert report["verdict"] == "ACCEPTED"
+    assert all(report["checks"].values())
+    assert report["model"]["param_count"] <= 1_000_000
+    assert report["sampling"]["valid_rate"] == 1.0
+    assert report["sampling"]["floor_fraction"] >= 0.10
