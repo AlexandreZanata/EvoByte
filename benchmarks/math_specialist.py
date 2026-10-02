@@ -2084,6 +2084,7 @@ def build_verified_training_corpus(
                 error_threshold=spec.target_mse_threshold,
                 extrap_threshold=1.0,
                 domain_str="[-3, 3] train; [-6, -3.5]U[3.5, 6] extrap",
+                domain=(-3.0, 3.0),
             )
             billed["exact_certification_sec"] += time.perf_counter() - t_cert_0
 
@@ -2093,19 +2094,26 @@ def build_verified_training_corpus(
             )
             billed["conversion_sec"] += time.perf_counter() - t_conv_0
 
+            # P42: no training positive is born from numeric tolerance alone.
             ok = (
                 v.passed
+                and v.proof_type == "exact_certificate"
                 and not bool(liveness.get("is_constant_output", True))
                 and int(liveness.get("live_count", 0)) > 0
             )
             if not ok:
                 failed += 1
+                exact_note = (
+                    "numerical_only_no_exact_certificate"
+                    if (v.passed and v.proof_type != "exact_certificate")
+                    else v.decision
+                )
                 negatives.append(
                     {
                         "item_id": item.id,
                         "split": split_name,
                         "label": "negative",
-                        "reason": v.decision,
+                        "reason": exact_note,
                         "teacher": teacher_info,
                         "lineage": lineage,
                         "test_mse": v.f64_test_mse,

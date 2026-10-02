@@ -674,7 +674,237 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42")
+
+
+def _p42_grids(formula: str) -> dict[str, Any]:
+    """Deterministic scoring grids shared with the P35 recipe."""
+    import sympy as _sympy
+
+    x = _sympy.Symbol("x")
+    fn = _sympy.lambdify(x, _sympy.sympify(formula), modules=["numpy"])
+    train_xs = np.linspace(-3.0, 3.0, 48, dtype=np.float64)
+    test_xs = np.linspace(-2.9, 2.9, 32, dtype=np.float64)
+    extrap_xs = np.concatenate([np.linspace(-6.0, -3.5, 16), np.linspace(3.5, 6.0, 16)]).astype(
+        np.float64
+    )
+    return {
+        "train_xs": train_xs,
+        "train_ys": np.asarray(fn(train_xs), dtype=np.float64),
+        "test_xs": test_xs,
+        "test_ys": np.asarray(fn(test_xs), dtype=np.float64),
+        "extrap_xs": extrap_xs,
+        "extrap_ys": np.asarray(fn(extrap_xs), dtype=np.float64),
+    }
+
+
+def run_p42_exact_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P42 audit: revalidate the P35 positives by exact verification (new records only)."""
+    import tempfile
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+        verify_manifest_integrity,
+    )
+    from evobyte.verifier import verify_l2
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P42":
+        raise ValueError(f"Config {cfg_p} is not a P42 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    domain = tuple(config.get("domain", [-3.0, 3.0]))
+
+    print("=" * 115)
+    print("P42 EXACT-CERTIFICATION AUDIT (P35 record read-only; new records only)")
+    print("=" * 115)
+
+    corpus_p = _REPO_ROOT / config.get("corpus_manifest", "experiments/p35-training-corpus.json")
+    with open(corpus_p, encoding="utf-8") as f:
+        corpus = json.load(f)
+    if corpus.get("phase") != "p35-verified-training-corpus" or corpus.get("status") != "PASS":
+        raise ValueError("P35 corpus prerequisite is not an accepted PASS artifact")
+    # Original record integrity first: revalidation never repairs it.
+    integrity = verify_manifest_integrity(corpus_p)
+    by_id = {p["item_id"]: p for p in corpus.get("positives", [])}
+
+    identities: list[dict[str, Any]] = []
+    for spec in config.get("identities", []):
+        iid, gt = spec["item_id"], spec["ground_truth"]
+        entry = by_id.get(iid)
+        if entry is None or entry.get("ground_truth_expr") != gt:
+            identities.append(
+                {
+                    "item_id": iid,
+                    "resolution": "inconclusive_evidence",
+                    "reason": "identity not found in frozen P35 record",
+                }
+            )
+            continue
+        prog = np.array(entry["program_words"], dtype=np.uint32)
+        grids = _p42_grids(gt)
+        v = verify_l2(
+            prog,
+            grids["train_xs"],
+            grids["train_ys"],
+            grids["test_xs"],
+            grids["test_ys"],
+            val_xs=grids["test_xs"],
+            val_ys=grids["test_ys"],
+            extrap_xs=grids["extrap_xs"],
+            extrap_ys=grids["extrap_ys"],
+            adversarial_xs=grids["extrap_xs"],
+            ground_truth_formula=gt,
+            error_threshold=1e-4,
+            extrap_threshold=1.0,
+            domain=domain,
+            domain_str="[-3, 3] train; [-6, -3.5]U[3.5, 6] extrap",
+        )
+        resolution = "exact_accepted" if v.proof_type == "exact_certificate" else "exact_rejected"
+        identities.append(
+            {
+                "item_id": iid,
+                "ground_truth": gt,
+                "resolution": resolution,
+                "passed": v.passed,
+                "proof_type": v.proof_type,
+                "symbolic_equivalent": v.symbolic_equivalent,
+                "decision": v.decision,
+                "test_mse": v.f64_test_mse,
+                "symbolic_notes": v.symbolic_notes,
+            }
+        )
+        print(f"  {iid}: {resolution} ({v.proof_type}; {v.symbolic_notes[:90]})")
+
+    # False controls must stay rejected under the fixed checker (tripwire).
+    from evobyte.bytecode import encode_instr, nop_program
+
+    controls: list[dict[str, Any]] = []
+    coinc = nop_program()
+    coinc[0] = encode_instr(0x02, dst=1, a=0, b=0)  # r1 = x - x = 0 everywhere
+    coinc[1] = encode_instr(0x04, dst=7, a=0, b=1)  # r7 = x / 0 (always invalid)
+    grids_c = _p42_grids("1")
+    vc = verify_l2(
+        coinc,
+        grids_c["train_xs"],
+        np.ones(48),
+        grids_c["test_xs"],
+        np.ones(32),
+        ground_truth_formula="1",
+        domain=domain,
+    )
+    controls.append(
+        {
+            "control": "invalid_numeric_certificate",
+            "rejected": (not vc.passed) and vc.proof_type == "numerical_evidence",
+        }
+    )
+    from evobyte.verifier import check_symbolic_equivalence, program_to_sympy
+
+    _x_prog = nop_program()
+    _x_prog[0] = encode_instr(0x03, dst=7, a=0, b=0)
+    sym_y = program_to_sympy(_x_prog, var_name="y")
+    eq_mm, _ = check_symbolic_equivalence(sym_y, "x", var_name="x")
+    controls.append({"control": "symbol_hypothesis_mismatch", "rejected": not eq_mm})
+    for c in controls:
+        print(f"  control {c['control']}: {'rejected' if c['rejected'] else 'NOT REJECTED'}")
+
+    # Prospective rule: no smoke-corpus positive is born from tolerance alone.
+    labeling: dict[str, Any] = {"checked": False}
+    try:
+        from math_specialist import build_verified_training_corpus
+
+        tmp = Path(tempfile.mkdtemp(prefix="evobyte-p42-"))
+        smoke_cfg = config.get("smoke", {})
+        rep = build_verified_training_corpus(
+            family="polynomial_arithmetic",
+            split_manifest="experiments/p30-splits.json",
+            output_path=tmp / "p42-smoke-corpus.json",
+            device_name="cpu",
+            teacher_budget_sec=float(smoke_cfg.get("teacher_budget_sec", 0.06)),
+            teacher_pop_size=int(smoke_cfg.get("teacher_pop_size", 32)),
+            seed=42,
+            smoke=True,
+        )
+        bad = [
+            p["item_id"]
+            for p in rep.get("positives", [])
+            if p.get("proof_type") != "exact_certificate"
+        ]
+        labeling = {
+            "checked": True,
+            "n_positives": len(rep.get("positives", [])),
+            "tolerance_born": bad,
+            "rule_holds": not bad,
+        }
+    except RuntimeError as exc:
+        labeling = {"checked": False, "reason": f"smoke unavailable: {exc}"}
+    print(f"  labeling rule (positives ⇒ exact_certificate): {labeling}")
+
+    decisive = all(i["resolution"] in ("exact_accepted", "exact_rejected") for i in identities)
+    if decisive and all(c["rejected"] for c in controls) and labeling.get("rule_holds"):
+        verdict = "ACCEPTED"
+    else:
+        verdict = "MIXED"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=42,
+        device=torch.device("cpu"),
+        dataset_hashes={
+            "p42_config": config_sha[:16],
+            "p35_corpus": hashlib.sha256(corpus_p.read_bytes()).hexdigest()[:16],
+        },
+        config={"acceptance_phase": "P42"},
+    )
+    report = {
+        "phase": "P42",
+        "verdict": verdict,
+        "claim_scope": "P35 positives revalidated by exact verification; original record untouched",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "corpus_integrity": {"ok": integrity["ok"], "errors": integrity["errors"]},
+        "identities": identities,
+        "controls": controls,
+        "labeling_rule": labeling,
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P42",
+        },
+        "seeds_rng": "fixed seed 42 for smoke corpus; revalidation deterministic (reason: no search)",
+        "budgets": {"smoke_teacher_budget_sec": config.get("smoke", {}).get("teacher_budget_sec")},
+        "counters": {
+            "identities": len(identities),
+            "exact_accepted": sum(1 for i in identities if i["resolution"] == "exact_accepted"),
+            "exact_rejected": sum(1 for i in identities if i["resolution"] == "exact_rejected"),
+        },
+        "limitations": [
+            "Revalidation reuses P35 scoring grids; it certifies identities, not the original training labels.",
+            "P35 record is read-only; its tolerance-born positives (if any) stay historical.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P42 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def _p41_snapshot(paths: list[str]) -> dict[str, str | None]:
@@ -1316,6 +1546,8 @@ def main() -> int:
             run_p40_evidence_audit(args.config, args.output)
         elif args.acceptance_phase == "P41":
             run_p41_immutable_audit(args.config, args.output)
+        elif args.acceptance_phase == "P42":
+            run_p42_exact_audit(args.config, args.output)
         return 0
 
     seeds = (
