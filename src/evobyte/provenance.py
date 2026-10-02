@@ -281,6 +281,97 @@ def write_manifest(path: str | Path, manifest: dict, raw_artifacts: dict[str, st
     return checksummed
 
 
+def verify_manifest_integrity(path: str | Path) -> dict:
+    """Reverify a checksummed manifest: seal hash plus every raw artifact hash.
+
+    Raw paths are resolved against the repo root when relative. Returns a
+    finding dict; ``ok`` is True only when the seal and all raw hashes match.
+    """
+    result: dict = {"manifest": str(path), "ok": False, "errors": [], "raw": []}
+    try:
+        with open(path, encoding="utf-8") as f:
+            stored = json.load(f)
+    except (OSError, ValueError) as exc:
+        result["errors"].append(f"unreadable_manifest: {exc}")
+        return result
+    recorded = stored.get("manifest_sha256")
+    if not recorded:
+        result["errors"].append("missing_manifest_sha256")
+        return result
+    recomputed = hashlib.sha256(
+        json.dumps(
+            {k: v for k, v in stored.items() if k != "manifest_sha256"},
+            sort_keys=True,
+            default=str,
+        ).encode()
+    ).hexdigest()
+    seal_ok = recomputed == recorded
+    result["seal_ok"] = seal_ok
+    if not seal_ok:
+        result["errors"].append("manifest_seal_mismatch")
+    for entry in stored.get("raw_artifacts", []):
+        ref = entry.get("path", "")
+        want = entry.get("sha256", "")
+        cand = Path(ref)
+        if not cand.is_absolute():
+            cand = _REPO_ROOT / ref
+        item: dict = {"path": ref, "ok": False, "size": 0}
+        if not cand.exists():
+            item["error"] = "missing_raw_file"
+        else:
+            try:
+                got = hash_file(cand)
+            except OSError as exc:
+                item["error"] = f"unreadable_raw_file: {exc}"
+            else:
+                item["size"] = cand.stat().st_size
+                item["sha256"] = got
+                if got == want:
+                    item["ok"] = True
+                else:
+                    item["error"] = "raw_hash_mismatch"
+        if not item["ok"] and "error" in item:
+            result["errors"].append(f"{ref}: {item['error']}")
+        result["raw"].append(item)
+    result["ok"] = seal_ok and all(r["ok"] for r in result["raw"])
+    return result
+
+
+def _refuse_nonempty(path: Path, label: str) -> None:
+    """Refuse to overwrite a non-empty historical destination (P41 immutability)."""
+    if path.exists() and path.stat().st_size > 0:
+        raise FileExistsError(
+            f"Refusing to overwrite non-empty {label} {path}; "
+            "use a fresh exclusive run directory instead of replacing sealed evidence."
+        )
+
+
+def write_manifest_exclusive(path: str | Path, manifest: dict, raw_blobs: dict[str, bytes]) -> dict:
+    """Seal-first writer: config and raw artifacts land before the manifest.
+
+    Refuses every non-empty destination (manifest or raw); records durable
+    references with size and SHA-256 in ``raw_inventory``. Never repairs an
+    old hash by replacing its evidence.
+    """
+    out_p = Path(path)
+    _refuse_nonempty(out_p, "manifest")
+    for ref in raw_blobs:
+        _refuse_nonempty(Path(ref), "raw artifact")
+    inventory = []
+    hashes = {}
+    for ref, blob in raw_blobs.items():
+        raw_p = Path(ref)
+        raw_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(raw_p, "wb") as f:
+            f.write(blob)
+        digest = hashlib.sha256(bytes(blob)).hexdigest()
+        inventory.append({"path": ref, "size_bytes": len(blob), "sha256": digest})
+        hashes[ref] = digest
+    sealed = dict(manifest)
+    sealed["raw_inventory"] = inventory
+    return write_manifest(out_p, sealed, hashes)
+
+
 def parse_budget_duration(budget_str: str) -> float:
     """Parse budget string like '10s', '1m', '10m', '1h', '30' into float seconds."""
     s = str(budget_str).strip().lower()

@@ -1771,6 +1771,245 @@ def run_acceptance_audit(
     return written
 
 
+# ==============================================================================
+# P51 — Bounded replay map (sampled nodes, bounded buffers, declared coverage)
+# ==============================================================================
+
+
+def build_bounded_replay_map(
+    record: LineageRecord,
+    *,
+    max_nodes: int = 100_000,
+    checkpoint_ref: str = "",
+) -> Any:
+    """Build a bounded replay map from a lineage record (P51).
+
+    Every promoted elite/finalist is stored first (certificates are never
+    sampled away); the remaining audit entries are stride-sampled to fit the
+    node cap. Unstored generations stay rebuildable from the recorded seed
+    plus a compatible checkpoint; coverage is declared full or partial.
+    """
+    import math as _math
+
+    from evobyte.archive import (
+        new_bounded_replay_map as _new_map,
+    )
+    from evobyte.archive import (
+        replay_map_add_sample as _add,
+    )
+
+    seed = int(record.sampler_state["initial_seed"])
+    replay_map = _new_map(seed, checkpoint_ref, max_nodes=max_nodes)
+    audit = list(record.audit_store or [])
+    replay_map.total_candidates = (
+        len(audit) if audit else int(record.summary.get("total_generated", 0))
+    )
+
+    def _size(node: dict[str, Any]) -> int:
+        return len(json.dumps(node, sort_keys=True, default=str).encode())
+
+    kept: set[str] = set()
+
+    def _store(
+        generation: int,
+        cid: str,
+        sha: str,
+        parents: list[str],
+        operator: str,
+        certificate: bool,
+    ) -> None:
+        node = {
+            "generation": int(generation),
+            "candidate_id": str(cid),
+            "bytecode_sha256": str(sha),
+            "parent_ids": [str(p) for p in parents],
+            "operator": str(operator),
+            "certificate": bool(certificate),
+        }
+        if _add(
+            replay_map,
+            int(generation),
+            str(cid),
+            str(sha),
+            [str(p) for p in parents],
+            str(operator),
+            certificate=bool(certificate),
+            node_bytes=_size(node),
+        ):
+            kept.add(str(cid))
+
+    for anc in record.promoted_ancestry:
+        if anc.candidate_id in kept:
+            continue
+        _store(
+            anc.generation,
+            anc.candidate_id,
+            anc.bytecode_sha256,
+            list(anc.parent_ids),
+            anc.operator,
+            True,
+        )
+
+    slots_left = max(0, max_nodes - len(kept))
+    stride = max(1, _math.ceil(len(audit) / slots_left)) if audit and slots_left else 1
+    for entry in audit[::stride]:
+        if entry["candidate_id"] in kept:
+            continue
+        _store(
+            int(entry["generation"]),
+            str(entry["candidate_id"]),
+            str(entry["bytecode_sha256"]),
+            [str(p) for p in entry.get("parent_ids", [])],
+            str(entry.get("operator", "unknown")),
+            False,
+        )
+
+    total = max(1, replay_map.total_candidates)
+    replay_map.sampling_rate = min(1.0, len(kept) / total)
+    replay_map.coverage = (
+        "full"
+        if (replay_map.sampling_rate >= 1.0 and replay_map.dropped_samples == 0)
+        else "partial_sampled"
+    )
+    return replay_map
+
+
+def replay_bounded_map_segments(
+    record: LineageRecord,
+    replay_map: Any,
+    *,
+    device_name: str | None = None,
+    declared_generations: list[int] | None = None,
+) -> dict[str, Any]:
+    """Rebuild the declared segments from seed+config and compare bit-exactly."""
+    seed = int(record.sampler_state["initial_seed"])
+    cfg = record.config
+    replayed = run_lineage_evolution(
+        seed=seed,
+        pop_size=int(cfg["pop_size"]),
+        n_generations=int(cfg["n_generations"]),
+        n_points=int(cfg["n_points"]),
+        formula=str(record.problem["name"]),
+        audit_mode=record.audit_store is not None,
+        device_name=device_name,
+        crossover_p=float(cfg.get("crossover_p", 0.4)),
+        elite_k=cfg.get("elite_k"),
+        random_inject_p=float(cfg.get("random_inject_p", 0.10)),
+    )
+    gens = (
+        declared_generations
+        if declared_generations is not None
+        else list(range(len(record.generations)))
+    )
+    mismatches: list[str] = []
+    for g in gens:
+        if record.generations[g].batch_hash != replayed.generations[g].batch_hash:
+            mismatches.append(f"gen {g} batch_hash mismatch")
+    replayed_map = build_bounded_replay_map(
+        replayed, max_nodes=replay_map.max_nodes, checkpoint_ref=replay_map.checkpoint_ref
+    )
+    orig_nodes = sorted(n["bytecode_sha256"] for n in replay_map.nodes)
+    new_nodes = sorted(n["bytecode_sha256"] for n in replayed_map.nodes)
+    if orig_nodes != new_nodes:
+        mismatches.append("sampled node set mismatch")
+    orig_certs = sorted(replay_map.certificates)
+    new_certs = sorted(replayed_map.certificates)
+    if orig_certs != new_certs:
+        mismatches.append("certificate set mismatch")
+    return {
+        "segments_declared": len(gens),
+        "segments_match": not mismatches,
+        "mismatches": mismatches[:5],
+        "nodes_compared": len(orig_nodes),
+        "certificates_compared": len(orig_certs),
+    }
+
+
+def run_p51_bounded_replay(
+    *,
+    seed: int = 42,
+    pop_size: int = 32,
+    n_generations: int = 6,
+    n_points: int = 64,
+    formula: str = "x2_3x_7",
+    device_name: str | None = None,
+    max_nodes: int = 100_000,
+    checkpoint_dir: Path | str | None = None,
+) -> dict[str, Any]:
+    """Run one bounded-map experiment: trace, sample, validate, replay, bill."""
+    import tempfile as _tempfile
+
+    from evobyte.archive import validate_bounded_replay_map as _validate
+
+    t0 = time.perf_counter()
+    device = resolve_device(device_name)
+    ckpt_dir = (
+        Path(checkpoint_dir)
+        if checkpoint_dir is not None
+        else Path(_tempfile.mkdtemp(prefix="evobyte-p51-"))
+    )
+    ckpt_dir.mkdir(parents=True, exist_ok=True)
+    split_at = max(1, n_generations // 2)
+    ckpt_path = ckpt_dir / f"p51_ckpt_s{seed}_g{split_at}.pt"
+
+    record = run_lineage_evolution(
+        seed=seed,
+        pop_size=pop_size,
+        n_generations=n_generations,
+        n_points=n_points,
+        formula=formula,
+        audit_mode=True,
+        device_name=device_name,
+        checkpoint_at=split_at,
+        checkpoint_path=ckpt_path,
+    )
+    ckpt_bytes = int(ckpt_path.stat().st_size) if ckpt_path.exists() else 0
+    replay_map = build_bounded_replay_map(
+        record, max_nodes=max_nodes, checkpoint_ref=str(ckpt_path)
+    )
+    expected_certs = [a.bytecode_sha256 for a in record.promoted_ancestry]
+    validation = _validate(replay_map, expected_certificates=expected_certs)
+    replay = replay_bounded_map_segments(record, replay_map, device_name=device_name)
+    ordering = validate_parent_ordering(record)
+    counters = verify_honest_counters(record)
+    overhead = measure_tracing_overhead(
+        pop_size=pop_size,
+        n_generations=n_generations,
+        n_points=n_points,
+        formula=formula,
+        device_name=device_name,
+        repeats=2,
+    )
+    elapsed = time.perf_counter() - t0
+    return {
+        "seed": seed,
+        "device": str(device),
+        "elapsed_sec": elapsed,
+        "total_candidates": replay_map.total_candidates,
+        "certificate_shas": [a.bytecode_sha256 for a in record.promoted_ancestry],
+        "map": {
+            "nodes": len(replay_map.nodes),
+            "max_nodes": replay_map.max_nodes,
+            "dropped_samples": replay_map.dropped_samples,
+            "sampling_rate": replay_map.sampling_rate,
+            "coverage": replay_map.coverage,
+            "io_bytes": replay_map.io_bytes,
+            "io_cap_bytes": replay_map.io_queue_bytes,
+            "raw_bytes": replay_map.raw_bytes,
+            "raw_cap_bytes": replay_map.raw_disk_bytes,
+            "certificates": len(replay_map.certificates),
+            "certificates_expected": len(expected_certs),
+            "checkpoint_ref": replay_map.checkpoint_ref,
+            "checkpoint_bytes": ckpt_bytes,
+        },
+        "validation": validation,
+        "replay": replay,
+        "parent_ordering_valid": bool(ordering.get("valid", False)),
+        "counters_consistent": bool(counters.get("consistent", False)),
+        "overhead": overhead,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P26/P32 Lineage Tracing, Audit Replay, Checkpoint Resume & Acceptance Harness"

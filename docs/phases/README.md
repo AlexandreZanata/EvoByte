@@ -1,4 +1,4 @@
-# Phases P00–P39 (executable plan)
+# Phases P00–P57 (executable plan)
 
 One file per phase. Each phase states objective, scope (in/out),
 tasks, exit gate (artifact runs + measured), risks, and a **Commit & Push**
@@ -60,7 +60,40 @@ measurement)`.
 - [P38 — Clean-environment confirmation and frozen model export](P38-independent-confirmation.md).
 - [P39 — Bounded mathematical campaign with novelty review](P39-certified-science.md).
 
-## Execution and acceptance contract
+## Guided formal-search program (P40–P57)
+
+The next proposed program is defined by
+[the executor runbook](../FORMAL_SEARCH_PLAN.md). P40 first reconciles the
+accepted code base and audits P33–P39 evidence; historical Done labels do
+not waive its prerequisite checks. This plan implements no new benchmark
+flags and does not authorize executing all phases at once.
+
+- [P40 — Reconciliar a base e auditar as evidências](P40-evidence-reconciliation.md).
+- [P41 — Impedir sobrescrita de evidências](P41-immutable-artifacts.md).
+- [P42 — Corrigir a certificação matemática](P42-exact-certification.md).
+- [P43 — Demonstrar continuação real de checkpoint](P43-real-checkpoint-resume.md).
+- [P44 — Manter a evolução estruturada na GPU](P44-resident-grammar.md).
+- [P45 — Medir o ciclo inteiro dentro de limites seguros](P45-honest-gpu-envelope.md).
+- [P46 — Catalogar 100 problemas com fontes](P46-open-problem-catalogue.md).
+- [P47 — Congelar uma família e o primeiro experimento](P47-freeze-one-family.md).
+- [P48 — Adicionar a fronteira de prova formal](P48-formal-checker-boundary.md).
+- [P49 — Congelar uma representação compacta limitada](P49-compact-typed-candidates.md).
+- [P50 — Estabelecer buscas e baselines verificáveis](P50-structured-search-controls.md).
+- [P51 — Rastrear a busca sem guardar um universo infinito](P51-bounded-replay-map.md).
+- [P52 — Construir dados certificados para o micromodelo](P52-certified-learning-data.md).
+- [P53 — Treinar um único proponente pequeno](P53-small-conditional-proposer.md).
+- [P54 — Decidir se o micromodelo compensa](P54-matched-budget-pilot.md).
+- [P55 — Testar uma hipótese de aleatoriedade, opcional](P55-optional-sampling-hypothesis.md).
+- [P56 — Confirmar o método congelado em teste novo](P56-fresh-frozen-confirmation.md).
+- [P57 — Executar uma campanha matemática e revisar novidade](P57-bounded-discovery-campaign.md).
+
+Execute P40–P57 in order, with the negative-result routes in the runbook.
+Insufficient certified data blocks training but permits honest baseline
+comparisons. The optional sampler can be deferred. Correctness, integrity
+or isolation failures block advancement. Keep 100 problems as a curated
+catalogue; run one nominated family, never 100 simultaneous conjecture hunts.
+
+## Historical execution and acceptance contract
 
 ```text
 P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
@@ -69,7 +102,8 @@ P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
 P29 recorded outcome -> P30 -> P31 -> P32 -> P33 -> P34 -> P35 -> P36 -> P37 -> P38 -> P39
 ```
 
-P30 is the next planned task. Numbers preserve historical references; the
+P30 was the entry task of D014. P40 is the next proposed acceptance audit.
+Numbers preserve historical references; the
 dependency order above, adopted in D013/D014, replaces numeric ordering.
 Assign an owner and freeze a machine-readable experiment configuration
 before Building.

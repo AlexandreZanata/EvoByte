@@ -23,6 +23,7 @@ from benchmarks.math_corpus import (
     convert_numinamath_row,
     extract_problem_template,
     generate_coverage_report,
+    generate_p52_bank_exact_tasks,
     generate_symbolic_task,
     get_source_problem_id,
     group_items_by_source_and_template,
@@ -1039,3 +1040,22 @@ def test_recorded_p31_full_corpus_counts() -> None:
     assert manifest["tracks"]["EXECUTE"]["verified"] == 4281
     assert manifest["tracks"]["FIND"]["verified"] == 200
     assert manifest["tracks"]["FIND"]["unsupported_natural_language"] == 1383
+
+
+def test_p52_bank_exact_tasks_deterministic() -> None:
+    """P52 sampler: full bank-exact enumeration, stable groups, exact-only slots."""
+    import sympy as _sp
+
+    tasks = generate_p52_bank_exact_tasks()
+    assert len(tasks) == 1320
+    assert len({t["group_id"] for t in tasks}) == len(tasks)
+    assert tasks == generate_p52_bank_exact_tasks()
+    formulas = {t["canonical_formula"] for t in tasks}
+    assert "x**2 + 3*x + 7" in formulas
+    assert "x**2 - 1" in formulas
+    assert all(t["template_id"] == "tpl_p52_bank_exact" for t in tasks)
+    assert all(t["degree"] in (1, 2) for t in tasks)
+    for t in tasks[:20]:
+        canonical = _sp.expand(_sp.sympify(t["canonical_formula"]))
+        for variation in t["variations"]:
+            assert _sp.expand(_sp.sympify(variation)) == canonical

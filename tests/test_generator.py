@@ -2,20 +2,33 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pytest
 import torch
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
 
 from evobyte.bytecode import N_INSTR, decode_instr, is_valid
 from evobyte.evolution import sample_structured
 from evobyte.generator import (
     MAX_GENERATOR_PARAMS,
     MIN_GENERATOR_PARAMS,
+    P53_EXPLORATION_FLOOR,
+    P53_MAX_PARAMS,
     BytecodeAutoregressiveModel,
     GeneratorConfig,
     MicroGenerator,
+    SequentialHistoryProposer,
     assert_generator_resource_cap,
     encode_programs_to_tensors,
+    load_proposer,
+    p53_position_mask_id,
+    p53_proposer_schema,
+    sample_proposer_standalone,
+    save_proposer,
+    train_sequential_proposer,
 )
 
 
@@ -161,3 +174,61 @@ def test_generator_pipeline_step() -> None:
     assert stats["total_pipeline_time_sec"] > 0.0
     for cand in candidates:
         assert is_valid(cand)
+
+
+def test_p53_proposer_within_param_cap() -> None:
+    model = SequentialHistoryProposer(feat_dim=16, gru_width=64)
+    assert model.count_parameters() <= P53_MAX_PARAMS
+    assert p53_position_mask_id(15) == 1
+    assert all(p53_position_mask_id(t) == 0 for t in range(15))
+
+
+def test_p53_proposer_is_history_conditional() -> None:
+    torch.manual_seed(0)
+    model = SequentialHistoryProposer(feat_dim=16, gru_width=64)
+    model.eval()
+    feats = torch.zeros(1, 16)
+    zeros = torch.zeros(1, 3, dtype=torch.long)
+    ones = torch.ones(1, 3, dtype=torch.long)
+    with torch.no_grad():
+        a = model.propose_step(feats, zeros, zeros, zeros, zeros)[0]
+        b = model.propose_step(feats, ones, ones % 8, ones % 8, ones)[0]
+    assert not torch.allclose(a, b), "position-only network is not history-conditional"
+
+
+def test_p53_train_sample_save_load_roundtrip(tmp_path) -> None:
+    import json as _json
+
+    corpus = _json.loads((_REPO_ROOT / "experiments" / "p52-certified-data.json").read_text())
+    train = [p for p in corpus["positives"] if p["split"] == "train"][:32]
+    val = [p for p in corpus["positives"] if p["split"] == "val"][:8]
+
+    def _feats(ps):
+        return np.array([p["features_inference_only"] for p in ps], dtype=np.float32)
+
+    def _progs(ps):
+        return np.array([p["program_words"] for p in ps], dtype=np.uint32)
+
+    res = train_sequential_proposer(
+        train_features=_feats(train),
+        train_programs=_progs(train),
+        val_features=_feats(val),
+        val_programs=_progs(val),
+        seed=3,
+        max_epochs=2,
+        device="cpu",
+    )
+    assert res["best_epoch"] >= 0
+    assert all(np.isfinite(res["train_curve"])) and all(np.isfinite(res["val_curve"]))
+    schema = p53_proposer_schema(feature_mean=res["feature_mean"], feature_std=res["feature_std"])
+    mu = np.array(res["feature_mean"])
+    sg = np.array(res["feature_std"])
+    probe = ((_feats(val) - mu) / sg).astype(np.float32)[:2]
+    w_path = tmp_path / "p53-proposer.pt"
+    save_proposer(w_path, res["model"])
+    fresh = load_proposer(w_path, schema, "cpu")
+    p1, o1 = sample_proposer_standalone(res["model"], probe, 8, seed=5, device="cpu")
+    p2, _ = sample_proposer_standalone(fresh, probe, 8, seed=5, device="cpu")
+    assert all(is_valid(p) for p in p1)
+    assert all((a == b).all() for a, b in zip(p1, p2))
+    assert sum(o == "floor" for o in o1) / len(o1) >= P53_EXPLORATION_FLOOR
