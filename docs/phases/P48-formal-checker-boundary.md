@@ -1,8 +1,13 @@
 # P48 — Adicionar a fronteira de prova formal
 
-**Status:** Proposed.
+**Status:** Built — pending human mathematical review (P49 blocked).
 **Pré-requisito:** P47, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p48-formal-checker-boundary`.
+**Resultado:** fronteira Lean operacional (toolchain v4.34.0 + Mathlib
+v4.34.0 pinados, processo separado, timeout, scans sorry/axioma/imports,
+hash do enunciado, recheck): 2 desafios aceitos (identidade + certificado
+numérico n=1009), 4 controles falsos rejeitados; tradução do enunciado
+aguarda aprovação matemática humana.
 
 ## Objetivo e escopo
 

@@ -49,3 +49,7 @@ Thumbs.db
 *.pem
 *.key
 secrets.yaml
+
+# Lean (isolated P48 proofs; deps resolved by lake, never committed)
+lean_proofs/.lake/
+lean_proofs/build/

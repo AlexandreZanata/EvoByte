@@ -677,7 +677,137 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47", "P48")
+
+
+def run_p48_formal_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P48 audit: valid challenge accepted, every false control rejected, cert matches."""
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.verifier import run_lean_checker
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P48":
+        raise ValueError(f"Config {cfg_p} is not a P48 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    proj = _REPO_ROOT / config.get("project_dir", "lean_proofs")
+    timeout_sec = float(config.get("timeout_sec", 900.0))
+
+    print("=" * 115)
+    print("P48 FORMAL-CHECKER BOUNDARY AUDIT (separate process, frozen toolchain)")
+    print("=" * 115)
+
+    challenges: list[dict[str, Any]] = []
+    for spec in config.get("challenges", []):
+        res = run_lean_checker(
+            _REPO_ROOT / config.get("challenge_file", "lean_proofs/P48Proofs.lean"),
+            project_dir=proj,
+            expected_theorem=spec["theorem"],
+            expected_statement_sha256=spec["statement_sha256_prefix"],
+            timeout_sec=timeout_sec,
+        )
+        challenges.append(
+            {
+                "theorem": spec["theorem"],
+                "accepted": res["accepted"],
+                "reasons": res["reasons"],
+                "axioms_recorded": res.get("axioms_recorded", []),
+            }
+        )
+        print(
+            f"  challenge {spec['theorem']}: "
+            f"{'accepted' if res['accepted'] else 'NOT ACCEPTED'} {res['reasons']}"
+        )
+
+    controls: list[dict[str, Any]] = []
+    for spec in config.get("controls", []):
+        res = run_lean_checker(
+            _REPO_ROOT / spec["file"],
+            project_dir=proj,
+            expected_theorem=spec.get("theorem"),
+            expected_statement_sha256=None,
+            timeout_sec=timeout_sec,
+            repeat_check=False,
+        )
+        rejected = not res["accepted"]
+        controls.append(
+            {
+                "id": spec["id"],
+                "expected": spec["expected"],
+                "rejected": rejected,
+                "reasons": res["reasons"],
+            }
+        )
+        print(f"  control {spec['id']}: {'rejected' if rejected else 'NOT REJECTED'}")
+
+    challenges_ok = all(c["accepted"] for c in challenges) and bool(challenges)
+    controls_ok = all(c["rejected"] for c in controls) and bool(controls)
+    verdict = "ACCEPTED" if (challenges_ok and controls_ok) else "MIXED"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=42,
+        device=torch.device("cpu"),
+        dataset_hashes={"p48_config": config_sha[:16]},
+        config={"acceptance_phase": "P48"},
+    )
+    report = {
+        "phase": "P48",
+        "verdict": verdict,
+        "claim_scope": "compiler boundary mechanics; statement translation review stays human",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "toolchain_pin": config.get("toolchain_pin"),
+        "challenges": challenges,
+        "controls": controls,
+        "translation_review": {
+            "required": True,
+            "status": "pending",
+            "scope": "challenge statements vs intended mathematics",
+            "gate_note": "A finite-test proven-theorem label additionally requires "
+            "translation approval; this audit cannot grant it.",
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P48",
+        },
+        "seeds_rng": "not-applicable: deterministic proof checking (reason: no search)",
+        "budgets": "per-file compile timeouts; wall-clock recorded, never a claim",
+        "counters": {
+            "challenges": len(challenges),
+            "challenges_accepted": sum(1 for c in challenges if c["accepted"]),
+            "controls": len(controls),
+            "controls_rejected": sum(1 for c in controls if c["rejected"]),
+        },
+        "limitations": [
+            "The checker confirms the formal statement and its hypotheses, not the translation.",
+            "Repeat compiles guard transients; they are not independent authorship.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P48 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def _p47_canonical_hash(nomination: dict[str, Any]) -> str:
@@ -2862,6 +2992,8 @@ def main() -> int:
             run_p46_catalogue_audit(args.config, args.output)
         elif args.acceptance_phase == "P47":
             run_p47_nomination_audit(args.config, args.output)
+        elif args.acceptance_phase == "P48":
+            run_p48_formal_audit(args.config, args.output)
         return 0
 
     seeds = (
