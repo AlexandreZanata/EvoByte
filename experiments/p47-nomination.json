@@ -1,0 +1,171 @@
+{
+  "phase": "p47-nomination",
+  "status": "frozen-pending-human-review",
+  "scopes": {
+    "proposer_development": {
+      "family": "polynomial_arithmetic",
+      "domain": "Q (rational coefficients; transcendental CONST_BANK slots are numerical-only by construction)",
+      "representation": "v0 16-word bytecode, r7 output, CONST_BANK pinned",
+      "certificate": "P42 exact_certificate (unified symbols, explicit domain, pole freedom); numerical evidence is never a success",
+      "source": {
+        "snapshot": "data/processed/p25_corpus.jsonl",
+        "snapshot_sha256": "27344a5ea12417f2d50270e37935e21b3802a07afad7ba79d4b4f8e89d8b75c0",
+        "pipeline": "P30 source-group-separated splits; no natural-language data in the loop"
+      },
+      "task_generator": {
+        "procedure": "deterministic polynomial sampler, degree <= 2, rational coefficients with denominator dividing 12, constant term in [-10, 10], deduplicated by canonical form",
+        "seed": 42047,
+        "target_counts": {
+          "train": 64,
+          "val": 16
+        },
+        "note": "exact task list materializes at experiment time and is sealed then; procedure above is frozen"
+      },
+      "splits": {
+        "policy": "frozen before any training; source record plus all equivalences/variations of the same canonical target share one group",
+        "grouping_rule": "same canonical polynomial form and same source template share a group id assigned before splitting",
+        "proportions": {
+          "train": "dev-pool",
+          "val": "dev-pool",
+          "test": "fresh sealed set"
+        },
+        "seed": 42047
+      },
+      "success": {
+        "per_task": "exact_certificate",
+        "aggregates": [
+          "certified_success_rate",
+          "median_time_to_certified"
+        ],
+        "mse_excluded_as_success": true
+      },
+      "baselines": [
+        "grammar sampling proposer (P33 accepted path)",
+        "genetic evolution baseline at equal total cost (wall-clock and candidate budgets)"
+      ],
+      "final_test": {
+        "status": "closed",
+        "storage": "experiments/p47-final-test/",
+        "access_log": "experiments/p47-final-test/access-log.json",
+        "access_count": 0,
+        "id_namespace": "p47ft-",
+        "forbidden_ids": [
+          "sym_poly_0003_find",
+          "sym_poly_0012_find",
+          "sym_poly_0016_find",
+          "sym_poly_0019_find",
+          "sym_poly_0024_find",
+          "sym_poly_0026_find",
+          "sym_poly_0029_find",
+          "sym_poly_0035_find",
+          "sym_poly_0039_find",
+          "sym_poly_0041_find"
+        ],
+        "forbidden_note": "P38-observed final test is never reused; materialization happens at confirmation time by the frozen procedure"
+      }
+    },
+    "scientific_campaign": {
+      "problem": "erdos-straus bounded instances (later campaign, separate scope)",
+      "certificate": "exact integer triple (x, y, z), dual checkers (integer identity and rational equation)",
+      "bounds": "M <= 10^9 strict on max(x, y, z); out-of-bound finalists rejected, never certified",
+      "baseline": "matched CPU enumeration of the same space and order, equal wall-clock",
+      "calibration_instances": [
+        1009,
+        10007,
+        100003
+      ],
+      "calibration_note": "already observed in P39; pipeline validation only, no discovery claims",
+      "discovery_instances": {
+        "source": "P46 finite_search_candidates bucket",
+        "selection": "human-approved list",
+        "status": "pending"
+      },
+      "coverage_policy": "bounded windows declared in the campaign manifest before each run; published with results; a finite miss is never a counterexample",
+      "no_universal_claims": true
+    }
+  },
+  "hypothesis": {
+    "statement": "Under equal total cost, the structured/conditioned proposer achieves a higher exact-certificate rate (or lower median time-to-certified) than the matched classical baseline on sealed tasks of the nominated family.",
+    "effect": "certified success rate gain or time-to-certified reduction at equal wall-clock and candidate budgets",
+    "falsification": "If the paired bootstrap 95% CI of the rate difference includes zero or favors the baseline, the hypothesis is rejected for this family; no post-hoc metric substitution is allowed.",
+    "mse_excluded_as_success": true
+  },
+  "controls": {
+    "known": [
+      {
+        "id": "k1",
+        "description": "x^2 - 1 via bank-exact Horner program",
+        "expected": "exact_certificate",
+        "reference": "P35 sym_poly_0023_find record (cited, not copied)"
+      },
+      {
+        "id": "k2",
+        "description": "x^2 + 3x + 7 exact program",
+        "expected": "exact_certificate",
+        "reference": "tests/test_verifier_l2.py exact quadratic fixture (cited, not copied)"
+      },
+      {
+        "id": "k3",
+        "description": "Erdos-Straus n=1009 triple (253, 85100, 944524900)",
+        "expected": "dual-checked bounded certificate",
+        "reference": "P31 strict certificate record (cited, not copied)"
+      }
+    ],
+    "false": [
+      {
+        "id": "f1",
+        "description": "train-coincident x^8/1e12 perturbation of x^2 + 3x + 7",
+        "expected": "numerical_evidence only, never a training positive",
+        "reference": "tests/test_verifier_l2.py coincident fixture"
+      },
+      {
+        "id": "f2",
+        "description": "symbol-hypothesis mismatch (program in y vs target in x)",
+        "expected": "rejected",
+        "reference": "tests/test_verifier_l2.py mismatch regression"
+      },
+      {
+        "id": "f3",
+        "description": "invalid numeric program x/0",
+        "expected": "rejected, numerical_evidence only",
+        "reference": "tests/test_verifier_l2.py invalid-certificate regression"
+      },
+      {
+        "id": "f4",
+        "description": "pole-in-domain rational (x^2 - 1)/(x - 1) on a domain containing x = 1",
+        "expected": "rejected with pole condition recorded",
+        "reference": "tests/test_verifier_l2.py pole regression"
+      }
+    ]
+  },
+  "thresholds": {
+    "status": "pending-human-review",
+    "quantities": [
+      "min_certified_success_rate_gain",
+      "max_time_to_certified_ratio",
+      "min_seeds",
+      "min_tasks",
+      "min_budgets"
+    ],
+    "values": "pending-human-review",
+    "note": "quantities are frozen; numeric values require human mathematical review"
+  },
+  "non_claims": [
+    "reusing infrastructure does not establish model transfer between the two scopes",
+    "a narrow-family win does not replace H1",
+    "a finite miss is never a counterexample",
+    "catalogue membership is never a novelty proof"
+  ],
+  "human_review": {
+    "required": true,
+    "status": "pending",
+    "scope": "nomination + thresholds (P47); P46 curation review still pending",
+    "gate_note": "P48 is blocked until a mathematician approves this nomination; this audit cannot grant approval."
+  },
+  "frozen": {
+    "sha256": "18af5df916836e5aa3872029d3e39fef0ad03d73a80e5fd76edfd3cac2d2f9c4",
+    "procedure": "sha256 over canonical JSON (sort_keys) of the nomination excluding this frozen block",
+    "frozen_at": "2026-10-02",
+    "frozen_by": "agent"
+  }
+}

@@ -133,7 +133,7 @@ def test_science_matrix_smoke():
 
 
 def test_p40_acceptance_registry_rejects_unknown_phases():
-    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44", "P45", "P46")
+    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47")
     import subprocess as _sp
 
     proc = _sp.run(
@@ -141,7 +141,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P47",
+            "P48",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -153,7 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P47'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P48'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -427,3 +427,50 @@ def test_p46_normalized_statement_dedup():
     assert a == b == "if a subseteq mathbb n then must"
     c = _p46_normalize_statement("Is there an odd covering system?")
     assert c != a
+
+
+def test_p47_nomination_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p47_nomination_audit
+
+    out_p = tmp_path / "p47-acceptance.json"
+    report = run_p47_nomination_audit("experiments/p47-config.json", out_p)
+    assert out_p.exists()
+    assert report["status"] == "PASS"
+    assert report["verdict"] == "PENDING_HUMAN_REVIEW"
+    assert report["freeze_recorded"] == report["nomination_sha256"]
+    assert report["final_test"]["access_log_empty"] is True
+    assert report["final_test"]["material"] == []
+    assert report["final_test"]["forbidden_p38_ids"] == 10
+    assert report["controls"] == {"known": 3, "false": 4}
+    assert report["human_review"]["required"] is True
+
+
+def test_p47_nomination_rejects_tampering_and_open_test(tmp_path):
+    import copy as _copy
+    import json as _json
+
+    from benchmarks.science_matrix import run_p47_nomination_audit
+
+    base = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p47-nomination.json").read_text()
+    )
+    tampered = _copy.deepcopy(base)
+    tampered["hypothesis"]["mse_excluded_as_success"] = True
+    tampered["thresholds"]["values"] = {"min_seeds": 3}
+    tampered_p = tmp_path / "p47-tampered.json"
+    tampered_p.write_text(_json.dumps(tampered))
+    cfg_p = tmp_path / "cfg.json"
+    cfg_p.write_text(
+        _json.dumps(
+            {
+                "phase": "P47",
+                "nomination_path": str(tampered_p),
+                "p38_manifest_path": "experiments/p38-confirmation.json",
+            }
+        )
+    )
+    report = run_p47_nomination_audit(cfg_p, tmp_path / "out.json")
+    assert report["status"] == "FAIL"
+    assert report["verdict"] == "REJECTED"
+    assert any("frozen hash mismatch" in e for e in report["errors"])
+    assert any("pending human review" in e for e in report["errors"])
