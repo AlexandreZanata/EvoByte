@@ -6,6 +6,8 @@ and selection directly on GPU tensors without per-candidate host round-trips.
 
 from __future__ import annotations
 
+import hashlib
+import random
 import time
 from collections.abc import Callable
 from pathlib import Path
@@ -14,9 +16,15 @@ from typing import Any
 import numpy as np
 import torch
 
-from evobyte.bytecode import N_INSTR, N_REGS, decode_human
+from evobyte.bytecode import CONST_BANK, N_INSTR, N_REGS, OPCODE_VERSION, decode_human
 from evobyte.evolution import STRUCTURED_OP_RATIOS, EvolutionConfig
 from evobyte.vm_torch import PopulationVMBuffer, execute_population_torch, get_default_device
+
+CHECKPOINT_FORMAT = "evobyte-exact-checkpoint-v1"
+
+
+class IncompatibleCheckpointError(ValueError):
+    """Refusal to resume from a foreign, stale or truncated checkpoint (P43)."""
 
 
 def gpu_sample_pure(
@@ -256,6 +264,13 @@ class GPUResidentEvolution:
         if self.device.type == "cuda":
             torch.cuda.synchronize(self.device)
 
+    def sync_best_to_host(self) -> None:
+        """Materialize the tracked best program on host (off-cycle only).
+
+        The base engine tracks best on host already, so this is a no-op;
+        resident subclasses defer host materialization until this call.
+        """
+
     def step(self) -> dict[str, Any]:
         """Execute one generation cycle resident on GPU."""
         self.generation += 1
@@ -442,6 +457,7 @@ class GPUResidentEvolution:
 
         total_time = time.perf_counter() - t_total_0
         total_evals = len(history) * self.config.pop_size
+        self.sync_best_to_host()
 
         return {
             "best_program": self.best_program,
@@ -456,27 +472,118 @@ class GPUResidentEvolution:
             "history": history,
         }
 
+    def _extra_checkpoint_state(self) -> dict[str, Any]:
+        """Subclass hook: engine-specific determinism state (P43)."""
+        return {}
+
+    def _apply_extra_checkpoint_state(self, extra: dict[str, Any]) -> None:
+        """Subclass hook: restore engine-specific determinism state."""
+        _ = extra
+
+    def _config_snapshot(self) -> dict[str, Any]:
+        import dataclasses as _dc
+
+        try:
+            snap = _dc.asdict(self.config)
+        except (TypeError, ValueError):
+            snap = dict(vars(self.config))
+        snap["__class__"] = type(self.config).__name__
+        return snap
+
+    def _elite_snapshot(self) -> list[list[int]]:
+        """Top-k programs by current fitness (same selection the engine uses)."""
+        k = max(1, min(int(self.config.elite_k), int(self.config.pop_size)))
+        preds, flags = execute_population_torch(self.population, self.xs, device=self.device)
+        diff = preds - self.ys.unsqueeze(0)
+        mse = (diff**2).mean(dim=1)
+        invalid = flags.any(dim=1) | torch.isnan(mse) | torch.isinf(mse)
+        fitness = torch.where(invalid, mse + 1e6, mse)
+        order = torch.argsort(fitness)
+        void = self.population.cpu().numpy().astype(np.uint32)
+        return [[int(v) for v in void[i]] for i in order[:k].tolist()]
+
     def save_checkpoint(self, path: str | Path) -> None:
-        """Save GPU-resident population and RNG states to checkpoint."""
+        """Save exact resumable state: population, fitness, elites, constants,
+        generation, counters, config and all RNG states (P43)."""
+        self.sync_best_to_host()
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
+        elites = self._elite_snapshot()
         state = {
+            "format": CHECKPOINT_FORMAT,
+            "engine": type(self).__name__,
+            "torch_version": torch.__version__,
+            "cuda_version": getattr(getattr(torch, "version", None), "cuda", None),
+            "opcode_version": int(OPCODE_VERSION),
+            "config": self._config_snapshot(),
+            "constants": [float(c) for c in list(CONST_BANK)],
+            "problem": {
+                "xs": self.xs.cpu().clone(),
+                "ys": self.ys.cpu().clone(),
+            },
             "generation": self.generation,
             "population": self.population.cpu().clone(),
+            "elites": elites,
             "best_fitness": self.best_fitness,
             "best_mse": self.best_mse,
             "best_program": torch.from_numpy(self.best_program.astype(np.int64)),
+            "counters": {
+                "steps": self.generation,
+                "candidates_total": self.generation * int(self.config.pop_size),
+            },
+            "extra": self._extra_checkpoint_state(),
+            "python_rng": random.getstate(),
+            "numpy_rng": np.random.get_state(),
             "torch_cpu_rng": torch.get_rng_state(),
             "torch_cuda_rng": (
                 torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None
             ),
-            "numpy_rng": np.random.get_state(),
         }
         torch.save(state, p)
 
-    def load_checkpoint(self, path: str | Path) -> None:
-        """Restore GPU-resident population and RNG states from checkpoint."""
-        state = torch.load(path, map_location=self.device, weights_only=False)
+    def load_checkpoint(self, path: str | Path, expected: dict[str, Any] | None = None) -> None:
+        """Restore exact resumable state; refuse foreign, stale or truncated files.
+
+        ``expected`` pins requirements such as torch_version, opcode_version
+        or config; any mismatch raises IncompatibleCheckpointError.
+        """
+        try:
+            state = torch.load(path, map_location=self.device, weights_only=False)
+        except Exception as exc:
+            raise IncompatibleCheckpointError(
+                f"truncated_or_unreadable_checkpoint {path}: {exc}"
+            ) from exc
+        if not isinstance(state, dict) or state.get("format") != CHECKPOINT_FORMAT:
+            raise IncompatibleCheckpointError(
+                "legacy_or_foreign_checkpoint: exact P43 format required"
+            )
+        if state.get("engine") != type(self).__name__:
+            raise IncompatibleCheckpointError(
+                f"engine_mismatch: checkpoint is {state.get('engine')!r}, "
+                f"loader is {type(self).__name__!r}"
+            )
+
+        def _release(value: Any) -> str:
+            return str(value).split("+")[0]
+
+        want = dict(expected or {})
+        want.setdefault("torch_version", torch.__version__)
+        want.setdefault("opcode_version", int(OPCODE_VERSION))
+        for key in ("torch_version", "opcode_version"):
+            if _release(state.get(key)) != _release(want[key]):
+                raise IncompatibleCheckpointError(
+                    f"version_mismatch on {key}: checkpoint {state.get(key)!r} "
+                    f"vs required {want[key]!r}"
+                )
+        if "config" in want:
+            pinned = want["config"]
+            snap = state.get("config", {})
+            for key, value in pinned.items():
+                if snap.get(key) != value:
+                    raise IncompatibleCheckpointError(
+                        f"config_mismatch on {key}: checkpoint {snap.get(key)!r} "
+                        f"vs required {value!r}"
+                    )
         self.generation = int(state["generation"])
         self.population = state["population"].to(self.device)
         self.best_fitness = float(state["best_fitness"])
@@ -488,5 +595,31 @@ class GPUResidentEvolution:
                 s.cpu() if isinstance(s, torch.Tensor) else s for s in state["torch_cuda_rng"]
             ]
             torch.cuda.set_rng_state_all(cuda_states)
-        if "numpy_rng" in state and state["numpy_rng"] is not None:
-            np.random.set_state(state["numpy_rng"])
+        np.random.set_state(state["numpy_rng"])
+        random.setstate(state["python_rng"])
+        self._apply_extra_checkpoint_state(state.get("extra", {}))
+
+
+def state_fingerprint(evo: Any) -> dict[str, Any]:
+    """Deterministic fingerprint of evolution state for resume-equality checks."""
+    sync = getattr(evo, "sync_best_to_host", None)
+    if callable(sync):
+        sync()
+    pop = np.ascontiguousarray(evo.population.cpu().numpy().astype(np.uint32))
+    prog = np.ascontiguousarray(np.asarray(evo.best_program, dtype=np.uint32))
+    cpu_rng = torch.get_rng_state().cpu().numpy().tobytes()
+    np_state = np.random.get_state()
+    np_blob = np_state[1].tobytes() + str(np_state[2:]).encode()
+    return {
+        "generation": int(evo.generation),
+        "population_sha256": hashlib.sha256(pop.tobytes()).hexdigest(),
+        "best_program_sha256": hashlib.sha256(prog.tobytes()).hexdigest(),
+        "best_fitness": float(evo.best_fitness),
+        "best_mse": float(evo.best_mse),
+        "torch_cpu_rng_sha256": hashlib.sha256(bytes(cpu_rng)).hexdigest(),
+        "numpy_rng_sha256": hashlib.sha256(bytes(np_blob)).hexdigest(),
+        "counters": {
+            "steps": int(evo.generation),
+            "candidates_total": int(evo.generation) * int(evo.config.pop_size),
+        },
+    }

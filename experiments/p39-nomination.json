@@ -1,0 +1,39 @@
+{
+  "phase": "p39-nomination",
+  "status": "preregistered",
+  "date": "2026-10-01",
+  "problem_id": "erdos-straus",
+  "title": "Erdős-Straus Diophantine Decomposition",
+  "domain": "Diophantine equations / Egyptian fractions",
+  "conjecture_statement": "For every integer n >= 2, 4/n = 1/x + 1/y + 1/z has positive integer solutions.",
+  "bounded_statement": "Find exact positive integer solutions (x, y, z) for nominated prime instances n in {1009, 10007, 100003} with search bound M <= 10^9.",
+  "instances": [1009, 10007, 100003],
+  "bounds": {
+    "constrained_coordinates": ["x", "y", "z"],
+    "declared_bound": 1000000000,
+    "rule": "max(x, y, z) <= 10^9, strictly enforced; out-of-bound finalists rejected, never certified"
+  },
+  "certificate_type": "integer_exact_certificate",
+  "checkers": [
+    "check_erdos_straus (exact integer identity)",
+    "check_erdos_straus_fractions (exact rational)"
+  ],
+  "frozen_method": "P29 GPU modular filtering with bounds_strict=true plus P31 dual exact CPU gates; no algorithm change during scoring",
+  "baseline": {
+    "kind": "matched_cpu_enumeration_equal_budget",
+    "description": "Deterministic CPU enumeration of the same (x, y) space in the same order, same checkers and bounds, time-boxed to the GPU wall-clock per instance."
+  },
+  "coverage": "Budget-limited exploration (x in [n//4+1, n//4+50], y windows <= 500000 per x step); NOT exhaustive. A failed finite search is not a counterexample.",
+  "literature_status": "Conjecture OPEN in general as of 2026. Nominated prime instances are long-studied benchmarks, not newly open conjectures.",
+  "novelty_plan": "Compare each certified instance against the repo catalogue (P29/P31 certificates) and cited parametric families; no exhaustive external catalogue lookup. Without positive novelty evidence the weaker rediscovery label is retained.",
+  "reproduction": "Independent dual-checker CPU reproduction; operator is self-repetition, disclosed as not independent authorship.",
+  "allowed_classifications": [
+    "rediscovery",
+    "candidate",
+    "verified-construction",
+    "counterexample",
+    "proven-theorem",
+    "exhaustive_null",
+    "budget_exhausted"
+  ]
+}

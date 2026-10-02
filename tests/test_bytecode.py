@@ -81,3 +81,74 @@ def test_nop_skipped_in_risky_chain():
     prog[4] = encode_instr(0x04, dst=7, a=0, b=1)
     prog[5] = encode_instr(0x04, dst=7, a=0, b=1)
     assert not is_valid(prog)
+
+
+def test_p49_compact_profile_limits():
+    from evobyte.bytecode import (
+        COMPACT_ALLOWED_OPS,
+        OPCODE_VERSION,
+        compact_candidate_profile,
+    )
+
+    profile = compact_candidate_profile()
+    assert profile["profile"] == "p49-compact-polynomial"
+    assert profile["opcode_version"] == OPCODE_VERSION == 0
+    assert profile["program_bytes"] == 64
+    assert profile["registers"] == 8 and profile["output_register"] == 7
+    assert [o["code"] for o in profile["allowed_ops"]] == [0x00, 0x01, 0x02, 0x03, 0x0F]
+    assert len(profile["constants"]) == 16
+    exact = {c["index"]: c["exact"] for c in profile["constants"]}
+    assert exact[1] == "1" and exact[3] == "2" and exact[10] == "7"
+    assert "approximate" in profile["constants"][5]["exact"]
+    assert "approximate" in profile["constants"][6]["exact"]
+    from fractions import Fraction as _Fraction
+
+    for i, c in enumerate(CONST_BANK):
+        if i not in (5, 6):
+            assert _Fraction(exact[i]) == _Fraction(str(float(c)))
+    assert COMPACT_ALLOWED_OPS == (0x00, 0x01, 0x02, 0x03, 0x0F)
+
+
+def test_p49_compact_roundtrip_bytes():
+    from evobyte.bytecode import compact_decode, compact_encode
+
+    prog = nop_program()
+    prog[0] = encode_instr(0x03, dst=7, a=0, b=0)
+    blob = compact_encode(prog)
+    assert len(blob) == 64
+    back = compact_decode(blob)
+    assert back.dtype == np.uint32 and (back == prog).all()
+
+
+def test_p49_compact_rejects_invalid_refs_and_versions():
+    from evobyte.bytecode import validate_compact_candidate
+
+    bad_reg = nop_program()
+    bad_reg[0] = np.uint32(0x01 | (9 << 8))
+    verdict = validate_compact_candidate(bad_reg)
+    assert verdict["ok"] is False
+    assert any("register" in r for r in verdict["reasons"])
+
+    bad_op = nop_program()
+    bad_op[0] = np.uint32(0xFF | (7 << 8))
+    assert validate_compact_candidate(bad_op)["ok"] is False
+
+    off_profile = nop_program()
+    off_profile[0] = encode_instr(0x05, dst=7, a=0, b=0)  # SIN: S0-valid, off-profile
+    verdict = validate_compact_candidate(off_profile)
+    assert verdict["ok"] is False
+    assert any("outside the compact profile" in r for r in verdict["reasons"])
+
+    good = nop_program()
+    good[0] = encode_instr(0x01, dst=7, a=0, b=1)
+    assert validate_compact_candidate(good)["ok"] is True
+    assert validate_compact_candidate(good, opcode_version=999)["ok"] is False
+
+    try:
+        from evobyte.bytecode import compact_decode as _d
+
+        _d(b"short")
+    except ValueError as exc:
+        assert "64 bytes" in str(exc)
+    else:
+        raise AssertionError("short blob must be rejected")

@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import hashlib
+import math
+import os
+import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -18,6 +22,21 @@ try:
 except ImportError:
     sympy = None  # type: ignore
     _HAS_SYMPY = False
+
+_POLY_ERRORS: tuple[type, ...] = (
+    TypeError,
+    ValueError,
+    AttributeError,
+    ArithmeticError,
+    KeyError,
+)
+if _HAS_SYMPY:
+    try:
+        from sympy.polys.polyerrors import PolificationFailed, PolynomialError
+
+        _POLY_ERRORS = _POLY_ERRORS + (PolificationFailed, PolynomialError)
+    except ImportError:
+        pass
 
 W_ERR = 1.0
 W_COMPLEXITY = 1e-3
@@ -238,6 +257,41 @@ class L2VerificationResult:
     exported_candidate: dict[str, Any]
 
 
+def _exact_constant(value: float) -> Any:
+    """Map a float constant to its exact symbolic value (P42).
+
+    Integral floats become Integers and finite decimals become exact Rationals
+    of their decimal expansion. Non-representable values (NaN/inf) and
+    transcendental approximations (pi/e slots) stay Float, which confines any
+    identity involving them to numerical evidence, never an exact certificate.
+    """
+    if not _HAS_SYMPY:
+        return None
+    v = float(value)
+    if not math.isfinite(v):
+        return sympy.Float(v)
+    if v.is_integer():
+        return sympy.Integer(int(v))
+    return sympy.Rational(str(v))
+
+
+def _unified_symbol(var_name: str) -> Any:
+    """Single assumed symbol shared by program and target expressions."""
+    return sympy.Symbol(var_name, real=True)
+
+
+def _unify_symbols(expr: Any, var_name: str) -> Any:
+    """Rewrite every same-named free symbol to the single assumed symbol."""
+    if expr is None:
+        return None
+    x = _unified_symbol(var_name)
+    try:
+        mapping = {s: x for s in expr.free_symbols if s.name == var_name}
+    except AttributeError:
+        return expr
+    return expr.xreplace(mapping) if mapping else expr
+
+
 def program_to_sympy(
     program: np.ndarray,
     const_bank: np.ndarray | None = None,
@@ -247,7 +301,7 @@ def program_to_sympy(
     """Build a simplified SymPy expression from bytecode, constants, and linear head."""
     if not _HAS_SYMPY:
         return None
-    x = sympy.Symbol(var_name, real=True)
+    x = _unified_symbol(var_name)
     regs = [sympy.Integer(0)] * 8
     regs[0] = x
     bank = const_bank if const_bank is not None else CONST_BANK
@@ -263,9 +317,7 @@ def program_to_sympy(
         if op == 0x0F:  # CSEL: ra + const[b & 0xF]
             b_idx = int(b_raw) & 0x0F
             c_val = bank[b_idx] if b_idx < len(bank) else 0.0
-            c_val_f = float(c_val)
-            c_sym = sympy.Rational(int(c_val_f)) if c_val_f.is_integer() else sympy.Float(c_val_f)
-            regs[dst] = ra + c_sym
+            regs[dst] = ra + _exact_constant(float(c_val))
             continue
 
         b = int(b_raw)
@@ -300,31 +352,38 @@ def program_to_sympy(
                 regs[dst] = sympy.Min(ra, rb)
             elif op == 0x0E:  # MAX
                 regs[dst] = sympy.Max(ra, rb)
-        except (TypeError, ValueError, AttributeError, ArithmeticError):
+        except _POLY_ERRORS:
             regs[dst] = sympy.nan
 
     out = regs[7]
     if linear_head != (1.0, 0.0):
         w1, w0 = linear_head
-        w1_sym = sympy.Rational(int(w1)) if float(w1).is_integer() else sympy.Float(w1)
-        w0_sym = sympy.Rational(int(w0)) if float(w0).is_integer() else sympy.Float(w0)
-        out = w1_sym * out + w0_sym
+        out = _exact_constant(float(w1)) * out + _exact_constant(float(w0))
 
     try:
         return sympy.simplify(out)
-    except (TypeError, ValueError, AttributeError, ArithmeticError):
+    except _POLY_ERRORS:
         return out
 
 
-def check_symbolic_equivalence(
+def check_exact_identity(
     candidate_expr: Any,
     ground_truth: str | Any,
     var_name: str = "x",
+    domain: tuple[float, float] | None = None,
 ) -> tuple[bool, str]:
-    """Test symbolic equivalence between simplified candidate expression and ground truth."""
+    """Prove or reject exact identity with unified symbols and an explicit domain.
+
+    Exactness requires exact integer/rational arithmetic (no Float coefficients,
+    no transcendental operators) with an identically zero numerator, plus no
+    poles inside the declared domain (or anywhere real when domain is None).
+    Low numeric error never promotes to exact: failures return reasons that
+    keep the caller on numerical evidence.
+    """
     if not _HAS_SYMPY or candidate_expr is None:
         return False, "sympy_unavailable"
-    x = sympy.Symbol(var_name, real=True)
+    x = _unified_symbol(var_name)
+    cand = _unify_symbols(candidate_expr, var_name)
     if isinstance(ground_truth, str):
         if ground_truth == "x2_3x_7":
             target = x**2 + 3 * x + 7
@@ -334,19 +393,64 @@ def check_symbolic_equivalence(
             target = x + 1
         else:
             try:
-                target = sympy.sympify(ground_truth)
+                target = sympy.sympify(ground_truth, locals={var_name: x})
             except (TypeError, ValueError, AttributeError, sympy.SympifyError) as e:
                 return False, f"cannot_parse_ground_truth: {e}"
     else:
-        target = ground_truth
-
+        target = _unify_symbols(ground_truth, var_name)
     try:
-        diff = sympy.simplify(candidate_expr - target)
-        if diff == 0:
-            return True, "exact_symbolic_equivalence"
-        return False, f"residual: {diff}"
-    except (TypeError, ValueError, AttributeError, ArithmeticError) as e:
-        return False, f"simplification_failed: {e}"
+        cand = sympy.sympify(cand)
+        target = sympy.sympify(target)
+    except (TypeError, ValueError, AttributeError, sympy.SympifyError) as e:
+        return False, f"cannot_normalize_expressions: {e}"
+    for side in (cand, target):
+        if side.has(sympy.nan, sympy.zoo, sympy.oo, -sympy.oo):
+            return False, "undefined_expression: zero denominator, invalid domain or overflow"
+    try:
+        if cand.has(sympy.Float) or target.has(sympy.Float):
+            return False, "inexact_coefficients: Float present; numerical evidence only"
+        non_rational = (sympy.sin, sympy.cos, sympy.exp, sympy.log, sympy.Abs, sympy.Min, sympy.Max)
+        if cand.has(*non_rational) or target.has(*non_rational):
+            return False, "non_rational_operators: exact identity not decidable here"
+        for side in (cand, target):
+            for power in side.atoms(sympy.Pow):
+                if not power.exp.is_number:
+                    return False, "non_polynomial_power: variable exponent is not exactly decidable"
+        diff = sympy.together(sympy.expand(cand - target))
+        num, den = sympy.fraction(diff)
+        if not sympy.Poly(num, x).is_zero:
+            return False, f"nonzero_numerator: {sympy.simplify(diff)}"
+        poles: list[float] = []
+        try:
+            for root in sympy.Poly(den, x).all_roots():
+                if root.is_real:
+                    poles.append(float(root.evalf()))
+        except _POLY_ERRORS:
+            return False, "denominator_not_polynomial: cannot certify pole freedom"
+        if domain is None:
+            if poles:
+                return (
+                    False,
+                    f"poles_on_real_line: {sorted(poles)}; declare an explicit pole-free domain",
+                )
+            return True, "exact_identity_unconditional"
+        lo, hi = domain
+        inside = sorted(p for p in poles if lo <= p <= hi)
+        if inside:
+            return False, f"pole_in_domain: {inside} inside [{lo}, {hi}]"
+        return True, f"exact_identity_on_domain [{lo}, {hi}]"
+    except _POLY_ERRORS as e:
+        return False, f"exact_check_failed: {e}"
+
+
+def check_symbolic_equivalence(
+    candidate_expr: Any,
+    ground_truth: str | Any,
+    var_name: str = "x",
+    domain: tuple[float, float] | None = None,
+) -> tuple[bool, str]:
+    """Test exact symbolic identity between candidate expression and ground truth."""
+    return check_exact_identity(candidate_expr, ground_truth, var_name=var_name, domain=domain)
 
 
 def check_ordinary_math(
@@ -490,8 +594,15 @@ def verify_l2(
     extrap_threshold: float = 1.0,
     divergence_threshold: float = 1e-3,
     domain_str: str = "[-10, 10]",
+    domain: tuple[float, float] | None = None,
 ) -> L2VerificationResult:
-    """Level-2 strict verification protocol on frozen candidate programs."""
+    """Level-2 strict verification protocol on frozen candidate programs.
+
+    Numeric checks (MSE, extrapolation, adversarial) only ever yield
+    numerical evidence. The exact_certificate label additionally requires a
+    unified-symbol exact identity over integers/rationals with no poles in
+    the explicit domain. No training positive is born from tolerance alone.
+    """
     reasons: list[str] = []
 
     bank_f64 = (
@@ -577,7 +688,7 @@ def verify_l2(
         if adv_invalid_rate > 0.0:
             reasons.append("adversarial_invalid_flag")
 
-    # 6. Symbolic equivalence check
+    # 6. Exact identity check (unified symbols, explicit domain)
     sym_expr = program_to_sympy(program, const_bank=bank_f64, linear_head=linear_head)
     sym_str = str(sym_expr) if sym_expr is not None else decode_human(program)
     sym_equiv = False
@@ -586,19 +697,25 @@ def verify_l2(
 
     gt_target = ground_truth_sympy if ground_truth_sympy is not None else ground_truth_formula
     if gt_target is not None and _HAS_SYMPY and sym_expr is not None:
-        eq, detail = check_symbolic_equivalence(sym_expr, gt_target)
+        eq, detail = check_symbolic_equivalence(sym_expr, gt_target, domain=domain)
         if eq:
             sym_equiv = True
-            proof_type = "symbolic_simplification"
-            sym_notes = f"Proved exact algebraic equivalence ({detail})"
+            sym_notes = f"Proved exact identity ({detail})"
         else:
             sym_equiv = False
-            proof_type = "numerical_evidence"
-            sym_notes = f"Symbolic residual exists: {detail}"
+            sym_notes = f"No exact identity: {detail}"
     else:
         sym_notes = "Numerical evidence only (symbolic ground truth not verified)"
 
     passed = len(reasons) == 0
+    # An exact label additionally requires full acceptance: an invalid program
+    # (e.g. rejected by ordinary mathematics) never carries a certificate.
+    if sym_equiv and passed:
+        proof_type = "exact_certificate"
+    else:
+        sym_equiv = sym_equiv and passed
+        proof_type = "numerical_evidence"
+
     decision = "VERIFIED_DISCOVERY" if passed else f"REJECTED: {', '.join(reasons)}"
 
     exported = export_reproducible_candidate(
@@ -632,3 +749,223 @@ def verify_l2(
         domain=domain_str,
         exported_candidate=exported,
     )
+
+
+LEAN_PINNED_TOOLCHAIN = "leanprover/lean4:v4.34.0"
+LEAN_ALLOWED_IMPORT_PREFIXES = ("Mathlib",)
+LEAN_SORRY_TOKENS = ("sorry", "admit", "sorryAx")
+
+
+class LeanToolchainUnavailable(Exception):
+    """Refusal: the pinned Lean toolchain is not installed here (P48)."""
+
+
+def lean_normalize_signature(source: str, theorem: str | None = None) -> tuple[str, str] | None:
+    """Extract (theorem_name, normalized_statement) from a Lean proof source.
+
+    With ``theorem`` set, extracts that named theorem; otherwise the first one.
+    """
+    import re as _re
+
+    pattern = (
+        rf"theorem\s+({_re.escape(theorem)})\s*:(.*?):="
+        if theorem is not None
+        else r"theorem\s+(\w+)\s*:(.*?):="
+    )
+    match = _re.search(pattern, source, _re.DOTALL)
+    if not match:
+        return None
+    name = match.group(1)
+    stmt = _re.sub(r"\s+", " ", match.group(2)).strip()
+    return name, stmt
+
+
+def lean_scan_source(source: str) -> dict[str, Any]:
+    """Source-level prohibitions: sorry/admit tokens, extra axioms, imports.
+
+    Static pre-check only; never a substitute for compilation.
+    """
+    import re as _re
+
+    lowered = source
+    sorry_hits = sorted({tok for tok in LEAN_SORRY_TOKENS if _re.search(rf"\b{tok}\b", lowered)})
+    axiom_names = _re.findall(r"(?m)^\s*axiom\s+(\w+)", lowered)
+    imports = _re.findall(r"(?m)^\s*import\s+([\w.]+)", lowered)
+    bad_imports = [i for i in imports if not i.startswith(LEAN_ALLOWED_IMPORT_PREFIXES)]
+    return {
+        "sorry_hits": sorry_hits,
+        "axiom_declarations": axiom_names,
+        "imports": imports,
+        "disallowed_imports": bad_imports,
+    }
+
+
+def lean_resolve_binaries(project_dir: str | Path | None = None) -> dict[str, str]:
+    """Locate lake/lean binaries and verify the pinned toolchain is present."""
+    import shutil as _shutil
+
+    _ = project_dir
+    candidates = [str(Path.home() / ".elan" / "bin")]
+    candidates.extend(os.environ.get("PATH", "").split(os.pathsep))
+    found: dict[str, str] = {}
+    for name in ("lake", "lean", "elan"):
+        hit = next(
+            (
+                entry + os.sep + name
+                for entry in candidates
+                if entry and Path(entry, name).is_file()
+            ),
+            None,
+        )
+        if hit is None:
+            hit = _shutil.which(name)
+        if hit is None:
+            raise LeanToolchainUnavailable(
+                f"Lean binary {name!r} not found; install the pinned toolchain "
+                f"{LEAN_PINNED_TOOLCHAIN} (P48 stays BLOCKED until then)."
+            )
+        found[name] = hit
+    return found
+
+
+def run_lean_checker(
+    proof_file: str | Path,
+    *,
+    project_dir: str | Path | None = None,
+    expected_theorem: str | None = None,
+    expected_statement_sha256: str | None = None,
+    timeout_sec: float = 900.0,
+    repeat_check: bool = True,
+) -> dict[str, Any]:
+    """Out-of-cycle Lean boundary: compile in a separate process, verify the match.
+
+    Refuses (never accepts) on: missing toolchain, timeout, compiler errors,
+    sorry/admit tokens, extra axiom declarations, disallowed imports, or a
+    proven statement that differs from the frozen challenge. Repeats the
+    compile once to rule out transient passes when supported.
+    """
+    import re as _re
+    import subprocess as _sp
+
+    t_start = time.perf_counter()
+    proof_p = Path(proof_file)
+    if project_dir is not None:
+        proj = Path(project_dir).resolve()
+        if not proof_p.is_absolute():
+            candidate = proj / proof_p
+            proof_p = candidate if candidate.exists() else (Path.cwd() / proof_p).resolve()
+    else:
+        proj = proof_p.resolve().parent
+        proof_p = proof_p.resolve()
+    bins = lean_resolve_binaries(proj)
+
+    result: dict[str, Any] = {
+        "proof_file": str(proof_p),
+        "toolchain_pin": LEAN_PINNED_TOOLCHAIN,
+        "binaries": bins,
+        "accepted": False,
+        "reasons": [],
+    }
+
+    ver = _sp.run(
+        [bins["lean"], "--version"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+        cwd=str(proj),
+    )
+    result["toolchain_version"] = (ver.stdout or ver.stderr).strip().splitlines()[0:1]
+    want_version = LEAN_PINNED_TOOLCHAIN.split(":")[-1].lstrip("v")
+    if want_version not in " ".join(result["toolchain_version"]):
+        result["reasons"].append(
+            f"toolchain_mismatch: expected {LEAN_PINNED_TOOLCHAIN}, "
+            f"got {result['toolchain_version']}"
+        )
+        result["elapsed_sec"] = time.perf_counter() - t_start
+        return result
+
+    try:
+        source = proof_p.read_text(encoding="utf-8")
+    except OSError as exc:
+        result["reasons"].append(f"unreadable_proof: {exc}")
+        result["elapsed_sec"] = time.perf_counter() - t_start
+        return result
+    scan = lean_scan_source(source)
+    result["scan"] = scan
+    if scan["sorry_hits"]:
+        result["reasons"].append(f"sorry_tokens: {scan['sorry_hits']}")
+    if scan["axiom_declarations"]:
+        result["reasons"].append(f"extra_axioms: {scan['axiom_declarations']}")
+    if scan["disallowed_imports"]:
+        result["reasons"].append(f"disallowed_imports: {scan['disallowed_imports']}")
+
+    parsed = lean_normalize_signature(source, theorem=expected_theorem)
+    if parsed is None and expected_theorem is not None:
+        fallback = lean_normalize_signature(source)
+        if fallback is not None:
+            result["reasons"].append(
+                f"theorem_mismatch: file proves {fallback[0]!r}, challenged {expected_theorem!r}"
+            )
+            parsed = fallback
+    if parsed is None:
+        result["reasons"].append("unparseable_theorem_signature")
+    else:
+        name, stmt = parsed
+        result["theorem_name"] = name
+        digest = hashlib.sha256(f"{name} : {stmt}".encode()).hexdigest()
+        result["statement_sha256"] = digest
+        if expected_theorem is not None and name != expected_theorem:
+            result["reasons"].append(
+                f"theorem_mismatch: proved {name!r}, challenged {expected_theorem!r}"
+            )
+        if expected_statement_sha256 is not None and not digest.startswith(
+            expected_statement_sha256
+        ):
+            result["reasons"].append("statement_mismatch: proven statement differs from challenge")
+
+    def _compile_once() -> tuple[int, str]:
+        try:
+            proc = _sp.run(
+                [bins["lake"], "env", "lean", str(proof_p)],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec,
+                check=False,
+                cwd=str(proj),
+            )
+        except _sp.TimeoutExpired:
+            return -1, "TIMEOUT"
+        return proc.returncode, (proc.stdout or "") + (proc.stderr or "")
+
+    if not result["reasons"]:
+        code, output = _compile_once()
+        result["compile_returncode"] = code
+        result["compile_output_tail"] = output[-2000:]
+        if code == -1:
+            result["reasons"].append(f"compile_timeout_after_{timeout_sec}s")
+        elif code != 0:
+            first_err = next(
+                (ln.strip()[:160] for ln in output.splitlines() if "error" in ln.lower()),
+                "unknown compile error",
+            )
+            result["reasons"].append(f"compile_rejected: {first_err}")
+        elif _re.search(r"declaration uses `sorry`", output):
+            result["reasons"].append("compiler_reports_sorry")
+        else:
+            result["compiled_ok"] = True
+            if repeat_check:
+                code2, _ = _compile_once()
+                result["repeat_returncode"] = code2
+                if code2 != 0:
+                    result["reasons"].append("repeat_compile_disagrees")
+                else:
+                    result["repeat_match"] = True
+
+    result["axioms_recorded"] = sorted(
+        set(scan.get("axiom_declarations", []))
+        | ({"sorryAx"} if "sorry" in scan.get("sorry_hits", []) else set())
+    )
+    result["accepted"] = not result["reasons"]
+    result["elapsed_sec"] = time.perf_counter() - t_start
+    return result
