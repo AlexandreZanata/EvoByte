@@ -1,0 +1,15 @@
+{
+  "budget_sec_per_task": 10.0,
+  "device": "cpu",
+  "domain": [-3.0, 3.0],
+  "error_threshold": 0.0001,
+  "family": "polynomial_arithmetic",
+  "note": "Complete frozen configuration. Five seeds and 10s real per task per arm; same exact_certificate criterion and billed costs for all arms; classical immediate solves recorded, never hidden; false controls guard promotion only. No TBD values.",
+  "phase": "P50",
+  "pop_size": 64,
+  "seeds": [42, 101, 202, 303, 404],
+  "tasks_known": [
+    {"formula": "x**2 + 3*x + 7", "id": "k1"},
+    {"formula": "x**2 - 1", "id": "k2"}
+  ]
+}

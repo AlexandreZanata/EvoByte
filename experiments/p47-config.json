@@ -1,0 +1,6 @@
+{
+  "phase": "P47",
+  "nomination_path": "experiments/p47-nomination.json",
+  "p38_manifest_path": "experiments/p38-confirmation.json",
+  "note": "Complete frozen configuration. Technical validation only; P48 entry requires human mathematical approval of the nomination and thresholds (recorded in the nomination and report). No TBD values."
+}

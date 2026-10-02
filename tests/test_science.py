@@ -11,16 +11,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 
 from benchmarks.science_matrix import (
+    ACCEPTANCE_PHASES,
     PREREGISTERED_SCIENCE_SPECS,
+    _p40_check_manifest,
+    _p40_has_path,
     check_adversarial_domain,
     check_non_degeneracy,
     check_units_scaling,
     compute_r2,
     generate_scientific_splits,
+    run_p40_evidence_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
 from evobyte.bytecode import encode_instr, nop_program
+from evobyte.provenance import verify_manifest_integrity, write_manifest
 
 
 def test_preregistered_specs():
@@ -125,3 +130,450 @@ def test_science_matrix_smoke():
     res = run_science_matrix(preregistered_only=True, seeds=[42], max_trial_sec=0.5)
     assert res["status"] == "PASS"
     assert len(res["datasets"]) >= 5
+
+
+def test_p40_acceptance_registry_rejects_unknown_phases():
+    assert ACCEPTANCE_PHASES == (
+        "P40",
+        "P41",
+        "P42",
+        "P43",
+        "P44",
+        "P45",
+        "P46",
+        "P47",
+        "P48",
+        "P49",
+        "P50",
+        "P51",
+    )
+    import subprocess as _sp
+
+    proc = _sp.run(
+        [
+            sys.executable,
+            "benchmarks/science_matrix.py",
+            "--acceptance-phase",
+            "P52",
+            "--config",
+            "experiments/p40-config.json",
+            "--output",
+            "/tmp/evobyte-p40-unknown.json",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=str(Path(__file__).resolve().parents[1]),
+    )
+    assert proc.returncode != 0
+    assert "Unknown acceptance phase 'P52'" in (proc.stdout + proc.stderr)
+
+
+def test_p40_path_helper_quantifiers():
+    doc = {"instances": [{"certificate": {"h": 1}}, {"note": "miss"}]}
+    assert _p40_has_path(doc, "instances[?certificate].certificate.h") is True
+    assert _p40_has_path(doc, "instances[].certificate.h") is False
+    assert _p40_has_path([{"a": 1}], "a") is True
+    assert _p40_has_path([], "a") is False
+
+
+def test_p40_manifest_integrity_detects_tampering(tmp_path):
+    raw = tmp_path / "raw.json"
+    raw.write_text('{"trials": []}')
+    manifest_p = tmp_path / "m.json"
+    write_manifest(manifest_p, {"phase": "P40-test", "elapsed_sec": 1.0}, {str(raw): "x"})
+    # Fix the recorded hash to the true value, then tamper the raw file.
+    import hashlib as _hl
+    import json as _json
+
+    doc = _json.loads(manifest_p.read_text())
+    doc["raw_artifacts"] = [{"path": str(raw), "sha256": _hl.sha256(raw.read_bytes()).hexdigest()}]
+    blob = _json.dumps(
+        {k: v for k, v in doc.items() if k != "manifest_sha256"}, sort_keys=True, default=str
+    ).encode()
+    doc["manifest_sha256"] = _hl.sha256(blob).hexdigest()
+    manifest_p.write_text(_json.dumps(doc, indent=2, sort_keys=True))
+    assert verify_manifest_integrity(manifest_p)["ok"] is True
+    with open(raw, "a", encoding="utf-8") as f:
+        f.write(" ")
+    tampered = verify_manifest_integrity(manifest_p)
+    assert tampered["ok"] is False
+    assert any("raw_hash_mismatch" in e for e in tampered["errors"])
+    # Tampered seal is also rejected.
+    doc["elapsed_sec"] = 2.0
+    manifest_p.write_text(_json.dumps(doc, indent=2, sort_keys=True))
+    resealed = verify_manifest_integrity(manifest_p)
+    assert resealed["ok"] is False
+    assert "manifest_seal_mismatch" in resealed["errors"]
+
+
+def test_p40_manifest_check_rejects_duration_divergence(tmp_path):
+    import json as _json
+
+    raw = tmp_path / "raw.json"
+    raw.write_text("{}")
+    manifest_p = tmp_path / "m.json"
+    import hashlib as _hl
+
+    doc = {
+        "phase": "P40-test",
+        "status": "PASS",
+        "elapsed_sec": 0.0,
+        "provenance": {"clean_tree": True},
+        "raw_artifacts": [{"path": str(raw), "sha256": _hl.sha256(raw.read_bytes()).hexdigest()}],
+    }
+    blob = _json.dumps(
+        {k: v for k, v in doc.items() if k != "manifest_sha256"}, sort_keys=True, default=str
+    ).encode()
+    doc["manifest_sha256"] = _hl.sha256(blob).hexdigest()
+    manifest_p.write_text(_json.dumps(doc, indent=2, sort_keys=True))
+    finding = _p40_check_manifest(
+        {
+            "path": str(manifest_p),
+            "status_ok": ["PASS"],
+            "required_fields": ["provenance"],
+            "certificate_evidence": [],
+            "budgets": {"scale": 1.0},
+        }
+    )
+    assert finding["verdict"] == "rejected"
+    assert any("elapsed_sec" in n for n in finding["notes"])
+
+
+def test_p40_evidence_audit_smoke(tmp_path):
+    out_p = tmp_path / "p40-acceptance.json"
+    report = run_p40_evidence_audit("experiments/p40-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P40"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert report["claim_scope"].startswith("P33-P39")
+    assert len(report["manifests"]) == 7
+    assert len(report["claims"]) == 13
+    assert report["base_reconciliation"]["merges_this_cycle"] is False
+    assert report["resolved_config"]["config_path"] == "experiments/p40-config.json"
+    assert "deterministic manifest inspection" in report["seeds_rng"]
+
+
+def test_p41_immutable_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p41_immutable_audit
+
+    out_p = tmp_path / "p41-acceptance.json"
+    report = run_p41_immutable_audit("experiments/p41-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P41"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert report["demonstrations"]["overwrite_refused"] is True
+    assert report["demonstrations"]["one_byte_tamper_detected"] is True
+    assert report["historical_untouched_by_smoke"]["changed"] == []
+    assert len(report["inventory"]) == 9
+    assert "deterministic inspection" in report["seeds_rng"]
+
+
+def test_p42_exact_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p42_exact_audit
+
+    out_p = tmp_path / "p42-acceptance.json"
+    report = run_p42_exact_audit("experiments/p42-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P42"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert len(report["identities"]) == 4
+    assert all(
+        i["resolution"] in ("exact_accepted", "exact_rejected") for i in report["identities"]
+    )
+    assert all(c["rejected"] for c in report["controls"])
+    assert report["labeling_rule"].get("rule_holds") is True
+    assert report["corpus_integrity"]["ok"] is True
+
+
+def test_p43_resume_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p43_resume_audit
+
+    out_p = tmp_path / "p43-acceptance.json"
+    report = run_p43_resume_audit("experiments/p43-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P43"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert report["equality"]["counters_match"] is True
+    assert all(report["equality"]["fields"].values())
+    assert all(r["refused"] for r in report["refusals"])
+    assert report["resumed"]["worker"].get("generations") == 60
+
+
+def test_p44_resident_audit_smoke(tmp_path):
+    import torch as _torch
+
+    from benchmarks.science_matrix import run_p44_resident_audit
+
+    out_p = tmp_path / "p44-acceptance.json"
+    report = run_p44_resident_audit("experiments/p44-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P44"
+    assert report["verdict"] in ("ACCEPTED", "MIXED", "NOT_MEASURED")
+    assert report["determinism"]["cpu"]["equal"] is True
+    assert all(report["conformance"].values())
+    assert report["invalidity"]["rejected"] is True
+    if _torch.cuda.is_available():
+        assert report["verdict"] == "ACCEPTED"
+        assert report["profile_cuda"]["measured"] is True
+
+
+def test_p45_envelope_audit_smoke(tmp_path):
+    import json as _json
+
+    import torch as _torch
+
+    from benchmarks.science_matrix import run_p45_envelope_audit
+
+    if not _torch.cuda.is_available():
+        return
+    cfg = {
+        "phase": "P45",
+        "formula": "x**2 + 3*x + 7",
+        "pop_size": 32,
+        "durations_60s": [3],
+        "durations_600s": [4],
+        "tracing_modes_60s": [True],
+        "seed": 42,
+        "verify_every_gens": 5,
+        "checkpoint_every_sec": 2,
+        "device": "cuda",
+        "selection_rule": "smoke rule",
+    }
+    cfg_p = tmp_path / "p45-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p45-acceptance.json"
+    report = run_p45_envelope_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P45"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert len(report["matrix_60s"]["tiers"]) == 1
+    assert report["envelope_600s"] is not None
+    assert all(t["counter_check"] for t in report["envelope_600s"]["tiers"])
+
+
+def test_p46_catalogue_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p46_catalogue_audit
+
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p46-config.json").read_text()
+    )
+    cfg["independent_refetch"] = False  # offline smoke; the frozen run re-fetches sources
+    cfg_p = tmp_path / "p46-offline-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p46-acceptance.json"
+    report = run_p46_catalogue_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["independent_refetch"] is None
+    checks = {k: v for k, v in report["checks"].items() if v is not None}
+    assert report["status"] == "PASS"
+    assert report["verdict"] == "PENDING_HUMAN_REVIEW"
+    assert report["counts"]["open_confirmed"] >= 100
+    assert report["counts"]["finite_search_candidates"] == 34
+    assert all(checks.values())
+    assert report["errors"] == []
+    assert report["human_review"]["required"] is True
+    assert report["human_review"]["status"] == "pending"
+
+
+def test_p46_catalogue_rejects_bad_entries(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p46_catalogue_audit
+
+    cat_dir = tmp_path / "docs"
+    cat_dir.mkdir()
+    cat_p = cat_dir / "open-problems.json"
+    entry = {
+        "id": "erdos-3",
+        "title": "Erdos Problem #3",
+        "statement_excerpt": "excerpt",
+        "area": "number theory",
+        "primary_source": {
+            "citation": "c",
+            "url": "https://www.erdosproblems.com/3",
+            "dataset": "d",
+            "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1",
+        },
+        "consulted_at": "2026-10-02",
+        "state": "open-confirmed",
+        "certificate_type": "proof_or_counterexample",
+        "verifiability": "exact_statement_checkable",
+        "partial_refs": [],
+        "statement_sha256": "0" * 16,
+    }
+    bad = _json.loads(_json.dumps(entry))
+    del bad["consulted_at"]
+    dup = _json.loads(_json.dumps(entry))
+    dup["statement_sha256"] = "0" * 16
+    cat = {
+        "phase": "p46-open-problem-catalogue",
+        "source": {
+            "primary": "p",
+            "dataset": "d",
+            "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1",
+            "license": "Apache-2.0",
+        },
+        "counts": {"open_confirmed": 2, "finite_search_candidates": 0},
+        "open_confirmed": [bad, dup],
+        "finite_search_candidates": [],
+        "human_review": {"required": True, "status": "pending"},
+    }
+    cat_p.write_text(_json.dumps(cat))
+    cfg_p = tmp_path / "cfg.json"
+    cfg_p.write_text(_json.dumps({"phase": "P46", "catalogue_path": str(cat_p)}))
+    report = run_p46_catalogue_audit(cfg_p, tmp_path / "out.json")
+    assert report["status"] == "FAIL"
+    assert report["verdict"] == "REJECTED"
+    assert any("missing field consulted_at" in e for e in report["errors"])
+    assert any("duplicate statement hashes" in e for e in report["errors"])
+    assert any("below the frozen minimum" in e for e in report["errors"])
+
+
+def test_p46_normalized_statement_dedup():
+    from benchmarks.science_matrix import _p46_normalize_statement
+
+    a = _p46_normalize_statement("If $A\\subseteq \\mathbb{N}$ then must ...")
+    b = _p46_normalize_statement("if a subseteq mathbb n then must")
+    assert a == b == "if a subseteq mathbb n then must"
+    c = _p46_normalize_statement("Is there an odd covering system?")
+    assert c != a
+
+
+def test_p47_nomination_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p47_nomination_audit
+
+    out_p = tmp_path / "p47-acceptance.json"
+    report = run_p47_nomination_audit("experiments/p47-config.json", out_p)
+    assert out_p.exists()
+    assert report["status"] == "PASS"
+    assert report["verdict"] == "PENDING_HUMAN_REVIEW"
+    assert report["freeze_recorded"] == report["nomination_sha256"]
+    assert report["final_test"]["access_log_empty"] is True
+    assert report["final_test"]["material"] == []
+    assert report["final_test"]["forbidden_p38_ids"] == 10
+    assert report["controls"] == {"known": 3, "false": 4}
+    assert report["human_review"]["required"] is True
+
+
+def test_p47_nomination_rejects_tampering_and_open_test(tmp_path):
+    import copy as _copy
+    import json as _json
+
+    from benchmarks.science_matrix import run_p47_nomination_audit
+
+    base = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p47-nomination.json").read_text()
+    )
+    tampered = _copy.deepcopy(base)
+    tampered["hypothesis"]["mse_excluded_as_success"] = True
+    tampered["thresholds"]["values"] = {"min_seeds": 3}
+    tampered_p = tmp_path / "p47-tampered.json"
+    tampered_p.write_text(_json.dumps(tampered))
+    cfg_p = tmp_path / "cfg.json"
+    cfg_p.write_text(
+        _json.dumps(
+            {
+                "phase": "P47",
+                "nomination_path": str(tampered_p),
+                "p38_manifest_path": "experiments/p38-confirmation.json",
+            }
+        )
+    )
+    report = run_p47_nomination_audit(cfg_p, tmp_path / "out.json")
+    assert report["status"] == "FAIL"
+    assert report["verdict"] == "REJECTED"
+    assert any("frozen hash mismatch" in e for e in report["errors"])
+    assert any("pending human review" in e for e in report["errors"])
+
+
+def test_p49_compact_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p49_compact_audit
+
+    out_p = tmp_path / "p49-acceptance.json"
+    report = run_p49_compact_audit("experiments/p49-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P49"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert all(f["ok"] for f in report["findings"])
+    assert report["counters"]["reconstructed"] == report["counters"]["reconstructed_total"] > 0
+    assert "grammar-defined only" in report["coverage"]
+
+
+def test_p50_search_controls_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p50_search_controls_audit
+
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p50-config.json").read_text()
+    )
+    cfg["seeds"] = [42, 101]
+    cfg["budget_sec_per_task"] = 0.3
+    cfg["pop_size"] = 32
+    cfg_p = tmp_path / "p50-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p50-acceptance.json"
+    report = run_p50_search_controls_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P50"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["criterion"]["same_for_all_arms"] is True
+    assert all(v["rediscovered"] for v in report["tasks_known"].values())
+    assert all(c["rejected"] for c in report["false_controls"])
+    assert report["counters"]["certified"] >= len(report["tasks_known"])
+    assert report["counters"]["false_rejected"] == report["counters"]["false_total"] == 4
+    assert report["budgets"]["actual_search_sec"] > 0
+    assert report["budgets"]["actual_verification_sec"] >= 0
+
+
+def test_p50_classical_baseline_is_deterministic():
+    import numpy as _np
+    import torch as _torch
+
+    from benchmarks.math_specialist import check_p50_false_controls, run_p50_arm_trial
+    from evobyte.grammar import classical_interpolate_program, count_batch_stats
+
+    xs = _np.linspace(-3.0, 3.0, 64, dtype=_np.float32)
+    ys = (xs**2 + 3.0 * xs + 7.0).astype(_np.float32)
+    rec = run_p50_arm_trial(
+        "classical", "x**2 + 3*x + 7", xs, ys, 0.3, 42, _torch.device("cpu"), 32
+    )
+    assert rec["candidates_total"] >= 1
+    assert rec["elapsed_sec"] < 0.3
+    assert rec["best_mse"] == 0.0
+    prog, _info = classical_interpolate_program(xs, ys, max_degree=2)
+    assert prog is not None
+    stats = count_batch_stats([prog, prog])
+    assert stats == {"n": 2, "duplicates": 1, "invalid": 0}
+    false = check_p50_false_controls()
+    assert len(false) == 4
+    assert all(c["rejected"] for c in false)
+
+
+def test_p51_replay_map_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p51_replay_map_audit
+
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p51-config.json").read_text()
+    )
+    cfg["seed"] = 7
+    cfg["pop_size"] = 16
+    cfg["n_generations"] = 3
+    cfg["max_nodes"] = 20
+    cfg_p = tmp_path / "p51-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p51-acceptance.json"
+    report = run_p51_replay_map_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P51"
+    assert report["verdict"] == "ACCEPTED"
+    assert all(report["checks"].values())
+    assert report["coverage"] == "partial_sampled"
+    assert report["map"]["nodes"] <= 20
+    assert report["counters"]["segments_matched"] == report["counters"]["segments_declared"] > 0
+    assert report["counters"]["certificates"] == len(report["certificate_references"]) > 0

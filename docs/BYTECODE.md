@@ -82,3 +82,30 @@ are for humans only and never enter the hot path.
 - `OPCODE_VERSION` is a uint16 header in every checkpoint/archive row.
 - v0 is frozen when P01's exit gate passes. Later versions add ops/registers
   only with a migration note and a retained v0 interpreter.
+
+## P49 compact candidate profile (`p49-compact-polynomial`, revision 0)
+
+The v0 codec already satisfies the nominated family, so P49 freezes a
+profile over it with **no codec change, no `OPCODE_VERSION` bump and no
+interpreter fork** (a bump would additionally require an ADR first):
+
+- Integer ids: 16 `uint32` words, 64 bytes per candidate (`compact_encode`
+  / `compact_decode`, length-checked both ways).
+- Allowed ops: NOP, ADD, SUB, MUL, CSEL only; other v0 ops stay globally
+  valid but are outside this profile.
+- Register refs: r0–r7 with the r7-output rule; S0 validity
+  (`is_valid`) still enforced underneath.
+- Bounded rational constants: the 16 `CONST_BANK` slots with exact
+  rationals of the stored binary values (`compact_candidate_profile()`,
+  same rule the P42 checker applies, so profile and certificates agree);
+  slots 5–6 are approximate transcendental slots and never carry exact
+  certificates.
+- Decoding: field layout per § Layout; `validate_compact_candidate()`
+  rejects unknown versions, bad shapes/dtypes, out-of-range refs,
+  off-profile ops and S0 failures with explicit reasons.
+- Certificates: text/Lean/SymPy live only at the certification boundary;
+  a compact candidate converts to the same certified mathematical object
+  (`program_to_sympy` + exact identity, P42).
+- Coverage: the defined grammar only (Horner degree ≤ 3 / expression
+  trees depth ≤ 3 over bank rationals). Compactness claims nothing about
+  universality and reduces no search complexity by itself.

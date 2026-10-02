@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import hashlib
 import json
 import pickle
 import sqlite3
 import time
 import types
+from dataclasses import field as dataclass_field
 from pathlib import Path
 from typing import Any, Self
 
@@ -415,6 +417,144 @@ def run_resume_selftest(
         f"Resume equivalence test PASSED: seed={seed}, 6 generations, bit-identical final population."
     )
     return True
+
+
+# ==============================================================================
+# P51 — Bounded replay map (sampled nodes, bounded buffers, declared coverage)
+# ==============================================================================
+
+P51_MAX_NODES = 100_000
+P51_IO_QUEUE_BYTES = 64 * 1024 * 1024
+P51_RAW_DISK_BYTES = 1024**3
+
+
+@dataclasses.dataclass
+class BoundedReplayMap:
+    """Sampled per-run search map with hard buffer caps (P51).
+
+    The map never claims to hold the candidate universe: it stores sampled
+    nodes plus every elite/finalist and certificate reference, the RNG seed
+    and a checkpoint reference to rebuild unstored generations, and declares
+    full vs partial coverage explicitly.
+    """
+
+    max_nodes: int = P51_MAX_NODES
+    io_queue_bytes: int = P51_IO_QUEUE_BYTES
+    raw_disk_bytes: int = P51_RAW_DISK_BYTES
+    seed: int = 0
+    checkpoint_ref: str = ""
+    total_candidates: int = 0
+    sampling_rate: float = 1.0
+    coverage: str = "full"
+    nodes: list[dict[str, Any]] = dataclass_field(default_factory=list)
+    certificates: dict[str, int] = dataclass_field(default_factory=dict)
+    dropped_samples: int = 0
+    io_bytes: int = 0
+    raw_bytes: int = 0
+
+
+def new_bounded_replay_map(
+    seed: int,
+    checkpoint_ref: str = "",
+    max_nodes: int = P51_MAX_NODES,
+) -> BoundedReplayMap:
+    """Create an empty bounded replay map for one run."""
+    return BoundedReplayMap(
+        seed=int(seed), checkpoint_ref=str(checkpoint_ref), max_nodes=int(max_nodes)
+    )
+
+
+def replay_map_add_sample(
+    replay_map: BoundedReplayMap,
+    generation: int,
+    candidate_id: str,
+    bytecode_sha256: str,
+    parent_ids: list[str],
+    operator: str,
+    certificate: bool = False,
+    node_bytes: int = 128,
+) -> bool:
+    """Append one sampled node; returns False and counts a drop when capped.
+
+    Certificates and elites must be added through this same path so a full
+    map never silently loses them: drops are counted, never concealed.
+    """
+    if len(replay_map.nodes) >= replay_map.max_nodes:
+        replay_map.dropped_samples += 1
+        return False
+    replay_map.nodes.append(
+        {
+            "generation": int(generation),
+            "candidate_id": str(candidate_id),
+            "bytecode_sha256": str(bytecode_sha256),
+            "parent_ids": [str(p) for p in parent_ids],
+            "operator": str(operator),
+            "certificate": bool(certificate),
+        }
+    )
+    if certificate:
+        replay_map.certificates[str(bytecode_sha256)] = int(generation)
+    replay_map.io_bytes += int(node_bytes)
+    replay_map.raw_bytes += int(node_bytes)
+    return True
+
+
+def _replay_node_generation(candidate_id: str) -> int | None:
+    """Generation index encoded in a lineage candidate id (None when malformed)."""
+    import re as _re
+
+    match = _re.fullmatch(r"c_g(\d+)_.*", str(candidate_id))
+    return int(match.group(1)) if match else None
+
+
+def validate_bounded_replay_map(
+    replay_map: BoundedReplayMap,
+    expected_certificates: list[str] | None = None,
+) -> dict[str, Any]:
+    """Validate links, hashes, counters and caps; no certificate may be lost."""
+    errors: list[str] = []
+    known_ids: set[str] = {str(node.get("candidate_id", "")) for node in replay_map.nodes}
+    for node in replay_map.nodes:
+        sha = str(node.get("bytecode_sha256", ""))
+        if len(sha) != 64 or any(c not in "0123456789abcdef" for c in sha):
+            errors.append(f"bad hash for {node.get('candidate_id', '?')}")
+        node_gen = _replay_node_generation(str(node.get("candidate_id", "")))
+        if node_gen is None:
+            errors.append(f"malformed candidate id {node.get('candidate_id', '?')}")
+            continue
+        for parent in node.get("parent_ids", []):
+            parent_gen = _replay_node_generation(str(parent))
+            if parent_gen is None:
+                errors.append(f"malformed parent {parent} for {node.get('candidate_id')}")
+            elif parent_gen >= node_gen:
+                errors.append(f"parent {parent} not older than {node.get('candidate_id')}")
+            elif str(parent) not in known_ids and replay_map.coverage == "full":
+                errors.append(f"full map missing parent {parent} for {node.get('candidate_id')}")
+    if len(replay_map.nodes) > replay_map.max_nodes:
+        errors.append("node cap exceeded")
+    if replay_map.io_bytes > replay_map.io_queue_bytes:
+        errors.append("io queue cap exceeded")
+    if replay_map.raw_bytes >= replay_map.raw_disk_bytes:
+        errors.append("raw disk limit reached")
+    missing = [c for c in (expected_certificates or []) if c not in replay_map.certificates]
+    if missing:
+        errors.append(f"certificates lost: {missing[:3]}")
+    if replay_map.coverage not in ("full", "partial_sampled"):
+        errors.append("coverage must declare full or partial_sampled")
+    if replay_map.coverage == "full" and (
+        replay_map.dropped_samples > 0 or replay_map.sampling_rate < 1.0
+    ):
+        errors.append("full coverage claimed while samples were dropped")
+    return {
+        "ok": not errors,
+        "errors": errors[:10],
+        "nodes": len(replay_map.nodes),
+        "dropped": replay_map.dropped_samples,
+        "certificates": len(replay_map.certificates),
+        "io_bytes": replay_map.io_bytes,
+        "raw_bytes": replay_map.raw_bytes,
+        "coverage": replay_map.coverage,
+    }
 
 
 def main() -> int:

@@ -1,8 +1,11 @@
 # P38 — Clean-environment confirmation and frozen model export
 
-**Status:** Proposed.
+**Status:** Done.
 **Prerequisite:** P30–P37 reports valid; selected method and all tuning frozen.
-**Owner:** assigned when moving to Building.
+**Owner:** Alexandre Zanata
+**Result:** PROVISIONAL — frozen grammar baseline verifies 0.20 of the sealed
+final-test polynomial slice (20 seeds); resume deterministic, 1 authorized
+access logged, H1 NOT_CONFIRMED (out of scope).
 **Branch:** `codex/p38-independent-confirmation`.
 
 ## Objective
