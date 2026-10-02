@@ -817,7 +817,7 @@ def _p40_git_contains(rev: str) -> bool:
 
 
 def _p40_evaluate_claims(
-    claim_defs: list[dict[str, Any]], docs: dict[str, Any]
+    claim_defs: list[dict[str, Any]], docs: dict[str, Any], origin_integrated: bool = False
 ) -> list[dict[str, Any]]:
     """Evaluate frozen per-claim rules; accepted/provisional/rejected only."""
     p33, p34, p35, p36, p37, p38, p39 = (
@@ -843,12 +843,20 @@ def _p40_evaluate_claims(
             f"gate runs recorded dirty trees ({sum(1 for c in clean_flags if not c)}/"
             f"{len(clean_flags)} manifests); revision-dirty fixtures rejected",
         )
-    _add(
-        "base-integration",
-        "rejected",
-        "origin/main accepted merges #54-#57 not integrated in this branch; "
-        "no merges this cycle; integration micro-task required before P41",
-    )
+    if origin_integrated:
+        _add(
+            "base-integration",
+            "accepted",
+            "origin/main accepted merges #54-#57 are ancestors of HEAD; "
+            "integration documented for P41",
+        )
+    else:
+        _add(
+            "base-integration",
+            "rejected",
+            "origin/main accepted merges #54-#57 not integrated in this branch; "
+            "no merges this cycle; integration micro-task required before P41",
+        )
     ruling = (p33.get("ruling") or {}).get("decision")
     if ruling == "ADOPT" and p33.get("finalists_verification"):
         _add(
@@ -988,7 +996,7 @@ def run_p40_evidence_audit(config_path: str | Path, output_path: str | Path) -> 
             + (f" ({'; '.join(finding['notes'])})" if finding["notes"] else "")
         )
 
-    claims = _p40_evaluate_claims(config.get("claims", []), docs)
+    claims = _p40_evaluate_claims(config.get("claims", []), docs, origin_integrated)
     for c in claims:
         print(f"  claim {c['id']}: {c['verdict']}")
     n_rejected = sum(1 for c in claims if c["verdict"] == "rejected")

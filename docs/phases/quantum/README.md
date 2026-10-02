@@ -25,3 +25,16 @@ remote push on a phase branch with a PR.
 
 Status convention per file: `Proposed | Building | Done (commit SHA + date +
 measurement)`.
+
+## Integration acceptance audit (D015)
+
+Implementation status and scientific acceptance are separate. Q07–Q13
+software integration preserves the old measurements; it does not promote
+pilot results to independent discoveries. Q10–Q13 contain interpretation
+corrections, including known solution seeds, a hand-written motif sampler,
+oracle-based stopping and incomplete evaluation counters. P32 audits these
+claims with the main-track evidence. Numerical equivalence/fidelity checks
+must state their tolerances; they are not exact symbolic proofs. Further
+scientific acceptance requires controlled unseeded comparisons, complete
+provenance and independent final verification. Provisional quantum records
+do not block the main track's P30–P39 corrective program.
