@@ -684,18 +684,41 @@ def reconcile_counters(res: LegResult) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _refuse_sealed_targets(raw_dir: str | Path, *names: str, overwrite: bool) -> None:
+    """Refuse to write into a directory holding non-empty historical evidence.
+
+    Every execution gets an exclusive directory; sealed artifacts are never
+    overwritten in place. Pass overwrite=True only for a deliberate, logged
+    re-run into a scratch directory.
+    """
+    if overwrite:
+        return
+    raw_path = Path(raw_dir)
+    for name in names:
+        cand = raw_path / name
+        if cand.exists() and cand.stat().st_size > 0:
+            raise FileExistsError(
+                f"Refusing to overwrite non-empty historical artifact {cand}; "
+                "pass a fresh exclusive raw_dir instead of replacing sealed evidence."
+            )
+
+
 def run_benchmark(
     budgets: list[float],
     seeds: list[int],
     confirm_1h: bool,
     output_path: str,
     raw_dir: str = "experiments/p24-raw",
+    overwrite: bool = False,
 ) -> tuple[bool, dict[str, Any]]:
     if not torch.cuda.is_available():
         raise RuntimeError("P24 requires the CUDA reference GPU; refusing CPU numbers.")
     device = resolve_device("cuda")
     raw_path = Path(raw_dir)
     raw_path.mkdir(parents=True, exist_ok=True)
+    _refuse_sealed_targets(
+        raw_dir, "p24-telemetry.jsonl", "p24-confirm-checkpoint.pt", overwrite=overwrite
+    )
 
     grid_hash = workload_grid_hash()
     print("================================================================================")
@@ -1211,13 +1234,19 @@ def run_p34_profiled_benchmark(
     output_path: str = "experiments/p34-throughput.json",
     raw_dir: str = "experiments/p34-raw",
     smoke: bool = False,
+    overwrite: bool = False,
 ) -> tuple[bool, dict[str, Any]]:
-    """Execute complete P34 Profiled Pipeline & Bounded Tracing benchmark."""
+    """Execute complete P34 Profiled Pipeline & Bounded Tracing benchmark.
+
+    Historical raw directories are never overwritten in place: pass a fresh
+    exclusive raw_dir per execution (tests must use tmp_path).
+    """
     if not torch.cuda.is_available():
         raise RuntimeError("P34 requires CUDA device; refusing CPU numbers.")
     device = resolve_device("cuda")
     raw_path = Path(raw_dir)
     raw_path.mkdir(parents=True, exist_ok=True)
+    _refuse_sealed_targets(raw_dir, "telemetry-p34.jsonl", "ckpt-p34.pt", overwrite=overwrite)
     tele_log = raw_path / "telemetry-p34.jsonl"
     ckpt = raw_path / "ckpt-p34.pt"
 

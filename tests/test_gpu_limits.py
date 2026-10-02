@@ -181,9 +181,22 @@ def test_stability_verdict_with_tracing_check() -> None:
     assert stability_verdict(**bad_tracing)["stable"] is False
 
 
+def _hash_historical_p34_raw() -> dict[str, str]:
+    import hashlib as _hl
+
+    root = Path(__file__).resolve().parents[1] / "experiments" / "p34-raw"
+    digests: dict[str, str] = {}
+    if root.exists():
+        for child in sorted(root.iterdir()):
+            if child.is_file():
+                digests[child.name] = _hl.sha256(child.read_bytes()).hexdigest()
+    return digests
+
+
 def test_p34_smoke_execution(tmp_path: Path) -> None:
     if not torch.cuda.is_available():
         return
+    before = _hash_historical_p34_raw()
     out_file = tmp_path / "p34-test.json"
     stable, manifest = run_p34_profiled_benchmark(
         budgets_str="0.05s",
@@ -192,6 +205,7 @@ def test_p34_smoke_execution(tmp_path: Path) -> None:
         tracing=True,
         scale_factor=0.05,
         output_path=str(out_file),
+        raw_dir=str(tmp_path / "p34-raw"),
         smoke=True,
     )
     assert manifest["phase"] == "p34-profiled-throughput"
@@ -202,3 +216,55 @@ def test_p34_smoke_execution(tmp_path: Path) -> None:
     assert "full_verifier_acceptance_rate" in manifest
     assert manifest["tracing_evaluation"]["target_met"] is True
     assert stable is True
+    # P41: the smoke wrote to its exclusive directory; historical evidence untouched.
+    assert (tmp_path / "p34-raw" / "telemetry-p34.jsonl").exists()
+    assert _hash_historical_p34_raw() == before
+
+
+def test_p34_refuses_sealed_raw_dir(tmp_path: Path) -> None:
+    import pytest
+
+    raw_dir = tmp_path / "p34-raw"
+    raw_dir.mkdir()
+    (raw_dir / "telemetry-p34.jsonl").write_text('{"sealed": true}\n')
+    if not torch.cuda.is_available():
+        with pytest.raises(RuntimeError):
+            run_p34_profiled_benchmark(
+                budgets_str="0.05s",
+                seeds_count=1,
+                output_path=str(tmp_path / "p34-x.json"),
+                raw_dir=str(raw_dir),
+                smoke=True,
+            )
+        return
+    with pytest.raises(FileExistsError, match="Refusing to overwrite"):
+        run_p34_profiled_benchmark(
+            budgets_str="0.05s",
+            seeds_count=1,
+            output_path=str(tmp_path / "p34-x.json"),
+            raw_dir=str(raw_dir),
+            smoke=True,
+        )
+
+
+def test_write_manifest_exclusive_seals_before_manifest(tmp_path: Path) -> None:
+    import pytest
+
+    from evobyte.provenance import verify_manifest_integrity, write_manifest_exclusive
+
+    manifest_p = tmp_path / "m.json"
+    raw_p = tmp_path / "raw" / "evidence.jsonl"
+    sealed = write_manifest_exclusive(
+        manifest_p, {"phase": "P41-test"}, {str(raw_p): b'{"n": 1}\n'}
+    )
+    assert sealed["raw_inventory"] == [
+        {"path": str(raw_p), "size_bytes": 9, "sha256": sealed["raw_artifacts"][0]["sha256"]}
+    ]
+    assert verify_manifest_integrity(manifest_p)["ok"] is True
+    # Second seal into the same destinations is refused, never silently replaced.
+    with pytest.raises(FileExistsError, match="Refusing to overwrite"):
+        write_manifest_exclusive(manifest_p, {"phase": "P41-test"}, {str(raw_p): b"{}"})
+    # A single flipped byte in sealed evidence is detected.
+    with open(raw_p, "ab") as f:
+        f.write(b" ")
+    assert verify_manifest_integrity(manifest_p)["ok"] is False

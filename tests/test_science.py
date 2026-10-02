@@ -133,7 +133,7 @@ def test_science_matrix_smoke():
 
 
 def test_p40_acceptance_registry_rejects_unknown_phases():
-    assert ACCEPTANCE_PHASES == ("P40",)
+    assert ACCEPTANCE_PHASES == ("P40", "P41")
     import subprocess as _sp
 
     proc = _sp.run(
@@ -141,7 +141,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P41",
+            "P42",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -153,7 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P41'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P42'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -239,3 +239,18 @@ def test_p40_evidence_audit_smoke(tmp_path):
     assert report["base_reconciliation"]["merges_this_cycle"] is False
     assert report["resolved_config"]["config_path"] == "experiments/p40-config.json"
     assert "deterministic manifest inspection" in report["seeds_rng"]
+
+
+def test_p41_immutable_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p41_immutable_audit
+
+    out_p = tmp_path / "p41-acceptance.json"
+    report = run_p41_immutable_audit("experiments/p41-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P41"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert report["demonstrations"]["overwrite_refused"] is True
+    assert report["demonstrations"]["one_byte_tamper_detected"] is True
+    assert report["historical_untouched_by_smoke"]["changed"] == []
+    assert len(report["inventory"]) == 9
+    assert "deterministic inspection" in report["seeds_rng"]

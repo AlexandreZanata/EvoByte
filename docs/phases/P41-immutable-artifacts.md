@@ -1,8 +1,11 @@
 # P41 — Impedir sobrescrita de evidências
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P40, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p41-immutable-artifacts`.
+**Resultado:** MIXED — mecanismo verificado (diretórios exclusivos, recusa de
+sobrescrita, 1 byte detectado, smoke sem tocar o histórico); inventário 8/9
+(telemetria P34 rejeitada por drift pós-selo, sem reconstrução).
 
 ## Objetivo e escopo
 
