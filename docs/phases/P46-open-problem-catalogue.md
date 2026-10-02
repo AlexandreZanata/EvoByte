@@ -1,8 +1,23 @@
 # P46 — Catalogar 100 problemas com fontes
 
-**Status:** Proposed.
+**Status:** Built — pending human mathematical review (P47 blocked).
 **Pré-requisito:** P45, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p46-open-problem-catalogue`.
+**Resultado:** 100 open-confirmed (fonte: banco Erdős Problems, commit de dataset
+pinado, conferidos na página viva) + 34 candidatos finitamente decidíveis em
+bucket separado que não conta para os 100; esquema validado sem campos
+ausentes, 0 duplicatas, 0 status-unconfirmed; veredito técnico
+PENDING_HUMAN_REVIEW — a aprovação matemática humana da curadoria é o gate
+restante antes de P47.
+
+**Validação minuciosa (2026-10-02):** re-fetch independente do dataset no
+commit pinado (sha256 do arquivo `cd3f949a…`) e de todas as 143 páginas:
+100/100 open-confirmed e 34/34 candidatos reproduzidos (enunciado integral,
+hash, excerpt, tags, referências, status da página), 0 quase-duplicatas.
+Achado: 6 entradas “decidable” do commit pinado já estavam resolvidas na
+fonte viva (páginas 19, 506, 551, 556, 742, 848) — movidas para o bucket
+solved com evidência `solved_after_pin`; total solved = 9. O comando de
+aceitação agora executa essa re-verificação (`independent_refetch: true`).
 
 ## Objetivo e escopo
 

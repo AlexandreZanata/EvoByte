@@ -133,7 +133,7 @@ def test_science_matrix_smoke():
 
 
 def test_p40_acceptance_registry_rejects_unknown_phases():
-    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44", "P45")
+    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44", "P45", "P46")
     import subprocess as _sp
 
     proc = _sp.run(
@@ -141,7 +141,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P46",
+            "P47",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -153,7 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P46'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P47'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -337,3 +337,93 @@ def test_p45_envelope_audit_smoke(tmp_path):
     assert len(report["matrix_60s"]["tiers"]) == 1
     assert report["envelope_600s"] is not None
     assert all(t["counter_check"] for t in report["envelope_600s"]["tiers"])
+
+
+def test_p46_catalogue_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p46_catalogue_audit
+
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p46-config.json").read_text()
+    )
+    cfg["independent_refetch"] = False  # offline smoke; the frozen run re-fetches sources
+    cfg_p = tmp_path / "p46-offline-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p46-acceptance.json"
+    report = run_p46_catalogue_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["independent_refetch"] is None
+    checks = {k: v for k, v in report["checks"].items() if v is not None}
+    assert report["status"] == "PASS"
+    assert report["verdict"] == "PENDING_HUMAN_REVIEW"
+    assert report["counts"]["open_confirmed"] >= 100
+    assert report["counts"]["finite_search_candidates"] == 34
+    assert all(checks.values())
+    assert report["errors"] == []
+    assert report["human_review"]["required"] is True
+    assert report["human_review"]["status"] == "pending"
+
+
+def test_p46_catalogue_rejects_bad_entries(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p46_catalogue_audit
+
+    cat_dir = tmp_path / "docs"
+    cat_dir.mkdir()
+    cat_p = cat_dir / "open-problems.json"
+    entry = {
+        "id": "erdos-3",
+        "title": "Erdos Problem #3",
+        "statement_excerpt": "excerpt",
+        "area": "number theory",
+        "primary_source": {
+            "citation": "c",
+            "url": "https://www.erdosproblems.com/3",
+            "dataset": "d",
+            "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1",
+        },
+        "consulted_at": "2026-10-02",
+        "state": "open-confirmed",
+        "certificate_type": "proof_or_counterexample",
+        "verifiability": "exact_statement_checkable",
+        "partial_refs": [],
+        "statement_sha256": "0" * 16,
+    }
+    bad = _json.loads(_json.dumps(entry))
+    del bad["consulted_at"]
+    dup = _json.loads(_json.dumps(entry))
+    dup["statement_sha256"] = "0" * 16
+    cat = {
+        "phase": "p46-open-problem-catalogue",
+        "source": {
+            "primary": "p",
+            "dataset": "d",
+            "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1",
+            "license": "Apache-2.0",
+        },
+        "counts": {"open_confirmed": 2, "finite_search_candidates": 0},
+        "open_confirmed": [bad, dup],
+        "finite_search_candidates": [],
+        "human_review": {"required": True, "status": "pending"},
+    }
+    cat_p.write_text(_json.dumps(cat))
+    cfg_p = tmp_path / "cfg.json"
+    cfg_p.write_text(_json.dumps({"phase": "P46", "catalogue_path": str(cat_p)}))
+    report = run_p46_catalogue_audit(cfg_p, tmp_path / "out.json")
+    assert report["status"] == "FAIL"
+    assert report["verdict"] == "REJECTED"
+    assert any("missing field consulted_at" in e for e in report["errors"])
+    assert any("duplicate statement hashes" in e for e in report["errors"])
+    assert any("below the frozen minimum" in e for e in report["errors"])
+
+
+def test_p46_normalized_statement_dedup():
+    from benchmarks.science_matrix import _p46_normalize_statement
+
+    a = _p46_normalize_statement("If $A\\subseteq \\mathbb{N}$ then must ...")
+    b = _p46_normalize_statement("if a subseteq mathbb n then must")
+    assert a == b == "if a subseteq mathbb n then must"
+    c = _p46_normalize_statement("Is there an odd covering system?")
+    assert c != a
