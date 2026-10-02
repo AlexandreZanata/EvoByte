@@ -2275,6 +2275,81 @@ def run_independent_corpus_verification(
 
 
 # ==============================================================================
+# P52 — Deterministic bank-exact polynomial tasks (development family only)
+# ==============================================================================
+
+# CONST_BANK slots whose stored float32 value is exactly an integer or a
+# finite binary/decimal rational, so the P42 checker can certify them.
+# Decimal slots (0.1, 0.01, 0.001) and transcendental slots (pi, e) are
+# excluded: their binary approximations never carry an exact certificate.
+P52_EXACT_COEFF_STRINGS: dict[int, str] = {
+    0: "0",
+    1: "1",
+    2: "-1",
+    3: "2",
+    4: "1/2",
+    7: "10",
+    9: "-1/2",
+    10: "7",
+    11: "3",
+    13: "100",
+    14: "-10",
+}
+
+P52_TEMPLATE_ID = "tpl_p52_bank_exact"
+
+
+def generate_p52_bank_exact_tasks() -> list[dict[str, Any]]:
+    """Enumerate every degree<=2 bank-exact polynomial task in canonical order.
+
+    Pure deterministic enumeration (no RNG): degree 2 with nonzero leading
+    coefficient, then degree 1. Each task carries its canonical formula, two
+    textual equivalences (same group by construction) and a stable group id.
+    Only the P47 development family (polynomial_arithmetic over Q); the final
+    test is never referenced here.
+    """
+    x = sp.Symbol("x")
+    tasks: list[dict[str, Any]] = []
+    exact_ids = sorted(P52_EXACT_COEFF_STRINGS)
+    nonzero_ids = [i for i in exact_ids if sp.sympify(P52_EXACT_COEFF_STRINGS[i]) != 0]
+    combos: list[tuple[int, tuple[int, ...]]] = []
+    for a2 in nonzero_ids:
+        for a1 in exact_ids:
+            for a0 in exact_ids:
+                combos.append((2, (a2, a1, a0)))
+    for a1 in nonzero_ids:
+        for a0 in exact_ids:
+            combos.append((1, (a1, a0)))
+
+    for seq, (degree, idxs) in enumerate(combos):
+        poly = sum(
+            sp.sympify(P52_EXACT_COEFF_STRINGS[i]) * x**p
+            for p, i in zip(range(degree, -1, -1), idxs)
+        )
+        canonical = str(sp.expand(poly))
+        terms = sp.Poly(poly, x).as_dict()
+        ascending = " + ".join(
+            f"{sp.expand(coeff * x**p)}" for (p,), coeff in sorted(terms.items())
+        ).replace("+ -", "- ")
+        variations = list(dict.fromkeys([canonical, f"({canonical})", ascending]))
+        group_key = (degree, idxs)
+        group_id = f"p52_d{degree}_{hashlib.sha256(repr(group_key).encode()).hexdigest()[:8]}"
+        tasks.append(
+            {
+                "seq": seq,
+                "task_id": f"p52_t{seq:04d}",
+                "group_id": group_id,
+                "group_key": [degree, list(idxs)],
+                "template_id": P52_TEMPLATE_ID,
+                "degree": degree,
+                "canonical_formula": canonical,
+                "variations": variations,
+            }
+        )
+    return tasks
+
+
+# ==============================================================================
 # CLI Entrypoint
 # ==============================================================================
 

@@ -1,8 +1,12 @@
 # P52 — Construir dados certificados para o micromodelo
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P51, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p52-certified-learning-data`.
+**Resultado:** ACCEPTED — 320 positivos com exact_certificate rechecado
+(256 train/256 grupos, 64 val/64 grupos, splits disjuntos, final fechado);
+6 negativos rejeitados por razão objetiva (sem timeout); professor
+determinístico faturado (~7 s, teto 1 h); controles k1/k2 no train.
 
 ## Objetivo e escopo
 

@@ -3177,6 +3177,362 @@ def _p36_sampling_loop(
 
 
 # ==============================================================================
+# 8. P52 Certified learning data (development family only, exact answers)
+# ==============================================================================
+
+P52_NEGATIVE_REASONS = ("invalid_execution", "false_certificate", "wrong_domain")
+P52_CONTROL_FORMULAS = ("x**2 + 3*x + 7", "x**2 - 1")
+
+
+def _p52_negative_fixtures() -> list[dict[str, Any]]:
+    """Six pinned negative fixtures with objective rejection reasons.
+
+    A timed-out search never labels a problem false: every fixture below is
+    rejected by the exact checker for an objective cause (invalid execution,
+    non-exact identity, or pole inside the declared domain).
+    """
+    from evobyte.bytecode import encode_instr as _enc
+    from evobyte.bytecode import nop_program as _nop
+
+    inv_t = _nop()
+    inv_t[0] = _enc(0x02, dst=1, a=0, b=0)
+    inv_t[1] = _enc(0x04, dst=7, a=0, b=1)
+    inv_v = _nop()
+    inv_v[0] = _enc(0x02, dst=2, a=0, b=0)
+    inv_v[1] = _enc(0x04, dst=7, a=0, b=2)
+
+    pole_t = _nop()  # 1 / (x - 1) claiming 1/(x - 1) on [-3, 3]: pole at x = 1
+    pole_t[0] = _enc(0x0F, dst=5, a=1, b=1)
+    pole_t[1] = _enc(0x02, dst=4, a=0, b=5)
+    pole_t[2] = _enc(0x04, dst=7, a=5, b=4)
+    pole_v = _nop()  # 1 / (x + 2) claiming 1/(x + 2) on [-3, 3]: pole at x = -2
+    pole_v[0] = _enc(0x0F, dst=5, a=1, b=3)
+    pole_v[1] = _enc(0x0F, dst=3, a=1, b=1)
+    pole_v[2] = _enc(0x01, dst=4, a=0, b=5)
+    pole_v[3] = _enc(0x04, dst=7, a=3, b=4)
+
+    exact_t = _try_exact_horner_program("x**2 + 3*x + 10")
+    exact_v = _try_exact_horner_program("x**2 - 1")
+    assert exact_t is not None and exact_v is not None
+    return [
+        {
+            "id": "p52_neg_inv_t",
+            "split": "train",
+            "reason": "invalid_execution",
+            "program": inv_t,
+            "claimed_truth": "1",
+            "domain": (-3.0, 3.0),
+            "adversarial_xs": None,
+        },
+        {
+            "id": "p52_neg_false_t",
+            "split": "train",
+            "reason": "false_certificate",
+            "program": exact_t,
+            "claimed_truth": "x**2 + 3*x + 7",
+            "domain": (-3.0, 3.0),
+            "adversarial_xs": None,
+        },
+        {
+            "id": "p52_neg_dom_t",
+            "split": "train",
+            "reason": "wrong_domain",
+            "program": pole_t,
+            "claimed_truth": "1/(x - 1)",
+            "domain": (-3.0, 3.0),
+            "adversarial_xs": [1.0],
+        },
+        {
+            "id": "p52_neg_inv_v",
+            "split": "val",
+            "reason": "invalid_execution",
+            "program": inv_v,
+            "claimed_truth": "1",
+            "domain": (-3.0, 3.0),
+            "adversarial_xs": None,
+        },
+        {
+            "id": "p52_neg_false_v",
+            "split": "val",
+            "reason": "false_certificate",
+            "program": exact_v,
+            "claimed_truth": "x**2",
+            "domain": (-3.0, 3.0),
+            "adversarial_xs": None,
+        },
+        {
+            "id": "p52_neg_dom_v",
+            "split": "val",
+            "reason": "wrong_domain",
+            "program": pole_v,
+            "claimed_truth": "1/(x + 2)",
+            "domain": (-3.0, 3.0),
+            "adversarial_xs": [-2.0],
+        },
+    ]
+
+
+def build_p52_certified_data(
+    family: str = "polynomial_arithmetic",
+    output_path: str | Path | None = "experiments/p52-certified-data.json",
+    device_name: str | None = None,
+    seed: int = 42047,
+    n_train_groups: int = 256,
+    n_val_groups: int = 64,
+    min_train_positives: int = 256,
+    min_train_groups: int = 32,
+    min_val_positives: int = 64,
+    min_val_groups: int = 8,
+    teacher_cap_sec: float = 3600.0,
+    domain: tuple[float, float] = (-3.0, 3.0),
+    error_threshold: float = 1e-4,
+    smoke: bool = False,
+) -> dict[str, Any]:
+    """Build the P52 certified problem->program corpus (train/val only).
+
+    Teacher: deterministic bank-exact Horner construction (no search, cost
+    billed as construction + exact verification). A positive label requires
+    a P42 exact_certificate; anything else is skipped, never relabeled.
+    Negatives carry objective rejection reasons; search timeouts never do.
+    The final test is never opened (only its access log is inspected).
+    """
+    import random as _random
+
+    from evobyte.verifier import verify_l2
+
+    t_wall_0 = time.perf_counter()
+    device = resolve_device(device_name)
+    torch.set_num_threads(8)
+    seed_all(seed)
+    synchronize(device)
+
+    from benchmarks.math_corpus import generate_p52_bank_exact_tasks
+
+    if smoke:
+        n_train_groups, n_val_groups = 6, 2
+        min_train_positives, min_train_groups = 6, 2
+        min_val_positives, min_val_groups = 2, 1
+
+    tasks = generate_p52_bank_exact_tasks()
+    order = list(range(len(tasks)))
+    _random.Random(seed).shuffle(order)
+    train_tasks = [tasks[i] for i in order[:n_train_groups]]
+    val_tasks = [tasks[i] for i in order[n_train_groups : n_train_groups + n_val_groups]]
+
+    def _force_controls(pool: list[dict[str, Any]]) -> None:
+        have = {t["canonical_formula"] for t in pool}
+        for formula in P52_CONTROL_FORMULAS:
+            if formula in have:
+                continue
+            donor = next(t for t in tasks if t["canonical_formula"] == formula)
+            for k, t in enumerate(pool):
+                if t["canonical_formula"] not in P52_CONTROL_FORMULAS:
+                    pool[k] = donor
+                    break
+
+    _force_controls(train_tasks)
+
+    final_log = _REPO_ROOT / "experiments" / "p47-final-test" / "access-log.json"
+    final_unopened = final_log.is_file() and json.loads(final_log.read_text()) == []
+
+    xs_feat = np.linspace(domain[0], domain[1], 64, dtype=np.float32)
+    train_xs = np.linspace(domain[0], domain[1], 48, dtype=np.float64)
+    test_xs = np.linspace(domain[0] + 0.1, domain[1] - 0.1, 32, dtype=np.float64)
+
+    positives: list[dict[str, Any]] = []
+    attempts: list[dict[str, Any]] = []
+    skipped: list[dict[str, Any]] = []
+    teacher_construction_sec = 0.0
+    teacher_verification_sec = 0.0
+    cap_exceeded = False
+
+    def _certify(task: dict[str, Any], split: str, item_idx: int) -> None:
+        nonlocal teacher_construction_sec, teacher_verification_sec
+        formula = task["canonical_formula"]
+        t_c0 = time.perf_counter()
+        prog = _try_exact_horner_program(formula)
+        item_construction_sec = time.perf_counter() - t_c0
+        teacher_construction_sec += item_construction_sec
+        if prog is None:
+            skipped.append({"group_id": task["group_id"], "reason": "no_bank_exact_program"})
+            return
+        ys_feat = _eval_ground_truth_expr(formula, xs_feat.astype(np.float64)).astype(np.float32)
+        feat = extract_problem_features(xs_feat, ys_feat, device=device)
+        train_ys = _eval_ground_truth_expr(formula, train_xs)
+        test_ys = _eval_ground_truth_expr(formula, test_xs)
+        t_v0 = time.perf_counter()
+        v = verify_l2(
+            prog,
+            train_xs,
+            train_ys,
+            test_xs,
+            test_ys,
+            ground_truth_formula=formula,
+            error_threshold=error_threshold,
+            domain=domain,
+        )
+        item_verification_sec = time.perf_counter() - t_v0
+        teacher_verification_sec += item_verification_sec
+        if v.proof_type != "exact_certificate" or not v.passed:
+            skipped.append({"group_id": task["group_id"], "reason": v.proof_type})
+            return
+        canon_prog, _ = canonicalize_bytecode(prog)
+        positives.append(
+            {
+                "item_id": f"p52_{'tr' if split == 'train' else 'va'}_{item_idx:04d}",
+                "group_id": task["group_id"],
+                "template_id": task["template_id"],
+                "split": split,
+                "label": "positive",
+                "ground_truth_expr": formula,
+                "variations": task["variations"],
+                "program_words": [int(w) for w in np.asarray(prog, dtype=np.uint32)],
+                "program_sha256": hashlib.sha256(np.ascontiguousarray(prog).tobytes()).hexdigest(),
+                "normalized_sha256": hashlib.sha256(
+                    np.ascontiguousarray(canon_prog).tobytes()
+                ).hexdigest(),
+                "certificate": {
+                    "proof_type": v.proof_type,
+                    "decision": v.decision,
+                    "symbolic_notes": v.symbolic_notes,
+                },
+                "features_inference_only": [float(f) for f in feat.cpu().numpy().tolist()],
+                "teacher_construction_sec": item_construction_sec,
+                "teacher_verification_sec": item_verification_sec,
+                "is_control": formula in P52_CONTROL_FORMULAS,
+            }
+        )
+        attempts.append({"group_id": task["group_id"], "split": split, "proof_type": v.proof_type})
+
+    for idx, task in enumerate(train_tasks):
+        if time.perf_counter() - t_wall_0 > teacher_cap_sec:
+            cap_exceeded = True
+            break
+        _certify(task, "train", idx)
+    for idx, task in enumerate(val_tasks):
+        if time.perf_counter() - t_wall_0 > teacher_cap_sec:
+            cap_exceeded = True
+            break
+        _certify(task, "val", idx)
+
+    negatives: list[dict[str, Any]] = []
+    for fix in _p52_negative_fixtures():
+        prog = fix["program"]
+        dom = fix["domain"]
+        gxs = np.linspace(dom[0], dom[1], 48, dtype=np.float64)
+        gys = _eval_ground_truth_expr(fix["claimed_truth"], gxs)
+        hxs = np.linspace(dom[0] + 0.1, dom[1] - 0.1, 32, dtype=np.float64)
+        hys = _eval_ground_truth_expr(fix["claimed_truth"], hxs)
+        adv = (
+            np.array(fix["adversarial_xs"], dtype=np.float64)
+            if fix["adversarial_xs"] is not None
+            else None
+        )
+        v = verify_l2(
+            prog,
+            gxs,
+            gys,
+            hxs,
+            hys,
+            adversarial_xs=adv,
+            ground_truth_formula=fix["claimed_truth"],
+            error_threshold=error_threshold,
+            domain=dom,
+        )
+        assert v.proof_type != "exact_certificate", f"negative {fix['id']} certified unexpectedly"
+        negatives.append(
+            {
+                "item_id": fix["id"],
+                "group_id": f"p52_neg_{fix['id']}",
+                "template_id": "tpl_p52_negative",
+                "split": fix["split"],
+                "label": "negative",
+                "reason": fix["reason"],
+                "ground_truth_expr": fix["claimed_truth"],
+                "adversarial_xs": list(fix["adversarial_xs"]) if fix["adversarial_xs"] else [],
+                "program_words": [int(w) for w in np.asarray(prog, dtype=np.uint32)],
+                "check": {"proof_type": v.proof_type, "decision": v.decision},
+            }
+        )
+
+    train_pos = [p for p in positives if p["split"] == "train"]
+    val_pos = [p for p in positives if p["split"] == "val"]
+    train_groups = {p["group_id"] for p in train_pos}
+    val_groups = {p["group_id"] for p in val_pos}
+    minimums = {
+        "train_positives": (len(train_pos), min_train_positives),
+        "train_groups": (len(train_groups), min_train_groups),
+        "val_positives": (len(val_pos), min_val_positives),
+        "val_groups": (len(val_groups), min_val_groups),
+    }
+    minimums_met = all(have >= need for have, need in minimums.values())
+    norm_shas = [p["normalized_sha256"] for p in positives]
+    dedup = {
+        "by_target": len({p["ground_truth_expr"] for p in positives}) == len(positives),
+        "by_program": len(set(norm_shas)) == len(positives),
+        "duplicates_dropped": 0,
+    }
+    group_overlap = sorted(train_groups & val_groups)
+    status = "PASS" if (minimums_met and not group_overlap and not cap_exceeded) else "INCONCLUSIVE"
+
+    elapsed = time.perf_counter() - t_wall_0
+    prov = collect_provenance(
+        seed=seed,
+        device=device,
+        dataset_hashes={"family": hashlib.sha256(family.encode()).hexdigest()},
+        config={"family": family, "seed": seed},
+    )
+    report = {
+        "phase": "p52-certified-data",
+        "status": status,
+        "family": family,
+        "source": {
+            "procedure": "deterministic bank-exact enumeration, degree<=2, seed-shuffled split",
+            "seed": seed,
+            "license": "synthetic-no-external-source",
+            "note": "No external data, no natural language; decimal/transcendental bank slots excluded (never exact).",
+        },
+        "splits": {
+            "policy": "group-disjoint by construction; control groups forced to train",
+            "train_groups": len(train_groups),
+            "val_groups": len(val_groups),
+            "group_overlap": group_overlap,
+        },
+        "positives": positives,
+        "negatives": negatives,
+        "controls": [p["item_id"] for p in positives if p["is_control"]],
+        "dedup": dedup,
+        "minimums": {k: {"have": h, "need": n} for k, (h, n) in minimums.items()},
+        "minimums_met": minimums_met,
+        "teacher": {
+            "construction_sec": teacher_construction_sec,
+            "verification_sec": teacher_verification_sec,
+            "cap_sec": teacher_cap_sec,
+            "within_cap": not cap_exceeded,
+        },
+        "final_test": {"access_log_empty": final_unopened, "opened": not final_unopened},
+        "skipped_targets": skipped,
+        "elapsed_sec": elapsed,
+        "provenance": prov,
+        "git_commit": get_git_commit(),
+    }
+    if output_path:
+        out_p = Path(output_path)
+        raw_p = out_p.parent / "p52-certified-data-raw.json"
+        raw_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(raw_p, "w", encoding="utf-8") as f:
+            json.dump(
+                {"attempts": attempts, "skipped": skipped}, f, indent=2, sort_keys=True, default=str
+            )
+        raw_hash = hashlib.sha256(raw_p.read_bytes()).hexdigest()
+        written = write_manifest(out_p, report, {str(raw_p): raw_hash})
+        print(
+            f"Artifact manifest written to {out_p} (manifest_sha256={written['manifest_sha256'][:16]})"
+        )
+    return report
+
+
+# ==============================================================================
 # 7. P50 Verifiable searches and baselines (polynomial_arithmetic)
 # ==============================================================================
 

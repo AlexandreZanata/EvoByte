@@ -146,6 +146,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P49",
         "P50",
         "P51",
+        "P52",
     )
     import subprocess as _sp
 
@@ -154,7 +155,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P52",
+            "P53",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -166,7 +167,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P52'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P53'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -577,3 +578,35 @@ def test_p51_replay_map_audit_smoke(tmp_path):
     assert report["map"]["nodes"] <= 20
     assert report["counters"]["segments_matched"] == report["counters"]["segments_declared"] > 0
     assert report["counters"]["certificates"] == len(report["certificate_references"]) > 0
+
+
+def test_p52_certified_data_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.math_specialist import build_p52_certified_data
+    from benchmarks.science_matrix import run_p52_certified_data_audit
+
+    corpus_p = tmp_path / "p52-smoke-corpus.json"
+    build = build_p52_certified_data(output_path=corpus_p, device_name="cpu", smoke=True)
+    assert build["status"] == "PASS"
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p52-config.json").read_text()
+    )
+    cfg["corpus_manifest"] = str(corpus_p)
+    cfg["minimums"] = {
+        "train_positives": 6,
+        "train_groups": 2,
+        "val_positives": 2,
+        "val_groups": 1,
+    }
+    cfg_p = tmp_path / "p52-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p52-acceptance.json"
+    report = run_p52_certified_data_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P52"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["rechecked_exact"] == report["rechecked_total"] > 0
+    assert report["negatives_rejected"] == report["negatives_total"] == 6
+    assert report["minimums_met"] is True
+    assert report["splits"]["group_overlap"] == []

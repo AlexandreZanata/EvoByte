@@ -22,6 +22,7 @@ from benchmarks.math_specialist import (
     SequentialSpecialist,
     TinyMathProposer,
     build_math_corpus,
+    build_p52_certified_data,
     build_verified_training_corpus,
     extract_problem_features,
     get_p28_family_targets,
@@ -529,3 +530,44 @@ def test_p36_full_pilot_smoke(tmp_path) -> None:
     }
     assert report["training"]["n_train_positives"] == 16
     assert "amortized_costs" in report
+
+
+def test_p52_build_certified_data_smoke() -> None:
+    report = build_p52_certified_data(
+        family="polynomial_arithmetic",
+        output_path=None,
+        device_name="cpu",
+        smoke=True,
+    )
+    assert report["phase"] == "p52-certified-data"
+    assert report["status"] == "PASS"
+    assert report["minimums_met"] is True
+    assert report["splits"]["group_overlap"] == []
+    assert report["dedup"]["by_target"] is True
+    assert report["dedup"]["by_program"] is True
+    assert report["final_test"]["opened"] is False
+    assert report["teacher"]["within_cap"] is True
+    assert {p["split"] for p in report["positives"]} == {"train", "val"}
+    assert len({p["group_id"] for p in report["positives"]}) == len(report["positives"])
+    for p in report["positives"]:
+        assert p["label"] == "positive"
+        assert p["certificate"]["proof_type"] == "exact_certificate"
+        assert len(p["features_inference_only"]) == 16
+    controls = {p["ground_truth_expr"] for p in report["positives"] if p["is_control"]}
+    assert controls == {"x**2 + 3*x + 7", "x**2 - 1"}
+
+
+def test_p52_negatives_have_objective_reasons() -> None:
+    report = build_p52_certified_data(
+        family="polynomial_arithmetic",
+        output_path=None,
+        device_name="cpu",
+        smoke=True,
+    )
+    reasons = {n["reason"] for n in report["negatives"]}
+    assert reasons == {"invalid_execution", "false_certificate", "wrong_domain"}
+    assert {n["split"] for n in report["negatives"]} == {"train", "val"}
+    for n in report["negatives"]:
+        assert n["label"] == "negative"
+        assert n["check"]["proof_type"] != "exact_certificate"
+        assert "timeout" not in n["reason"]

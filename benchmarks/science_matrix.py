@@ -690,7 +690,250 @@ ACCEPTANCE_PHASES = (
     "P49",
     "P50",
     "P51",
+    "P52",
 )
+
+
+def run_p52_certified_data_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P52 audit: 100% positives rechecked exactly, disjoint splits, billed costs.
+
+    Every recorded positive is re-verified with the frozen exact checker;
+    group/item/canonical splits must not overlap, the final test must stay
+    unopened, negatives must carry objective reasons (never a timeout), and
+    teacher costs must fit the one-hour cap. Unmet minimums with otherwise
+    clean evidence yield INCONCLUSIVE (P53 blocked, P54 allowed on baselines).
+    """
+    import numpy as _np
+    import torch as _torch
+
+    from evobyte.grammar import canonicalize_bytecode as _canon
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+        verify_manifest_integrity,
+    )
+    from evobyte.verifier import verify_l2
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P52":
+        raise ValueError(f"Config {cfg_p} is not a P52 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    err_thr = float(config.get("error_threshold", 1e-4))
+    domain = tuple(config.get("domain", [-3.0, 3.0]))
+    min_req = config.get("minimums", {})
+
+    print("=" * 115)
+    print("P52 CERTIFIED-DATA AUDIT (100% recheck; disjoint splits; billed teacher)")
+    print("=" * 115)
+
+    corpus_p = _REPO_ROOT / config.get("corpus_manifest", "experiments/p52-certified-data.json")
+    integrity = verify_manifest_integrity(corpus_p)
+    with open(corpus_p, encoding="utf-8") as f:
+        corpus = json.load(f)
+
+    errors: list[str] = []
+    if not integrity["ok"]:
+        errors.append(f"manifest seal broken: {integrity['errors'][:3]}")
+
+    positives = corpus.get("positives", [])
+    negatives = corpus.get("negatives", [])
+    train_xs = _np.linspace(domain[0], domain[1], 48, dtype=_np.float64)
+    test_xs = _np.linspace(domain[0] + 0.1, domain[1] - 0.1, 32, dtype=_np.float64)
+
+    import sympy as _sympy
+
+    _x = _sympy.Symbol("x")
+    rechecked = 0
+    for pos in positives:
+        prog = _np.array(pos["program_words"], dtype=_np.uint32)
+        truth = str(pos["ground_truth_expr"])
+        fn = _sympy.lambdify(_x, _sympy.sympify(truth), modules=["numpy"])
+        v = verify_l2(
+            prog,
+            train_xs,
+            _np.asarray(fn(train_xs)),
+            test_xs,
+            _np.asarray(fn(test_xs)),
+            ground_truth_formula=truth,
+            error_threshold=err_thr,
+            domain=domain,
+        )
+        if v.proof_type != "exact_certificate" or not v.passed:
+            errors.append(f"positive {pos['item_id']} not exact on recheck ({v.proof_type})")
+        else:
+            rechecked += 1
+        canon, _ = _canon(prog)
+        if hashlib.sha256(_np.ascontiguousarray(canon).tobytes()).hexdigest() != pos.get(
+            "normalized_sha256"
+        ):
+            errors.append(f"positive {pos['item_id']} normalized hash mismatch")
+    print(f"  positives rechecked exact: {rechecked}/{len(positives)}")
+
+    def _groups(items: list[dict[str, Any]], split: str) -> set[str]:
+        return {p["group_id"] for p in items if p.get("split") == split}
+
+    train_groups = _groups(positives, "train")
+    val_groups = _groups(positives, "val")
+    overlap = sorted(train_groups & val_groups)
+    if overlap:
+        errors.append(f"group overlap across splits: {overlap[:3]}")
+    train_items = {p["item_id"] for p in positives if p.get("split") == "train"}
+    val_items = {p["item_id"] for p in positives if p.get("split") == "val"}
+    if train_items & val_items:
+        errors.append("item overlap across splits")
+    train_canon = {p["ground_truth_expr"] for p in positives if p.get("split") == "train"}
+    val_canon = {p["ground_truth_expr"] for p in positives if p.get("split") == "val"}
+    if train_canon & val_canon:
+        errors.append("canonical-target overlap across splits")
+    if len(positives) != len({p["item_id"] for p in positives}):
+        errors.append("duplicate positive item ids")
+    if len({p["normalized_sha256"] for p in positives}) != len(positives):
+        errors.append("duplicate normalized programs")
+
+    allowed_reasons = set(
+        config.get("negative_reasons", ["invalid_execution", "false_certificate", "wrong_domain"])
+    )
+    neg_rejected = 0
+    for neg in negatives:
+        if neg.get("reason") not in allowed_reasons:
+            errors.append(
+                f"negative {neg['item_id']} has non-objective reason {neg.get('reason')!r}"
+            )
+            continue
+        prog = _np.array(neg["program_words"], dtype=_np.uint32)
+        truth = str(neg["ground_truth_expr"])
+        fn = _sympy.lambdify(_x, _sympy.sympify(truth), modules=["numpy"])
+        adv = _np.array(neg.get("adversarial_xs") or [], dtype=_np.float64)
+        v = verify_l2(
+            prog,
+            train_xs,
+            _np.asarray(fn(train_xs)),
+            test_xs,
+            _np.asarray(fn(test_xs)),
+            adversarial_xs=adv if adv.size else None,
+            ground_truth_formula=truth,
+            error_threshold=err_thr,
+            domain=domain,
+        )
+        if v.proof_type == "exact_certificate":
+            errors.append(f"negative {neg['item_id']} certified unexpectedly")
+        else:
+            neg_rejected += 1
+    blob = json.dumps(corpus, sort_keys=True, default=str).lower()
+    if "timeout" in blob or "budget_exhausted" in blob:
+        errors.append("timeout/budget language inside corpus evidence")
+    print(f"  negatives rejected: {neg_rejected}/{len(negatives)}")
+
+    final_ok = bool(corpus.get("final_test", {}).get("access_log_empty", False))
+    if not final_ok:
+        errors.append("final test may have been opened")
+    controls = [p for p in positives if p.get("is_control")]
+    expected_controls = set(config.get("controls", ["x**2 + 3*x + 7", "x**2 - 1"]))
+    found_controls = {p["ground_truth_expr"] for p in controls if p.get("split") == "train"}
+    if found_controls != expected_controls:
+        errors.append(f"deterministic controls incomplete: {sorted(found_controls)}")
+
+    teacher = corpus.get("teacher", {})
+    teacher_total = float(teacher.get("construction_sec", 0.0)) + float(
+        teacher.get("verification_sec", 0.0)
+    )
+    if teacher_total > float(config.get("teacher_cap_sec", 3600.0)):
+        errors.append("teacher cost exceeded the one-hour cap")
+    if not teacher.get("within_cap", False):
+        errors.append("teacher cap breach recorded by builder")
+
+    actual = {
+        "train_positives": sum(1 for p in positives if p.get("split") == "train"),
+        "train_groups": len(train_groups),
+        "val_positives": sum(1 for p in positives if p.get("split") == "val"),
+        "val_groups": len(val_groups),
+    }
+    minimums_ok = all(actual[k] >= int(min_req.get(k, 0)) for k in actual)
+    print(f"  minimums: {actual} vs required {min_req}")
+
+    if errors:
+        verdict = "MIXED"
+    elif not minimums_ok:
+        verdict = "INCONCLUSIVE"
+    else:
+        verdict = "ACCEPTED"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=42,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p52_config": config_sha[:16]},
+        config={"acceptance_phase": "P52"},
+    )
+    report = {
+        "phase": "P52",
+        "verdict": verdict,
+        "claim_scope": "certified train/val data only; engineering minimums, no statistical claim",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "integrity_ok": bool(integrity["ok"]),
+        "rechecked_exact": rechecked,
+        "rechecked_total": len(positives),
+        "negatives_rejected": neg_rejected,
+        "negatives_total": len(negatives),
+        "splits": {
+            "train_groups": len(train_groups),
+            "val_groups": len(val_groups),
+            "group_overlap": overlap,
+        },
+        "minimums_required": min_req,
+        "minimums_actual": actual,
+        "minimums_met": minimums_ok,
+        "controls_found": sorted(found_controls),
+        "teacher_total_sec": teacher_total,
+        "teacher_cap_sec": float(config.get("teacher_cap_sec", 3600.0)),
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P52",
+            "corpus_manifest": str(corpus_p),
+        },
+        "seeds_rng": "deterministic enumeration; seed-shuffled split; no search RNG",
+        "budgets": {"audit_recheck_sec": time.perf_counter() - t0},
+        "certificate_references": [
+            {"item_id": p["item_id"], "sha256": p.get("program_sha256")} for p in positives[:5]
+        ],
+        "counters": {
+            "positives": len(positives),
+            "negatives": len(negatives),
+            "rechecked_exact": rechecked,
+            "controls": len(controls),
+        },
+        "errors": errors[:10],
+        "limitations": [
+            "Minimum counts are engineering readiness, not statistical power.",
+            "INCONCLUSIVE blocks P53 training but permits P54 baselines without learning.",
+            "Single-template corpus: group/item isolation enforced, template sharing disclosed.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P52 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p51_replay_map_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -3543,6 +3786,8 @@ def main() -> int:
             run_p50_search_controls_audit(args.config, args.output)
         elif args.acceptance_phase == "P51":
             run_p51_replay_map_audit(args.config, args.output)
+        elif args.acceptance_phase == "P52":
+            run_p52_certified_data_audit(args.config, args.output)
         return 0
 
     seeds = (
