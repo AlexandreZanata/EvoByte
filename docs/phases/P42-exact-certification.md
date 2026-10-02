@@ -1,8 +1,11 @@
 # P42 — Corrigir a certificação matemática
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P41, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p42-exact-certification`.
+**Resultado:** ACCEPTED — 4/4 identidades P35 revalidadas por certificado exato
+em novos registros (original intacto); controles falsos rejeitados; regra
+prospectiva verificada (positivos ⇒ exact_certificate).
 
 ## Objetivo e escopo
 

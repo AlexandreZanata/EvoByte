@@ -69,7 +69,7 @@ def test_program_to_sympy_and_equivalence():
 
     eq, detail = check_symbolic_equivalence(sym_expr, "x2_3x_7")
     assert eq is True
-    assert detail == "exact_symbolic_equivalence"
+    assert detail == "exact_identity_unconditional"
 
 
 def test_l2_verify_known_correct_program():
@@ -105,7 +105,7 @@ def test_l2_verify_known_correct_program():
     assert res.f32_test_mse < 1e-10
     assert res.f64_f32_divergence < 1e-10
     assert res.symbolic_equivalent is True
-    assert res.proof_type == "symbolic_simplification"
+    assert res.proof_type == "exact_certificate"
     assert res.ordinary_math_valid is True
     assert res.adversarial_invalid_rate == 0.0
 
@@ -349,3 +349,96 @@ def test_tunable_program_execute_f64():
     preds, flags = tunable.execute_f64(xs)
     np.testing.assert_allclose(preds, expected, rtol=1e-12)
     assert not np.any(flags)
+
+
+def _build_coincident_false_program() -> np.ndarray:
+    """x^2 + 3x + 7 + 1e-12*x^8: train-coincident, symbolically distinct."""
+    p = nop_program()
+    p[0] = encode_instr(0x0F, dst=5, a=1, b=15)  # r5 = 0.001
+    p[1] = encode_instr(0x03, dst=5, a=5, b=5)  # r5 = 1e-6
+    p[2] = encode_instr(0x03, dst=6, a=5, b=5)  # r6 = 1e-12
+    p[3] = encode_instr(0x03, dst=2, a=0, b=0)  # r2 = x^2
+    p[4] = encode_instr(0x03, dst=4, a=2, b=2)  # r4 = x^4
+    p[5] = encode_instr(0x03, dst=4, a=4, b=4)  # r4 = x^8
+    p[6] = encode_instr(0x03, dst=6, a=6, b=4)  # r6 = 1e-12 * x^8
+    p[7] = encode_instr(0x0F, dst=3, a=1, b=11)  # r3 = 3.0
+    p[8] = encode_instr(0x03, dst=3, a=3, b=0)  # r3 = 3x
+    p[9] = encode_instr(0x01, dst=5, a=2, b=3)  # r5 = x^2 + 3x
+    p[10] = encode_instr(0x0F, dst=7, a=5, b=10)  # r7 = x^2 + 3x + 7
+    p[11] = encode_instr(0x01, dst=7, a=7, b=6)  # r7 += 1e-12 * x^8
+    return p
+
+
+def test_p42_true_identity_unified_symbols() -> None:
+    from evobyte.grammar import HornerPoly, compile_horner_to_bytecode
+
+    prog, _ = compile_horner_to_bytecode(HornerPoly(coeff_indices=[1, 0, 2]))
+    prog = np.asarray(prog, dtype=np.uint32)
+    sym_expr = program_to_sympy(prog)
+    # String ground truth parses with plain symbols; unified hypotheses must still match.
+    eq, detail = check_symbolic_equivalence(sym_expr, "x**2 - 1")
+    assert eq is True
+    assert detail == "exact_identity_unconditional"
+    eq_dom, detail_dom = check_symbolic_equivalence(sym_expr, "x**2 - 1", domain=(-3.0, 3.0))
+    assert eq_dom is True
+    assert "exact_identity_on_domain" in detail_dom
+
+
+def test_p42_false_identity_coincident_on_train_rejected() -> None:
+    prog = _build_coincident_false_program()
+    train_xs = np.linspace(-3.0, 3.0, 48, dtype=np.float64)
+    train_ys = train_xs**2 + 3 * train_xs + 7
+    test_xs = np.linspace(-2.9, 2.9, 32, dtype=np.float64)
+    test_ys = test_xs**2 + 3 * test_xs + 7
+    extrap_xs = np.concatenate([np.linspace(-6.0, -3.5, 16), np.linspace(3.5, 6.0, 16)])
+    extrap_ys = extrap_xs**2 + 3 * extrap_xs + 7
+    res = verify_l2(
+        program=prog,
+        train_xs=train_xs,
+        train_ys=train_ys,
+        test_xs=test_xs,
+        test_ys=test_ys,
+        extrap_xs=extrap_xs,
+        extrap_ys=extrap_ys,
+        ground_truth_formula="x**2 + 3*x + 7",
+        domain=(-3.0, 3.0),
+    )
+    assert res.train_mse < 1e-4
+    assert res.symbolic_equivalent is False
+    assert res.proof_type == "numerical_evidence"
+
+
+def test_p42_symbol_hypothesis_mismatch_rejected() -> None:
+    prog = _build_exact_quadratic_program()
+    sym_expr = program_to_sympy(prog, var_name="y")
+    eq, _ = check_symbolic_equivalence(sym_expr, "x**2 + 3*x + 7", var_name="x")
+    assert eq is False
+
+
+def test_p42_invalid_numeric_certificate_rejected() -> None:
+    p = nop_program()
+    p[0] = encode_instr(0x04, dst=7, a=0, b=0)  # r7 = x / x (invalid at x = 0)
+    xs = np.array([-1.0, 0.0, 1.0], dtype=np.float64)
+    res = verify_l2(
+        program=p,
+        train_xs=xs,
+        train_ys=np.array([1.0, 1.0, 1.0]),
+        test_xs=xs,
+        test_ys=np.array([1.0, 1.0, 1.0]),
+        ground_truth_formula="1",
+    )
+    assert res.passed is False
+    assert res.symbolic_equivalent is False
+    assert res.proof_type == "numerical_evidence"
+
+
+def test_p42_pole_in_domain_rejected() -> None:
+    import sympy as _sympy
+
+    x = _sympy.Symbol("x", real=True)
+    cand = (x**2 - 1) / (x - 1)
+    eq, detail = check_symbolic_equivalence(cand, x + 1, domain=(-3.0, 3.0))
+    assert eq is False
+    assert "pole_in_domain" in detail
+    eq_free, _ = check_symbolic_equivalence(cand, x + 1, domain=(2.0, 3.0))
+    assert eq_free is True

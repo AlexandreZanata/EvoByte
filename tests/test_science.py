@@ -133,7 +133,7 @@ def test_science_matrix_smoke():
 
 
 def test_p40_acceptance_registry_rejects_unknown_phases():
-    assert ACCEPTANCE_PHASES == ("P40", "P41")
+    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42")
     import subprocess as _sp
 
     proc = _sp.run(
@@ -141,7 +141,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P42",
+            "P43",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -153,7 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P42'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P43'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -254,3 +254,20 @@ def test_p41_immutable_audit_smoke(tmp_path):
     assert report["historical_untouched_by_smoke"]["changed"] == []
     assert len(report["inventory"]) == 9
     assert "deterministic inspection" in report["seeds_rng"]
+
+
+def test_p42_exact_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p42_exact_audit
+
+    out_p = tmp_path / "p42-acceptance.json"
+    report = run_p42_exact_audit("experiments/p42-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P42"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert len(report["identities"]) == 4
+    assert all(
+        i["resolution"] in ("exact_accepted", "exact_rejected") for i in report["identities"]
+    )
+    assert all(c["rejected"] for c in report["controls"])
+    assert report["labeling_rule"].get("rule_holds") is True
+    assert report["corpus_integrity"]["ok"] is True

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -238,6 +239,41 @@ class L2VerificationResult:
     exported_candidate: dict[str, Any]
 
 
+def _exact_constant(value: float) -> Any:
+    """Map a float constant to its exact symbolic value (P42).
+
+    Integral floats become Integers and finite decimals become exact Rationals
+    of their decimal expansion. Non-representable values (NaN/inf) and
+    transcendental approximations (pi/e slots) stay Float, which confines any
+    identity involving them to numerical evidence, never an exact certificate.
+    """
+    if not _HAS_SYMPY:
+        return None
+    v = float(value)
+    if not math.isfinite(v):
+        return sympy.Float(v)
+    if v.is_integer():
+        return sympy.Integer(int(v))
+    return sympy.Rational(str(v))
+
+
+def _unified_symbol(var_name: str) -> Any:
+    """Single assumed symbol shared by program and target expressions."""
+    return sympy.Symbol(var_name, real=True)
+
+
+def _unify_symbols(expr: Any, var_name: str) -> Any:
+    """Rewrite every same-named free symbol to the single assumed symbol."""
+    if expr is None:
+        return None
+    x = _unified_symbol(var_name)
+    try:
+        mapping = {s: x for s in expr.free_symbols if s.name == var_name}
+    except AttributeError:
+        return expr
+    return expr.xreplace(mapping) if mapping else expr
+
+
 def program_to_sympy(
     program: np.ndarray,
     const_bank: np.ndarray | None = None,
@@ -247,7 +283,7 @@ def program_to_sympy(
     """Build a simplified SymPy expression from bytecode, constants, and linear head."""
     if not _HAS_SYMPY:
         return None
-    x = sympy.Symbol(var_name, real=True)
+    x = _unified_symbol(var_name)
     regs = [sympy.Integer(0)] * 8
     regs[0] = x
     bank = const_bank if const_bank is not None else CONST_BANK
@@ -263,9 +299,7 @@ def program_to_sympy(
         if op == 0x0F:  # CSEL: ra + const[b & 0xF]
             b_idx = int(b_raw) & 0x0F
             c_val = bank[b_idx] if b_idx < len(bank) else 0.0
-            c_val_f = float(c_val)
-            c_sym = sympy.Rational(int(c_val_f)) if c_val_f.is_integer() else sympy.Float(c_val_f)
-            regs[dst] = ra + c_sym
+            regs[dst] = ra + _exact_constant(float(c_val))
             continue
 
         b = int(b_raw)
@@ -306,9 +340,7 @@ def program_to_sympy(
     out = regs[7]
     if linear_head != (1.0, 0.0):
         w1, w0 = linear_head
-        w1_sym = sympy.Rational(int(w1)) if float(w1).is_integer() else sympy.Float(w1)
-        w0_sym = sympy.Rational(int(w0)) if float(w0).is_integer() else sympy.Float(w0)
-        out = w1_sym * out + w0_sym
+        out = _exact_constant(float(w1)) * out + _exact_constant(float(w0))
 
     try:
         return sympy.simplify(out)
@@ -316,15 +348,36 @@ def program_to_sympy(
         return out
 
 
-def check_symbolic_equivalence(
+try:
+    _POLY_ERRORS: tuple[type, ...] = (
+        TypeError,
+        ValueError,
+        AttributeError,
+        ArithmeticError,
+        sympy.PolificationFailed,
+    )
+except AttributeError:
+    _POLY_ERRORS = (TypeError, ValueError, AttributeError, ArithmeticError)
+
+
+def check_exact_identity(
     candidate_expr: Any,
     ground_truth: str | Any,
     var_name: str = "x",
+    domain: tuple[float, float] | None = None,
 ) -> tuple[bool, str]:
-    """Test symbolic equivalence between simplified candidate expression and ground truth."""
+    """Prove or reject exact identity with unified symbols and an explicit domain.
+
+    Exactness requires exact integer/rational arithmetic (no Float coefficients,
+    no transcendental operators) with an identically zero numerator, plus no
+    poles inside the declared domain (or anywhere real when domain is None).
+    Low numeric error never promotes to exact: failures return reasons that
+    keep the caller on numerical evidence.
+    """
     if not _HAS_SYMPY or candidate_expr is None:
         return False, "sympy_unavailable"
-    x = sympy.Symbol(var_name, real=True)
+    x = _unified_symbol(var_name)
+    cand = _unify_symbols(candidate_expr, var_name)
     if isinstance(ground_truth, str):
         if ground_truth == "x2_3x_7":
             target = x**2 + 3 * x + 7
@@ -334,19 +387,60 @@ def check_symbolic_equivalence(
             target = x + 1
         else:
             try:
-                target = sympy.sympify(ground_truth)
+                target = sympy.sympify(ground_truth, locals={var_name: x})
             except (TypeError, ValueError, AttributeError, sympy.SympifyError) as e:
                 return False, f"cannot_parse_ground_truth: {e}"
     else:
-        target = ground_truth
-
+        target = _unify_symbols(ground_truth, var_name)
     try:
-        diff = sympy.simplify(candidate_expr - target)
-        if diff == 0:
-            return True, "exact_symbolic_equivalence"
-        return False, f"residual: {diff}"
+        cand = sympy.sympify(cand)
+        target = sympy.sympify(target)
+    except (TypeError, ValueError, AttributeError, sympy.SympifyError) as e:
+        return False, f"cannot_normalize_expressions: {e}"
+    for side in (cand, target):
+        if side.has(sympy.nan, sympy.zoo, sympy.oo, -sympy.oo):
+            return False, "undefined_expression: zero denominator, invalid domain or overflow"
+    try:
+        if cand.has(sympy.Float) or target.has(sympy.Float):
+            return False, "inexact_coefficients: Float present; numerical evidence only"
+        non_rational = (sympy.sin, sympy.cos, sympy.exp, sympy.log, sympy.Abs, sympy.Min, sympy.Max)
+        if cand.has(*non_rational) or target.has(*non_rational):
+            return False, "non_rational_operators: exact identity not decidable here"
+        diff = sympy.together(sympy.expand(cand - target))
+        num, den = sympy.fraction(diff)
+        if not sympy.Poly(num, x).is_zero:
+            return False, f"nonzero_numerator: {sympy.simplify(diff)}"
+        poles: list[float] = []
+        try:
+            for root in sympy.Poly(den, x).all_roots():
+                if root.is_real:
+                    poles.append(float(root.evalf()))
+        except _POLY_ERRORS:
+            return False, "denominator_not_polynomial: cannot certify pole freedom"
+        if domain is None:
+            if poles:
+                return (
+                    False,
+                    f"poles_on_real_line: {sorted(poles)}; declare an explicit pole-free domain",
+                )
+            return True, "exact_identity_unconditional"
+        lo, hi = domain
+        inside = sorted(p for p in poles if lo <= p <= hi)
+        if inside:
+            return False, f"pole_in_domain: {inside} inside [{lo}, {hi}]"
+        return True, f"exact_identity_on_domain [{lo}, {hi}]"
     except (TypeError, ValueError, AttributeError, ArithmeticError) as e:
-        return False, f"simplification_failed: {e}"
+        return False, f"exact_check_failed: {e}"
+
+
+def check_symbolic_equivalence(
+    candidate_expr: Any,
+    ground_truth: str | Any,
+    var_name: str = "x",
+    domain: tuple[float, float] | None = None,
+) -> tuple[bool, str]:
+    """Test exact symbolic identity between candidate expression and ground truth."""
+    return check_exact_identity(candidate_expr, ground_truth, var_name=var_name, domain=domain)
 
 
 def check_ordinary_math(
@@ -490,8 +584,15 @@ def verify_l2(
     extrap_threshold: float = 1.0,
     divergence_threshold: float = 1e-3,
     domain_str: str = "[-10, 10]",
+    domain: tuple[float, float] | None = None,
 ) -> L2VerificationResult:
-    """Level-2 strict verification protocol on frozen candidate programs."""
+    """Level-2 strict verification protocol on frozen candidate programs.
+
+    Numeric checks (MSE, extrapolation, adversarial) only ever yield
+    numerical evidence. The exact_certificate label additionally requires a
+    unified-symbol exact identity over integers/rationals with no poles in
+    the explicit domain. No training positive is born from tolerance alone.
+    """
     reasons: list[str] = []
 
     bank_f64 = (
@@ -577,7 +678,7 @@ def verify_l2(
         if adv_invalid_rate > 0.0:
             reasons.append("adversarial_invalid_flag")
 
-    # 6. Symbolic equivalence check
+    # 6. Exact identity check (unified symbols, explicit domain)
     sym_expr = program_to_sympy(program, const_bank=bank_f64, linear_head=linear_head)
     sym_str = str(sym_expr) if sym_expr is not None else decode_human(program)
     sym_equiv = False
@@ -586,19 +687,25 @@ def verify_l2(
 
     gt_target = ground_truth_sympy if ground_truth_sympy is not None else ground_truth_formula
     if gt_target is not None and _HAS_SYMPY and sym_expr is not None:
-        eq, detail = check_symbolic_equivalence(sym_expr, gt_target)
+        eq, detail = check_symbolic_equivalence(sym_expr, gt_target, domain=domain)
         if eq:
             sym_equiv = True
-            proof_type = "symbolic_simplification"
-            sym_notes = f"Proved exact algebraic equivalence ({detail})"
+            sym_notes = f"Proved exact identity ({detail})"
         else:
             sym_equiv = False
-            proof_type = "numerical_evidence"
-            sym_notes = f"Symbolic residual exists: {detail}"
+            sym_notes = f"No exact identity: {detail}"
     else:
         sym_notes = "Numerical evidence only (symbolic ground truth not verified)"
 
     passed = len(reasons) == 0
+    # An exact label additionally requires full acceptance: an invalid program
+    # (e.g. rejected by ordinary mathematics) never carries a certificate.
+    if sym_equiv and passed:
+        proof_type = "exact_certificate"
+    else:
+        sym_equiv = sym_equiv and passed
+        proof_type = "numerical_evidence"
+
     decision = "VERIFIED_DISCOVERY" if passed else f"REJECTED: {', '.join(reasons)}"
 
     exported = export_reproducible_candidate(
