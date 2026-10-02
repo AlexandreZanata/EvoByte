@@ -7,6 +7,7 @@ import pytest
 import torch
 
 from evobyte.evolution import EvolutionConfig
+from evobyte.grammar import GrammarResidentEvolution
 from evobyte.resident import (
     GPUResidentEvolution,
     gpu_crossover_single_point,
@@ -154,3 +155,66 @@ def test_gpu_resident_evolution_deterministic_resume(
         assert np.isclose(full_stat["best_mse"], res_stat["best_mse"], rtol=1e-6)
 
     assert torch.equal(final_pop_full, evo_resumed.population)
+
+
+def _p43_fresh_grammar(seed: int, pop_size: int = 16) -> GrammarResidentEvolution:
+    import random as _random
+
+    xs = np.linspace(-3.0, 3.0, 48, dtype=np.float32)
+    ys = xs**2 + 3.0 * xs + 7.0
+    cfg = EvolutionConfig(pop_size=pop_size, elite_k=4, random_inject_p=0.10)
+    _random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    return GrammarResidentEvolution(xs, ys, config=cfg, device=torch.device("cpu"), seed=seed)
+
+
+def test_p43_grammar_resume_matches_uninterrupted(tmp_path) -> None:
+    from evobyte.grammar import rebuild_from_checkpoint
+    from evobyte.resident import state_fingerprint
+
+    straight = _p43_fresh_grammar(7)
+    straight.run(max_generations=10, early_stop_mse=0.0)
+    ref = state_fingerprint(straight)
+
+    part = _p43_fresh_grammar(7)
+    part.run(max_generations=4, early_stop_mse=0.0)
+    ckpt = tmp_path / "grammar-exact.pt"
+    part.save_checkpoint(ckpt)
+
+    resumed = rebuild_from_checkpoint(str(ckpt), device="cpu")
+    resumed.run(max_generations=6, early_stop_mse=0.0)
+    got = state_fingerprint(resumed)
+
+    assert got["generation"] == ref["generation"] == 10
+    assert got["population_sha256"] == ref["population_sha256"]
+    assert got["best_program_sha256"] == ref["best_program_sha256"]
+    assert got["torch_cpu_rng_sha256"] == ref["torch_cpu_rng_sha256"]
+    assert got["numpy_rng_sha256"] == ref["numpy_rng_sha256"]
+    assert got["counters"] == ref["counters"]
+
+
+def test_p43_checkpoint_refusals_are_explicit(tmp_path) -> None:
+    from evobyte.grammar import rebuild_from_checkpoint
+    from evobyte.resident import IncompatibleCheckpointError
+
+    evo = _p43_fresh_grammar(11)
+    evo.run(max_generations=2, early_stop_mse=0.0)
+    good = tmp_path / "good.pt"
+    evo.save_checkpoint(good)
+
+    raw = good.read_bytes()
+    trunc = tmp_path / "trunc.pt"
+    trunc.write_bytes(raw[: len(raw) // 2])
+    with pytest.raises(IncompatibleCheckpointError, match="truncated_or_unreadable"):
+        rebuild_from_checkpoint(str(trunc), device="cpu")
+
+    legacy = tmp_path / "legacy.pt"
+    torch.save({"generation": 1}, legacy)
+    with pytest.raises(IncompatibleCheckpointError, match="legacy_or_foreign"):
+        rebuild_from_checkpoint(str(legacy), device="cpu")
+
+    with pytest.raises(IncompatibleCheckpointError, match="version_mismatch"):
+        rebuild_from_checkpoint(str(good), device="cpu", expected={"torch_version": "0.0.0"})
+    with pytest.raises(IncompatibleCheckpointError, match="config_mismatch"):
+        rebuild_from_checkpoint(str(good), device="cpu", expected={"config": {"pop_size": 9999}})

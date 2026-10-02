@@ -1,0 +1,10 @@
+{
+  "device": "cpu",
+  "engine": "GrammarResidentEvolution",
+  "formula": "x**2 + 3*x + 7",
+  "generations": {"restore_at": 40, "resumed": 60, "total": 100},
+  "note": "Complete frozen configuration. Continuation runs in a fresh OS process; wall-clock is recorded, never an equality criterion. Same pinned environment required; cross-GPU/version equality is not promised. No TBD values.",
+  "phase": "P43",
+  "pop_size": 32,
+  "seed": 7
+}
