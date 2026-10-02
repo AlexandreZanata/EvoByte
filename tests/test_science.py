@@ -133,7 +133,18 @@ def test_science_matrix_smoke():
 
 
 def test_p40_acceptance_registry_rejects_unknown_phases():
-    assert ACCEPTANCE_PHASES == ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47", "P48")
+    assert ACCEPTANCE_PHASES == (
+        "P40",
+        "P41",
+        "P42",
+        "P43",
+        "P44",
+        "P45",
+        "P46",
+        "P47",
+        "P48",
+        "P49",
+    )
     import subprocess as _sp
 
     proc = _sp.run(
@@ -141,7 +152,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P49",
+            "P50",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -153,7 +164,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P49'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P50'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -474,3 +485,16 @@ def test_p47_nomination_rejects_tampering_and_open_test(tmp_path):
     assert report["verdict"] == "REJECTED"
     assert any("frozen hash mismatch" in e for e in report["errors"])
     assert any("pending human review" in e for e in report["errors"])
+
+
+def test_p49_compact_audit_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p49_compact_audit
+
+    out_p = tmp_path / "p49-acceptance.json"
+    report = run_p49_compact_audit("experiments/p49-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P49"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert all(f["ok"] for f in report["findings"])
+    assert report["counters"]["reconstructed"] == report["counters"]["reconstructed_total"] > 0
+    assert "grammar-defined only" in report["coverage"]

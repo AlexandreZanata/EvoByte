@@ -1,8 +1,12 @@
 # P49 — Congelar uma representação compacta limitada
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P48, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p49-compact-typed-candidates`.
+**Resultado:** ACCEPTED — perfil compacto congelado sobre o codec v0 (sem
+bump, sem fork, sem ADR: condição não acionada); round-trip 64B, refs
+inválidas e versão desconhecida rejeitadas; 4/4 positivos P35 reconstruídos
+como o mesmo objeto certificado; cobertura anunciada só da gramática.
 
 ## Objetivo e escopo
 
