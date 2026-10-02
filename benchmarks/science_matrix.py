@@ -675,7 +675,289 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44")
+
+
+def _p44_profile_components(evo: Any, iters: int) -> dict[str, Any]:
+    """Time generation/mutation/execution/selection sections with device sync."""
+    import torch as _torch
+
+    from evobyte.grammar import grammar_mutate_batch_torch, sample_grammar_batch
+    from evobyte.resident import (
+        gpu_crossover_single_point,
+        gpu_tournament_selection,
+    )
+    from evobyte.vm_torch import execute_population_torch
+
+    dev = evo.device
+    is_cuda = dev.type == "cuda" and _torch.cuda.is_available()
+
+    def _sync() -> None:
+        if is_cuda:
+            _torch.cuda.synchronize(dev)
+
+    def _timed(fn: Any) -> float:
+        _sync()
+        t0 = time.perf_counter()
+        for _ in range(iters):
+            fn()
+        _sync()
+        return (time.perf_counter() - t0) / iters
+
+    pop = evo.population
+    cfg = evo.config
+    fit = _torch.rand(pop.shape[0], device=dev)
+    t_gen = _timed(lambda: sample_grammar_batch(pop.shape[0], device=dev, seed=1).to(dev))
+    t_mut = _timed(lambda: grammar_mutate_batch_torch(pop, device=dev, p_mut=cfg.gene_mut_p))
+    t_exe = _timed(lambda: execute_population_torch(pop, evo.xs, device=dev, buffer=evo.vm_buffer))
+
+    def _select() -> None:
+        _sfit, sidx = _torch.sort(fit)
+        spop = pop[sidx]
+        winners = gpu_tournament_selection(spop, _sfit, pop.shape[0] // 2, 4)
+        gpu_crossover_single_point(winners, winners, crossover_p=0.4)
+
+    t_sel = _timed(_select)
+    _sync()
+    t_step_0 = time.perf_counter()
+    for _ in range(iters):
+        evo.step()
+    _sync()
+    t_step = (time.perf_counter() - t_step_0) / iters
+    total = t_gen + t_mut + t_exe + t_sel
+    return {
+        "iters": iters,
+        "mean_ms": {
+            "generation": t_gen * 1000.0,
+            "mutation": t_mut * 1000.0,
+            "execution": t_exe * 1000.0,
+            "selection": t_sel * 1000.0,
+            "full_step": t_step * 1000.0,
+        },
+        "share": (
+            {
+                k: v / total
+                for k, v in {
+                    "generation": t_gen,
+                    "mutation": t_mut,
+                    "execution": t_exe,
+                    "selection": t_sel,
+                }.items()
+            }
+            if total > 0
+            else {}
+        ),
+    }
+
+
+def run_p44_resident_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P44 audit: resident torch mutation with per-backend determinism and profile."""
+    import random as _random
+    import unittest.mock as _mock
+
+    import numpy as _np
+    import torch as _torch
+
+    from evobyte.evolution import EvolutionConfig
+    from evobyte.grammar import (
+        GrammarResidentEvolution,
+        batch_is_valid_torch,
+        grammar_mutate_batch,
+        grammar_mutate_batch_torch,
+        sample_grammar_batch,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.resident import state_fingerprint
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P44":
+        raise ValueError(f"Config {cfg_p} is not a P44 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    seed = int(config.get("seed", 7))
+    pop_size = int(config.get("pop_size", 64))
+    n_gens = int(config.get("determinism_gens", 30))
+    profile_iters = int(config.get("profile_iters", 25))
+
+    import sympy as _sympy
+
+    _x = _sympy.Symbol("x")
+    _fn = _sympy.lambdify(
+        _x, _sympy.sympify(config.get("formula", "x**2 + 3*x + 7")), modules=["numpy"]
+    )
+    xs = _np.linspace(-3.0, 3.0, 48, dtype=_np.float32)
+    ys = _np.asarray(_fn(xs), dtype=_np.float32)
+
+    print("=" * 115)
+    print("P44 RESIDENT-GRAMMAR AUDIT (torch batch mutation; no host round-trip)")
+    print("=" * 115)
+
+    def _fresh(dev: _torch.device) -> GrammarResidentEvolution:
+        _random.seed(seed)
+        _np.random.seed(seed)
+        _torch.manual_seed(seed)
+        if dev.type == "cuda" and _torch.cuda.is_available():
+            _torch.cuda.manual_seed_all(seed)
+        cfg = EvolutionConfig(pop_size=pop_size, elite_k=4, random_inject_p=0.10)
+        return GrammarResidentEvolution(xs, ys, config=cfg, device=dev, seed=seed)
+
+    # Global-RNG engines require a reseed between consecutive runs: each arm is
+    # built (reseeded) immediately before its own run, never batched upfront.
+    determinism: dict[str, Any] = {}
+    for dev in (_torch.device("cpu"), _torch.device("cuda")):
+        if dev.type == "cuda" and not _torch.cuda.is_available():
+            determinism["cuda"] = {"measured": False, "reason": "no CUDA device"}
+            continue
+        first = _fresh(dev)
+        first.run(max_generations=n_gens, early_stop_mse=0.0)
+        fa = state_fingerprint(first)
+        second = _fresh(dev)
+        second.run(max_generations=n_gens, early_stop_mse=0.0)
+        fb = state_fingerprint(second)
+        keys = (
+            "population_sha256",
+            "best_program_sha256",
+            "torch_cpu_rng_sha256",
+            "numpy_rng_sha256",
+        )
+        determinism[dev.type] = {"measured": True, "equal": all(fa[k] == fb[k] for k in keys)}
+
+    # Semantic conformance: torch batch vs deterministic CPU reference.
+    dev_cpu = _torch.device("cpu")
+    _torch.manual_seed(seed)
+    ref_pop = sample_grammar_batch(128, device=dev_cpu, seed=seed)
+    _torch.manual_seed(seed)
+    torch_mut = grammar_mutate_batch_torch(ref_pop, device=dev_cpu, p_mut=0.30)
+    py_mut = grammar_mutate_batch(ref_pop, device=dev_cpu, p_mut=0.30, seed=seed)
+    gate_torch = batch_is_valid_torch(torch_mut).cpu().numpy()
+    w0 = ref_pop.cpu().numpy().astype(_np.int64)
+    w1 = torch_mut.cpu().numpy().astype(_np.int64)
+    conformance = {
+        "torch_all_valid": bool(gate_torch.all()),
+        "python_reference_ran": py_mut.shape == ref_pop.shape,
+        "locality_ok": bool(((w0 != w1) & ~_np.isin(w0 & 0xFF, [1, 2, 15])).sum() == 0),
+        "fields_in_range": bool((((w1 >> 8) & 0xFF) < 8).all() and (((w1 >> 16) & 0xFF) < 8).all()),
+    }
+
+    # Invalidity rejected through the device gate.
+    bad = _np.zeros((3, 16), dtype=_np.uint32)
+    bad[1, 0] = _np.uint32(0x01 | (9 << 8))
+    bad[2, :6] = _np.uint32(
+        [
+            0x01 | (7 << 8),
+            0x04 | (7 << 8),
+            0x07 | (7 << 8),
+            0x08 | (7 << 8),
+            0x09 | (7 << 8),
+            0x0B | (7 << 8),
+        ]
+    )
+    gate_bad = batch_is_valid_torch(_torch.from_numpy(bad.astype(_np.int64)).to(dev_cpu))
+    flags = gate_bad.cpu().numpy().tolist()
+    invalidity = {"gate_flags": flags, "rejected": flags == [False, False, False]}
+
+    # No full-population host transfer inside the resident loop.
+    transfers: dict[str, Any] = {}
+    for dev in (_torch.device("cpu"), _torch.device("cuda")):
+        if dev.type == "cuda" and not _torch.cuda.is_available():
+            transfers["cuda"] = {"checked": False, "reason": "no CUDA device"}
+            continue
+        evo = _fresh(dev)
+        try:
+            with (
+                _mock.patch.object(
+                    _torch.Tensor, "cpu", side_effect=AssertionError("host transfer")
+                ),
+                _mock.patch.object(
+                    _torch.Tensor, "numpy", side_effect=AssertionError("host transfer")
+                ),
+            ):
+                for _ in range(5):
+                    evo.step()
+            transfers[dev.type] = {"checked": True, "host_transfer_calls": 0}
+        except AssertionError as exc:
+            transfers[dev.type] = {"checked": True, "host_transfer_calls": 1, "error": str(exc)}
+
+    cuda_available = _torch.cuda.is_available()
+    profile: dict[str, Any] = {"measured": False}
+    if cuda_available:
+        evo_cuda = _fresh(_torch.device("cuda"))
+        profile = {"measured": True, **_p44_profile_components(evo_cuda, profile_iters)}
+
+    resident_ok = (
+        determinism.get("cuda", {}).get("equal", False)
+        and transfers.get("cuda", {}).get("host_transfer_calls", 1) == 0
+        and profile.get("measured", False)
+    )
+    checks_ok = (
+        determinism.get("cpu", {}).get("equal", False)
+        and all(conformance.values())
+        and invalidity["rejected"]
+        and transfers.get("cpu", {}).get("host_transfer_calls", 1) == 0
+    )
+    if not cuda_available:
+        verdict = "NOT_MEASURED"
+    elif resident_ok and checks_ok:
+        verdict = "ACCEPTED"
+    else:
+        verdict = "MIXED"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p44_config": config_sha[:16]},
+        config={"acceptance_phase": "P44"},
+    )
+    report = {
+        "phase": "P44",
+        "verdict": verdict,
+        "claim_scope": "resident torch mutation; per-backend determinism; no host round-trip",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "determinism": determinism,
+        "conformance": conformance,
+        "invalidity": invalidity,
+        "host_transfers": transfers,
+        "profile_cuda": profile,
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P44",
+        },
+        "seeds_rng": f"fixed seed {seed}; cross-backend bit equality not required (reason: distinct RNG streams)",
+        "budgets": f"fixed generation counts ({n_gens} determinism, {profile_iters} profile iters); "
+        "wall-clock recorded, never an equality criterion",
+        "counters": {"determinism_backends": 2, "profile_components": 4},
+        "limitations": [
+            "Canonical form not guaranteed by the torch path; validity and field semantics preserved.",
+            "Injection sampling stays a CPU-built batch upload (generation, profiled separately).",
+            "Scalar logging syncs (O(1) bytes) remain; no population-sized host transfers in the loop.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P44 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p43_resume_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -1741,6 +2023,8 @@ def main() -> int:
             run_p42_exact_audit(args.config, args.output)
         elif args.acceptance_phase == "P43":
             run_p43_resume_audit(args.config, args.output)
+        elif args.acceptance_phase == "P44":
+            run_p44_resident_audit(args.config, args.output)
         return 0
 
     seeds = (

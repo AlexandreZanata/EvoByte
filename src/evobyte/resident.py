@@ -264,6 +264,13 @@ class GPUResidentEvolution:
         if self.device.type == "cuda":
             torch.cuda.synchronize(self.device)
 
+    def sync_best_to_host(self) -> None:
+        """Materialize the tracked best program on host (off-cycle only).
+
+        The base engine tracks best on host already, so this is a no-op;
+        resident subclasses defer host materialization until this call.
+        """
+
     def step(self) -> dict[str, Any]:
         """Execute one generation cycle resident on GPU."""
         self.generation += 1
@@ -450,6 +457,7 @@ class GPUResidentEvolution:
 
         total_time = time.perf_counter() - t_total_0
         total_evals = len(history) * self.config.pop_size
+        self.sync_best_to_host()
 
         return {
             "best_program": self.best_program,
@@ -497,6 +505,7 @@ class GPUResidentEvolution:
     def save_checkpoint(self, path: str | Path) -> None:
         """Save exact resumable state: population, fitness, elites, constants,
         generation, counters, config and all RNG states (P43)."""
+        self.sync_best_to_host()
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
         elites = self._elite_snapshot()
@@ -593,6 +602,9 @@ class GPUResidentEvolution:
 
 def state_fingerprint(evo: Any) -> dict[str, Any]:
     """Deterministic fingerprint of evolution state for resume-equality checks."""
+    sync = getattr(evo, "sync_best_to_host", None)
+    if callable(sync):
+        sync()
     pop = np.ascontiguousarray(evo.population.cpu().numpy().astype(np.uint32))
     prog = np.ascontiguousarray(np.asarray(evo.best_program, dtype=np.uint32))
     cpu_rng = torch.get_rng_state().cpu().numpy().tobytes()
