@@ -11,16 +11,21 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 
 from benchmarks.science_matrix import (
+    ACCEPTANCE_PHASES,
     PREREGISTERED_SCIENCE_SPECS,
+    _p40_check_manifest,
+    _p40_has_path,
     check_adversarial_domain,
     check_non_degeneracy,
     check_units_scaling,
     compute_r2,
     generate_scientific_splits,
+    run_p40_evidence_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
 from evobyte.bytecode import encode_instr, nop_program
+from evobyte.provenance import verify_manifest_integrity, write_manifest
 
 
 def test_preregistered_specs():
@@ -125,3 +130,112 @@ def test_science_matrix_smoke():
     res = run_science_matrix(preregistered_only=True, seeds=[42], max_trial_sec=0.5)
     assert res["status"] == "PASS"
     assert len(res["datasets"]) >= 5
+
+
+def test_p40_acceptance_registry_rejects_unknown_phases():
+    assert ACCEPTANCE_PHASES == ("P40",)
+    import subprocess as _sp
+
+    proc = _sp.run(
+        [
+            sys.executable,
+            "benchmarks/science_matrix.py",
+            "--acceptance-phase",
+            "P41",
+            "--config",
+            "experiments/p40-config.json",
+            "--output",
+            "/tmp/evobyte-p40-unknown.json",
+        ],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=str(Path(__file__).resolve().parents[1]),
+    )
+    assert proc.returncode != 0
+    assert "Unknown acceptance phase 'P41'" in (proc.stdout + proc.stderr)
+
+
+def test_p40_path_helper_quantifiers():
+    doc = {"instances": [{"certificate": {"h": 1}}, {"note": "miss"}]}
+    assert _p40_has_path(doc, "instances[?certificate].certificate.h") is True
+    assert _p40_has_path(doc, "instances[].certificate.h") is False
+    assert _p40_has_path([{"a": 1}], "a") is True
+    assert _p40_has_path([], "a") is False
+
+
+def test_p40_manifest_integrity_detects_tampering(tmp_path):
+    raw = tmp_path / "raw.json"
+    raw.write_text('{"trials": []}')
+    manifest_p = tmp_path / "m.json"
+    write_manifest(manifest_p, {"phase": "P40-test", "elapsed_sec": 1.0}, {str(raw): "x"})
+    # Fix the recorded hash to the true value, then tamper the raw file.
+    import hashlib as _hl
+    import json as _json
+
+    doc = _json.loads(manifest_p.read_text())
+    doc["raw_artifacts"] = [{"path": str(raw), "sha256": _hl.sha256(raw.read_bytes()).hexdigest()}]
+    blob = _json.dumps(
+        {k: v for k, v in doc.items() if k != "manifest_sha256"}, sort_keys=True, default=str
+    ).encode()
+    doc["manifest_sha256"] = _hl.sha256(blob).hexdigest()
+    manifest_p.write_text(_json.dumps(doc, indent=2, sort_keys=True))
+    assert verify_manifest_integrity(manifest_p)["ok"] is True
+    with open(raw, "a", encoding="utf-8") as f:
+        f.write(" ")
+    tampered = verify_manifest_integrity(manifest_p)
+    assert tampered["ok"] is False
+    assert any("raw_hash_mismatch" in e for e in tampered["errors"])
+    # Tampered seal is also rejected.
+    doc["elapsed_sec"] = 2.0
+    manifest_p.write_text(_json.dumps(doc, indent=2, sort_keys=True))
+    resealed = verify_manifest_integrity(manifest_p)
+    assert resealed["ok"] is False
+    assert "manifest_seal_mismatch" in resealed["errors"]
+
+
+def test_p40_manifest_check_rejects_duration_divergence(tmp_path):
+    import json as _json
+
+    raw = tmp_path / "raw.json"
+    raw.write_text("{}")
+    manifest_p = tmp_path / "m.json"
+    import hashlib as _hl
+
+    doc = {
+        "phase": "P40-test",
+        "status": "PASS",
+        "elapsed_sec": 0.0,
+        "provenance": {"clean_tree": True},
+        "raw_artifacts": [{"path": str(raw), "sha256": _hl.sha256(raw.read_bytes()).hexdigest()}],
+    }
+    blob = _json.dumps(
+        {k: v for k, v in doc.items() if k != "manifest_sha256"}, sort_keys=True, default=str
+    ).encode()
+    doc["manifest_sha256"] = _hl.sha256(blob).hexdigest()
+    manifest_p.write_text(_json.dumps(doc, indent=2, sort_keys=True))
+    finding = _p40_check_manifest(
+        {
+            "path": str(manifest_p),
+            "status_ok": ["PASS"],
+            "required_fields": ["provenance"],
+            "certificate_evidence": [],
+            "budgets": {"scale": 1.0},
+        }
+    )
+    assert finding["verdict"] == "rejected"
+    assert any("elapsed_sec" in n for n in finding["notes"])
+
+
+def test_p40_evidence_audit_smoke(tmp_path):
+    out_p = tmp_path / "p40-acceptance.json"
+    report = run_p40_evidence_audit("experiments/p40-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P40"
+    assert report["verdict"] in ("ACCEPTED", "MIXED")
+    assert report["claim_scope"].startswith("P33-P39")
+    assert len(report["manifests"]) == 7
+    assert len(report["claims"]) == 13
+    assert report["base_reconciliation"]["merges_this_cycle"] is False
+    assert report["resolved_config"]["config_path"] == "experiments/p40-config.json"
+    assert "deterministic manifest inspection" in report["seeds_rng"]

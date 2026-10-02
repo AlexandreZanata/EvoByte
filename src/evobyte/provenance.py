@@ -281,6 +281,62 @@ def write_manifest(path: str | Path, manifest: dict, raw_artifacts: dict[str, st
     return checksummed
 
 
+def verify_manifest_integrity(path: str | Path) -> dict:
+    """Reverify a checksummed manifest: seal hash plus every raw artifact hash.
+
+    Raw paths are resolved against the repo root when relative. Returns a
+    finding dict; ``ok`` is True only when the seal and all raw hashes match.
+    """
+    result: dict = {"manifest": str(path), "ok": False, "errors": [], "raw": []}
+    try:
+        with open(path, encoding="utf-8") as f:
+            stored = json.load(f)
+    except (OSError, ValueError) as exc:
+        result["errors"].append(f"unreadable_manifest: {exc}")
+        return result
+    recorded = stored.get("manifest_sha256")
+    if not recorded:
+        result["errors"].append("missing_manifest_sha256")
+        return result
+    recomputed = hashlib.sha256(
+        json.dumps(
+            {k: v for k, v in stored.items() if k != "manifest_sha256"},
+            sort_keys=True,
+            default=str,
+        ).encode()
+    ).hexdigest()
+    seal_ok = recomputed == recorded
+    result["seal_ok"] = seal_ok
+    if not seal_ok:
+        result["errors"].append("manifest_seal_mismatch")
+    for entry in stored.get("raw_artifacts", []):
+        ref = entry.get("path", "")
+        want = entry.get("sha256", "")
+        cand = Path(ref)
+        if not cand.is_absolute():
+            cand = _REPO_ROOT / ref
+        item: dict = {"path": ref, "ok": False, "size": 0}
+        if not cand.exists():
+            item["error"] = "missing_raw_file"
+        else:
+            try:
+                got = hash_file(cand)
+            except OSError as exc:
+                item["error"] = f"unreadable_raw_file: {exc}"
+            else:
+                item["size"] = cand.stat().st_size
+                item["sha256"] = got
+                if got == want:
+                    item["ok"] = True
+                else:
+                    item["error"] = "raw_hash_mismatch"
+        if not item["ok"] and "error" in item:
+            result["errors"].append(f"{ref}: {item['error']}")
+        result["raw"].append(item)
+    result["ok"] = seal_ok and all(r["ok"] for r in result["raw"])
+    return result
+
+
 def parse_budget_duration(budget_str: str) -> float:
     """Parse budget string like '10s', '1m', '10m', '1h', '30' into float seconds."""
     s = str(budget_str).strip().lower()

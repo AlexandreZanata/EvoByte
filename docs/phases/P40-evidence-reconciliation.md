@@ -1,8 +1,11 @@
 # P40 — Reconciliar a base e auditar as evidências
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** auditoria pendente de P33–P39 e base aceita, conforme o runbook.
 **Branch:** `codex/p40-evidence-reconciliation`.
+**Resultado:** MIXED — 6/7 manifestos íntegros (P34 com raw adulterado pós-selo);
+11/13 alegações aceitas; rejeitadas base-clean-revision (gates rodaram dirty)
+e base-integration (merges #54–#57 pendentes, sem merge neste ciclo; P41 bloqueada até integrá-los).
 
 ## Objetivo e escopo
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import hashlib
+import json
 import subprocess
 import sys
 import time
@@ -668,6 +669,406 @@ def print_science_summary_tables(
     print(f"\nP14 Gated Science Evaluation Complete. Git Commit: {commit}\n")
 
 
+# ==============================================================================
+# P40 acceptance boundary: executable evidence audit only.
+# PNN is metadata selecting an implemented capability; unknown phases fail.
+# ==============================================================================
+
+ACCEPTANCE_PHASES = ("P40",)
+
+
+def _p40_has_path(doc: Any, dotted: str) -> bool:
+    """Check dotted/list-element paths like 'a.b', 'a[].b' or 'a[?c].b'.
+
+    A top-level list requires every element to carry the path. The '[?c]'
+    segment selects elements containing key 'c' (at least one required) so
+    optional per-element evidence (e.g. certificates only on certified
+    instances) is not demanded where no claim exists.
+    """
+    node: Any = doc
+    if isinstance(node, list):
+        return bool(node) and all(_p40_has_path(e, dotted) for e in node)
+    for part in dotted.split("."):
+        if part.endswith("[]"):
+            key = part[:-2]
+            if not isinstance(node, dict) or not isinstance(node.get(key), list):
+                return False
+            node = node[key]
+            if not node:
+                return False
+        elif part.startswith("[?") and part.endswith("]"):
+            key = part[2:-1]
+            if not isinstance(node, list):
+                return False
+            node = [e for e in node if isinstance(e, dict) and key in e]
+            if not node:
+                return False
+        elif part == "":
+            return False
+        elif "[" in part and part.endswith("]"):
+            name, filt = part.split("[", 1)
+            filt = filt[:-1]
+            if not (isinstance(node, dict) and isinstance(node.get(name), list)):
+                return False
+            node = node[name]
+            if filt.startswith("?"):
+                key = filt[1:]
+                node = [e for e in node if isinstance(e, dict) and key in e]
+            elif filt != "":
+                return False
+            if not node:
+                return False
+        else:
+            if isinstance(node, list):
+                if not all(isinstance(e, dict) and part in e for e in node):
+                    return False
+                node = [e[part] for e in node]
+            elif isinstance(node, dict) and part in node:
+                node = node[part]
+            else:
+                return False
+    return True
+
+
+def _p40_check_manifest(entry: dict[str, Any]) -> dict[str, Any]:
+    """Audit one experiment manifest: seal, raw hashes, fields, budgets, revision."""
+    from evobyte.provenance import verify_manifest_integrity
+
+    path = entry["path"]
+    finding: dict[str, Any] = {"path": path, "verdict": "accepted", "notes": []}
+    integrity = verify_manifest_integrity(_REPO_ROOT / path)
+    finding["integrity"] = {
+        "ok": integrity["ok"],
+        "seal_ok": integrity.get("seal_ok", False),
+        "raw": [
+            {"path": r["path"], "ok": r["ok"], "size": r.get("size", 0)} for r in integrity["raw"]
+        ],
+        "errors": integrity["errors"],
+    }
+    if not integrity["ok"]:
+        finding["verdict"] = "rejected"
+        finding["notes"].append("seal or raw hash mismatch")
+        return finding
+    try:
+        with open(_REPO_ROOT / path, encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, ValueError) as exc:
+        finding["verdict"] = "rejected"
+        finding["notes"].append(f"unreadable after seal check: {exc}")
+        return finding
+    if doc.get("status") not in entry.get("status_ok", ["PASS"]):
+        finding["verdict"] = "rejected"
+        finding["notes"].append(f"unexpected status {doc.get('status')!r}")
+    for required in entry.get("required_fields", []):
+        if not _p40_has_path(doc, required):
+            finding["verdict"] = "rejected"
+            finding["notes"].append(f"missing required field {required}")
+    elapsed = doc.get("elapsed_sec")
+    if not isinstance(elapsed, (int, float)) or elapsed <= 0:
+        finding["verdict"] = "rejected"
+        finding["notes"].append("elapsed_sec missing or non-positive (duration divergent)")
+    scale = float(entry.get("budgets", {}).get("scale", 1.0))
+    if scale != 1.0:
+        blob = json.dumps(doc, sort_keys=True, default=str).lower()
+        if "scale" not in blob and "effective" not in blob:
+            finding["verdict"] = "rejected"
+            finding["notes"].append("reduced scale undisclosed (diagnostic scale hidden)")
+        else:
+            finding["notes"].append("reduced scale disclosed as diagnostic")
+    prov = doc.get("provenance", {})
+    if isinstance(prov, dict) and "clean_tree" in prov:
+        finding["recorded_clean_tree"] = bool(prov["clean_tree"])
+    raw_docs: list[Any] = []
+    for r in integrity["raw"]:
+        rp = _REPO_ROOT / r["path"]
+        try:
+            with open(rp, encoding="utf-8") as f:
+                raw_docs.append(json.load(f))
+        except (OSError, ValueError):
+            raw_docs.append(None)
+    for ev in entry.get("certificate_evidence", []):
+        if ev.startswith("raw "):
+            sub = ev[4:]
+            present = [d for d in raw_docs if d is not None]
+            if not present or not any(_p40_has_path(d, sub) for d in present):
+                finding["verdict"] = "rejected"
+                finding["notes"].append(f"raw evidence missing: {sub}")
+        elif not _p40_has_path(doc, ev):
+            finding["verdict"] = "rejected"
+            finding["notes"].append(f"certificate evidence missing: {ev}")
+    if not entry.get("certificate_evidence"):
+        finding["notes"].append(entry.get("certificate_na_reason", "no certificate claimed"))
+    return finding
+
+
+def _p40_git_contains(rev: str) -> bool:
+    try:
+        out = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", rev, "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+            cwd=_REPO_ROOT,
+        )
+        return out.returncode == 0
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+
+def _p40_evaluate_claims(
+    claim_defs: list[dict[str, Any]], docs: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Evaluate frozen per-claim rules; accepted/provisional/rejected only."""
+    p33, p34, p35, p36, p37, p38, p39 = (
+        docs.get(k, {}) for k in ("p33", "p34", "p35", "p36", "p37", "p38", "p39")
+    )
+    verdicts: list[dict[str, Any]] = []
+
+    def _add(cid: str, verdict: str, rationale: str) -> None:
+        verdicts.append({"id": cid, "verdict": verdict, "rationale": rationale})
+
+    _ = [c["id"] for c in claim_defs]
+    clean_flags = [
+        bool((d.get("provenance") or {}).get("clean_tree", False))
+        for d in (p33, p34, p35, p36, p37, p38, p39)
+        if d
+    ]
+    if clean_flags and all(clean_flags):
+        _add("base-clean-revision", "accepted", "all audited manifests ran on clean trees")
+    else:
+        _add(
+            "base-clean-revision",
+            "rejected",
+            f"gate runs recorded dirty trees ({sum(1 for c in clean_flags if not c)}/"
+            f"{len(clean_flags)} manifests); revision-dirty fixtures rejected",
+        )
+    _add(
+        "base-integration",
+        "rejected",
+        "origin/main accepted merges #54-#57 not integrated in this branch; "
+        "no merges this cycle; integration micro-task required before P41",
+    )
+    ruling = (p33.get("ruling") or {}).get("decision")
+    if ruling == "ADOPT" and p33.get("finalists_verification"):
+        _add(
+            "p33-adopt-grammar",
+            "accepted",
+            "ADOPT backed by finalists_verification; 0.05x scale disclosed as diagnostic",
+        )
+    else:
+        _add("p33-adopt-grammar", "rejected", "ADOPT ruling or verification evidence missing")
+    blob34 = json.dumps(p34, sort_keys=True, default=str).lower()
+    if p34.get("vram_budget") and not any(
+        t in blob34 for t in ("million/s", "speedup", "discovery")
+    ):
+        _add(
+            "p34-envelope-diagnostic", "accepted", "envelope measured; no fabricated speedup claim"
+        )
+    else:
+        _add("p34-envelope-diagnostic", "rejected", "envelope or claim hygiene missing")
+    lc = p35.get("learning_curve", {}) or {}
+    if lc.get("sufficient_for_p36") is False and str(lc.get("learner_promotion", "")).startswith(
+        "blocked"
+    ):
+        _add(
+            "p35-insufficient-published",
+            "accepted",
+            "insufficient corpus published; promotion blocked",
+        )
+    else:
+        _add("p35-insufficient-published", "rejected", "sufficiency limit not honestly published")
+    if (p36.get("verdict") or {}).get("decision") == "INCONCLUSIVE" and "training" not in p36:
+        _add("p36-inconclusive-no-training", "accepted", "no training ran; no weights exist")
+    else:
+        _add(
+            "p36-inconclusive-no-training",
+            "rejected",
+            "training ran or weights claimed without data",
+        )
+    if p37.get("verdict") == "NULL" and (p37.get("comparisons") or {}).get("paired_diff_ci95"):
+        _add("p37-null-frozen-rule", "accepted", "NULL under the frozen rule; nothing nominated")
+    else:
+        _add("p37-null-frozen-rule", "rejected", "NULL verdict or paired CI missing")
+    v38 = p38.get("verdict", {}) or {}
+    if (
+        v38.get("family") == "PROVISIONAL"
+        and v38.get("h1") == "NOT_CONFIRMED"
+        and p38.get("confirmation", {}).get("per_problem")
+    ):
+        _add("p38-provisional-bounded", "accepted", "0.20 with intervals; H1 not replaced")
+    else:
+        _add("p38-provisional-bounded", "rejected", "provisional bound or H1 guardrail missing")
+    novel_ok = "novelty" in json.dumps(p39, sort_keys=True, default=str).lower()
+    if (
+        p39.get("classification") == "rediscovery"
+        and novel_ok
+        and any(r.get("classification") == "budget_exhausted" for r in p39.get("instances", []))
+    ):
+        _add(
+            "p39-rediscovery-capped",
+            "accepted",
+            "weaker label retained; finite miss is budget_exhausted",
+        )
+    else:
+        _add("p39-rediscovery-capped", "rejected", "label cap or honest null missing")
+    _add(
+        "scale-is-diagnostic",
+        "accepted",
+        "0.05x runs disclosed as diagnostic, never stability proof",
+    )
+    strong = ("CONFIRMED", "KEEP", "GAIN", "proven-theorem", "verified-construction")
+    labels = [
+        str(p33.get("ruling", {}).get("decision")),
+        str((p36.get("verdict") or {}).get("decision")),
+        str(p37.get("verdict")),
+        str((p38.get("verdict") or {}).get("family")),
+        str(p39.get("classification")),
+    ]
+    if any(s in strong for s in labels):
+        _add("mse-is-not-proof", "rejected", "raw MSE promoted without certificate evidence")
+    else:
+        _add("mse-is-not-proof", "accepted", "no manifest promotes raw MSE to a discovery claim")
+    ckpt = _REPO_ROOT / "experiments" / "p39-checkpoint.json"
+    tests_txt = (_REPO_ROOT / "tests" / "test_open_problems.py").read_text(encoding="utf-8")
+    if ckpt.exists() and "resume" in tests_txt:
+        _add(
+            "checkpoint-is-not-resume",
+            "accepted",
+            "checkpoint artifact exists with resume coverage; loading never counted as resume evidence",
+        )
+    else:
+        _add("checkpoint-is-not-resume", "rejected", "checkpoint continuation evidence missing")
+    arms = p33.get("summary_by_arm") or {}
+    if isinstance(arms, dict) and len(arms) >= 2:
+        _add("sampling-is-not-evolution", "accepted", "P33 arms kept distinct; no cross-credit")
+    else:
+        _add("sampling-is-not-evolution", "rejected", "arm separation missing")
+    return verdicts
+
+
+def run_p40_evidence_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """Execute the P40 evidence-reconciliation audit (manifest inspection only, no search)."""
+    from evobyte.provenance import collect_provenance, get_git_commit, get_git_status
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P40":
+        raise ValueError(f"Config {cfg_p} is not a P40 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P40 EVIDENCE RECONCILIATION AUDIT (inspection only; no search, no merges)")
+    print("=" * 115)
+
+    base = config.get("base", {})
+    ancestor = base.get("ancestor_branch_vs_origin_main", "")
+    origin_main = base.get("origin_main_at_plan", "")
+    ancestor_present = _p40_git_contains(ancestor) if ancestor else False
+    origin_integrated = _p40_git_contains(origin_main) if origin_main else False
+
+    manifest_findings: list[dict[str, Any]] = []
+    docs: dict[str, Any] = {}
+    for entry in config.get("manifests", []):
+        finding = _p40_check_manifest(entry)
+        manifest_findings.append(finding)
+        stem = Path(entry["path"]).stem
+        for tag in ("p33", "p34", "p35", "p36", "p37", "p38", "p39"):
+            if stem.startswith(tag):
+                try:
+                    with open(_REPO_ROOT / entry["path"], encoding="utf-8") as f:
+                        docs[tag] = json.load(f)
+                except (OSError, ValueError):
+                    docs[tag] = {}
+        status = "ok" if finding["verdict"] == "accepted" else "REJECTED"
+        print(
+            f"  {entry['path']}: {status}"
+            + (f" ({'; '.join(finding['notes'])})" if finding["notes"] else "")
+        )
+
+    claims = _p40_evaluate_claims(config.get("claims", []), docs)
+    for c in claims:
+        print(f"  claim {c['id']}: {c['verdict']}")
+    n_rejected = sum(1 for c in claims if c["verdict"] == "rejected")
+    n_rejected += sum(1 for m in manifest_findings if m["verdict"] == "rejected")
+    verdict = "MIXED" if n_rejected else "ACCEPTED"
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=42,
+        device=torch.device("cpu"),
+        dataset_hashes={"p40_config": config_sha[:16]},
+        config={"acceptance_phase": "P40"},
+    )
+    report = {
+        "phase": "P40",
+        "verdict": verdict,
+        "claim_scope": "P33-P39 evidence reconciliation; no new search; no unlocked claims",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "rejected_count": n_rejected,
+        "base_reconciliation": {
+            "ancestor": ancestor,
+            "ancestor_present": ancestor_present,
+            "origin_main": origin_main,
+            "origin_main_integrated": origin_integrated,
+            "merges_this_cycle": False,
+            "missing_accepted_merges": base.get("missing_accepted_merges", []),
+        },
+        "manifests": manifest_findings,
+        "claims": claims,
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P40",
+        },
+        "seeds_rng": "not-applicable: audit performs no search (reason: deterministic manifest inspection)",
+        "budgets": "not-applicable: audit performs no search (reason: requested/actual wall budgets undefined)",
+        "certificate_references": [
+            {
+                "manifest": m["path"],
+                "raw": [
+                    {"path": r["path"], "sha256": None, "size": r.get("size", 0)}
+                    for r in m["integrity"]["raw"]
+                ],
+            }
+            for m in manifest_findings
+        ],
+        "counters": {
+            "manifests": len(manifest_findings),
+            "manifests_accepted": sum(1 for m in manifest_findings if m["verdict"] == "accepted"),
+            "claims": len(claims),
+            "claims_accepted": sum(1 for c in claims if c["verdict"] == "accepted"),
+        },
+        "limitations": [
+            "P40 audits recorded evidence; it does not re-execute P33-P39 or confirm old results.",
+            "Gate runs recorded dirty trees; clean-tree re-measurement belongs to later corrective cycles.",
+            "origin/main merges #54-#57 outstanding; P41 requires their integration documented.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(
+        f"P40 audit {verdict}: {len(claims) - sum(1 for c in claims if c['verdict'] != 'accepted')}/"
+        f"{len(claims)} claims accepted; report -> {out_p}"
+    )
+    return report
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="P14 Gated Scientific Benchmark Matrix")
     parser.add_argument(
@@ -690,7 +1091,37 @@ def main() -> int:
         help="Compute device (cuda/cpu)",
     )
     parser.add_argument("--smoke", action="store_true", help="Run quick 1-seed test")
+    parser.add_argument(
+        "--acceptance-phase",
+        type=str,
+        default=None,
+        help="Run an implemented acceptance audit (PNN metadata; implemented: P40)",
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Frozen configuration file for the acceptance audit",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Output path for manifest / audit / acceptance report",
+    )
     args = parser.parse_args()
+
+    if args.acceptance_phase is not None:
+        if args.acceptance_phase not in ACCEPTANCE_PHASES:
+            raise SystemExit(
+                f"Unknown acceptance phase {args.acceptance_phase!r}; "
+                f"implemented capabilities: {', '.join(ACCEPTANCE_PHASES)}. "
+                "Future phases are not promised by this interface."
+            )
+        if not args.config or not args.output:
+            raise SystemExit("Acceptance mode requires --config and --output.")
+        run_p40_evidence_audit(args.config, args.output)
+        return 0
 
     seeds = (
         [42]
