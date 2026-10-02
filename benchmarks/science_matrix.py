@@ -677,7 +677,302 @@ def print_science_summary_tables(
 # PNN is metadata selecting an implemented capability; unknown phases fail.
 # ==============================================================================
 
-ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46")
+ACCEPTANCE_PHASES = ("P40", "P41", "P42", "P43", "P44", "P45", "P46", "P47")
+
+
+def _p47_canonical_hash(nomination: dict[str, Any]) -> str:
+    """Frozen hash: sha256 over canonical JSON excluding the frozen block itself."""
+    body = {k: v for k, v in nomination.items() if k != "frozen"}
+    return hashlib.sha256(json.dumps(body, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
+def _p47_need(cond: bool, errors: list[str], message: str) -> None:
+    if not cond:
+        errors.append(message)
+
+
+def run_p47_nomination_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P47 audit: frozen nomination completeness, freeze integrity, sealed final test.
+
+    Technical validation only; the nomination, thresholds and the P46 curation
+    additionally require human mathematical review before P48, which this audit
+    reports as pending and cannot grant.
+    """
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P47":
+        raise ValueError(f"Config {cfg_p} is not a P47 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    nom_p = _REPO_ROOT / config.get("nomination_path", "experiments/p47-nomination.json")
+    p38_p = _REPO_ROOT / config.get("p38_manifest_path", "experiments/p38-confirmation.json")
+
+    print("=" * 115)
+    print("P47 FROZEN-NOMINATION AUDIT (two scopes; final test closed)")
+    print("=" * 115)
+
+    report: dict[str, Any] = {
+        "phase": "P47",
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P47",
+            "nomination_path": str(nom_p),
+        },
+    }
+    try:
+        with open(nom_p, encoding="utf-8") as f:
+            nom = json.load(f)
+    except (OSError, ValueError) as exc:
+        report.update(
+            {"status": "FAIL", "verdict": "REJECTED", "errors": [f"unreadable nomination: {exc}"]}
+        )
+        print(f"P47 REJECTED: unreadable nomination: {exc}")
+        return report
+
+    errors: list[str] = []
+    if nom.get("phase") != "p47-nomination":
+        errors.append("nomination phase marker is wrong")
+    for section in (
+        "scopes",
+        "hypothesis",
+        "controls",
+        "thresholds",
+        "non_claims",
+        "human_review",
+        "frozen",
+    ):
+        _p47_need(section in nom, errors, f"missing top-level section {section}")
+
+    scopes = nom.get("scopes") or {}
+    dev = scopes.get("proposer_development") or {}
+    for required in (
+        "family",
+        "domain",
+        "representation",
+        "certificate",
+        "source",
+        "task_generator",
+        "splits",
+        "success",
+        "baselines",
+        "final_test",
+    ):
+        _p47_need(required in dev, errors, f"scope proposer_development missing {required}")
+    _p47_need(
+        (dev.get("success") or {}).get("per_task") == "exact_certificate",
+        errors,
+        "per-task success must be exact_certificate",
+    )
+    _p47_need(
+        set((dev.get("success") or {}).get("aggregates", []))
+        >= {"certified_success_rate", "median_time_to_certified"},
+        errors,
+        "success aggregates must pin rate and time-to-certified",
+    )
+    _p47_need(
+        (dev.get("success") or {}).get("mse_excluded_as_success") is True,
+        errors,
+        "MSE must be excluded as a success metric",
+    )
+    _p47_need(
+        isinstance(dev.get("baselines"), list) and len(dev["baselines"]) >= 2,
+        errors,
+        "at least two classical baselines required",
+    )
+    src = dev.get("source") or {}
+    commit = str(src.get("snapshot_sha256", ""))
+    _p47_need(
+        len(commit) == 64 and set(commit) <= set("0123456789abcdef"),
+        errors,
+        "source snapshot hash must be a pinned 64-hex sha256",
+    )
+    gen = dev.get("task_generator") or {}
+    _p47_need(
+        isinstance(gen.get("seed"), int) and gen.get("procedure"),
+        errors,
+        "task generator needs a frozen procedure and integer seed",
+    )
+    splits = dev.get("splits") or {}
+    _p47_need(
+        bool(splits.get("grouping_rule")) and bool(splits.get("policy")),
+        errors,
+        "split policy and grouping rule must be frozen before training",
+    )
+
+    camp = scopes.get("scientific_campaign") or {}
+    for required in (
+        "problem",
+        "certificate",
+        "bounds",
+        "baseline",
+        "calibration_instances",
+        "discovery_instances",
+        "coverage_policy",
+    ):
+        _p47_need(required in camp, errors, f"scope scientific_campaign missing {required}")
+    _p47_need(
+        "exact integer triple" in str(camp.get("certificate", "")),
+        errors,
+        "campaign certificate must be the exact integer triple",
+    )
+    _p47_need(
+        "10^9" in str(camp.get("bounds", "")),
+        errors,
+        "campaign bounds must state the strict M <= 10^9 rule",
+    )
+    _p47_need(
+        set(camp.get("calibration_instances", [])) == {1009, 10007, 100003},
+        errors,
+        "calibration instances must be exactly the observed P39 triple",
+    )
+    _p47_need(
+        (camp.get("discovery_instances") or {}).get("status") == "pending",
+        errors,
+        "discovery instances must stay pending human approval",
+    )
+    _p47_need(
+        camp.get("no_universal_claims") is True, errors, "no-universal-claims rule must be explicit"
+    )
+
+    hyp = nom.get("hypothesis") or {}
+    for required in ("statement", "effect", "falsification"):
+        _p47_need(bool(hyp.get(required)), errors, f"hypothesis missing {required}")
+    _p47_need(
+        hyp.get("mse_excluded_as_success") is True, errors, "hypothesis must exclude MSE as success"
+    )
+
+    ctrls = nom.get("controls") or {}
+    known = ctrls.get("known") or []
+    false = ctrls.get("false") or []
+    _p47_need(
+        len(known) >= 1 and len(false) >= 1,
+        errors,
+        "at least one known and one false control required",
+    )
+    for ctrl in known + false:
+        _p47_need(
+            bool(ctrl.get("expected")) and bool(ctrl.get("reference")),
+            errors,
+            f"control {ctrl.get('id', '?')} needs expected outcome + reference",
+        )
+    _p47_need(
+        all(
+            "reject" in str(c.get("expected", "")).lower()
+            or "numerical" in str(c.get("expected", "")).lower()
+            or "condition" in str(c.get("expected", "")).lower()
+            for c in false
+        ),
+        errors,
+        "every false control must expect rejection or numerical-only",
+    )
+
+    thr = nom.get("thresholds") or {}
+    _p47_need(
+        isinstance(thr.get("quantities"), list) and len(thr["quantities"]) >= 1,
+        errors,
+        "threshold quantities must be frozen",
+    )
+    _p47_need(
+        thr.get("values") == "pending-human-review" and thr.get("status") == "pending-human-review",
+        errors,
+        "threshold values stay pending human review",
+    )
+
+    frozen = nom.get("frozen") or {}
+    recomputed = _p47_canonical_hash(nom)
+    _p47_need(
+        frozen.get("sha256") == recomputed,
+        errors,
+        "frozen hash mismatch: nomination edited after freezing",
+    )
+    try:
+        datetime.date.fromisoformat(str(frozen.get("frozen_at", "")))
+    except ValueError:
+        errors.append("frozen_at is not an ISO date")
+
+    final = dev.get("final_test") or {}
+    _p47_need(final.get("status") == "closed", errors, "final test must be closed")
+    storage = _REPO_ROOT / str(final.get("storage", "experiments/p47-final-test/"))
+    log_p = _REPO_ROOT / str(final.get("access_log", "experiments/p47-final-test/access-log.json"))
+    _p47_need(storage.is_dir(), errors, "final-test storage directory must exist")
+    log_ok, log_entries = False, None
+    try:
+        with open(log_p, encoding="utf-8") as f:
+            log_entries = json.load(f)
+        log_ok = log_entries == []
+    except (OSError, ValueError):
+        log_ok = False
+    _p47_need(log_ok, errors, "final-test access log must exist and be empty")
+    material = (
+        sorted(
+            p.name for p in storage.iterdir() if p.is_file() and p.name not in ("access-log.json",)
+        )
+        if storage.is_dir()
+        else ["<missing>"]
+    )
+    _p47_need(material == [], errors, f"final-test storage must hold no material yet: {material}")
+    try:
+        with open(p38_p, encoding="utf-8") as f:
+            p38_ids = set((json.load(f).get("problem_set") or {}).get("final_ids", []))
+    except (OSError, ValueError) as exc:
+        p38_ids = set()
+        errors.append(f"P38 manifest unreadable, cannot check exclusion: {exc}")
+    _p47_need(
+        bool(p38_ids) and p38_ids <= set(final.get("forbidden_ids", [])),
+        errors,
+        "all P38-observed final ids must be listed as forbidden",
+    )
+
+    review = nom.get("human_review") or {}
+    review_required = bool(review.get("required", True))
+    schema_ok = not errors
+    report.update(
+        {
+            "status": "PASS" if schema_ok else "FAIL",
+            "verdict": "PENDING_HUMAN_REVIEW" if schema_ok else "REJECTED",
+            "claim_scope": "nomination completeness and freeze integrity; approval is a human gate",
+            "nomination_sha256": recomputed,
+            "freeze_recorded": frozen.get("sha256"),
+            "scopes": sorted(scopes.keys()),
+            "controls": {"known": len(known), "false": len(false)},
+            "threshold_quantities": list((nom.get("thresholds") or {}).get("quantities", [])),
+            "final_test": {
+                "status": final.get("status"),
+                "access_log_empty": log_ok,
+                "material": material,
+                "forbidden_p38_ids": len(p38_ids),
+            },
+            "checks": {
+                "schema_ok": schema_ok,
+                "hypothesis_frozen": bool(hyp.get("statement")) and bool(hyp.get("falsification")),
+                "freeze_intact": frozen.get("sha256") == recomputed,
+                "final_test_closed": final.get("status") == "closed" and log_ok and material == [],
+                "p38_excluded": bool(p38_ids) and p38_ids <= set(final.get("forbidden_ids", [])),
+            },
+            "errors": errors[:50],
+            "human_review": {
+                "required": review_required,
+                "status": review.get("status", "pending"),
+                "scope": review.get(
+                    "scope", "nomination + thresholds (P47); P46 curation still pending"
+                ),
+                "gate_note": "P48 is blocked until a mathematician approves this nomination; "
+                "this audit cannot grant approval.",
+            },
+            "elapsed_sec": time.perf_counter() - t0,
+        }
+    )
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(
+        f"P47 technical={'PASS' if schema_ok else 'FAIL'} "
+        f"verdict={report['verdict']}; report -> {out_p}"
+    )
+    return report
 
 
 P46_CERTIFICATE_TYPES = ("proof_or_counterexample", "construction_or_impossibility")
@@ -2565,6 +2860,8 @@ def main() -> int:
             run_p45_envelope_audit(args.config, args.output)
         elif args.acceptance_phase == "P46":
             run_p46_catalogue_audit(args.config, args.output)
+        elif args.acceptance_phase == "P47":
+            run_p47_nomination_audit(args.config, args.output)
         return 0
 
     seeds = (

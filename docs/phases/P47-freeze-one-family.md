@@ -1,8 +1,13 @@
 # P47 — Congelar uma família e o primeiro experimento
 
-**Status:** Proposed.
+**Status:** Built — pending human mathematical review (P48 blocked).
 **Pré-requisito:** P46, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p47-freeze-one-family`.
+**Resultado:** nominação congelada (hash `18af5df9…`, auto-excluído) com dois
+escopos, hipótese pré-fixada sem MSE, 3 controles conhecidos + 4 falsos,
+splits congelados por política, teste final novo fechado (log vazio, 10 ids
+P38 proibidos); veredito técnico PENDING_HUMAN_REVIEW — nominação, limiares
+e curadoria P46 aguardam aprovação matemática humana.
 
 ## Objetivo e escopo
 
