@@ -151,6 +151,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P54",
         "P55",
         "P56",
+        "P57",
     )
     import subprocess as _sp
 
@@ -159,7 +160,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P57",
+            "P58",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -171,7 +172,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P57'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P58'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -748,3 +749,30 @@ def test_p56_confirmation_audit_smoke_dev_override(tmp_path):
     seal_after = seal_path.read_bytes() if seal_path.exists() else None
     assert seal_after == seal_before
     assert log_path.read_text() == log_before
+
+
+def test_p57_campaign_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p57_campaign_audit
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p57-config.json").read_text())
+    cfg["instances"] = [73, 97, 193]
+    cfg["limit"] = 200
+    cfg["device"] = "cpu"
+    cfg["batch_size"] = 50000
+    cfg["time_cap_sec"] = 120.0
+    cfg["certificates_path"] = str(tmp_path / "p57-smoke-certs.json")
+    cfg_p = tmp_path / "p57-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p57-acceptance.json"
+    report = run_p57_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P57"
+    assert report["verdict"] in ("COMPLETE", "INCOMPLETE")
+    assert report["counters"]["nominated"] == 3
+    assert report["counters"]["certified"] + report["counters"]["budget_exhausted"] == 3
+    assert "exhaustive-null" not in report["by_status"]
+    blob = out_p.read_text().lower()
+    assert "discovery claimed" not in blob or "no discovery claimed" in blob

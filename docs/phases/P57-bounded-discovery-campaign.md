@@ -1,8 +1,13 @@
 # P57 — Executar uma campanha matemática e revisar novidade
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P56, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p57-bounded-discovery-campaign`.
+**Resultado:** COMPLETE, sem descoberta — 1181 primos 1 mod 24 selados:
+932 certificados duais (1 rediscovery âncora k3/1009, 931 candidates com
+novidade não sustentada), 249 budget-exhausted (janela limitada, nunca
+exhaustive-null); clássicas 0/1181 na classe dura; 13.2B avaliados;
+revisão de novidade publicada; cadeia P40–P57 concluída.
 
 ## Objetivo e escopo
 

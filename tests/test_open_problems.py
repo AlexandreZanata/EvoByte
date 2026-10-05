@@ -20,10 +20,14 @@ from benchmarks.open_problems import (
     check_erdos_straus_fractions,
     check_taxicab,
     check_taxicab_factorization,
+    p57_classical_constructions,
+    p57_classify_solved,
+    p57_nominate_instances,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
     run_open_problem_campaign,
+    run_p57_bounded_campaign,
     verify_independent_reproduction,
 )
 
@@ -335,3 +339,42 @@ def test_p39_rejects_parallel_problems(tmp_path: Path) -> None:
             output_path=tmp_path / "p39-bad.json",
             checkpoint_path=None,
         )
+
+
+def test_p57_nomination_frozen_hard_class() -> None:
+    nom = p57_nominate_instances()
+    assert len(nom) == 1181
+    assert nom[0] == 73
+    assert 1009 in nom
+    assert nom == p57_nominate_instances()
+    assert all(n % 24 == 1 and n >= 2 for n in nom)
+    assert nom == sorted(nom)
+
+
+def test_p57_classical_constructions_verify_and_miss_hard_class() -> None:
+    fams = {f["family"]: f for f in p57_classical_constructions(4)}
+    assert fams["even"]["triple"] == (2, 3, 6) and fams["even"]["verified"] is True
+    fams = {f["family"]: f for f in p57_classical_constructions(5)}
+    assert fams["n=2-mod-3"]["triple"] == (5, 2, 10) and fams["n=2-mod-3"]["verified"] is True
+    fams = {f["family"]: f for f in p57_classical_constructions(3)}
+    assert (
+        fams["multiple-of-3"]["triple"] == (1, 6, 6) and fams["multiple-of-3"]["verified"] is True
+    )
+    for n in (73, 97, 1009):
+        assert p57_classical_constructions(n) == []
+    assert p57_classify_solved(1009, (253, 85100, 944524900)) == "rediscovery"
+    assert p57_classify_solved(73, (20, 210, 30660)) == "candidate"
+
+
+def test_p57_windowed_search_never_claims_exhaustive_null() -> None:
+    import torch
+
+    res = run_p57_bounded_campaign(
+        [99793],
+        device=torch.device("cpu"),
+        time_cap_sec=0.0,
+        batch_size=1000,
+    )
+    assert res["instances"][0]["status"] == "budget-exhausted"
+    assert res["time_capped"] is True
+    assert "exhaustive-null" not in res["by_status"]

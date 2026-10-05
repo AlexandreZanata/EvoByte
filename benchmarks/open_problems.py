@@ -1721,6 +1721,158 @@ def run_certified_campaign(
     return _finish(report, {"instances": per_instance})
 
 
+# ==============================================================================
+# P57 — Bounded Erdős–Straus discovery campaign (instances only, never the conjecture)
+# ==============================================================================
+
+P57_MODULUS = 24
+P57_RESIDUE = 1
+P57_LIMIT = 100000
+P57_MAX_COORD = 10**9
+P57_KNOWN_TRIPLE_1009 = (253, 85100, 944524900)
+P57_CLASSIFICATIONS = (
+    "rediscovery",
+    "candidate",
+    "budget-exhausted",
+)
+
+
+def p57_sieve_primes(limit: int) -> list[int]:
+    """Deterministic prime sieve for the nomination list."""
+    n = int(limit)
+    sieve = bytearray(b"\x01") * (n + 1)
+    sieve[0:2] = b"\x00\x00"
+    for i in range(2, int(n**0.5) + 1):
+        if sieve[i]:
+            sieve[i * i : n + 1 : i] = b"\x00" * ((n - i * i) // i + 1)
+    return [i for i in range(2, n + 1) if sieve[i]]
+
+
+def p57_nominate_instances(limit: int = P57_LIMIT) -> list[int]:
+    """Frozen nomination: primes n ≡ 1 (mod 24) with 2 ≤ n ≤ limit.
+
+    The hard residue class: even n, multiples of 3, and n ≡ 2 (mod 3) all
+    carry classical parametric triples, and greedy covers n ≠ 1 (mod 4).
+    """
+    return [p for p in p57_sieve_primes(limit) if p % P57_MODULUS == P57_RESIDUE]
+
+
+def p57_classical_constructions(n: int) -> list[dict[str, Any]]:
+    """Known parametric triples, each exactly verified; inapplicable outside its class."""
+    fams: list[dict[str, Any]] = []
+    if n % 2 == 0:
+        m = n // 2
+        fams.append({"family": "even", "triple": (m, m + 1, m * (m + 1))})
+    if (n + 1) % 3 == 0:
+        fams.append({"family": "n=2-mod-3", "triple": (n, (n + 1) // 3, n * (n + 1) // 3)})
+    if n % 3 == 0:
+        fams.append({"family": "multiple-of-3", "triple": (n // 3, 2 * n, 2 * n)})
+    out = []
+    for fam in fams:
+        x, y, z = fam["triple"]
+        ok, _, _ = check_erdos_straus(n, x, y, z)
+        fam["verified"] = bool(ok)
+        out.append(fam)
+    return out
+
+
+def p57_classify_solved(n: int, triple: tuple[int, int, int]) -> str:
+    """rediscovery when the triple matches a classical family or the cited k3 anchor.
+
+    Anything else stays candidate: computationally verified but novelty
+    unreviewed. verified-construction needs reviewer-sustained novelty;
+    discovery additionally needs independent reproduction plus the proper
+    certificate or proof. None of that is claimed here.
+    """
+    for fam in p57_classical_constructions(n):
+        if tuple(fam["triple"]) == tuple(triple):
+            return "rediscovery"
+    if n == 1009 and tuple(triple) == P57_KNOWN_TRIPLE_1009:
+        return "rediscovery"
+    return "candidate"
+
+
+def run_p57_bounded_campaign(
+    n_instances: list[int],
+    *,
+    device: torch.device,
+    max_coord: int = P57_MAX_COORD,
+    time_cap_sec: float = 3600.0,
+    batch_size: int = 500_000,
+    chunk: int = 64,
+) -> dict[str, Any]:
+    """Time-capped instance campaign: accepted search, classical comparison, honest statuses.
+
+    Unprocessed or unfound instances are budget-exhausted, never
+    exhaustive-null: the search window is bounded, not covering.
+    """
+    t0 = time.perf_counter()
+    deadline = t0 + float(time_cap_sec)
+    instances: list[dict[str, Any]] = []
+    total_evaluated = 0
+    capped = False
+    for start in range(0, len(n_instances), chunk):
+        if time.perf_counter() > deadline:
+            capped = True
+            break
+        part = run_erdos_straus_campaign(
+            [int(n) for n in n_instances[start : start + chunk]],
+            device=device,
+            batch_size=batch_size,
+            bounds_strict=True,
+            max_coord=max_coord,
+        )
+        total_evaluated += part["total_evaluated"]
+        for inst in part["instances"]:
+            n = int(inst["n"])
+            fams = p57_classical_constructions(n)
+            classical_solved = sum(1 for f in fams if f["verified"])
+            if inst["found"]:
+                d = inst["details"] or {}
+                triple = (int(d["x"]), int(d["y"]), int(d["z"]))
+                status = p57_classify_solved(n, triple)
+            else:
+                triple = None
+                status = "budget-exhausted"
+            instances.append(
+                {
+                    "n": n,
+                    "found": bool(inst["found"]),
+                    "status": status,
+                    "triple": triple,
+                    "classical_families": [f["family"] for f in fams],
+                    "classical_solved": classical_solved,
+                    "elapsed_sec": inst["elapsed_sec"],
+                }
+            )
+    for n in n_instances[len(instances) :]:
+        instances.append(
+            {
+                "n": int(n),
+                "found": False,
+                "status": "budget-exhausted",
+                "triple": None,
+                "classical_families": [],
+                "classical_solved": 0,
+                "elapsed_sec": 0.0,
+            }
+        )
+        capped = True
+    elapsed = time.perf_counter() - t0
+    by_status: dict[str, int] = {}
+    for inst in instances:
+        by_status[inst["status"]] = by_status.get(inst["status"], 0) + 1
+    return {
+        "problem_id": "erdos-straus-p57",
+        "nominated": len(n_instances),
+        "instances": instances,
+        "by_status": by_status,
+        "time_capped": capped,
+        "total_evaluated": total_evaluated,
+        "elapsed_total_sec": elapsed,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

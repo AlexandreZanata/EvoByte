@@ -695,6 +695,7 @@ ACCEPTANCE_PHASES = (
     "P54",
     "P55",
     "P56",
+    "P57",
 )
 
 
@@ -827,6 +828,178 @@ def main() -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 '''
+
+
+def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
+
+    The nominated list must match the frozen enumeration exactly; the
+    time-capped search reuses the accepted checkers; every found triple is
+    independently re-verified with bounds tested; unsolved instances stay
+    budget-exhausted (never exhaustive-null without full coverage); novelty
+    caps at candidate without sustained review plus independent reproduction,
+    so no discovery is claimed here.
+    """
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P57":
+        raise ValueError(f"Config {cfg_p} is not a P57 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    max_coord = int(config.get("max_coord", 10**9))
+    time_cap = float(config.get("time_cap_sec", 3600.0))
+
+    print("=" * 115)
+    print("P57 DISCOVERY CAMPAIGN AUDIT (instances only; no discovery claimed)")
+    print("=" * 115)
+
+    from open_problems import (
+        p57_classify_solved,
+        p57_nominate_instances,
+        run_p57_bounded_campaign,
+        verify_independent_reproduction,
+    )
+
+    frozen = [int(n) for n in config.get("instances", [])]
+    if p57_nominate_instances(int(config.get("limit", 100000))) != frozen:
+        raise ValueError("P57 nominated list differs from the frozen enumeration")
+    print(f"  frozen nomination: {len(frozen)} primes 1 mod 24 <= {config.get('limit', 100000)}")
+
+    device_name = config.get("device")
+    device = _torch.device(device_name) if device_name else None
+    if device is None:
+        device = _torch.device("cuda" if _torch.cuda.is_available() else "cpu")
+    campaign = run_p57_bounded_campaign(
+        frozen,
+        device=device,
+        max_coord=max_coord,
+        time_cap_sec=time_cap,
+        batch_size=int(config.get("batch_size", 500_000)),
+    )
+
+    errors: list[str] = []
+    certificates: list[dict[str, Any]] = []
+    for inst in campaign["instances"]:
+        if inst["status"] not in ("rediscovery", "candidate", "budget-exhausted"):
+            errors.append(f"n={inst['n']}: forbidden status {inst['status']}")
+            continue
+        if not inst["found"]:
+            if inst["status"] != "budget-exhausted":
+                errors.append(f"n={inst['n']}: unsolved must be budget-exhausted")
+            continue
+        x, y, z = (int(v) for v in inst["triple"])
+        try:
+            repro = verify_independent_reproduction(
+                "erdos-straus",
+                {"n": int(inst["n"]), "x": x, "y": y, "z": z},
+                bounds_strict=True,
+                device=device,
+            )
+            ok = bool(repro.get("status") == "PASS")
+        except Exception as exc:  # noqa: BLE001 - record, never hide
+            errors.append(f"n={inst['n']}: reproduction failed ({exc!r})")
+            continue
+        if not ok:
+            errors.append(f"n={inst['n']}: reproduction not verified")
+            continue
+        if max(x, y, z) > max_coord:
+            errors.append(f"n={inst['n']}: bounds violated after accept")
+            continue
+        if p57_classify_solved(int(inst["n"]), (x, y, z)) != inst["status"]:
+            errors.append(f"n={inst['n']}: classification mismatch")
+            continue
+        certificates.append(
+            {
+                "n": int(inst["n"]),
+                "x": x,
+                "y": y,
+                "z": z,
+                "status": inst["status"],
+                "sha256": hashlib.sha256(f"{inst['n']}/{x}/{y}/{z}".encode()).hexdigest(),
+            }
+        )
+    print(f"  verified certificates: {len(certificates)}/{len(frozen)}")
+
+    cert_path = Path(config.get("certificates_path", "experiments/p57-certificates.json"))
+    if not cert_path.is_absolute():
+        cert_path = _REPO_ROOT / cert_path
+    cert_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(cert_path, "w", encoding="utf-8") as f:
+        json.dump(certificates, f, sort_keys=True)
+    cert_sha = hashlib.sha256(cert_path.read_bytes()).hexdigest()
+
+    verdict = "COMPLETE" if not errors else "INCOMPLETE"
+    print(f"P57 audit {verdict}; errors={errors[:3]}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=42,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p57_config": config_sha[:16], "p57_certs": cert_sha[:16]},
+        config={"acceptance_phase": "P57"},
+    )
+    report = {
+        "phase": "P57",
+        "verdict": verdict,
+        "claim_scope": "bounded instances only; no conjecture claim; no discovery claimed",
+        "run_id": hashlib.sha256(f"{config_sha}{cert_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "errors": errors[:10],
+        "nomination": {"count": len(frozen), "frozen_match": True},
+        "by_status": campaign["by_status"],
+        "time_capped": campaign["time_capped"],
+        "total_evaluated": campaign["total_evaluated"],
+        "certificates": len(certificates),
+        "certificates_sha256": cert_sha,
+        "novelty": (
+            "rediscovery where classical/k3-anchored, else candidate; "
+            "verified-construction needs reviewer-sustained novelty, discovery needs "
+            "independent reproduction plus the proper certificate or proof; none claimed."
+        ),
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P57",
+        },
+        "seeds_rng": "deterministic grid enumeration; no sampling RNG",
+        "budgets": {"time_cap_sec": time_cap, "compute_sec": campaign["elapsed_total_sec"]},
+        "certificate_references": [{"n": c["n"], "sha256": c["sha256"]} for c in certificates[:5]],
+        "counters": {
+            "nominated": len(frozen),
+            "certified": len(certificates),
+            "budget_exhausted": campaign["by_status"].get("budget-exhausted", 0),
+        },
+        "limitations": [
+            "Windowed search: unsolved means budget-exhausted, never exhaustive-null.",
+            "A new instance solution is useful without settling the open conjecture.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P57 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p56_confirmation_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -4621,6 +4794,8 @@ def main() -> int:
             run_p55_sampling_audit(args.config, args.output)
         elif args.acceptance_phase == "P56":
             run_p56_confirmation_audit(args.config, args.output)
+        elif args.acceptance_phase == "P57":
+            run_p57_campaign_audit(args.config, args.output)
         return 0
 
     seeds = (
