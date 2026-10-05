@@ -23,6 +23,7 @@ from benchmarks.qrand_ab import (
     PROBE_POINTS,
     compute_expression_signatures,
     encode_program_tensor,
+    p55_budget_gate,
     run_amplitude_arm,
     run_bigram_arm,
     run_controlled_qrand,
@@ -242,3 +243,31 @@ def test_p37_rejects_parallel_mechanisms(tmp_path: Path) -> None:
             output_path=tmp_path / "p37-bad.json",
             smoke=True,
         )
+
+
+def test_p55_budget_gate_defers_without_budget_or_mechanism() -> None:
+    gate = p55_budget_gate({})
+    assert gate["execute"] is False
+    assert gate["compute_sec"] == 0.0
+    assert any("budget" in m for m in gate["missing"])
+    assert gate["historical"]["phase"] == "P37"
+    assert gate["historical"]["result"] == "NULL"
+
+    partial = p55_budget_gate({"approved_budget_sec": 600.0})
+    assert partial["execute"] is False
+    assert any("mechanism" in m for m in partial["missing"])
+
+    complete = p55_budget_gate(
+        {
+            "approved_budget_sec": 600.0,
+            "mechanism": "single-test-transform",
+            "procedure": {
+                "metric": "certified success",
+                "paired_analysis": "paired",
+                "multiple_comparison_correction": "holm",
+                "keep_rule": "ci",
+            },
+        }
+    )
+    assert complete["execute"] is True
+    assert complete["missing"] == []

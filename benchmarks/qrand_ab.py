@@ -1364,6 +1364,65 @@ def run_controlled_qrand(
     return written
 
 
+P55_RUNBOOK_CAPS = {
+    "P52_collection_sec": 3600.0,
+    "P53_training_sec": 1800.0,
+    "P54_comparison_sec": 10800.0,
+    "P57_campaign_sec": 3600.0,
+}
+P55_HISTORICAL_RESULT = {
+    "phase": "P37",
+    "hypothesis": P37_HYPOTHESIS,
+    "result": "NULL",
+    "note": "Reused as history only; not rerun and not a general equivalence proof.",
+}
+P55_PROCEDURE_KEYS = (
+    "metric",
+    "paired_analysis",
+    "multiple_comparison_correction",
+    "keep_rule",
+)
+
+
+def p55_budget_gate(config: dict[str, Any]) -> dict[str, Any]:
+    """Mechanical P55 execution gate: run only on approved budget + preregistration.
+
+    Executes a new single-mechanism comparison exclusively when a frozen
+    config carries an approved compute budget, one preregistered mechanism
+    with an implemented arm, and a complete frozen procedure. Anything else
+    records DEFERRED: useful research is never blocked by a missing quantum
+    idea, and P56 proceeds with the classical sampler.
+    """
+    approved = float(config.get("approved_budget_sec", 0) or 0)
+    mechanism = str(config.get("mechanism", "") or "")
+    procedure = config.get("procedure", {}) or {}
+    missing: list[str] = []
+    if approved <= 0:
+        missing.append(
+            "no approved compute budget for P55 in any frozen manifest "
+            "(runbook caps cover P52/P53/P54/P57 only)"
+        )
+    if not mechanism:
+        missing.append("no preregistered single mechanism")
+    for key in P55_PROCEDURE_KEYS:
+        if not (isinstance(procedure, dict) and procedure.get(key)):
+            missing.append(f"procedure.{key} not preregistered")
+    execute = not missing
+    return {
+        "execute": execute,
+        "approved_budget_sec": approved,
+        "mechanism": mechanism or None,
+        "missing": missing,
+        "reason": (
+            "budget and preregistration complete; single-mechanism comparison approved"
+            if execute
+            else "; ".join(missing)
+        ),
+        "historical": dict(P55_HISTORICAL_RESULT),
+        "compute_sec": 0.0,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P27 Quantum-Inspired Randomness Hypotheses A/B Testing Harness"

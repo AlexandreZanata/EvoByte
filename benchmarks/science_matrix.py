@@ -693,7 +693,105 @@ ACCEPTANCE_PHASES = (
     "P52",
     "P53",
     "P54",
+    "P55",
 )
+
+
+def run_p55_sampling_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P55 audit: explicit DEFERRED unless budget and preregistration exist.
+
+    The mechanical gate runs a new single-mechanism comparison only on an
+    approved compute budget with one preregistered mechanism and a complete
+    frozen procedure. Otherwise it records DEFERRED with justification and
+    zero compute cost, reuses P37 as history (never rerun), forbids
+    quantum-advantage/hardware language for classical ops, and continues to
+    P56 with the classical sampler. No threshold is relaxed after the fact.
+    """
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P55":
+        raise ValueError(f"Config {cfg_p} is not a P55 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P55 SAMPLING-HYPOTHESIS AUDIT (optional; explicit DEFERRED without budget)")
+    print("=" * 115)
+
+    from qrand_ab import p55_budget_gate
+
+    gate = p55_budget_gate(config)
+    print(f"  gate execute: {gate['execute']}; reason: {gate['reason']}")
+    if gate["execute"]:
+        raise RuntimeError(
+            "P55 execution approved by config, but no single-mechanism comparison "
+            "is implemented on this branch; a follow-up microtask must preregister "
+            "the mechanism, procedure and thresholds before any sampling runs."
+        )
+    verdict = "DEFERRED"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=42,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p55_config": config_sha[:16]},
+        config={"acceptance_phase": "P55"},
+    )
+    report = {
+        "phase": "P55",
+        "verdict": verdict,
+        "claim_scope": "no new sampling claim; P56 proceeds with the classical sampler",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "gate": gate,
+        "justification": (
+            "No approved P55 compute budget exists in any frozen manifest "
+            "(runbook caps cover P52/P53/P54/P57 only); no single mechanism is "
+            "preregistered; P37 stays NULL history and P54 DROP keeps the "
+            "classical sampler. Useful research is not blocked: P56 proceeds."
+        ),
+        "language_guard": "no quantum-advantage or quantum-hardware terms used; classical ops only",
+        "continuation": "P56 with the classical sampler",
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P55",
+        },
+        "seeds_rng": "no sampling ran; no RNG consumed",
+        "budgets": {"approved_budget_sec": gate["approved_budget_sec"], "compute_sec": 0.0},
+        "certificate_references": [],
+        "counters": {"comparisons_run": 0},
+        "limitations": [
+            "DEFERRED is terminal for this microtask, not a verdict on quantum-inspired search.",
+            "A future approved budget plus a preregistered mechanism needs its own branch.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P55 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p54_utility_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -4113,6 +4211,8 @@ def main() -> int:
             run_p53_proposer_audit(args.config, args.output)
         elif args.acceptance_phase == "P54":
             run_p54_utility_audit(args.config, args.output)
+        elif args.acceptance_phase == "P55":
+            run_p55_sampling_audit(args.config, args.output)
         return 0
 
     seeds = (

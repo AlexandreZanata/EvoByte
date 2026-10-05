@@ -149,6 +149,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P52",
         "P53",
         "P54",
+        "P55",
     )
     import subprocess as _sp
 
@@ -157,7 +158,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P55",
+            "P56",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -169,7 +170,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P55'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P56'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -662,3 +663,21 @@ def test_p54_utility_audit_smoke(tmp_path):
     assert set(report["pilot"]["arms"]) == {"structured_random", "evolution", "classical", "hybrid"}
     assert report["pilot"]["thresholds_frozen"]["keep_ratio"] == 0.8
     assert report["pilot"]["negatives_ok"] is True
+
+
+def test_p55_sampling_audit_deferred(tmp_path):
+    from benchmarks.science_matrix import run_p55_sampling_audit
+
+    out_p = tmp_path / "p55-acceptance.json"
+    report = run_p55_sampling_audit("experiments/p55-config.json", out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P55"
+    assert report["verdict"] == "DEFERRED"
+    assert report["gate"]["execute"] is False
+    assert report["budgets"]["compute_sec"] == 0.0
+    assert report["counters"]["comparisons_run"] == 0
+    assert report["gate"]["historical"]["result"] == "NULL"
+    assert "P56" in report["continuation"]
+    blob = out_p.read_text().lower()
+    assert "quantum advantage" not in blob
+    assert "quantum hardware" not in blob

@@ -1,8 +1,13 @@
 # P55 — Testar uma hipótese de aleatoriedade, opcional
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P54, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p55-optional-sampling-hypothesis`.
+**Resultado:** DEFERRED explícito — sem orçamento aprovado para P55 em
+nenhum manifesto (runbook cobre P52/P53/P54/P57) e sem mecanismo único
+pré-registrado; gate mecânico em `qrand_ab.p55_budget_gate`, custo zero,
+P37 NULL como histórico (sem rerun), sem linguagem de vantagem/hardware
+quântico. P56 segue com o sampler clássico.
 
 ## Objetivo e escopo
 
