@@ -692,7 +692,121 @@ ACCEPTANCE_PHASES = (
     "P51",
     "P52",
     "P53",
+    "P54",
 )
+
+
+def run_p54_utility_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P54 audit: matched-budget pilot with a preregistered paired decision.
+
+    The pilot screens all arms at 10 s, confirms the top-2 search arms plus
+    classical at 60 s, and returns a mechanical KEEP/DROP/INCONCLUSIVE
+    verdict: KEEP needs the frozen 95% interval sustaining >=20% faster
+    time-to-certificate with no success drop (plus recorded statistical
+    approval and a limited-adoption ADR); classical trivializing the family
+    forces DROP; thin data forces INCONCLUSIVE. No threshold is relaxed
+    after seeing results.
+    """
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P54":
+        raise ValueError(f"Config {cfg_p} is not a P54 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P54 UTILITY AUDIT (matched budgets; paired time-to-certificate; frozen rule)")
+    print("=" * 115)
+
+    from math_specialist import run_p54_matched_pilot
+
+    tmp_dir = Path(output_path).parent
+    pilot = run_p54_matched_pilot(
+        corpus_manifest=config.get("corpus_manifest", "experiments/p52-certified-data.json"),
+        proposer_manifest=config.get("proposer_manifest", "experiments/p53-proposer-manifest.json"),
+        output_path=tmp_dir / "p54-pilot.json",
+        task_ids=config.get("task_ids"),
+        seeds=config.get("seeds", [42, 101, 202, 303, 404]),
+        screen_sec=float(config.get("screen_sec", 10.0)),
+        confirm_sec=float(config.get("confirm_sec", 60.0)),
+        campaign_cap_sec=float(config.get("campaign_cap_sec", 10800.0)),
+        pop_size=int(config.get("pop_size", 64)),
+        hybrid_proposals=int(config.get("hybrid_proposals", 64)),
+        device_name=config.get("device", "cpu"),
+        keep_ratio=float(config.get("keep_ratio", 0.8)),
+        min_pairs=int(config.get("min_pairs", 20)),
+        classical_frac=float(config.get("classical_frac", 0.9)),
+        domain=tuple(config.get("domain", [-3.0, 3.0])),
+        error_threshold=float(config.get("error_threshold", 1e-4)),
+        statistical_review=config.get("statistical_review", {}),
+    )
+    verdict = pilot.get("status", "INCONCLUSIVE")
+    assert verdict in ("KEEP", "DROP", "INCONCLUSIVE", "MIXED"), verdict
+    print(f"  pilot verdict: {verdict} ({pilot.get('reason')})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=int(config.get("seeds", [42])[0]),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p54_config": config_sha[:16]},
+        config={"acceptance_phase": "P54"},
+    )
+    report = {
+        "phase": "P54",
+        "verdict": verdict,
+        "claim_scope": "utility of the P53 proposer on six development tasks; no discovery claim",
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "pilot": pilot,
+        "adr_required": verdict == "KEEP",
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P54",
+        },
+        "seeds_rng": f"fixed seeds {config.get('seeds')}; paired trials share seeds across arms",
+        "budgets": {
+            "screen_sec": float(config.get("screen_sec", 10.0)),
+            "confirm_sec": float(config.get("confirm_sec", 60.0)),
+            "campaign_cap_sec": float(config.get("campaign_cap_sec", 10800.0)),
+        },
+        "certificate_references": [],
+        "counters": {
+            "confirm_pairs": pilot.get("pairs", {}).get("n_both_uncensored", 0),
+            "hybrid_certified": pilot.get("certified", {}).get("hybrid", 0),
+        },
+        "limitations": [
+            "KEEP would require recorded statistical approval plus a limited-adoption ADR.",
+            "Amortized projections are arithmetic over stated horizons, not measurements.",
+            "Six development tasks cannot prove generality; the final test stays sealed.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P54 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p53_proposer_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -3997,6 +4111,8 @@ def main() -> int:
             run_p52_certified_data_audit(args.config, args.output)
         elif args.acceptance_phase == "P53":
             run_p53_proposer_audit(args.config, args.output)
+        elif args.acceptance_phase == "P54":
+            run_p54_utility_audit(args.config, args.output)
         return 0
 
     seeds = (

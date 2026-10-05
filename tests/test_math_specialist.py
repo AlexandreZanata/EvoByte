@@ -31,6 +31,8 @@ from benchmarks.math_specialist import (
     run_p28_specialist_rematch,
     run_p33_structured_search,
     run_p36_certified_pilot,
+    run_p54_arm_trial,
+    run_p54_matched_pilot,
     sample_multihead_candidates,
     sample_neural_candidates,
     sample_sequential_candidates,
@@ -571,3 +573,60 @@ def test_p52_negatives_have_objective_reasons() -> None:
         assert n["label"] == "negative"
         assert n["check"]["proof_type"] != "exact_certificate"
         assert "timeout" not in n["reason"]
+
+
+def _p54_easy_task():
+    import sympy as _sympy
+
+    corpus = (_REPO_ROOT / "experiments" / "p52-certified-data.json").read_text()
+    import json as _json
+
+    pos = next(p for p in _json.loads(corpus)["positives"] if p["item_id"] == "p52_va_0000")
+    fn = _sympy.lambdify(_sympy.Symbol("x"), _sympy.sympify(pos["ground_truth_expr"]), "numpy")
+    xs = np.linspace(-3.0, 3.0, 64, dtype=np.float32)
+    return pos["ground_truth_expr"], xs, np.asarray(fn(xs), dtype=np.float32)
+
+
+def test_p54_arm_trial_classical_instant_and_censoring() -> None:
+    formula, xs, ys = _p54_easy_task()
+    rec = run_p54_arm_trial(
+        "classical",
+        formula=formula,
+        features_norm=None,
+        xs_f32=xs,
+        ys_f32=ys,
+        budget_sec=10.0,
+        seed=42,
+        device=torch.device("cpu"),
+    )
+    assert rec["certified"] is True
+    assert rec["censored"] is False
+    assert rec["proof_type"] == "exact_certificate"
+    assert rec["candidates"] == 1
+
+    rec = run_p54_arm_trial(
+        "structured_random",
+        formula=formula,
+        features_norm=None,
+        xs_f32=xs,
+        ys_f32=ys,
+        budget_sec=0.0,
+        seed=42,
+        device=torch.device("cpu"),
+        pop_size=16,
+    )
+    assert rec["certified"] is False
+    assert rec["censored"] is True
+    assert rec["time_to_cert"] == 0.0
+
+
+def test_p54_matched_pilot_smoke_rejects_unknown_task() -> None:
+    with pytest.raises(ValueError, match="must be a P52 validation item"):
+        run_p54_matched_pilot(
+            task_ids=["p52_tr_0000"],
+            seeds=[42],
+            screen_sec=0.3,
+            confirm_sec=0.5,
+            device_name="cpu",
+            smoke=True,
+        )

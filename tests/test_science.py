@@ -148,6 +148,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P51",
         "P52",
         "P53",
+        "P54",
     )
     import subprocess as _sp
 
@@ -156,7 +157,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P54",
+            "P55",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -168,7 +169,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P54'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P55'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -634,3 +635,30 @@ def test_p53_proposer_audit_smoke(tmp_path):
     assert report["model"]["param_count"] <= 1_000_000
     assert report["sampling"]["valid_rate"] == 1.0
     assert report["sampling"]["floor_fraction"] >= 0.10
+
+
+def test_p54_utility_audit_smoke(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p54_utility_audit
+
+    cfg = _json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p54-config.json").read_text()
+    )
+    cfg["task_ids"] = ["p52_va_0000"]
+    cfg["seeds"] = [42, 101]
+    cfg["screen_sec"] = 0.3
+    cfg["confirm_sec"] = 0.5
+    cfg["pop_size"] = 16
+    cfg["hybrid_proposals"] = 8
+    cfg_p = tmp_path / "p54-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p54-acceptance.json"
+    report = run_p54_utility_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P54"
+    assert report["verdict"] in ("KEEP", "DROP", "INCONCLUSIVE", "MIXED")
+    assert report["pilot"]["screen_ok"] is True
+    assert set(report["pilot"]["arms"]) == {"structured_random", "evolution", "classical", "hybrid"}
+    assert report["pilot"]["thresholds_frozen"]["keep_ratio"] == 0.8
+    assert report["pilot"]["negatives_ok"] is True

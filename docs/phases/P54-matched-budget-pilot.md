@@ -1,8 +1,13 @@
 # P54 — Decidir se o micromodelo compensa
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P53, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p54-matched-budget-pilot`.
+**Resultado:** DROP — construção clássica exata certifica 30/30 em ~15 ms
+(família trivializada, sem espaço para o modelo); híbrido 29/30 mas 3–7×
+mais lento que evolução (IC95 pareado [1.01, 1.87] no log-razão, 25 pares);
+triagem íntegra, negativos rejeitados, custos com/sem amortização
+publicados. Método aceito mantido; sem ADR (só KEEP exigiria).
 
 ## Objetivo e escopo
 

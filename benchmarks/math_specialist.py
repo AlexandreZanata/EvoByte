@@ -3533,6 +3533,628 @@ def build_p52_certified_data(
 
 
 # ==============================================================================
+# 10. P54 Matched-budget pilot (preregistered arms, paired time-to-certificate)
+# ==============================================================================
+
+P54_ARMS = ("structured_random", "evolution", "classical", "hybrid")
+P54_CERT_MSE = 1e-6
+
+
+def _p54_verify_exact(
+    program: np.ndarray,
+    formula: str,
+    domain: tuple[float, float],
+    error_threshold: float,
+    adversarial_xs: np.ndarray | None = None,
+) -> tuple[bool, float, str]:
+    """Same exact criterion for every arm; returns (certified, seconds, proof)."""
+    import sympy as _sympy
+
+    from evobyte.verifier import verify_l2
+
+    x = _sympy.Symbol("x")
+    fn = _sympy.lambdify(x, _sympy.sympify(formula), modules=["numpy"])
+    train_xs = np.linspace(domain[0], domain[1], 48, dtype=np.float64)
+    test_xs = np.linspace(domain[0] + 0.1, domain[1] - 0.1, 32, dtype=np.float64)
+    t0 = time.perf_counter()
+    v = verify_l2(
+        np.asarray(program, dtype=np.uint32),
+        train_xs,
+        np.asarray(fn(train_xs), dtype=np.float64),
+        test_xs,
+        np.asarray(fn(test_xs), dtype=np.float64),
+        adversarial_xs=adversarial_xs,
+        ground_truth_formula=formula,
+        error_threshold=error_threshold,
+        domain=domain,
+    )
+    return (
+        bool(v.proof_type == "exact_certificate" and v.passed),
+        time.perf_counter() - t0,
+        v.proof_type,
+    )
+
+
+def _p54_mse_of(prog: np.ndarray, xs: np.ndarray, ys: np.ndarray) -> float:
+    from evobyte.vm import execute_batch as _exec
+
+    preds, _ = _exec(np.asarray(prog, dtype=np.uint32), np.asarray(xs, dtype=np.float32))
+    return float(
+        np.mean((np.asarray(preds, dtype=np.float64) - np.asarray(ys, dtype=np.float64)) ** 2)
+    )
+
+
+def run_p54_matched_pilot(
+    corpus_manifest: str | Path = "experiments/p52-certified-data.json",
+    proposer_manifest: str | Path = "experiments/p53-proposer-manifest.json",
+    output_path: str | Path | None = None,
+    task_ids: list[str] | None = None,
+    seeds: list[int] | None = None,
+    screen_sec: float = 10.0,
+    confirm_sec: float = 60.0,
+    campaign_cap_sec: float = 10800.0,
+    pop_size: int = 64,
+    hybrid_proposals: int = 64,
+    device_name: str | None = None,
+    keep_ratio: float = 0.8,
+    min_pairs: int = 20,
+    classical_frac: float = 0.9,
+    domain: tuple[float, float] = (-3.0, 3.0),
+    error_threshold: float = 1e-4,
+    statistical_review: dict[str, Any] | None = None,
+    smoke: bool = False,
+) -> dict[str, Any]:
+    """Matched-budget pilot: screen at 10 s, confirm top-2 plus classical at 60 s.
+
+    Preregistered paired rule, mechanical verdict, no post-hoc relaxation:
+    KEEP needs the 95% interval on paired log time-to-certificate entirely
+    below ln(keep_ratio) with no success drop; classical trivializing the
+    family forces DROP; thin data forces INCONCLUSIVE. KEEP additionally
+    requires recorded statistical-review approval, else INCONCLUSIVE.
+    """
+    import scipy.stats as _st
+
+    from evobyte.generator import load_proposer as _load_prop
+
+    t_wall_0 = time.perf_counter()
+    device = resolve_device(device_name)
+    torch.set_num_threads(8)
+    seeds = list(seeds or [42, 101, 202, 303, 404])
+    if smoke:
+        screen_sec, confirm_sec = 0.3, 0.5
+        seeds = seeds[:2]
+        pop_size = 16
+        hybrid_proposals = 8
+
+    with open(corpus_manifest, encoding="utf-8") as f:
+        corpus = json.load(f)
+    by_id = {p["item_id"]: p for p in corpus.get("positives", [])}
+    task_ids = list(task_ids or [f"p52_va_{i:04d}" for i in range(6)])
+    tasks = []
+    for tid in task_ids:
+        pos = by_id.get(tid)
+        if pos is None or pos.get("split") != "val":
+            raise ValueError(f"P54 task {tid!r} must be a P52 validation item")
+        tasks.append(pos)
+    if smoke:
+        tasks = tasks[:1]
+
+    proposer = None
+    schema = None
+    hybrid_available = False
+    try:
+        with open(proposer_manifest, encoding="utf-8") as f:
+            p53 = json.load(f)
+        if p53.get("status") == "PASS":
+            schema = p53["schema"]
+            proposer = _load_prop(p53["weights"]["path"], schema, device)
+            hybrid_available = True
+    except (OSError, ValueError, KeyError, RuntimeError):
+        proposer = None
+    mu = np.array(schema["feature_mean"], dtype=np.float64) if schema else None
+    sigma = np.array(schema["feature_std"], dtype=np.float64) if schema else None
+
+    xs_f32 = np.linspace(domain[0], domain[1], 64, dtype=np.float32)
+    trials: list[dict[str, Any]] = []
+    stage_errors: list[str] = []
+    deadline = t_wall_0 + float(campaign_cap_sec)
+
+    def _grids(formula: str) -> tuple[np.ndarray, np.ndarray]:
+        import sympy as _sympy
+
+        fn = _sympy.lambdify(_sympy.Symbol("x"), _sympy.sympify(formula), modules=["numpy"])
+        return xs_f32, np.asarray(fn(xs_f32), dtype=np.float32)
+
+    def _features(pos: dict[str, Any]) -> np.ndarray | None:
+        if mu is None or sigma is None:
+            return None
+        raw = np.array(pos["features_inference_only"], dtype=np.float64)
+        return ((raw - mu) / sigma).astype(np.float32)
+
+    def _run_stage(arms: list[str], budget: float, stage: str) -> None:
+        for pos in tasks:
+            formula = str(pos["ground_truth_expr"])
+            xs, ys = _grids(formula)
+            feats = _features(pos)
+            for arm in arms:
+                for seed in seeds:
+                    if time.perf_counter() > deadline:
+                        stage_errors.append(f"campaign cap hit in {stage}")
+                        return
+                    try:
+                        rec = run_p54_arm_trial(
+                            arm,
+                            formula=formula,
+                            features_norm=feats,
+                            xs_f32=xs,
+                            ys_f32=ys,
+                            budget_sec=budget,
+                            seed=seed,
+                            device=device,
+                            pop_size=pop_size,
+                            proposer=proposer if arm == "hybrid" else None,
+                            proposer_schema=schema if arm == "hybrid" else None,
+                            hybrid_proposals=hybrid_proposals,
+                            domain=domain,
+                            error_threshold=error_threshold,
+                        )
+                    except Exception as exc:  # noqa: BLE001 - screening must record, not crash
+                        stage_errors.append(f"{stage}/{arm}/{pos['item_id']}/{seed}: {exc!r}")
+                        continue
+                    rec.update({"stage": stage, "task": pos["item_id"], "formula": formula})
+                    trials.append(rec)
+
+    arms_a = ["structured_random", "evolution", "classical"] + (
+        ["hybrid"] if hybrid_available else []
+    )
+    _run_stage(arms_a, float(screen_sec), "screen")
+
+    def _stage_trials(stage: str, arm: str) -> list[dict[str, Any]]:
+        return [t for t in trials if t["stage"] == stage and t["arm"] == arm]
+
+    screen_ok = not stage_errors and all(
+        len(_stage_trials("screen", a)) == len(tasks) * len(seeds) for a in arms_a
+    )
+
+    def _rank_key(arm: str) -> tuple[int, float, str]:
+        recs = _stage_trials("screen", arm)
+        cert = sum(t["certified"] for t in recs)
+        med = float(np.median([t["time_to_cert"] for t in recs])) if recs else float("inf")
+        return (-cert, med, arm)
+
+    search_arms = [a for a in arms_a if a != "classical"]
+    ranked = sorted(search_arms, key=_rank_key)
+    top2 = ranked[:2]
+
+    stage_b_arms: list[str] = []
+    if screen_ok and hybrid_available:
+        stage_b_arms = top2 + ["classical"]
+        _run_stage(stage_b_arms, float(confirm_sec), "confirm")
+
+    baseline = next((a for a in top2 if a != "hybrid"), None)
+    pairs: list[float] = []
+    hybrid_cert_b = base_cert_b = 0
+    classical_cert_b = 0
+    classical_times: list[float] = []
+    for pos in tasks:
+        for seed in seeds:
+            hb = next(
+                (
+                    t
+                    for t in trials
+                    if t["stage"] == "confirm"
+                    and t["arm"] == "hybrid"
+                    and t["task"] == pos["item_id"]
+                    and t["seed"] == seed
+                ),
+                None,
+            )
+            bb = next(
+                (
+                    t
+                    for t in trials
+                    if baseline
+                    and t["stage"] == "confirm"
+                    and t["arm"] == baseline
+                    and t["task"] == pos["item_id"]
+                    and t["seed"] == seed
+                ),
+                None,
+            )
+            if hb is not None and hb["certified"]:
+                hybrid_cert_b += 1
+            if bb is not None and bb["certified"]:
+                base_cert_b += 1
+            if hb is not None and bb is not None and not hb["censored"] and not bb["censored"]:
+                pairs.append(
+                    float(np.log(max(hb["time_to_cert"], 1e-6) / max(bb["time_to_cert"], 1e-6)))
+                )
+    for t in _stage_trials("confirm", "classical"):
+        classical_cert_b += int(t["certified"])
+        if t["certified"]:
+            classical_times.append(t["time_to_cert"])
+    n_confirm = len(tasks) * len(seeds)
+    classical_sufficient = (
+        n_confirm > 0
+        and classical_cert_b / n_confirm >= float(classical_frac)
+        and (float(np.median(classical_times)) < 1.0 if classical_times else False)
+    )
+    ci_low = ci_high = float("nan")
+    if len(pairs) >= 2:
+        mean, sem = float(np.mean(pairs)), float(_st.sem(pairs))
+        ci_low, ci_high = [
+            float(v) for v in _st.t.interval(0.95, len(pairs) - 1, loc=mean, scale=sem)
+        ]
+
+    review = statistical_review or {}
+    review_approved = bool(review.get("approved_by"))
+    verdict = "INCONCLUSIVE"
+    reason = "pending"
+    if not hybrid_available:
+        reason = "hybrid unavailable (P53 model missing); promotion cannot be decided"
+    elif not screen_ok:
+        reason = f"screening not sound: {stage_errors[:2]}"
+    elif "hybrid" not in top2:
+        verdict, reason = "DROP", f"hybrid not among top-2 search arms (ranked {ranked})"
+    elif classical_sufficient:
+        verdict, reason = "DROP", "classical exact construction trivializes the family"
+    elif len(pairs) < int(min_pairs):
+        reason = f"only {len(pairs)} uncensored pairs (< {min_pairs}); thin data"
+    elif ci_high < float(np.log(float(keep_ratio))) and hybrid_cert_b >= base_cert_b:
+        if review_approved:
+            verdict, reason = (
+                "KEEP",
+                "preregistered 95% interval sustains >=20% faster, no success drop",
+            )
+        else:
+            reason = "KEEP criteria met but statistical review not recorded; review-pending"
+    else:
+        verdict, reason = "DROP", "no preregistered 20% time-to-certificate gain"
+
+    negatives_ok = True
+    for neg in corpus.get("negatives", []):
+        prog = np.array(neg["program_words"], dtype=np.uint32)
+        adv = np.array(neg.get("adversarial_xs") or [], dtype=np.float64)
+        ok, _, _ = _p54_verify_exact(
+            prog,
+            str(neg["ground_truth_expr"]),
+            domain,
+            error_threshold,
+            adversarial_xs=adv if adv.size else None,
+        )
+        if ok:
+            negatives_ok = False
+            stage_errors.append(f"negative {neg['item_id']} promoted")
+    if not negatives_ok:
+        verdict, reason = "MIXED", "a negative control promoted to exact"
+
+    per_arm: dict[str, Any] = {}
+    for stage in ("screen", "confirm"):
+        for arm in P54_ARMS:
+            recs = [t for t in trials if t["stage"] == stage and t["arm"] == arm]
+            if not recs:
+                continue
+            per_arm[f"{stage}/{arm}"] = {
+                "trials": len(recs),
+                "certified": sum(t["certified"] for t in recs),
+                "censored": sum(t["censored"] for t in recs),
+                "median_time_to_cert": float(np.median([t["time_to_cert"] for t in recs])),
+                "search_sec": float(sum(t["search_sec"] for t in recs)),
+                "inference_sec": float(sum(t["inference_sec"] for t in recs)),
+                "cert_sec": float(sum(t["cert_sec"] for t in recs)),
+                "candidates": int(sum(t["candidates"] for t in recs)),
+                "diversity": int(sum(t["diversity"] for t in recs)),
+            }
+    teacher = corpus.get("teacher", {})
+    collection_sec = float(teacher.get("construction_sec", 0.0)) + float(
+        teacher.get("verification_sec", 0.0)
+    )
+    train_sec = 0.0
+    try:
+        with open(proposer_manifest, encoding="utf-8") as f:
+            train_sec = float(json.load(f)["training"]["train_sec"])
+    except (OSError, ValueError, KeyError):
+        train_sec = 0.0
+    pilot_sec = float(sum(t["search_sec"] + t["inference_sec"] + t["cert_sec"] for t in trials))
+    n_pilot_tasks = max(1, len(trials))
+    report = {
+        "phase": "p54-matched-pilot",
+        "status": verdict,
+        "reason": reason,
+        "arms": arms_a,
+        "screen_ok": screen_ok,
+        "screen_errors": stage_errors[:5],
+        "ranked_search_arms": ranked,
+        "stage_b_arms": stage_b_arms,
+        "baseline": baseline,
+        "pairs": {
+            "n_both_uncensored": len(pairs),
+            "ci_95": [ci_low, ci_high],
+            "keep_log_threshold": float(np.log(float(keep_ratio))),
+        },
+        "certified": {
+            "hybrid": hybrid_cert_b,
+            "baseline": base_cert_b,
+            "classical": classical_cert_b,
+            "denominator": n_confirm,
+        },
+        "classical_sufficient": bool(classical_sufficient),
+        "negatives_ok": negatives_ok,
+        "per_arm": per_arm,
+        "by_task": {
+            f"{stage}/{arm}/{pos['item_id']}": {
+                "certified": sum(
+                    t["certified"]
+                    for t in trials
+                    if t["stage"] == stage and t["arm"] == arm and t["task"] == pos["item_id"]
+                ),
+                "censored": sum(
+                    t["censored"]
+                    for t in trials
+                    if t["stage"] == stage and t["arm"] == arm and t["task"] == pos["item_id"]
+                ),
+                "median_time_to_cert": float(
+                    np.median(
+                        [
+                            t["time_to_cert"]
+                            for t in trials
+                            if t["stage"] == stage
+                            and t["arm"] == arm
+                            and t["task"] == pos["item_id"]
+                        ]
+                    )
+                ),
+            }
+            for stage in ("screen", "confirm")
+            for arm in P54_ARMS
+            for pos in tasks
+            if any(
+                t["stage"] == stage and t["arm"] == arm and t["task"] == pos["item_id"]
+                for t in trials
+            )
+        },
+        "trials": [
+            {
+                "stage": t["stage"],
+                "arm": t["arm"],
+                "task": t["task"],
+                "seed": t["seed"],
+                "budget_sec": t["budget_sec"],
+                "certified": t["certified"],
+                "censored": t["censored"],
+                "time_to_cert": t["time_to_cert"],
+                "search_sec": t["search_sec"],
+                "inference_sec": t["inference_sec"],
+                "cert_sec": t["cert_sec"],
+                "candidates": t["candidates"],
+                "duplicates": t["duplicates"],
+                "invalid": t["invalid"],
+                "diversity": t["diversity"],
+                "proof_type": t["proof_type"],
+            }
+            for t in trials
+        ],
+        "costs": {
+            "collection_sec": collection_sec,
+            "train_sec": train_sec,
+            "pilot_sec": pilot_sec,
+            "per_task_pilot_sec": pilot_sec / n_pilot_tasks,
+            "amortized_per_task_over_pilot": (collection_sec + train_sec + pilot_sec)
+            / n_pilot_tasks,
+            "amortized_per_task_over_10k_projection": (collection_sec + train_sec) / 10000.0,
+            "device": str(device),
+            "cuda_available": bool(torch.cuda.is_available()),
+        },
+        "thresholds_frozen": {
+            "keep_ratio": float(keep_ratio),
+            "min_pairs": int(min_pairs),
+            "classical_frac": float(classical_frac),
+        },
+        "statistical_review": {
+            "approved_by": review.get("approved_by", ""),
+            "status": "approved" if review_approved else "pending-human",
+        },
+        "elapsed_sec": time.perf_counter() - t_wall_0,
+        "git_commit": get_git_commit(),
+    }
+    if output_path:
+        out_p = Path(output_path)
+        out_p.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_p, "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2, sort_keys=True, default=str)
+    return report
+
+
+# ==============================================================================
+# 10. P54 trial arms (matched budget, stop on first exact certificate)
+# ==============================================================================
+
+
+def run_p54_arm_trial(
+    arm: str,
+    *,
+    formula: str,
+    features_norm: np.ndarray | None,
+    xs_f32: np.ndarray,
+    ys_f32: np.ndarray,
+    budget_sec: float,
+    seed: int,
+    device: torch.device,
+    pop_size: int = 64,
+    proposer: Any = None,
+    proposer_schema: dict[str, Any] | None = None,
+    hybrid_proposals: int = 64,
+    domain: tuple[float, float] = (-3.0, 3.0),
+    error_threshold: float = 1e-4,
+) -> dict[str, Any]:
+    """One matched-budget trial: search until first exact certificate or budget.
+
+    The search budget covers search only; exact verification is billed
+    separately under the same criterion for all arms. Timeouts are censored
+    at the budget, never relabeled.
+    """
+    from evobyte.bytecode import is_valid as _is_valid
+    from evobyte.grammar import canonicalize_bytecode as _canon
+    from evobyte.grammar import sample_grammar_batch as _sample_batch
+
+    seed_all(seed)
+    t0 = time.perf_counter()
+    seen: set[bytes] = set()
+    diverse: set[str] = set()
+    duplicates = 0
+    invalid = 0
+    candidates = 0
+    cert_sec = 0.0
+    inference_sec = 0.0
+    best_prog: np.ndarray | None = None
+    best_mse = float("inf")
+    proof = "none"
+
+    def _note(prog: np.ndarray) -> None:
+        nonlocal duplicates, invalid
+        blob = np.ascontiguousarray(np.asarray(prog, dtype=np.uint32)).tobytes()
+        if blob in seen:
+            duplicates += 1
+        else:
+            seen.add(blob)
+        if not _is_valid(np.asarray(prog, dtype=np.uint32)):
+            invalid += 1
+
+    def _diverse(prog: np.ndarray) -> None:
+        canon, _ = _canon(np.asarray(prog, dtype=np.uint32))
+        diverse.add(hashlib.sha256(np.ascontiguousarray(canon).tobytes()).hexdigest())
+
+    def _consider(prog: np.ndarray, mse: float) -> None:
+        nonlocal best_prog, best_mse
+        if mse < best_mse:
+            best_mse = mse
+            best_prog = np.asarray(prog, dtype=np.uint32).copy()
+        _diverse(prog)
+
+    def _try_cert(prog: np.ndarray) -> bool:
+        nonlocal cert_sec, proof
+        ok, spent, prf = _p54_verify_exact(prog, formula, domain, error_threshold)
+        cert_sec += spent
+        proof = prf
+        return ok
+
+    certified = False
+    if arm == "structured_random":
+        from evobyte.vm_torch import execute_population_torch as _exec_pop
+
+        xs_t = torch.from_numpy(np.asarray(xs_f32, dtype=np.float32)).to(device)
+        ys_t = torch.from_numpy(np.asarray(ys_f32, dtype=np.float32)).to(device)
+        ctr = seed
+        while time.perf_counter() - t0 < budget_sec:
+            ctr += 1
+            pop = _sample_batch(pop_size, device=device, seed=ctr)
+            pop_np = pop.cpu().numpy().astype(np.uint32)
+            candidates += pop_size
+            preds, _ = _exec_pop(pop, xs_t, device=device)
+            mse = ((preds - ys_t.unsqueeze(0)) ** 2).mean(dim=1)
+            cur = int(torch.argmin(mse).item())
+            cur_mse = float(mse[cur].item())
+            for prog in pop_np:
+                _note(prog)
+                _diverse(prog)
+            _consider(pop_np[cur], cur_mse)
+            if cur_mse <= P54_CERT_MSE and _try_cert(pop_np[cur]):
+                certified = True
+                break
+    elif arm in ("evolution", "hybrid"):
+        from evobyte.grammar import GrammarResidentEvolution as _GREvo
+
+        init_pop = None
+        if arm == "hybrid":
+            from evobyte.generator import sample_proposer_standalone as _propose
+
+            assert proposer is not None and proposer_schema is not None
+            assert features_norm is not None
+            t_inf = time.perf_counter()
+            props, _ = _propose(
+                proposer,
+                np.asarray(features_norm, dtype=np.float32),
+                hybrid_proposals,
+                seed=seed,
+                device=device,
+            )
+            inference_sec = time.perf_counter() - t_inf
+            scored = sorted(
+                ((float(_p54_mse_of(p, xs_f32, ys_f32)), p) for p in props),
+                key=lambda t: t[0],
+            )
+            for _, p in scored:
+                candidates += 1
+                _note(p)
+                _consider(p, float(_p54_mse_of(p, xs_f32, ys_f32)))
+            for mse_p, p in scored:
+                if mse_p <= P54_CERT_MSE and _try_cert(p):
+                    certified = True
+                    break
+            if not certified:
+                keep = [p for _, p in scored[:pop_size]]
+                while len(keep) < pop_size:
+                    fill = _sample_batch(pop_size - len(keep), device=device, seed=seed + len(keep))
+                    keep.extend(list(fill.cpu().numpy().astype(np.uint32)))
+                init_pop = torch.tensor(np.stack(keep[:pop_size]).astype(np.int64), device=device)
+        evo = _GREvo(
+            np.asarray(xs_f32, dtype=np.float32),
+            np.asarray(ys_f32, dtype=np.float32),
+            device=device,
+            seed=seed,
+        )
+        if init_pop is not None:
+            evo.population = init_pop.to(dtype=torch.int64, device=device)
+            evo.best_fitness = float("inf")
+            evo.best_mse = float("inf")
+            evo.best_program = evo.population[0].cpu().numpy().astype(np.uint32)
+            evo._best_row = None
+            evo._best_stale = False
+        while not certified and time.perf_counter() - t0 - inference_sec < budget_sec:
+            res = evo.run(time_budget_sec=0.25)
+            evo.sync_best_to_host()
+            best = np.asarray(evo.best_program, dtype=np.uint32)
+            candidates += int(res.get("candidates_total", pop_size))
+            _note(best)
+            _consider(best, float(evo.best_mse))
+            if float(evo.best_mse) <= P54_CERT_MSE and _try_cert(best):
+                certified = True
+                break
+            if time.perf_counter() - t0 - inference_sec >= budget_sec:
+                break
+    elif arm == "classical":
+        prog = _try_exact_horner_program(formula)
+        candidates = 1
+        if prog is not None:
+            _note(prog)
+            _consider(prog, 0.0)
+            certified = _try_cert(prog)
+            best_prog = prog
+            best_mse = 0.0
+    else:
+        raise ValueError(f"Unknown P54 arm: {arm}")
+
+    search_sec = time.perf_counter() - t0 - inference_sec
+    return {
+        "arm": arm,
+        "seed": seed,
+        "budget_sec": float(budget_sec),
+        "certified": bool(certified),
+        "censored": bool(not certified),
+        "time_to_cert": float(search_sec if certified else budget_sec),
+        "search_sec": float(search_sec),
+        "inference_sec": float(inference_sec),
+        "cert_sec": float(cert_sec),
+        "candidates": int(candidates),
+        "duplicates": int(duplicates),
+        "invalid": int(invalid),
+        "diversity": len(diverse),
+        "best_mse": float(best_mse),
+        "proof_type": proof,
+    }
+
+
+# ==============================================================================
 # 7. P50 Verifiable searches and baselines (polynomial_arithmetic)
 # ==============================================================================
 
