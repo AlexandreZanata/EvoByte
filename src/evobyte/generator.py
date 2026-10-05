@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -310,7 +311,401 @@ def decode_sampled_tokens_to_programs(
     return progs
 
 
+# ==============================================================================
+# P53 — Small history-conditional sequential proposer (single model, <= 1M params)
+# ==============================================================================
+
+P53_MAX_PARAMS = 1_000_000
+P53_EXPLORATION_FLOOR = 0.10
+P53_MASK_NORMAL = 0
+P53_MASK_FINAL = 1
+
+
+def p53_position_mask_id(step: int) -> int:
+    """Validity-mask id for an instruction slot: the final slot forbids NOP."""
+    return P53_MASK_FINAL if step == N_INSTR - 1 else P53_MASK_NORMAL
+
+
+class SequentialHistoryProposer(nn.Module):
+    """GRU proposer conditioned on numeric objective, sampled history and mask.
+
+    Unlike a position-only network, every step observes the feature-encoded
+    objective plus all previously sampled instruction tokens and the
+    validity-mask id of the current slot. Training uses teacher forcing;
+    sampling feeds back actually sampled tokens autoregressively.
+    """
+
+    def __init__(
+        self,
+        feat_dim: int = 16,
+        feat_width: int = 32,
+        gru_width: int = 64,
+    ) -> None:
+        super().__init__()
+        self.feat_dim = int(feat_dim)
+        self.feat_width = int(feat_width)
+        self.gru_width = int(gru_width)
+        self.feat_encoder = nn.Sequential(
+            nn.Linear(feat_dim, feat_width),
+            nn.ReLU(),
+        )
+        self.op_embed = nn.Embedding(16, 8)
+        self.dst_embed = nn.Embedding(8, 4)
+        self.a_embed = nn.Embedding(8, 4)
+        self.b_embed = nn.Embedding(16, 8)
+        self.mask_embed = nn.Embedding(2, 4)
+        self.gru = nn.GRU(feat_width + 8 + 4 + 4 + 8 + 4, gru_width, 1, batch_first=True)
+        self.head_op = nn.Linear(gru_width, 16)
+        self.head_dst = nn.Linear(gru_width, 8)
+        self.head_a = nn.Linear(gru_width, 8)
+        self.head_b = nn.Linear(gru_width, 16)
+
+    def count_parameters(self) -> int:
+        return sum(p.numel() for p in self.parameters())
+
+    def _encode_window(
+        self,
+        feats: torch.Tensor,
+        ops: torch.Tensor,
+        dsts: torch.Tensor,
+        a_s: torch.Tensor,
+        b_s: torch.Tensor,
+    ) -> torch.Tensor:
+        """Encode one prefix window (B, L+1): BOS + history, features, mask ids."""
+        per = ops.shape[0]
+        cur_len = ops.shape[1] + 1
+        bos = torch.zeros(per, 1, dtype=torch.long, device=ops.device)
+        mask_ids = torch.zeros(per, cur_len, dtype=torch.long, device=ops.device)
+        mask_ids[:, -1] = 1 if cur_len == N_INSTR else 0
+        x = torch.cat(
+            [
+                self.feat_encoder(feats).unsqueeze(1).expand(per, cur_len, -1),
+                self.op_embed(torch.cat([bos, ops], dim=1)),
+                self.dst_embed(torch.cat([bos, dsts], dim=1)),
+                self.a_embed(torch.cat([bos, a_s], dim=1)),
+                self.b_embed(torch.cat([bos, b_s], dim=1)),
+                self.mask_embed(mask_ids),
+            ],
+            dim=-1,
+        )
+        h, _ = self.gru(x)
+        return h[:, -1, :]
+
+    def forward_loss(
+        self,
+        feats: torch.Tensor,
+        ops: torch.Tensor,
+        dsts: torch.Tensor,
+        a_s: torch.Tensor,
+        b_s: torch.Tensor,
+    ) -> torch.Tensor:
+        """Next-token cross-entropy with teacher-forced history (B, 16 targets)."""
+        per = ops.shape[0]
+        bos = torch.zeros(per, 1, dtype=torch.long, device=ops.device)
+        full = torch.arange(N_INSTR, device=ops.device).unsqueeze(0).expand(per, -1)
+        mask_ids = torch.where(
+            full == N_INSTR - 1,
+            torch.ones_like(full),
+            torch.zeros_like(full),
+        )
+        x = torch.cat(
+            [
+                self.feat_encoder(feats).unsqueeze(1).expand(per, N_INSTR, -1),
+                self.op_embed(torch.cat([bos, ops[:, :-1]], dim=1)),
+                self.dst_embed(torch.cat([bos, dsts[:, :-1]], dim=1)),
+                self.a_embed(torch.cat([bos, a_s[:, :-1]], dim=1)),
+                self.b_embed(torch.cat([bos, b_s[:, :-1]], dim=1)),
+                self.mask_embed(mask_ids),
+            ],
+            dim=-1,
+        )
+        h, _ = self.gru(x)
+        B = ops.shape[0]
+        return (
+            nn.functional.cross_entropy(self.head_op(h).reshape(B * N_INSTR, 16), ops.reshape(-1))
+            + nn.functional.cross_entropy(
+                self.head_dst(h).reshape(B * N_INSTR, 8), dsts.reshape(-1)
+            )
+            + nn.functional.cross_entropy(self.head_a(h).reshape(B * N_INSTR, 8), a_s.reshape(-1))
+            + nn.functional.cross_entropy(self.head_b(h).reshape(B * N_INSTR, 16), b_s.reshape(-1))
+        ) / 4.0
+
+    def propose_step(
+        self,
+        feats_row: torch.Tensor,
+        ops: torch.Tensor,
+        dsts: torch.Tensor,
+        a_s: torch.Tensor,
+        b_s: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Logits for the next slot given the actually sampled prefix."""
+        last = self._encode_window(feats_row, ops, dsts, a_s, b_s)
+        return self.head_op(last), self.head_dst(last), self.head_a(last), self.head_b(last)
+
+
+def p53_proposer_schema(
+    feat_dim: int = 16,
+    feat_width: int = 32,
+    gru_width: int = 64,
+    feature_mean: list[float] | None = None,
+    feature_std: list[float] | None = None,
+) -> dict[str, Any]:
+    """Serializable schema: vocabs, normalization, mask rule and decoder rules."""
+    return {
+        "schema_version": "p53-v1",
+        "architecture": "SequentialHistoryProposer",
+        "feat_dim": int(feat_dim),
+        "feat_width": int(feat_width),
+        "gru_width": int(gru_width),
+        "vocabs": {"op": 16, "dst": 8, "a": 8, "b": 16},
+        "n_instr": int(N_INSTR),
+        "feature_mean": [float(v) for v in (feature_mean or [])],
+        "feature_std": [float(v) for v in (feature_std or [])],
+        "mask_rule": "mask id 1 at the final slot only; NOP logit forced to -inf there",
+        "decoder_rules": "b masked to 4 bits for CSEL else register; last slot writes r7 non-NOP (S0)",
+        "exploration_floor_source": "grammar sampling (structured random)",
+    }
+
+
+def train_sequential_proposer(
+    *,
+    train_features: np.ndarray,
+    train_programs: np.ndarray,
+    val_features: np.ndarray,
+    val_programs: np.ndarray,
+    seed: int = 42,
+    batch_size: int = 32,
+    max_epochs: int = 20,
+    max_train_sec: float = 1800.0,
+    lr: float = 3e-3,
+    gru_width: int = 64,
+    device: torch.device | str = "cpu",
+) -> dict[str, Any]:
+    """Train one sequential proposer with teacher forcing; checkpoint by validation.
+
+    Caps (epochs, wall time, 1M params) are enforced, never widened: with
+    insufficient VRAM the batch shrinks instead. Returns the model holding
+    the best-validation weights plus curves and billed costs.
+    """
+    import torch as _torch
+
+    dev = _torch.device(device)
+    _torch.manual_seed(seed % (2**32))
+    np.random.seed(seed % (2**32))
+    feat_dim = int(np.asarray(train_features).shape[1])
+    mu = np.asarray(train_features, dtype=np.float64).mean(axis=0)
+    sigma = np.asarray(train_features, dtype=np.float64).std(axis=0) + 1e-6
+    norm_train = ((np.asarray(train_features, dtype=np.float64) - mu) / sigma).astype(np.float32)
+    norm_val = ((np.asarray(val_features, dtype=np.float64) - mu) / sigma).astype(np.float32)
+
+    model = SequentialHistoryProposer(feat_dim=feat_dim, gru_width=int(gru_width)).to(dev)
+    param_count = model.count_parameters()
+    if param_count > P53_MAX_PARAMS:
+        raise ValueError(f"P53 proposer has {param_count} params, cap is {P53_MAX_PARAMS}")
+
+    tr_ops, tr_dst, tr_a, tr_b = encode_programs_to_tensors(train_programs, device="cpu")
+    va_ops, va_dst, va_a, va_b = encode_programs_to_tensors(val_programs, device="cpu")
+    tr_f = _torch.tensor(norm_train, dtype=_torch.float32)
+    va_f = _torch.tensor(norm_val, dtype=_torch.float32)
+    n_train = len(norm_train)
+    opt = _torch.optim.AdamW(model.parameters(), lr=float(lr))
+
+    def _epoch_loss(train: bool, batch: int) -> float:
+        model.train(train)
+        tot, steps = 0.0, 0
+        if train:
+            perm = _torch.randperm(n_train)
+            for s in range(0, n_train, batch):
+                idx = perm[s : s + batch]
+                opt.zero_grad()
+                loss = model.forward_loss(
+                    tr_f[idx].to(dev),
+                    tr_ops[idx].to(dev),
+                    tr_dst[idx].to(dev),
+                    tr_a[idx].to(dev),
+                    tr_b[idx].to(dev),
+                )
+                loss.backward()
+                opt.step()
+                tot += float(loss.item())
+                steps += 1
+            return tot / max(1, steps)
+        with _torch.no_grad():
+            loss = model.forward_loss(
+                va_f.to(dev), va_ops.to(dev), va_dst.to(dev), va_a.to(dev), va_b.to(dev)
+            )
+            return float(loss.item())
+
+    t0 = time.perf_counter()
+    batch_used = int(batch_size)
+    train_curve: list[float] = []
+    val_curve: list[float] = []
+    best_val = float("inf")
+    best_epoch = -1
+    best_state: dict[str, Any] | None = None
+    epochs_run = 0
+    stopped_by: str = "max_epochs"
+    for epoch in range(max(1, int(max_epochs))):
+        if time.perf_counter() - t0 > float(max_train_sec):
+            stopped_by = "time_cap"
+            break
+        try:
+            tr_loss = _epoch_loss(True, batch_used)
+        except RuntimeError as exc:
+            if "out of memory" not in str(exc).lower() or batch_used <= 4:
+                raise
+            batch_used = max(4, batch_used // 2)
+            if dev.type == "cuda":
+                _torch.cuda.empty_cache()
+            tr_loss = _epoch_loss(True, batch_used)
+        va_loss = _epoch_loss(False, batch_used)
+        train_curve.append(tr_loss)
+        val_curve.append(va_loss)
+        epochs_run += 1
+        if va_loss < best_val:
+            best_val = va_loss
+            best_epoch = epoch
+            best_state = {k: v.cpu().clone() for k, v in model.state_dict().items()}
+    train_sec = time.perf_counter() - t0
+    if best_state is not None:
+        model.load_state_dict({k: v.to(dev) for k, v in best_state.items()})
+    return {
+        "model": model,
+        "param_count": param_count,
+        "train_curve": train_curve,
+        "val_curve": val_curve,
+        "best_val_loss": best_val,
+        "best_epoch": best_epoch,
+        "epochs_run": epochs_run,
+        "stopped_by": stopped_by,
+        "batch_used": batch_used,
+        "batch_requested": int(batch_size),
+        "train_sec": train_sec,
+        "feature_mean": [float(v) for v in mu],
+        "feature_std": [float(v) for v in sigma],
+    }
+
+
+def save_proposer(path: str | Path, model: SequentialHistoryProposer) -> str:
+    """Save proposer weights; returns the sha256 of the written file."""
+    import hashlib as _hashlib
+    from pathlib import Path as _Path
+
+    out = _Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    _torch_state = {k: v.cpu() for k, v in model.state_dict().items()}
+    torch.save(_torch_state, out)
+    return _hashlib.sha256(out.read_bytes()).hexdigest()
+
+
+def load_proposer(
+    path: str | Path,
+    schema: dict[str, Any],
+    device: torch.device | str = "cpu",
+) -> SequentialHistoryProposer:
+    """Independently load proposer weights into a fresh instance from schema."""
+    model = SequentialHistoryProposer(
+        feat_dim=int(schema.get("feat_dim", 16)),
+        feat_width=int(schema.get("feat_width", 32)),
+        gru_width=int(schema.get("gru_width", 64)),
+    ).to(torch.device(device))
+    state = torch.load(path, map_location=torch.device(device), weights_only=True)
+    model.load_state_dict(state)
+    model.eval()
+    return model
+
+
+def sample_proposer_standalone(
+    model: SequentialHistoryProposer,
+    features: np.ndarray,
+    n: int,
+    *,
+    seed: int = 42,
+    temperature: float = 0.8,
+    exploration_floor: float = P53_EXPLORATION_FLOOR,
+    device: torch.device | str = "cpu",
+) -> tuple[np.ndarray, list[str]]:
+    """Standalone proposal without evolution: model samples plus a random floor.
+
+    Returns (programs, origins) with origins in {"model", "floor"}; at least
+    the exploration floor fraction always comes from structured random sampling.
+    Seeded runs reproduce bit-exactly.
+    """
+    from evobyte.grammar import sample_grammar_batch as _sample_batch
+
+    dev = torch.device(device)
+    temp = max(1e-3, float(temperature))
+    torch.manual_seed(seed % (2**32))
+    np.random.seed(seed % (2**32))
+    model.eval()
+    feats = np.asarray(features, dtype=np.float32)
+    if feats.ndim == 1:
+        feats = feats.reshape(1, -1)
+    n_floor = 0
+    if n > 1:
+        import math as _math
+
+        n_floor = min(n, max(1, _math.ceil(n * float(exploration_floor))))
+    n_model = n - n_floor
+
+    progs: list[np.ndarray] = []
+    origins: list[str] = []
+    with torch.no_grad():
+        rows = feats.shape[0]
+        per_row = max(1, (n_model + max(1, rows) - 1) // max(1, rows))
+        for bi in range(rows):
+            if sum(len(p) for p in progs) >= n_model:
+                break
+            f_row = torch.tensor(feats[bi : bi + 1], dtype=torch.float32, device=dev)
+            ops = torch.zeros(per_row, 0, dtype=torch.long, device=dev)
+            dsts = torch.zeros(per_row, 0, dtype=torch.long, device=dev)
+            a_s = torch.zeros(per_row, 0, dtype=torch.long, device=dev)
+            b_s = torch.zeros(per_row, 0, dtype=torch.long, device=dev)
+            co, cd, ca, cb = [], [], [], []
+            for _ in range(N_INSTR):
+                lo, ld, la, lb = model.propose_step(f_row, ops, dsts, a_s, b_s)
+                if ops.shape[1] == N_INSTR - 1:
+                    lo = lo.clone()
+                    lo[:, 0] = float("-inf")
+                o = torch.multinomial(torch.softmax(lo / temp, dim=-1), 1)
+                d = torch.multinomial(torch.softmax(ld / temp, dim=-1), 1)
+                a = torch.multinomial(torch.softmax(la / temp, dim=-1), 1)
+                b = torch.multinomial(torch.softmax(lb / temp, dim=-1), 1)
+                co.append(o)
+                cd.append(d)
+                ca.append(a)
+                cb.append(b)
+                ops = torch.cat([ops, o], dim=1)
+                dsts = torch.cat([dsts, d % 8], dim=1)
+                a_s = torch.cat([a_s, a % 8], dim=1)
+                b_s = torch.cat([b_s, b], dim=1)
+            decoded = decode_sampled_tokens_to_programs(
+                torch.cat(co, dim=1),
+                torch.cat(cd, dim=1),
+                torch.cat(ca, dim=1),
+                torch.cat(cb, dim=1),
+            )
+            progs.append(decoded)
+            origins.extend(["model"] * len(decoded))
+    model_progs = (
+        np.concatenate(progs, axis=0)[:n_model]
+        if progs
+        else np.zeros((0, N_INSTR), dtype=np.uint32)
+    )
+    model_origins = origins[:n_model]
+    if n_floor > 0:
+        floor = _sample_batch(n_floor, device=dev, seed=seed + 1).cpu().numpy().astype(np.uint32)
+        if floor.ndim == 1:
+            floor = floor.reshape(1, -1)
+        return np.concatenate([model_progs, floor[:n_floor]], axis=0), model_origins + [
+            "floor"
+        ] * n_floor
+    return model_progs, model_origins
+
+
 class MicroGenerator:
+    """Micro neural bytecode generator trained on elite archives under a strict VRAM cap."""
+
     """Micro neural bytecode generator trained on elite archives under a strict VRAM cap."""
 
     def __init__(

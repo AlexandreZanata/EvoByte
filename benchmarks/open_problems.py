@@ -1305,6 +1305,574 @@ def run_certificate_audit(
     return audit_report
 
 
+P39_PREREGISTRATION_HASH = (
+    hashlib.sha256(Path(_REPO_ROOT, "experiments", "p39-nomination.json").read_bytes()).hexdigest()
+    if Path(_REPO_ROOT, "experiments", "p39-nomination.json").exists()
+    else "missing"
+)
+
+P39_ALLOWED_CLASSIFICATIONS = (
+    "rediscovery",
+    "candidate",
+    "verified-construction",
+    "counterexample",
+    "proven-theorem",
+    "exhaustive_null",
+    "budget_exhausted",
+)
+
+
+def _p39_overflow_audit(n: int, x_steps: int = 50, batch_size: int = 500_000) -> dict[str, Any]:
+    """Analytic int64-overflow guard for the GPU modular-filtering intermediates.
+
+    Bounds 4*x*y and n*(x+y) over the explored (x, y) rectangle and requires
+    both maxima below 2^62; z itself is computed in Python arbitrary precision.
+    """
+    x0 = n // 4 + 1
+    x_max = x0 + x_steps - 1
+    y_min = n * x0 // 1 + 1
+    y_max = y_min + batch_size
+    peak_mul = 4 * x_max * y_max
+    peak_sum = n * (x_max + y_max)
+    limit = 2**62
+    return {
+        "n": n,
+        "peak_4xy": peak_mul,
+        "peak_n_x_plus_y": peak_sum,
+        "int64_limit": 2**63 - 1,
+        "guard_limit": limit,
+        "within_guard": peak_mul < limit and peak_sum < limit,
+    }
+
+
+def run_matched_baseline_erdos_straus(
+    n_instances: list[int],
+    budget_per_instance_sec: list[float],
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Matched CPU baseline: same (x, y) space definition and order, same checkers.
+
+    Deterministic sequential enumeration with Python arbitrary-precision
+    integers, time-boxed per instance to the GPU campaign wall-clock (equal
+    budget). Contextualizes engine cost; classification never depends on it.
+    """
+    results: list[dict[str, Any]] = []
+    for n, budget in zip(n_instances, budget_per_instance_sec):
+        t0 = time.perf_counter()
+        x0 = n // 4 + 1
+        evaluated = 0
+        found: dict[str, Any] | None = None
+        for x_step in range(50):
+            x_val = x0 + x_step
+            r = 4 * x_val - n
+            if r <= 0:
+                continue
+            y_min = (n * x_val) // r + 1
+            y = y_min
+            while True:
+                if time.perf_counter() - t0 >= budget:
+                    break
+                denom = 4 * x_val * y - n * (x_val + y)
+                if denom > 0 and (n * x_val * y) % denom == 0:
+                    z_val = (n * x_val * y) // denom
+                    evaluated += 1
+                    ok1, _, det1 = check_erdos_straus(n, x_val, y, z_val)
+                    ok2, _, det2 = check_erdos_straus_fractions(n, x_val, y, z_val)
+                    if ok1 and ok2 and max(x_val, y, z_val) <= max_coord:
+                        found = {
+                            "n": n,
+                            "x": x_val,
+                            "y": y,
+                            "z": z_val,
+                            "checker_1": det1["residual"],
+                            "checker_2": det2.get("diff", 0),
+                        }
+                        break
+                    if max(x_val, y, z_val) > max_coord and y > y_min + 500_000:
+                        break
+                else:
+                    evaluated += 1
+                y += 1
+                if y > y_min + 500_000:
+                    break
+            if found is not None or time.perf_counter() - t0 >= budget:
+                break
+        elapsed = time.perf_counter() - t0
+        results.append(
+            {
+                "n": n,
+                "found": found is not None,
+                "details": found,
+                "evaluated": evaluated,
+                "elapsed_sec": elapsed,
+                "budget_sec": budget,
+            }
+        )
+    return {
+        "problem_id": "erdos-straus",
+        "method": "matched_cpu_enumeration_equal_budget",
+        "instances": results,
+    }
+
+
+def _p39_repo_catalogue() -> list[dict[str, int]]:
+    """Collect previously certified Erdős-Straus instances from repo artifacts."""
+    catalogue: list[dict[str, int]] = []
+    for rel in ("experiments/p29-erdos-straus-certificate.json",):
+        p = _REPO_ROOT / rel
+        if not p.exists():
+            continue
+        try:
+            data = json.loads(p.read_text())
+        except (OSError, ValueError):
+            continue
+        sol = data.get("solution_data", {})
+        tgt = data.get("target_instance", {})
+        if {"x", "y", "z"} <= set(sol) and "n" in tgt:
+            catalogue.append(
+                {"n": int(tgt["n"]), "x": int(sol["x"]), "y": int(sol["y"]), "z": int(sol["z"])}
+            )
+    p31 = _REPO_ROOT / "experiments" / "p31-certificates.json"
+    if p31.exists():
+        try:
+            strict = (
+                json.loads(p31.read_text()).get("strict_certificates", {}).get("erdos-straus", {})
+            )
+        except (OSError, ValueError):
+            strict = {}
+        repro = (strict.get("independent_reproduction") or {}).get("details") or {}
+        c1 = repro.get("checker_1_integer_identity", {})
+        if {"n", "x", "y", "z"} <= set(c1):
+            catalogue.append(
+                {"n": int(c1["n"]), "x": int(c1["x"]), "y": int(c1["y"]), "z": int(c1["z"])}
+            )
+    return catalogue
+
+
+def assess_instance_novelty(
+    solution: dict[str, int], catalogue: list[dict[str, int]]
+) -> dict[str, Any]:
+    """Novelty assessment with explicit catalogue-search limitations.
+
+    Without positive novelty evidence the weaker rediscovery label is retained;
+    an uncatalogued instance alone is never promoted to a new-theorem claim.
+    """
+    triple = sorted([int(solution["x"]), int(solution["y"]), int(solution["z"])])
+    for known in catalogue:
+        if (
+            int(known["n"]) == int(solution["n"])
+            and sorted([known["x"], known["y"], known["z"]]) == triple
+        ):
+            return {
+                "assessment": "duplicate_of_catalogue",
+                "classification_cap": "rediscovery",
+                "note": "Bit-exact match with a previously certified repo instance.",
+            }
+    return {
+        "assessment": "rediscovery_benchmark_instance",
+        "classification_cap": "rediscovery",
+        "note": (
+            "Nominated prime instances are long-studied benchmarks; no exhaustive "
+            "external catalogue (OEIS-wide) lookup performed, so novelty beyond "
+            "rediscovery is not claimed."
+        ),
+    }
+
+
+def run_certified_campaign(
+    problem_id: str = "erdos-straus",
+    freeze_manifest: str | Path = "experiments/p38-confirmation.json",
+    nomination_path: str | Path = "experiments/p39-nomination.json",
+    output_path: str | Path | None = "experiments/p39-science.json",
+    device_name: str | None = None,
+    smoke: bool = False,
+    checkpoint_path: str | Path | None = "experiments/p39-checkpoint.json",
+) -> dict[str, Any]:
+    """P39 bounded certified campaign for one nominated problem (single cycle)."""
+    if problem_id != "erdos-straus":
+        raise ValueError(
+            f"Unsupported P39 problem {problem_id!r}; one campaign per cycle "
+            "(additional targets are separate research cycles)."
+        )
+    device = resolve_device(device_name)
+    torch.set_num_threads(8)
+    t_wall_0 = time.perf_counter()
+
+    freeze_p = Path(freeze_manifest)
+    freeze = json.loads(freeze_p.read_text())
+    freeze_sha = hashlib.sha256(freeze_p.read_bytes()).hexdigest()
+    nom_p = Path(nomination_path)
+    nomination = json.loads(nom_p.read_text())
+    nom_sha = hashlib.sha256(nom_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P39 BOUNDED CERTIFIED SCIENCE CAMPAIGN (erdos-straus, frozen stack)")
+    print(f"  Device              : {device}")
+    print(f"  Freeze manifest     : {freeze_p} (status={freeze.get('status')})")
+    print("=" * 115)
+
+    base = {
+        "phase": "p39-certified-science",
+        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "problem_id": problem_id,
+        "freeze_manifest": str(freeze_p),
+        "freeze_manifest_sha256": freeze_sha,
+        "nomination_path": str(nom_p),
+        "nomination_sha256": nom_sha,
+    }
+
+    def _finish(report: dict[str, Any], raw: dict[str, Any]) -> dict[str, Any]:
+        report["elapsed_sec"] = time.perf_counter() - t_wall_0
+        if output_path:
+            out_p = Path(output_path)
+            out_p.parent.mkdir(parents=True, exist_ok=True)
+            raw_p = out_p.parent / "p39-science-raw.json"
+            with open(raw_p, "w", encoding="utf-8") as f:
+                json.dump(raw, f, indent=2, sort_keys=True, default=str)
+            written = write_manifest(
+                out_p, report, {str(raw_p): hashlib.sha256(raw_p.read_bytes()).hexdigest()}
+            )
+            print(
+                f"Artifact manifest written to {out_p} "
+                f"(manifest_sha256={written['manifest_sha256'][:16]})"
+            )
+        return report
+
+    # Prerequisite gates: P38 integrity accepted; nomination matches the problem.
+    if freeze.get("status") != "PASS":
+        report = {
+            **base,
+            "status": "FAIL",
+            "classification": "BLOCKED",
+            "rationale": "P38 freeze manifest is not accepted; advancement blocked.",
+        }
+        print("P39 BLOCKED: P38 prerequisite not met.")
+        return _finish(report, {"instances": []})
+    if nomination.get("problem_id") != problem_id or nomination.get("status") != "preregistered":
+        report = {
+            **base,
+            "status": "FAIL",
+            "classification": "BLOCKED",
+            "rationale": "Nomination file does not preregister this problem; blocked.",
+        }
+        print("P39 BLOCKED: nomination mismatch.")
+        return _finish(report, {"instances": []})
+
+    # Soundness gate: P31 independent checkers must reject every adversarial fixture.
+    adv = run_adversarial_rejection_suite(device)
+    fps = [f for f in adv if not f.get("rejected")]
+    if fps:
+        report = {
+            **base,
+            "status": "FAIL",
+            "classification": "BLOCKED",
+            "rationale": f"Checker soundness gate failed: {len(fps)} accepted false positives.",
+        }
+        print("P39 BLOCKED: checker soundness gate failed.")
+        return _finish(report, {"instances": []})
+    print(f"  Checker soundness   : {len(adv)}/{len(adv)} adversarial fixtures rejected")
+
+    bound = int(nomination["bounds"]["declared_bound"])
+    instances = [int(n) for n in nomination["instances"]]
+    if smoke:
+        instances = instances[:1]
+    batch_size = 50_000 if smoke else 500_000
+    catalogue = _p39_repo_catalogue()
+
+    ckpt_p = Path(checkpoint_path) if checkpoint_path else None
+    checkpoint: dict[str, Any] = {}
+    if ckpt_p is not None and ckpt_p.exists():
+        try:
+            checkpoint = json.loads(ckpt_p.read_text())
+        except (OSError, ValueError):
+            checkpoint = {}
+
+    per_instance: list[dict[str, Any]] = []
+    for n in instances:
+        key = str(n)
+        if key in checkpoint and checkpoint[key].get("certificate_hash"):
+            rec = checkpoint[key]
+            sol = rec["solution"]
+            ok1, _, _ = check_erdos_straus(n, sol["x"], sol["y"], sol["z"])
+            ok2, _, _ = check_erdos_straus_fractions(n, sol["x"], sol["y"], sol["z"])
+            if ok1 and ok2:
+                print(f"  n={n}: resumed from checkpoint ({rec['classification']})")
+                per_instance.append({**rec, "resumed": True})
+                continue
+            print(f"  n={n}: checkpoint failed re-verification; re-running")
+        audit = _p39_overflow_audit(n, batch_size=batch_size)
+        assert audit["within_guard"], f"int64 overflow guard tripped for n={n}: {audit}"
+        camp = run_erdos_straus_campaign(
+            [n], device=device, batch_size=batch_size, bounds_strict=True, max_coord=bound
+        )
+        inst = camp["instances"][0]
+        base_cmp = run_matched_baseline_erdos_straus([n], [inst["elapsed_sec"]], max_coord=bound)
+        rec: dict[str, Any] = {
+            "n": n,
+            "found": bool(inst["found"]),
+            "gpu_elapsed_sec": inst["elapsed_sec"],
+            "gpu_evaluated": camp["total_evaluated"],
+            "overflow_audit": audit,
+            "baseline": base_cmp["instances"][0],
+            "coverage": (
+                "x in [n//4+1, n//4+50] with y windows <= "
+                f"{batch_size} per x step; budget-limited, not exhaustive"
+            ),
+            "resumed": False,
+        }
+        if inst["found"]:
+            det = inst["details"]
+            sol = {"n": n, "x": int(det["x"]), "y": int(det["y"]), "z": int(det["z"])}
+            repro = verify_independent_reproduction(
+                problem_id, sol, bounds_strict=True, device=device
+            )
+            assert repro["status"] == "PASS", f"Independent reproduction failed for n={n}"
+            novelty = assess_instance_novelty(sol, catalogue)
+            cert_body = {
+                "solution": sol,
+                "dual_evidence": det,
+                "reproduction": repro,
+                "novelty": novelty,
+                "classification": novelty["classification_cap"],
+            }
+            cert_body["certificate_hash"] = hashlib.sha256(
+                json.dumps(cert_body, sort_keys=True, default=str).encode()
+            ).hexdigest()
+            rec.update(
+                {
+                    "solution": sol,
+                    "certificate": cert_body,
+                    "certificate_hash": cert_body["certificate_hash"],
+                    "classification": novelty["classification_cap"],
+                }
+            )
+            catalogue.append(sol)
+        else:
+            rec.update(
+                {
+                    "classification": "budget_exhausted",
+                    "note": (
+                        "No in-bounds certified decomposition in the explored "
+                        "windows; a failed finite search is not a counterexample "
+                        "to the existential conjecture."
+                    ),
+                }
+            )
+        per_instance.append(rec)
+        if ckpt_p is not None:
+            checkpoint[key] = {k: v for k, v in rec.items() if k != "baseline"}
+            ckpt_p.parent.mkdir(parents=True, exist_ok=True)
+            with open(ckpt_p, "w", encoding="utf-8") as f:
+                json.dump(checkpoint, f, indent=2, sort_keys=True, default=str)
+        print(
+            f"  n={n}: {rec['classification']} "
+            f"(gpu {inst['elapsed_sec']:.2f}s, baseline found={base_cmp['instances'][0]['found']})"
+        )
+
+    # Recheck the nomination statement against what actually ran.
+    assert [r["n"] for r in per_instance] == instances, "Ran instances differ from nomination"
+    assert bound == 10**9, "Bound drifted from nomination"
+
+    certified = [r for r in per_instance if r.get("certificate_hash")]
+    if certified:
+        overall = "rediscovery"
+        why = (
+            f"{len(certified)}/{len(per_instance)} nominated instances carry bounded "
+            "dual-checked certificates matching benchmark knowledge; weaker label retained."
+        )
+    else:
+        overall = "budget_exhausted"
+        why = "No nominated instance yielded an in-bounds certificate in budget; honest null."
+    assert overall in P39_ALLOWED_CLASSIFICATIONS
+
+    prov = collect_provenance(
+        seed=42,
+        device=device,
+        dataset_hashes={"nomination": nom_sha[:16], "p38_freeze": freeze_sha[:16]},
+        config={
+            "problem_id": problem_id,
+            "instances": instances,
+            "bound": bound,
+            "bounds_strict": True,
+        },
+    )
+    report = {
+        **base,
+        "status": "PASS",
+        "provenance": prov,
+        "nomination_statement": nomination["conjecture_statement"],
+        "bounded_statement": nomination["bounded_statement"],
+        "soundness": {
+            "adversarial_rejected": f"{len(adv)}/{len(adv)}",
+            "accepted_false_positives": 0,
+        },
+        "instances": per_instance,
+        "classification": overall,
+        "classification_rationale": why,
+        "novelty": (
+            "No catalogue-novel instance demonstrated; literature status unchanged "
+            "(conjecture open in general; nominated instances remain benchmarks)."
+        ),
+        "operator": (
+            "self-repetition with implementation-independent checkers; not independent authorship."
+        ),
+    }
+    print(f"P39 {overall}: {why}")
+    return _finish(report, {"instances": per_instance})
+
+
+# ==============================================================================
+# P57 — Bounded Erdős–Straus discovery campaign (instances only, never the conjecture)
+# ==============================================================================
+
+P57_MODULUS = 24
+P57_RESIDUE = 1
+P57_LIMIT = 100000
+P57_MAX_COORD = 10**9
+P57_KNOWN_TRIPLE_1009 = (253, 85100, 944524900)
+P57_CLASSIFICATIONS = (
+    "rediscovery",
+    "candidate",
+    "budget-exhausted",
+)
+
+
+def p57_sieve_primes(limit: int) -> list[int]:
+    """Deterministic prime sieve for the nomination list."""
+    n = int(limit)
+    sieve = bytearray(b"\x01") * (n + 1)
+    sieve[0:2] = b"\x00\x00"
+    for i in range(2, int(n**0.5) + 1):
+        if sieve[i]:
+            sieve[i * i : n + 1 : i] = b"\x00" * ((n - i * i) // i + 1)
+    return [i for i in range(2, n + 1) if sieve[i]]
+
+
+def p57_nominate_instances(limit: int = P57_LIMIT) -> list[int]:
+    """Frozen nomination: primes n ≡ 1 (mod 24) with 2 ≤ n ≤ limit.
+
+    The hard residue class: even n, multiples of 3, and n ≡ 2 (mod 3) all
+    carry classical parametric triples, and greedy covers n ≠ 1 (mod 4).
+    """
+    return [p for p in p57_sieve_primes(limit) if p % P57_MODULUS == P57_RESIDUE]
+
+
+def p57_classical_constructions(n: int) -> list[dict[str, Any]]:
+    """Known parametric triples, each exactly verified; inapplicable outside its class."""
+    fams: list[dict[str, Any]] = []
+    if n % 2 == 0:
+        m = n // 2
+        fams.append({"family": "even", "triple": (m, m + 1, m * (m + 1))})
+    if (n + 1) % 3 == 0:
+        fams.append({"family": "n=2-mod-3", "triple": (n, (n + 1) // 3, n * (n + 1) // 3)})
+    if n % 3 == 0:
+        fams.append({"family": "multiple-of-3", "triple": (n // 3, 2 * n, 2 * n)})
+    out = []
+    for fam in fams:
+        x, y, z = fam["triple"]
+        ok, _, _ = check_erdos_straus(n, x, y, z)
+        fam["verified"] = bool(ok)
+        out.append(fam)
+    return out
+
+
+def p57_classify_solved(n: int, triple: tuple[int, int, int]) -> str:
+    """rediscovery when the triple matches a classical family or the cited k3 anchor.
+
+    Anything else stays candidate: computationally verified but novelty
+    unreviewed. verified-construction needs reviewer-sustained novelty;
+    discovery additionally needs independent reproduction plus the proper
+    certificate or proof. None of that is claimed here.
+    """
+    for fam in p57_classical_constructions(n):
+        if tuple(fam["triple"]) == tuple(triple):
+            return "rediscovery"
+    if n == 1009 and tuple(triple) == P57_KNOWN_TRIPLE_1009:
+        return "rediscovery"
+    return "candidate"
+
+
+def run_p57_bounded_campaign(
+    n_instances: list[int],
+    *,
+    device: torch.device,
+    max_coord: int = P57_MAX_COORD,
+    time_cap_sec: float = 3600.0,
+    batch_size: int = 500_000,
+    chunk: int = 64,
+) -> dict[str, Any]:
+    """Time-capped instance campaign: accepted search, classical comparison, honest statuses.
+
+    Unprocessed or unfound instances are budget-exhausted, never
+    exhaustive-null: the search window is bounded, not covering.
+    """
+    t0 = time.perf_counter()
+    deadline = t0 + float(time_cap_sec)
+    instances: list[dict[str, Any]] = []
+    total_evaluated = 0
+    capped = False
+    for start in range(0, len(n_instances), chunk):
+        if time.perf_counter() > deadline:
+            capped = True
+            break
+        part = run_erdos_straus_campaign(
+            [int(n) for n in n_instances[start : start + chunk]],
+            device=device,
+            batch_size=batch_size,
+            bounds_strict=True,
+            max_coord=max_coord,
+        )
+        total_evaluated += part["total_evaluated"]
+        for inst in part["instances"]:
+            n = int(inst["n"])
+            fams = p57_classical_constructions(n)
+            classical_solved = sum(1 for f in fams if f["verified"])
+            if inst["found"]:
+                d = inst["details"] or {}
+                triple = (int(d["x"]), int(d["y"]), int(d["z"]))
+                status = p57_classify_solved(n, triple)
+            else:
+                triple = None
+                status = "budget-exhausted"
+            instances.append(
+                {
+                    "n": n,
+                    "found": bool(inst["found"]),
+                    "status": status,
+                    "triple": triple,
+                    "classical_families": [f["family"] for f in fams],
+                    "classical_solved": classical_solved,
+                    "elapsed_sec": inst["elapsed_sec"],
+                }
+            )
+    for n in n_instances[len(instances) :]:
+        instances.append(
+            {
+                "n": int(n),
+                "found": False,
+                "status": "budget-exhausted",
+                "triple": None,
+                "classical_families": [],
+                "classical_solved": 0,
+                "elapsed_sec": 0.0,
+            }
+        )
+        capped = True
+    elapsed = time.perf_counter() - t0
+    by_status: dict[str, int] = {}
+    for inst in instances:
+        by_status[inst["status"]] = by_status.get(inst["status"], 0) + 1
+    return {
+        "problem_id": "erdos-straus-p57",
+        "nominated": len(n_instances),
+        "instances": instances,
+        "by_status": by_status,
+        "time_capped": capped,
+        "total_evaluated": total_evaluated,
+        "elapsed_total_sec": elapsed,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
@@ -1320,6 +1888,23 @@ def main() -> int:
         "--audit-certificates",
         action="store_true",
         help="Run P31 certificate audit, strict bounds verification, and adversarial rejection suite",
+    )
+    parser.add_argument(
+        "--certified-campaign",
+        action="store_true",
+        help="Run P39 bounded certified campaign for the nominated problem",
+    )
+    parser.add_argument(
+        "--freeze-manifest",
+        type=str,
+        default="experiments/p38-confirmation.json",
+        help="P39: accepted freeze manifest (default: experiments/p38-confirmation.json)",
+    )
+    parser.add_argument(
+        "--nomination",
+        type=str,
+        default="experiments/p39-nomination.json",
+        help="P39: preregistered nomination file",
     )
     parser.add_argument(
         "--bounds-strict",
@@ -1351,6 +1936,18 @@ def main() -> int:
             bounds_strict=args.bounds_strict,
             output_path=out_path,
             device_name=args.device,
+        )
+        return 0 if res["status"] == "PASS" else 1
+
+    if args.certified_campaign:
+        out_path = args.output or "experiments/p39-science.json"
+        res = run_certified_campaign(
+            problem_id=args.problem,
+            freeze_manifest=args.freeze_manifest,
+            nomination_path=args.nomination,
+            output_path=out_path,
+            device_name=args.device,
+            smoke=args.smoke,
         )
         return 0 if res["status"] == "PASS" else 1
 

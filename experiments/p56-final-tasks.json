@@ -1,0 +1,37 @@
+{
+  "excluded_dev_targets": 320,
+  "manifest_sha256": "d4c94417e94550ec6cfa4723f54ba04c9d9868f30a6c0ca3320112e1af4beb44",
+  "phase": "p56-final-tasks",
+  "raw_artifacts": [],
+  "task_rule": {
+    "final_seed": 56056,
+    "n_tasks": 6,
+    "source": "p52-bank-exact-enumeration"
+  },
+  "tasks": [
+    {
+      "canonical_formula": "3*x**2 - x/2 + 1/2",
+      "task_id": "p56_f00"
+    },
+    {
+      "canonical_formula": "100*x**2 + x/2 + 1",
+      "task_id": "p56_f01"
+    },
+    {
+      "canonical_formula": "7*x**2 + 100*x",
+      "task_id": "p56_f02"
+    },
+    {
+      "canonical_formula": "-x**2 + 100*x + 1",
+      "task_id": "p56_f03"
+    },
+    {
+      "canonical_formula": "x**2 - 10*x + 2",
+      "task_id": "p56_f04"
+    },
+    {
+      "canonical_formula": "100*x**2 - 10*x + 2",
+      "task_id": "p56_f05"
+    }
+  ]
+}

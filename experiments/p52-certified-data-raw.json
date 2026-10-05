@@ -1,0 +1,1605 @@
+{
+  "attempts": [
+    {
+      "group_id": "p52_d2_a09271b5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_31242d3a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_a4cbed17",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_03167ef3",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_6ff559e5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_a00da17e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c035874a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0cf70c8e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_58fb7021",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_e72d51fa",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f73a2574",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_bdb5d951",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b43b124b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_87e3ac35",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0b1410d5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_5e404610",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_bf921876",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_eef109d5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_acf1e4b3",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_16aebd68",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_7f152c82",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_2e323aa7",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_e60d7ad4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_54e0e92b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ce5bfcf5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_3b80bc41",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ae59b4ce",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ab8a9dd6",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_a7fb8695",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b9a40516",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_85c52527",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_94f849b4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_90f1564d",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b612fc66",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_3c9bc092",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_5d82169e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_331ba489",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_390d61bc",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_13c43fe4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d25770fc",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0f44923a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b513dfec",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b3514c4e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_12646df3",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_becd385a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b199b0cc",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_82d7edd5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_277df4fa",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_eaace5d5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_33340fc8",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_78b6f255",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0689ac25",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_995f8366",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1b60b319",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_a3faff1e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_85d484f0",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_6da0625c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_de8ea7cd",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_84fa00b9",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_05835323",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_afb5154c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c3e2bd86",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_dee6d5f9",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ca0ac837",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_03726f9f",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_4fe46ed2",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8bd5416e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_aec46966",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8fbca0d5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_bcca94ef",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_29ec6152",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c23ecc22",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_926d1d0a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c082983a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f4b9e53a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f287c0cb",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_318f3293",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b90cd5da",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b574a2bf",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_88d64c7a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_9e9c74ce",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c1563fcf",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_53c44c03",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_efba674f",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f7a02d33",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ef58d120",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_dd7f89bb",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_524d610e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_2f726518",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_64b9ee1e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0d7d126c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_19e6a59c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_e5416880",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_664f4a60",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1ac5b623",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d44755e2",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_6771ad13",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_a4fff25b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b590294e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_9ab2fc39",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_cbf1c437",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0a900839",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_53ef0ae0",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f48cae57",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_3fb24b80",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ebf8df90",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_3cd89538",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d664b76b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d703a7cf",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_aecab164",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_aa77b038",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_67324184",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_485625ca",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8574c48b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d7c6baab",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_65d95381",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_fdc53d68",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_566da780",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f5a6e6d2",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_38883efd",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b78d152b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b63027c6",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_a1c7307a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_51ad356b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_d093fa7a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_56a6fcfd",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_5a2ff9af",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c5f8a65e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_2ab29cb4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_4dd6ab52",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_dde72310",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8e2fd37f",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8b9eed0a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8ea20a60",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0d19989a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_79d541db",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f574c5bf",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1b36ed09",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_658d58df",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_26dc28d0",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_912de6f6",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f34f853e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_78b12ef2",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_4123b158",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_790da985",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_4e8eca69",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_511060f8",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_771824f9",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ae34f095",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c0384309",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0051d13d",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_42a9738c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d9d51132",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_86ee7ebc",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_978214ce",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_78fd5a1f",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0537645e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_ded10028",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0832b471",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ec641a16",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1547b5c3",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_5856a261",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_4e78cd4d",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ffd83517",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c3182b2f",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d288aff0",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_6d2334b7",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_5b276cc6",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0e869aca",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b19976f0",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d6fd8e36",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_0ad6c97f",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_25aee7d1",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_9de96094",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_39e5e90e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_6dc4b5eb",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_24ed42b8",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1f8fd3dc",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c26d0a46",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_fa48684c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_dbf482c8",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_cc1a6f53",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_a2c465b7",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c6eda569",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_4c3f171d",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_9822a572",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_98dde8b4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_6b7826dc",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_34d884a4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_dc40b9f0",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_5d59287c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f5efb4bb",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_108362ab",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_5b06ea73",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_a13c73a6",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_b26817d0",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d39fbad7",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_4b98e060",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_cf4b241c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_3a81a1f2",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_e8c3b783",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1fafa648",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_9101a0f4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_e72376f4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_fa006187",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_577d96a8",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_867d184b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_9a86be97",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1425dfd4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_aeaa9bc4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d1d02680",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_70aa5616",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_04484f54",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_0c182b84",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_38fd2425",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_7fe477b5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_18c2460b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1aa1e5e2",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8bcde4b6",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0d49999a",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_7a66185b",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_96ad5c5e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_cc9f3712",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_522b10ad",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_2be7d284",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c15ab9b5",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c2ae001e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c8089194",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_946df4a7",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_eeb6673c",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_95689dfb",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_0b243e95",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_371f6c04",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_9b1902b0",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c41ab242",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_b840c7eb",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_e4b54210",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_def96275",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_9d8f5ef3",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d2d0e487",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_3d2b1fb4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_252b9137",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_f2924e4e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8a1cc0a7",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_5c8faa3d",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_4313bcc4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_d1a046d4",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_97b0e27e",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_fc91ff8f",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_c1d1e2ab",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_8f4a8d61",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_1b17beaf",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_7b2808a9",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_ef9608e7",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_cd437d18",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d2_c694f2f9",
+      "proof_type": "exact_certificate",
+      "split": "train"
+    },
+    {
+      "group_id": "p52_d1_c7cd32f8",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_a0c10b8f",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_3f96c207",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_491792ba",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d1_e681e1cf",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_ff9bcfcb",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_d229df3c",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_ef7ac8c4",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_1589bc27",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_2044542a",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_401f35b4",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_776cbf7b",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_8f83c1d9",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_d2141cd5",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_d7d2c610",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_fd6d6c69",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_57646273",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_7093a78f",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_beb1c225",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_63c59db7",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_84cf0bdc",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_e3dccc93",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_cc390d7f",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_b8fa84cc",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_82ee4e33",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_86ea83f6",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_eb87f3d2",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_25187509",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_3f60c9ca",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_b39cec16",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d1_9a41bf9f",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_14ca2306",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d1_56d35285",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_087b0991",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_1d2d9325",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d1_9dff3040",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_a4ca2e99",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_cbc59868",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_62ccbddb",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_3a768d82",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_c95f38af",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_7d6b7b58",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_f8558af3",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_c80851e3",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_d6917da3",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_d7b7482e",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_e9ecc94a",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d1_54f86507",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_6a4532b9",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_25ff993d",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_c8b8fef4",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_aff50546",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_dbc95af3",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_aef4414f",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_c12e6c28",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_38be35b3",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_714a7fc1",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_2ef05a61",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_de8b6d78",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_749e6f1f",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_ed9fa7b7",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_e05bb3da",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d1_74876605",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    },
+    {
+      "group_id": "p52_d2_a601ab44",
+      "proof_type": "exact_certificate",
+      "split": "val"
+    }
+  ],
+  "skipped": []
+}

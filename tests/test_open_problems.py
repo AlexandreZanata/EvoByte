@@ -20,10 +20,14 @@ from benchmarks.open_problems import (
     check_erdos_straus_fractions,
     check_taxicab,
     check_taxicab_factorization,
+    p57_classical_constructions,
+    p57_classify_solved,
+    p57_nominate_instances,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
     run_open_problem_campaign,
+    run_p57_bounded_campaign,
     verify_independent_reproduction,
 )
 
@@ -244,3 +248,133 @@ def test_run_certificate_audit_manifest(tmp_path: Path) -> None:
     assert "diophantine-quintuple" in audit["strict_certificates"]
     assert "erdos-straus" in audit["strict_certificates"]
     assert "taxicab" in audit["strict_certificates"]
+
+
+def test_p39_nomination_file_valid() -> None:
+    import json as _json
+
+    nom = _json.loads((_REPO_ROOT / "experiments" / "p39-nomination.json").read_text())
+    assert nom["problem_id"] == "erdos-straus"
+    assert nom["status"] == "preregistered"
+    assert nom["instances"] == [1009, 10007, 100003]
+    assert nom["bounds"]["declared_bound"] == 10**9
+    assert len(nom["checkers"]) == 2
+    assert "novelty_plan" in nom and "coverage" in nom
+
+
+def test_p39_certified_campaign_smoke(tmp_path: Path) -> None:
+    from benchmarks.open_problems import P39_ALLOWED_CLASSIFICATIONS, run_certified_campaign
+
+    out_p = tmp_path / "p39-science.json"
+    report = run_certified_campaign(
+        problem_id="erdos-straus",
+        freeze_manifest=_REPO_ROOT / "experiments" / "p38-confirmation.json",
+        nomination_path=_REPO_ROOT / "experiments" / "p39-nomination.json",
+        output_path=out_p,
+        device_name="cpu",
+        smoke=True,
+        checkpoint_path=tmp_path / "p39-checkpoint.json",
+    )
+    assert out_p.exists()
+    assert report["phase"] == "p39-certified-science"
+    assert report["status"] == "PASS"
+    assert len(report["instances"]) == 1
+    assert report["instances"][0]["n"] == 1009
+    assert report["classification"] in P39_ALLOWED_CLASSIFICATIONS
+    assert report["soundness"]["accepted_false_positives"] == 0
+    for inst in report["instances"]:
+        if inst.get("certificate"):
+            assert len(inst["certificate_hash"]) == 64
+            assert inst["certificate"]["reproduction"]["status"] == "PASS"
+
+
+def test_p39_checkpoint_resume(tmp_path: Path) -> None:
+    from benchmarks.open_problems import run_certified_campaign
+
+    ckpt = tmp_path / "p39-checkpoint.json"
+    kwargs = {
+        "problem_id": "erdos-straus",
+        "freeze_manifest": _REPO_ROOT / "experiments" / "p38-confirmation.json",
+        "nomination_path": _REPO_ROOT / "experiments" / "p39-nomination.json",
+        "device_name": "cpu",
+        "smoke": True,
+        "checkpoint_path": ckpt,
+    }
+    first = run_certified_campaign(output_path=tmp_path / "p39-a.json", **kwargs)
+    assert ckpt.exists()
+    second = run_certified_campaign(output_path=tmp_path / "p39-b.json", **kwargs)
+    assert first["instances"][0]["classification"] == second["instances"][0]["classification"]
+    if second["instances"][0].get("certificate_hash"):
+        assert second["instances"][0]["resumed"] is True
+
+
+def test_p39_blocked_without_valid_freeze(tmp_path: Path) -> None:
+    import json as _json
+
+    from benchmarks.open_problems import run_certified_campaign
+
+    bad_freeze = tmp_path / "bad-freeze.json"
+    bad_freeze.write_text(_json.dumps({"phase": "p38", "status": "FAIL"}))
+    report = run_certified_campaign(
+        problem_id="erdos-straus",
+        freeze_manifest=bad_freeze,
+        nomination_path=_REPO_ROOT / "experiments" / "p39-nomination.json",
+        output_path=tmp_path / "p39-blocked.json",
+        device_name="cpu",
+        smoke=True,
+        checkpoint_path=None,
+    )
+    assert report["status"] == "FAIL"
+    assert report["classification"] == "BLOCKED"
+
+
+def test_p39_rejects_parallel_problems(tmp_path: Path) -> None:
+    import pytest
+
+    from benchmarks.open_problems import run_certified_campaign
+
+    with pytest.raises(ValueError, match="one campaign per cycle"):
+        run_certified_campaign(
+            problem_id="erdos-straus+taxicab",
+            output_path=tmp_path / "p39-bad.json",
+            checkpoint_path=None,
+        )
+
+
+def test_p57_nomination_frozen_hard_class() -> None:
+    nom = p57_nominate_instances()
+    assert len(nom) == 1181
+    assert nom[0] == 73
+    assert 1009 in nom
+    assert nom == p57_nominate_instances()
+    assert all(n % 24 == 1 and n >= 2 for n in nom)
+    assert nom == sorted(nom)
+
+
+def test_p57_classical_constructions_verify_and_miss_hard_class() -> None:
+    fams = {f["family"]: f for f in p57_classical_constructions(4)}
+    assert fams["even"]["triple"] == (2, 3, 6) and fams["even"]["verified"] is True
+    fams = {f["family"]: f for f in p57_classical_constructions(5)}
+    assert fams["n=2-mod-3"]["triple"] == (5, 2, 10) and fams["n=2-mod-3"]["verified"] is True
+    fams = {f["family"]: f for f in p57_classical_constructions(3)}
+    assert (
+        fams["multiple-of-3"]["triple"] == (1, 6, 6) and fams["multiple-of-3"]["verified"] is True
+    )
+    for n in (73, 97, 1009):
+        assert p57_classical_constructions(n) == []
+    assert p57_classify_solved(1009, (253, 85100, 944524900)) == "rediscovery"
+    assert p57_classify_solved(73, (20, 210, 30660)) == "candidate"
+
+
+def test_p57_windowed_search_never_claims_exhaustive_null() -> None:
+    import torch
+
+    res = run_p57_bounded_campaign(
+        [99793],
+        device=torch.device("cpu"),
+        time_cap_sec=0.0,
+        batch_size=1000,
+    )
+    assert res["instances"][0]["status"] == "budget-exhausted"
+    assert res["time_capped"] is True
+    assert "exhaustive-null" not in res["by_status"]

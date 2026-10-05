@@ -1,0 +1,159 @@
+{
+  "corpus": {
+    "collection_construction_sec": 0.20898547303659143,
+    "collection_verification_sec": 3.7121858170285122,
+    "manifest": "experiments/p52-certified-data.json",
+    "train_positives": 256,
+    "val_positives": 64
+  },
+  "device": "cpu",
+  "git_commit": "aa653f98a4c4",
+  "manifest_sha256": "b582728be8e670dcea0a83bf2d3c3c2ea2c4c18d899a43703869300a7b31ace7",
+  "model": {
+    "architecture": "SequentialHistoryProposer",
+    "gru_width": 64,
+    "param_cap": 1000000,
+    "param_count": 28184
+  },
+  "phase": "p53-proposer-training",
+  "promotion": "undecided_here",
+  "raw_artifacts": [
+    {
+      "path": "experiments/p53-proposer-raw.json",
+      "sha256": "9da6a6720b7734498b31d998c623c46b6e8e84fa982cc37b96287a208ee6c7f1"
+    },
+    {
+      "path": "experiments/p53-proposer.pt",
+      "sha256": "6681b37af6541586996aabec17c17123f11f89cee0d27fe4639b316b32c7dd96"
+    }
+  ],
+  "sampling": {
+    "exploration_floor": 0.1,
+    "floor_fraction": 0.125,
+    "n_sample": 32,
+    "sample_seed": 1042,
+    "standalone": true,
+    "valid_rate": 1.0
+  },
+  "schema": {
+    "architecture": "SequentialHistoryProposer",
+    "decoder_rules": "b masked to 4 bits for CSEL else register; last slot writes r7 non-NOP (S0)",
+    "exploration_floor_source": "grammar sampling (structured random)",
+    "feat_dim": 16,
+    "feat_width": 32,
+    "feature_mean": [
+      0.4085334687865725,
+      2.8948869756422937,
+      -2.0366442125609865,
+      3.226340745601192,
+      0.28675550052097093,
+      -0.8181126748677343,
+      0.7473553932504728,
+      0.014818949202890508,
+      0.828841212651696,
+      2.366356107117775,
+      -0.3015451072133146,
+      2.271624744986184,
+      2.5622630815528415,
+      0.00047003123709288275,
+      0.23726550857736584,
+      0.1282319939532357
+    ],
+    "feature_std": [
+      1.301037147227513,
+      1.400393337402669,
+      3.321966770102233,
+      2.947065488629793,
+      0.7049219129054501,
+      0.1019534613841621,
+      0.12104463573923151,
+      0.015042171736868733,
+      3.2001533505124766,
+      1.4767493441352855,
+      3.320795657290793,
+      2.7372222885262563,
+      6.031347801809594,
+      0.0007790815209117533,
+      0.5969481956090701,
+      0.8402690952516643
+    ],
+    "gru_width": 64,
+    "mask_rule": "mask id 1 at the final slot only; NOP logit forced to -inf there",
+    "n_instr": 16,
+    "schema_version": "p53-v1",
+    "vocabs": {
+      "a": 8,
+      "b": 16,
+      "dst": 8,
+      "op": 16
+    }
+  },
+  "seed": 42,
+  "status": "PASS",
+  "total_cost_sec": {
+    "collection_sec": 3.9211712900651037,
+    "elapsed_sec": 1.9031690490010078,
+    "train_sec": 1.0168603119964246
+  },
+  "training": {
+    "batch_requested": 32,
+    "batch_used": 32,
+    "best_epoch": 19,
+    "best_val_loss": 0.12784478068351746,
+    "checkpoint_rule": "lowest validation loss",
+    "epochs_run": 20,
+    "lr": 0.003,
+    "max_epochs": 20,
+    "max_train_min": 30.0,
+    "stopped_by": "max_epochs",
+    "train_curve": [
+      1.7337817996740341,
+      0.7872841730713844,
+      0.567446269094944,
+      0.4367040619254112,
+      0.35411403700709343,
+      0.292999941855669,
+      0.24779661558568478,
+      0.21478907205164433,
+      0.19140301458537579,
+      0.17473931796848774,
+      0.16233710758388042,
+      0.1533105131238699,
+      0.14653191342949867,
+      0.14152835495769978,
+      0.13772819563746452,
+      0.1348088402301073,
+      0.13238759338855743,
+      0.13025415688753128,
+      0.1283391173928976,
+      0.1265790881589055
+    ],
+    "train_sec": 1.0168603119964246,
+    "val_curve": [
+      0.9493694305419922,
+      0.6375468373298645,
+      0.48112884163856506,
+      0.3822420537471771,
+      0.31417858600616455,
+      0.26365190744400024,
+      0.22627682983875275,
+      0.19997526705265045,
+      0.18141289055347443,
+      0.16806159913539886,
+      0.15803839266300201,
+      0.15065309405326843,
+      0.14558230340480804,
+      0.14156070351600647,
+      0.13844160735607147,
+      0.13602745532989502,
+      0.13377362489700317,
+      0.13166716694831848,
+      0.12974056601524353,
+      0.12784478068351746
+    ]
+  },
+  "weights": {
+    "path": "experiments/p53-proposer.pt",
+    "sha256": "6681b37af6541586996aabec17c17123f11f89cee0d27fe4639b316b32c7dd96"
+  }
+}
