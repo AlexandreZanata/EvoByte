@@ -275,11 +275,19 @@ def test_p41_immutable_audit_smoke(tmp_path):
     assert "deterministic inspection" in report["seeds_rng"]
 
 
-def test_p42_exact_audit_smoke(tmp_path):
+def test_p42_exact_audit_smoke(tmp_path, p30_split_manifest):
     from benchmarks.science_matrix import run_p42_exact_audit
 
     out_p = tmp_path / "p42-acceptance.json"
-    report = run_p42_exact_audit("experiments/p42-config.json", out_p)
+    import json
+
+    config = json.loads(
+        (Path(__file__).resolve().parents[1] / "experiments" / "p42-config.json").read_text()
+    )
+    config["smoke"]["split_manifest"] = str(p30_split_manifest)
+    config_path = tmp_path / "p42-test-config.json"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    report = run_p42_exact_audit(config_path, out_p)
     assert out_p.exists()
     assert report["phase"] == "P42"
     assert report["verdict"] in ("ACCEPTED", "MIXED")
@@ -288,6 +296,7 @@ def test_p42_exact_audit_smoke(tmp_path):
         i["resolution"] in ("exact_accepted", "exact_rejected") for i in report["identities"]
     )
     assert all(c["rejected"] for c in report["controls"])
+    assert report["labeling_rule"]["n_positives"] > 0
     assert report["labeling_rule"].get("rule_holds") is True
     assert report["corpus_integrity"]["ok"] is True
 

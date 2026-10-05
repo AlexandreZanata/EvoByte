@@ -215,7 +215,7 @@ def test_p38_wilson_ci_bounds() -> None:
     assert lo < 0.5 < hi
 
 
-def test_p38_confirm_smoke(tmp_path: Path) -> None:
+def test_p38_confirm_smoke(tmp_path: Path, p30_split_manifest: Path) -> None:
     import sys as _sys
     from pathlib import Path as _Path
 
@@ -227,7 +227,7 @@ def test_p38_confirm_smoke(tmp_path: Path) -> None:
         freeze_manifest=_Path(__file__).resolve().parents[1]
         / "experiments"
         / "p37-qrand-dependency-correlated.json",
-        split_manifest=_Path(__file__).resolve().parents[1] / "experiments" / "p30-splits.json",
+        split_manifest=p30_split_manifest,
         seeds_count=2,
         device_name="cpu",
         output_path=out_file,

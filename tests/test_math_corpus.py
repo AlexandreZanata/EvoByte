@@ -1059,3 +1059,13 @@ def test_p52_bank_exact_tasks_deterministic() -> None:
         canonical = _sp.expand(_sp.sympify(t["canonical_formula"]))
         for variation in t["variations"]:
             assert _sp.expand(_sp.sympify(variation)) == canonical
+
+
+def test_manifest_missing_snapshot_fails_closed(tmp_path: Path, p30_split_manifest: Path) -> None:
+    manifest = json.loads(p30_split_manifest.read_text(encoding="utf-8"))
+    manifest["corpus_snapshot"]["path"] = str(tmp_path / "missing.jsonl")
+    broken = tmp_path / "missing-snapshot-manifest.json"
+    broken.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(FileNotFoundError, match="Corpus snapshot not found"):
+        IsolatedCorpusLoader.from_manifest(broken)
+    assert not (tmp_path / "missing.jsonl").exists()

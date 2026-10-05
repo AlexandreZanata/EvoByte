@@ -345,10 +345,10 @@ def test_p33_sample_and_mutate_grammar_batch() -> None:
         assert is_valid(prog)
 
 
-def test_p35_build_verified_corpus_smoke() -> None:
+def test_p35_build_verified_corpus_smoke(p30_split_manifest: Path) -> None:
     report = build_verified_training_corpus(
         family="polynomial_arithmetic",
-        split_manifest=_REPO_ROOT / "experiments" / "p30-splits.json",
+        split_manifest=p30_split_manifest,
         output_path=None,
         device_name="cpu",
         teacher_budget_sec=0.06,
@@ -356,6 +356,7 @@ def test_p35_build_verified_corpus_smoke() -> None:
         seed=42,
         smoke=True,
     )
+    assert report["positives"], "Exercise certification on real fixture tasks"
     assert report["phase"] == "p35-verified-training-corpus"
     assert report["status"] in ("PASS", "FAIL")
     assert report["leakage"]["final_test_accessed"] is False

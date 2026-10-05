@@ -4040,7 +4040,7 @@ def run_p42_exact_audit(config_path: str | Path, output_path: str | Path) -> dic
         smoke_cfg = config.get("smoke", {})
         rep = build_verified_training_corpus(
             family="polynomial_arithmetic",
-            split_manifest="experiments/p30-splits.json",
+            split_manifest=smoke_cfg.get("split_manifest", "experiments/p30-splits.json"),
             output_path=tmp / "p42-smoke-corpus.json",
             device_name="cpu",
             teacher_budget_sec=float(smoke_cfg.get("teacher_budget_sec", 0.06)),
