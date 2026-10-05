@@ -150,6 +150,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P53",
         "P54",
         "P55",
+        "P56",
     )
     import subprocess as _sp
 
@@ -158,7 +159,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P56",
+            "P57",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -170,7 +171,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P56'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P57'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -452,10 +453,30 @@ def test_p47_nomination_audit_smoke(tmp_path):
     out_p = tmp_path / "p47-acceptance.json"
     report = run_p47_nomination_audit("experiments/p47-config.json", out_p)
     assert out_p.exists()
-    assert report["status"] == "PASS"
-    assert report["verdict"] == "PENDING_HUMAN_REVIEW"
+    import json as _json
+
+    _log = _json.loads(
+        (
+            Path(__file__).resolve().parents[1]
+            / "experiments"
+            / "p47-final-test"
+            / "access-log.json"
+        ).read_text()
+    )
+    if not _log:
+        assert report["status"] == "PASS"
+        assert report["final_test"]["access_log_empty"] is True
+    else:
+        # Post-P56 the final is open: the gate must keep firing on exactly
+        # the emptiness condition, and every opening must be the authorized one.
+        assert report["status"] == "FAIL"
+        assert report["errors"] == ["final-test access log must exist and be empty"]
+        assert report["final_test"]["access_log_empty"] is False
+        assert all(
+            e.get("phase") == "P56" and e.get("action") == "generate-sealed-final-tasks"
+            for e in _log
+        )
     assert report["freeze_recorded"] == report["nomination_sha256"]
-    assert report["final_test"]["access_log_empty"] is True
     assert report["final_test"]["material"] == []
     assert report["final_test"]["forbidden_p38_ids"] == 10
     assert report["controls"] == {"known": 3, "false": 4}
@@ -586,16 +607,11 @@ def test_p51_replay_map_audit_smoke(tmp_path):
 def test_p52_certified_data_audit_smoke(tmp_path):
     import json as _json
 
-    from benchmarks.math_specialist import build_p52_certified_data
     from benchmarks.science_matrix import run_p52_certified_data_audit
 
-    corpus_p = tmp_path / "p52-smoke-corpus.json"
-    build = build_p52_certified_data(output_path=corpus_p, device_name="cpu", smoke=True)
-    assert build["status"] == "PASS"
-    cfg = _json.loads(
-        (Path(__file__).resolve().parents[1] / "experiments" / "p52-config.json").read_text()
-    )
-    cfg["corpus_manifest"] = str(corpus_p)
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p52-config.json").read_text())
+    cfg["corpus_manifest"] = "experiments/p52-certified-data.json"
     cfg["minimums"] = {
         "train_positives": 6,
         "train_groups": 2,
@@ -681,3 +697,54 @@ def test_p55_sampling_audit_deferred(tmp_path):
     blob = out_p.read_text().lower()
     assert "quantum advantage" not in blob
     assert "quantum hardware" not in blob
+
+
+def test_p56_fresh_tasks_exclude_development_targets():
+    import json as _json
+
+    from benchmarks.science_matrix import _p56_fresh_tasks
+
+    corpus = _json.loads(
+        (
+            Path(__file__).resolve().parents[1] / "experiments" / "p52-certified-data.json"
+        ).read_text()
+    )
+    dev = {p["ground_truth_expr"] for p in corpus["positives"]}
+    tasks = _p56_fresh_tasks(final_seed=56056, n_tasks=6, dev_formulas=dev)
+    assert len(tasks) == 6
+    assert len({t["group_id"] for t in tasks}) == 6
+    assert not ({t["canonical_formula"] for t in tasks} & dev)
+    again = _p56_fresh_tasks(final_seed=56056, n_tasks=6, dev_formulas=dev)
+    assert [t["group_id"] for t in again] == [t["group_id"] for t in tasks]
+
+
+def test_p56_confirmation_audit_smoke_dev_override(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p56_confirmation_audit
+
+    repo = Path(__file__).resolve().parents[1]
+    seal_path = repo / "experiments" / "p56-final-tasks.json"
+    log_path = repo / "experiments" / "p47-final-test" / "access-log.json"
+    log_before = log_path.read_text()
+    seal_before = seal_path.read_bytes() if seal_path.exists() else None
+    cfg = _json.loads((repo / "experiments" / "p56-config.json").read_text())
+    cfg["task_override_ids"] = ["p52_va_0000", "p52_va_0001"]
+    cfg["seeds"] = [900, 901]
+    cfg["budget_sec"] = 0.3
+    cfg["pop_size"] = 16
+    cfg["clean_rerun_max_controls"] = 4
+    cfg_p = tmp_path / "p56-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p56-acceptance.json"
+    report = run_p56_confirmation_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P56"
+    assert report["verdict"] == "CONFIRMED"
+    assert report["task_origin"] == "dev-override (test only, never final)"
+    assert report["result_label"].startswith("provisional-confirmation")
+    assert "discovery" in report["result_label"] and "never" in report["result_label"]
+    assert report["clean_rerun"]["ok"] is True
+    seal_after = seal_path.read_bytes() if seal_path.exists() else None
+    assert seal_after == seal_before
+    assert log_path.read_text() == log_before

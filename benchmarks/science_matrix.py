@@ -694,7 +694,413 @@ ACCEPTANCE_PHASES = (
     "P53",
     "P54",
     "P55",
+    "P56",
 )
+
+
+def _p56_fresh_tasks(
+    *, final_seed: int, n_tasks: int, dev_formulas: set[str]
+) -> list[dict[str, Any]]:
+    """Blind fresh-task draw: bank-exact enumeration minus development-used targets."""
+    import random as _random
+
+    from math_corpus import generate_p52_bank_exact_tasks
+
+    pool = [
+        t for t in generate_p52_bank_exact_tasks() if t["canonical_formula"] not in dev_formulas
+    ]
+    order = list(range(len(pool)))
+    _random.Random(int(final_seed)).shuffle(order)
+    return [pool[i] for i in order[:n_tasks]]
+
+
+_P56_CLEAN_RERUN_SCRIPT = r'''
+"""P56 clean-process re-verification (self-repeat label, not independent review)."""
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+REPO = Path("__REPO_ROOT__")
+sys.path.insert(0, str(REPO / "benchmarks"))
+sys.path.insert(0, str(REPO / "src"))
+
+import numpy as np
+
+
+def _grids(formula, domain):
+    import sympy as _sympy
+
+    fn = _sympy.lambdify(_sympy.Symbol("x"), _sympy.sympify(formula), modules=["numpy"])
+    tr = np.linspace(domain[0], domain[1], 48, dtype=np.float64)
+    te = np.linspace(domain[0] + 0.1, domain[1] - 0.1, 32, dtype=np.float64)
+    return tr, np.asarray(fn(tr)), te, np.asarray(fn(te))
+
+
+def main() -> int:
+    from evobyte.archive import run_resume_selftest
+    from evobyte.provenance import verify_manifest_integrity
+    from evobyte.verifier import verify_l2
+    from math_specialist import _try_exact_horner_program
+
+    cfg = json.loads(Path(sys.argv[1]).read_text())
+    domain = tuple(cfg["domain"])
+    err = float(cfg["error_threshold"])
+    errors: list[str] = []
+
+    tasks_ok = 0
+    for task in cfg["tasks"]:
+        prog = _try_exact_horner_program(task["formula"])
+        if prog is None:
+            errors.append(f"task {task['task_id']}: no exact construction")
+            continue
+        tr_x, tr_y, te_x, te_y = _grids(task["formula"], domain)
+        v = verify_l2(prog, tr_x, tr_y, te_x, te_y,
+                      ground_truth_formula=task["formula"], error_threshold=err, domain=domain)
+        if v.proof_type == "exact_certificate" and v.passed:
+            tasks_ok += 1
+        else:
+            errors.append(f"task {task['task_id']}: {v.proof_type}")
+
+    corpus = json.loads((REPO / "experiments" / "p52-certified-data.json").read_text())
+    controls = [p for p in corpus["positives"] if p.get("is_control")]
+    negatives = corpus.get("negatives", [])
+    if cfg.get("max_controls") is not None:
+        controls = controls[:0] + [p for p in corpus["positives"] if p.get("split") == "train"][
+            : int(cfg["max_controls"])
+        ]
+    controls_ok = 0
+    for pos in controls:
+        prog = np.array(pos["program_words"], dtype=np.uint32)
+        tr_x, tr_y, te_x, te_y = _grids(pos["ground_truth_expr"], domain)
+        v = verify_l2(prog, tr_x, tr_y, te_x, te_y,
+                      ground_truth_formula=pos["ground_truth_expr"], error_threshold=err, domain=domain)
+        if v.proof_type == "exact_certificate" and v.passed:
+            controls_ok += 1
+        else:
+            errors.append(f"control {pos['item_id']}: {v.proof_type}")
+    negatives_ok = 0
+    for neg in negatives:
+        prog = np.array(neg["program_words"], dtype=np.uint32)
+        tr_x, tr_y, te_x, te_y = _grids(neg["ground_truth_expr"], domain)
+        adv = np.array(neg.get("adversarial_xs") or [], dtype=np.float64)
+        v = verify_l2(prog, tr_x, tr_y, te_x, te_y, adversarial_xs=adv if adv.size else None,
+                      ground_truth_formula=neg["ground_truth_expr"], error_threshold=err, domain=domain)
+        if v.proof_type != "exact_certificate":
+            negatives_ok += 1
+        else:
+            errors.append(f"negative {neg['item_id']} promoted")
+
+    p43_ok = bool(run_resume_selftest(seed=99))
+
+    restored: dict[str, bool] = {}
+    for rel in cfg.get("sealed", []) or []:
+        if rel is None:
+            continue
+        chk = verify_manifest_integrity(REPO / rel)
+        restored[rel] = bool(chk["ok"])
+        if not chk["ok"]:
+            errors.append(f"seal broken: {rel}")
+    weights_sha = cfg.get("weights_sha")
+    if weights_sha is not None:
+        actual = hashlib.sha256((REPO / "experiments" / "p53-proposer.pt").read_bytes()).hexdigest()
+        restored["experiments/p53-proposer.pt"] = actual == weights_sha
+        if actual != weights_sha:
+            errors.append("p53 weights mismatch")
+
+    print(json.dumps({
+        "ok": not errors,
+        "errors": errors[:10],
+        "label": "self-repeat in a clean process (not independent review)",
+        "tasks_restored": tasks_ok,
+        "tasks_total": len(cfg["tasks"]),
+        "controls_restored": controls_ok,
+        "controls_total": len(controls),
+        "negatives_rejected": negatives_ok,
+        "negatives_total": len(negatives),
+        "p43_resume": {"bit_exact_continuation": p43_ok},
+        "artifacts_restored": restored,
+    }, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+'''
+
+
+def run_p56_confirmation_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P56 audit: confirm the frozen method on fresh sealed tasks.
+
+    Development-frozen methods only (no algorithm edits): the kept search
+    method versus the classical reference and structured random, 20 seeds on
+    six fresh tasks at 10 s real. Tasks are sealed before any trial and access
+    is logged persistently; controls and certificates are re-verified in a
+    clean process alongside the P43 resume check and artifact restoration.
+    Loss and tie are valid results; without independent review the result is
+    labeled provisional, never a discovery. Integrity failure blocks P57.
+    """
+    import subprocess as _sp
+
+    import numpy as _np
+    import torch as _torch
+    from full_matrix import _p38_wilson_ci as _wilson
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+        write_manifest,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P56":
+        raise ValueError(f"Config {cfg_p} is not a P56 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+    err_thr = float(config.get("error_threshold", 1e-4))
+    domain = tuple(config.get("domain", [-3.0, 3.0]))
+    seeds = list(config.get("seeds", []))
+    override_ids = list(config.get("task_override_ids", []))
+    if not override_ids and len(seeds) != 20:
+        raise ValueError("P56 requires exactly 20 preregistered seeds")
+    arms = list(config.get("arms", ["evolution", "classical", "structured_random"]))
+    budget = float(config.get("budget_sec", 10.0))
+    pop_size = int(config.get("pop_size", 64))
+    cap = float(config.get("campaign_cap_sec", 10800.0))
+
+    print("=" * 115)
+    print("P56 FRESH-FROZEN CONFIRMATION (sealed tasks; frozen method; no discovery label)")
+    print("=" * 115)
+
+    from math_specialist import run_p54_arm_trial
+
+    task_rule = config.get("task_rule", {})
+    if override_ids:
+        task_origin = "dev-override (test only, never final)"
+        with open(_REPO_ROOT / "experiments" / "p52-certified-data.json", encoding="utf-8") as f:
+            positives = json.load(f)["positives"]
+        by_id = {p["item_id"]: p for p in positives}
+        tasks = [
+            {"task_id": tid, "canonical_formula": by_id[tid]["ground_truth_expr"]}
+            for tid in override_ids
+        ]
+        seal_sha = "dev-override-no-seal"
+    else:
+        task_origin = "sealed-final"
+        with open(_REPO_ROOT / "experiments" / "p52-certified-data.json", encoding="utf-8") as f:
+            dev_formulas = {p["ground_truth_expr"] for p in json.load(f)["positives"]}
+        dev_formulas |= {t.get("formula", "") for t in config.get("extra_exclusions", [])}
+        dev_formulas |= {"x**2 - 1", "x**2 + 3*x + 7"}
+        tasks = [
+            {"task_id": f"p56_f{i:02d}", "canonical_formula": t["canonical_formula"]}
+            for i, t in enumerate(
+                _p56_fresh_tasks(
+                    final_seed=int(task_rule.get("final_seed", 56056)),
+                    n_tasks=int(task_rule.get("n_tasks", 6)),
+                    dev_formulas=dev_formulas,
+                )
+            )
+        ]
+        seal_doc = {
+            "phase": "p56-final-tasks",
+            "task_rule": task_rule,
+            "excluded_dev_targets": len(dev_formulas),
+            "tasks": tasks,
+        }
+        seal_path = _REPO_ROOT / "experiments" / "p56-final-tasks.json"
+        written = write_manifest(seal_path, seal_doc, {})
+        seal_sha = written["manifest_sha256"]
+        log_path = _REPO_ROOT / "experiments" / "p47-final-test" / "access-log.json"
+        log = json.loads(log_path.read_text())
+        log.append(
+            {
+                "phase": "P56",
+                "action": "generate-sealed-final-tasks",
+                "timestamp": time.time(),
+                "task_ids": [t["task_id"] for t in tasks],
+                "seal_sha256": seal_sha,
+                "config_sha256": config_sha,
+                "revision": get_git_commit(),
+            }
+        )
+        log_path.write_text(json.dumps(log, indent=2))
+        print(f"  sealed {len(tasks)} fresh tasks -> {seal_path} (sha {seal_sha[:16]})")
+
+    import sympy as _sympy
+
+    trials: list[dict[str, Any]] = []
+    errors: list[str] = []
+    deadline = t0 + cap
+    device = _torch.device(config.get("device", "cpu"))
+    for task in tasks:
+        formula = str(task["canonical_formula"])
+        fn = _sympy.lambdify(_sympy.Symbol("x"), _sympy.sympify(formula), modules=["numpy"])
+        xs = _np.linspace(domain[0], domain[1], 64, dtype=_np.float32)
+        ys = _np.asarray(fn(xs), dtype=_np.float32)
+        for arm in arms:
+            for seed in seeds:
+                if time.perf_counter() > deadline:
+                    errors.append("campaign cap hit")
+                    break
+                try:
+                    rec = run_p54_arm_trial(
+                        arm,
+                        formula=formula,
+                        features_norm=None,
+                        xs_f32=xs,
+                        ys_f32=ys,
+                        budget_sec=budget,
+                        seed=seed,
+                        device=device,
+                        pop_size=pop_size,
+                        domain=domain,
+                        error_threshold=err_thr,
+                    )
+                except Exception as exc:  # noqa: BLE001 - record, never hide
+                    errors.append(f"{task['task_id']}/{arm}/{seed}: {exc!r}")
+                    continue
+                rec.update({"task": task["task_id"], "formula": formula})
+                trials.append(rec)
+        print(
+            f"  {task['task_id']} {formula}: "
+            + ", ".join(
+                f"{a}={sum(t['certified'] for t in trials if t['task'] == task['task_id'] and t['arm'] == a)}/{len(seeds)}"
+                for a in arms
+            )
+        )
+
+    by_task: dict[str, Any] = {}
+    for task in tasks:
+        for arm in arms:
+            recs = [t for t in trials if t["task"] == task["task_id"] and t["arm"] == arm]
+            k = sum(t["certified"] for t in recs)
+            lo, hi = _wilson(k, len(recs))
+            by_task[f"{task['task_id']}/{arm}"] = {
+                "certified": k,
+                "trials": len(recs),
+                "wilson_95": [lo, hi],
+                "median_time_to_cert": float(_np.median([t["time_to_cert"] for t in recs]))
+                if recs
+                else None,
+            }
+
+    per_arm = {
+        arm: {
+            "trials": sum(1 for t in trials if t["arm"] == arm),
+            "certified": sum(t["certified"] for t in trials if t["arm"] == arm),
+            "search_sec": float(sum(t["search_sec"] for t in trials if t["arm"] == arm)),
+            "cert_sec": float(sum(t["cert_sec"] for t in trials if t["arm"] == arm)),
+        }
+        for arm in arms
+    }
+
+    clean_input = {
+        "tasks": [{"task_id": t["task_id"], "formula": t["canonical_formula"]} for t in tasks],
+        "domain": list(domain),
+        "error_threshold": err_thr,
+        "max_controls": config.get("clean_rerun_max_controls"),
+        "sealed": [
+            "experiments/p52-certified-data.json",
+            "experiments/p53-proposer-manifest.json",
+            "experiments/p56-final-tasks.json" if task_origin == "sealed-final" else None,
+        ],
+        "weights_sha": None,
+    }
+    try:
+        with open(_REPO_ROOT / "experiments" / "p53-proposer-manifest.json", encoding="utf-8") as f:
+            clean_input["weights_sha"] = json.load(f)["weights"]["sha256"]
+    except (OSError, ValueError, KeyError):
+        clean_input["weights_sha"] = None
+    clean_path = Path(output_path).parent / "p56-clean-input.json"
+    with open(clean_path, "w", encoding="utf-8") as f:
+        json.dump(clean_input, f, sort_keys=True)
+    clean_script = Path(output_path).parent / "p56-clean-rerun.py"
+    clean_script.write_text(_P56_CLEAN_RERUN_SCRIPT.replace("__REPO_ROOT__", str(_REPO_ROOT)))
+    try:
+        proc = _sp.run(
+            [sys.executable, str(clean_script), str(clean_path)],
+            capture_output=True,
+            text=True,
+            check=False,
+            cwd=str(_REPO_ROOT),
+            timeout=1200,
+        )
+        clean_rerun = (
+            json.loads(proc.stdout.strip().splitlines()[-1])
+            if proc.returncode == 0
+            else {
+                "ok": False,
+                "error": (proc.stderr or proc.stdout)[-500:],
+            }
+        )
+    except Exception as exc:  # noqa: BLE001 - record, never hide
+        clean_rerun = {"ok": False, "error": repr(exc)}
+    print(f"  clean rerun (new process, self-repeat label): {clean_rerun.get('ok')}")
+
+    if errors:
+        verdict, reason = "BLOCKED", f"trial errors: {errors[:2]}"
+    elif not clean_rerun.get("ok"):
+        verdict, reason = "BLOCKED", f"clean rerun failed: {clean_rerun.get('error', clean_rerun)}"
+    else:
+        verdict, reason = "CONFIRMED", "recoverable package with complete final results"
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    prov = collect_provenance(
+        seed=int(seeds[0]),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p56_config": config_sha[:16], "p56_tasks": seal_sha[:16]},
+        config={"acceptance_phase": "P56"},
+    )
+    report = {
+        "phase": "P56",
+        "verdict": verdict,
+        "result_label": "provisional-confirmation (independent review pending; never a discovery label)",
+        "claim_scope": "frozen method on six fresh tasks; loss and tie are valid results",
+        "run_id": hashlib.sha256(f"{config_sha}{seal_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "reason": reason,
+        "task_origin": task_origin,
+        "tasks": tasks,
+        "task_seal_sha256": seal_sha,
+        "by_task": by_task,
+        "per_arm": per_arm,
+        "clean_rerun": clean_rerun,
+        "p43_resume": clean_rerun.get("p43_resume", {}),
+        "artifacts_restored": clean_rerun.get("artifacts_restored", {}),
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P56",
+        },
+        "seeds_rng": f"fixed seeds {seeds[0]}..{seeds[-1]} (20); paired across arms",
+        "budgets": {"budget_sec": budget, "campaign_cap_sec": cap},
+        "certificate_references": [],
+        "counters": {"trials": len(trials), "tasks": len(tasks)},
+        "limitations": [
+            "Six tasks cannot prove generality; sample limits published per task.",
+            "Provisional without independent review; a post-final change needs a new future test.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P56 audit {verdict}; report -> {out_p}")
+    return report
 
 
 def run_p55_sampling_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -4213,6 +4619,8 @@ def main() -> int:
             run_p54_utility_audit(args.config, args.output)
         elif args.acceptance_phase == "P55":
             run_p55_sampling_audit(args.config, args.output)
+        elif args.acceptance_phase == "P56":
+            run_p56_confirmation_audit(args.config, args.output)
         return 0
 
     seeds = (

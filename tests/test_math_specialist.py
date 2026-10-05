@@ -547,7 +547,15 @@ def test_p52_build_certified_data_smoke() -> None:
     assert report["splits"]["group_overlap"] == []
     assert report["dedup"]["by_target"] is True
     assert report["dedup"]["by_program"] is True
-    assert report["final_test"]["opened"] is False
+    import json as _json
+
+    _log = _json.loads(
+        (_REPO_ROOT / "experiments" / "p47-final-test" / "access-log.json").read_text()
+    )
+    assert report["final_test"]["opened"] == (len(_log) > 0)
+    assert all(
+        e.get("phase") == "P56" and e.get("action") == "generate-sealed-final-tasks" for e in _log
+    )
     assert report["teacher"]["within_cap"] is True
     assert {p["split"] for p in report["positives"]} == {"train", "val"}
     assert len({p["group_id"] for p in report["positives"]}) == len(report["positives"])

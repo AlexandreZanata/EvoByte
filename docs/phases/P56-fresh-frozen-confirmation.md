@@ -1,8 +1,13 @@
 # P56 — Confirmar o método congelado em teste novo
 
-**Status:** Proposed.
+**Status:** Done.
 **Pré-requisito:** P55, com as rotas negativas explícitas do runbook.
 **Branch:** `codex/p56-fresh-frozen-confirmation`.
+**Resultado:** CONFIRMED (provisional, sem rótulo de descoberta) — 360
+ensaios em 6 tarefas seladas novas: clássico 120/120 (~ms), evolução e
+aleatório 40/120 (só 2 tarefas fáceis); derrota publicada com intervalos
+de Wilson por tarefa; reverificação limpa ok (6 certificados, 2 controles,
+6 negativos, P43 resume, 4 selos); acesso registrado persistentemente.
 
 ## Objetivo e escopo
 
