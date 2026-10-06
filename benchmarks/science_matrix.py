@@ -840,9 +840,12 @@ def run_p58_acceptance_baseline_audit(
     verify, every P57 certificate is rechecked with the exact dual checker
     under strict bounds, durable raw/weights must exist with recorded
     size+hash (absent data is MISSING_EVIDENCE, never silently remade),
-    dirty-source final claims are rejected, and any pending scientific
-    approval keeps the dossier BLOCKED. Provisional labels (P56) and
-    P46/P47/P48/P54 pendencies are preserved, never waived.
+    transient-only evidence listed in ``recoveries`` is copied byte-identical
+    to its durable destination with hash recorded (non-empty destinations are
+    never overwritten; unsealed copies stay labeled unsealed), dirty-source
+    final claims are rejected, and any pending scientific approval keeps the
+    dossier BLOCKED. Provisional labels (P56) and P46/P47/P48/P54 pendencies
+    are preserved, never waived.
     """
 
     import torch as _torch
@@ -934,6 +937,54 @@ def run_p58_acceptance_baseline_audit(
         )
     print(f"  durable raw present: {sum(1 for r in raw_inventory if r['ok'])}/{len(raw_inventory)}")
 
+    recovery: list[dict[str, Any]] = []
+    for item in config.get("recoveries", []):
+        src = Path(item["src"])
+        if not src.is_absolute():
+            src = _REPO_ROOT / item["src"]
+        dest = Path(item["dest"])
+        if not dest.is_absolute():
+            dest = _REPO_ROOT / item["dest"]
+        rec: dict[str, Any] = {
+            "phase": item.get("phase"),
+            "src": item["src"],
+            "dest": item["dest"],
+        }
+        if dest.exists() and dest.stat().st_size > 0:
+            digest = hash_file(dest)
+            rec.update(
+                {
+                    "status": "ALREADY_DURABLE",
+                    "size": dest.stat().st_size,
+                    "sha256": digest,
+                    "seal": "none (hash recorded at audit; no prior seal to compare)",
+                }
+            )
+            print(f"  recover {item.get('phase')}: ALREADY_DURABLE {item['dest']}")
+        elif not src.exists():
+            rec.update({"status": "MISSING_EVIDENCE"})
+            findings.append(f"MISSING_EVIDENCE: neither durable nor transient copy: {item['dest']}")
+            print(f"  recover {item.get('phase')}: MISSING_EVIDENCE")
+        else:
+            blob = src.read_bytes()
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with open(dest, "wb") as f:
+                f.write(blob)
+            digest = hashlib.sha256(blob).hexdigest()
+            rec.update(
+                {
+                    "status": "RECOVERED_UNSEALED",
+                    "size": len(blob),
+                    "sha256": digest,
+                    "seal": "none (recovered transient copy; hash recorded at recovery)",
+                    "src_mtime": src.stat().st_mtime,
+                }
+            )
+            print(
+                f"  recover {item.get('phase')}: RECOVERED_UNSEALED {len(blob)}B -> {item['dest']}"
+            )
+        recovery.append(rec)
+
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty:
@@ -975,6 +1026,7 @@ def run_p58_acceptance_baseline_audit(
             "failures": recheck_failures[:10],
         },
         "durable_raw": raw_inventory,
+        "recovery": recovery,
         "approvals": config.get("approvals", []),
         "approvals_pending": [str(a.get("id")) for a in pending],
         "hardware": prov["hardware"],
@@ -1002,10 +1054,15 @@ def run_p58_acceptance_baseline_audit(
             "certificates_rechecked": rechecked_ok,
             "durable_raw": len(raw_inventory),
             "durable_raw_ok": sum(1 for r in raw_inventory if r["ok"]),
+            "recovery": len(recovery),
+            "recovery_durable": sum(1 for r in recovery if r["status"] == "ALREADY_DURABLE"),
+            "recovery_recovered": sum(1 for r in recovery if r["status"] == "RECOVERED_UNSEALED"),
+            "recovery_missing": sum(1 for r in recovery if r["status"] == "MISSING_EVIDENCE"),
             "approvals_pending": len(pending),
         },
         "limitations": [
             "Reconciliation audits recorded evidence; it re-executes no P40-P57 search.",
+            "Recovered transient copies carry no prior seal; their hash is recorded at recovery and they stay provisional.",
             "BLOCKED on missing data, dirty source or pending approval is the honest gate, not a negative result.",
             "P59 requires applicable scientific review completed plus an accepted code review.",
         ],

@@ -1,9 +1,13 @@
 # P58 — Reconciliar evidências e liberar uma base de pesquisa
 
-**Status:** Building (microtarefa A: auditor implementado + diagnóstico; aceitação final e revisão humana pendentes).
+**Status:** Building (microtarefas A+B: auditor + recuperação implementados com
+diagnóstico; aceitação final e revisão humana pendentes).
 **Resultado parcial:** auditor `run_p58_acceptance_baseline_audit` rejeita fonte
 suja, raw ausente e aprovação pendente e recheca os 932 certificados P57
-com o checker exato; dossiê atual BLOCKED (revisão de escopo pendente).
+com o checker exato; 18 evidências de aceitação P40–P57 recuperadas de
+`/tmp` para `experiments/p58-recovered-acceptance/` byte-idênticas com
+hash registrado (cópias sem selo prévio, seguem provisionais); dossiê
+atual BLOCKED (revisão de escopo pendente).
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P57 registrado como resultado histórico; árvore limpa e predecessor identificado.
 **Branch:** `codex/p58-accepted-research-baseline`.

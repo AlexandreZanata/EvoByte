@@ -1,0 +1,357 @@
+{
+  "base_reconciliation": {
+    "ancestor": "ab2cc0c6291c1e30ffb6ebd52d713481a443112b",
+    "ancestor_present": true,
+    "merges_this_cycle": false,
+    "missing_accepted_merges": [
+      "PR #54 P30-P39 research phases consolidation",
+      "PR #55 P30 cache-independence test",
+      "PR #56 P31 CI isolation test",
+      "PR #57 P32 durable-evidence acceptance"
+    ],
+    "origin_main": "17860957d1a65bf10d877bc67eb844a38e239846",
+    "origin_main_integrated": true
+  },
+  "budgets": "not-applicable: audit performs no search (reason: requested/actual wall budgets undefined)",
+  "certificate_references": [
+    {
+      "manifest": "experiments/p33-structured-search.json",
+      "raw": [
+        {
+          "path": "experiments/p33-structured-search-raw.json",
+          "sha256": null,
+          "size": 96844
+        }
+      ]
+    },
+    {
+      "manifest": "experiments/p34-throughput.json",
+      "raw": [
+        {
+          "path": "experiments/p34-raw/ckpt-p34.pt",
+          "sha256": null,
+          "size": 1651
+        },
+        {
+          "path": "experiments/p34-raw/telemetry-p34.jsonl",
+          "sha256": null,
+          "size": 393
+        }
+      ]
+    },
+    {
+      "manifest": "experiments/p35-training-corpus.json",
+      "raw": [
+        {
+          "path": "experiments/p35-training-corpus-raw.json",
+          "sha256": null,
+          "size": 26806
+        }
+      ]
+    },
+    {
+      "manifest": "experiments/p36-specialist.json",
+      "raw": [
+        {
+          "path": "experiments/p36-specialist-raw.json",
+          "sha256": null,
+          "size": 18
+        }
+      ]
+    },
+    {
+      "manifest": "experiments/p37-qrand-dependency-correlated.json",
+      "raw": [
+        {
+          "path": "experiments/p37-qrand-dependency-correlated-raw.json",
+          "sha256": null,
+          "size": 143547
+        }
+      ]
+    },
+    {
+      "manifest": "experiments/p38-confirmation.json",
+      "raw": [
+        {
+          "path": "experiments/p38-confirmation-raw.json",
+          "sha256": null,
+          "size": 230689
+        },
+        {
+          "path": "experiments/p38-frozen-proposer.json",
+          "sha256": null,
+          "size": 891
+        }
+      ]
+    },
+    {
+      "manifest": "experiments/p39-science.json",
+      "raw": [
+        {
+          "path": "experiments/p39-science-raw.json",
+          "sha256": null,
+          "size": 8575
+        }
+      ]
+    }
+  ],
+  "claim_scope": "P33-P39 evidence reconciliation; no new search; no unlocked claims",
+  "claims": [
+    {
+      "id": "base-clean-revision",
+      "rationale": "gate runs recorded dirty trees (7/7 manifests); revision-dirty fixtures rejected",
+      "verdict": "rejected"
+    },
+    {
+      "id": "base-integration",
+      "rationale": "origin/main accepted merges #54-#57 are ancestors of HEAD; integration documented for P41",
+      "verdict": "accepted"
+    },
+    {
+      "id": "p33-adopt-grammar",
+      "rationale": "ADOPT backed by finalists_verification; 0.05x scale disclosed as diagnostic",
+      "verdict": "accepted"
+    },
+    {
+      "id": "p34-envelope-diagnostic",
+      "rationale": "envelope measured; no fabricated speedup claim",
+      "verdict": "accepted"
+    },
+    {
+      "id": "p35-insufficient-published",
+      "rationale": "insufficient corpus published; promotion blocked",
+      "verdict": "accepted"
+    },
+    {
+      "id": "p36-inconclusive-no-training",
+      "rationale": "no training ran; no weights exist",
+      "verdict": "accepted"
+    },
+    {
+      "id": "p37-null-frozen-rule",
+      "rationale": "NULL under the frozen rule; nothing nominated",
+      "verdict": "accepted"
+    },
+    {
+      "id": "p38-provisional-bounded",
+      "rationale": "0.20 with intervals; H1 not replaced",
+      "verdict": "accepted"
+    },
+    {
+      "id": "p39-rediscovery-capped",
+      "rationale": "weaker label retained; finite miss is budget_exhausted",
+      "verdict": "accepted"
+    },
+    {
+      "id": "scale-is-diagnostic",
+      "rationale": "0.05x runs disclosed as diagnostic, never stability proof",
+      "verdict": "accepted"
+    },
+    {
+      "id": "mse-is-not-proof",
+      "rationale": "no manifest promotes raw MSE to a discovery claim",
+      "verdict": "accepted"
+    },
+    {
+      "id": "checkpoint-is-not-resume",
+      "rationale": "checkpoint artifact exists with resume coverage; loading never counted as resume evidence",
+      "verdict": "accepted"
+    },
+    {
+      "id": "sampling-is-not-evolution",
+      "rationale": "P33 arms kept distinct; no cross-credit",
+      "verdict": "accepted"
+    }
+  ],
+  "counters": {
+    "claims": 13,
+    "claims_accepted": 12,
+    "manifests": 7,
+    "manifests_accepted": 6
+  },
+  "dirty": "",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 0.18123367199950735,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "P40 audits recorded evidence; it does not re-execute P33-P39 or confirm old results.",
+    "Gate runs recorded dirty trees; clean-tree re-measurement belongs to later corrective cycles.",
+    "origin/main merges #54-#57 outstanding; P41 requires their integration documented."
+  ],
+  "manifests": [
+    {
+      "integrity": {
+        "errors": [],
+        "ok": true,
+        "raw": [
+          {
+            "ok": true,
+            "path": "experiments/p33-structured-search-raw.json",
+            "size": 96844
+          }
+        ],
+        "seal_ok": true
+      },
+      "notes": [
+        "reduced scale disclosed as diagnostic"
+      ],
+      "path": "experiments/p33-structured-search.json",
+      "recorded_clean_tree": false,
+      "verdict": "accepted"
+    },
+    {
+      "integrity": {
+        "errors": [
+          "experiments/p34-raw/telemetry-p34.jsonl: raw_hash_mismatch"
+        ],
+        "ok": false,
+        "raw": [
+          {
+            "ok": true,
+            "path": "experiments/p34-raw/ckpt-p34.pt",
+            "size": 1651
+          },
+          {
+            "ok": false,
+            "path": "experiments/p34-raw/telemetry-p34.jsonl",
+            "size": 393
+          }
+        ],
+        "seal_ok": true
+      },
+      "notes": [
+        "seal or raw hash mismatch"
+      ],
+      "path": "experiments/p34-throughput.json",
+      "verdict": "rejected"
+    },
+    {
+      "integrity": {
+        "errors": [],
+        "ok": true,
+        "raw": [
+          {
+            "ok": true,
+            "path": "experiments/p35-training-corpus-raw.json",
+            "size": 26806
+          }
+        ],
+        "seal_ok": true
+      },
+      "notes": [],
+      "path": "experiments/p35-training-corpus.json",
+      "recorded_clean_tree": false,
+      "verdict": "accepted"
+    },
+    {
+      "integrity": {
+        "errors": [],
+        "ok": true,
+        "raw": [
+          {
+            "ok": true,
+            "path": "experiments/p36-specialist-raw.json",
+            "size": 18
+          }
+        ],
+        "seal_ok": true
+      },
+      "notes": [
+        "INCONCLUSIVE with no training run; no certificate claimed"
+      ],
+      "path": "experiments/p36-specialist.json",
+      "verdict": "accepted"
+    },
+    {
+      "integrity": {
+        "errors": [],
+        "ok": true,
+        "raw": [
+          {
+            "ok": true,
+            "path": "experiments/p37-qrand-dependency-correlated-raw.json",
+            "size": 143547
+          }
+        ],
+        "seal_ok": true
+      },
+      "notes": [
+        "reduced scale disclosed as diagnostic"
+      ],
+      "path": "experiments/p37-qrand-dependency-correlated.json",
+      "recorded_clean_tree": false,
+      "verdict": "accepted"
+    },
+    {
+      "integrity": {
+        "errors": [],
+        "ok": true,
+        "raw": [
+          {
+            "ok": true,
+            "path": "experiments/p38-confirmation-raw.json",
+            "size": 230689
+          },
+          {
+            "ok": true,
+            "path": "experiments/p38-frozen-proposer.json",
+            "size": 891
+          }
+        ],
+        "seal_ok": true
+      },
+      "notes": [],
+      "path": "experiments/p38-confirmation.json",
+      "recorded_clean_tree": false,
+      "verdict": "accepted"
+    },
+    {
+      "integrity": {
+        "errors": [],
+        "ok": true,
+        "raw": [
+          {
+            "ok": true,
+            "path": "experiments/p39-science-raw.json",
+            "size": 8575
+          }
+        ],
+        "seal_ok": true
+      },
+      "notes": [],
+      "path": "experiments/p39-science.json",
+      "recorded_clean_tree": false,
+      "verdict": "accepted"
+    }
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P40",
+  "rejected_count": 2,
+  "resolved_config": {
+    "acceptance_phase": "P40",
+    "config_path": "experiments/p40-config.json",
+    "config_sha256": "f46142501f67ca5e2b6af2623452871d4b31e5e220c8fd37c7d6587e2c707674"
+  },
+  "revision": "5a916707963055bec46ee3dc13d51fc3ba3d4708",
+  "run_id": "19d0f9663ccb475b",
+  "seeds_rng": "not-applicable: audit performs no search (reason: deterministic manifest inspection)",
+  "verdict": "MIXED"
+}

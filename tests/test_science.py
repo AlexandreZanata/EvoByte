@@ -789,7 +789,9 @@ def test_p57_campaign_audit_smoke(tmp_path):
     assert "discovery claimed" not in blob or "no discovery claimed" in blob
 
 
-def _p58_smoke_config(tmp_path, repo, *, approvals, require_clean_tree, n_certs=3):
+def _p58_smoke_config(
+    tmp_path, repo, *, approvals, require_clean_tree, n_certs=3, durable_raw=None, recoveries=None
+):
     import json as _json
 
     certs = _json.loads((repo / "experiments" / "p57-certificates.json").read_text())[:n_certs]
@@ -800,13 +802,16 @@ def _p58_smoke_config(tmp_path, repo, *, approvals, require_clean_tree, n_certs=
         "sealed_manifests": ["experiments/p56-final-tasks.json"],
         "certificates_path": str(cert_path),
         "certificates_expected": n_certs,
-        "durable_raw": [
+        "durable_raw": durable_raw
+        if durable_raw is not None
+        else [
             "experiments/p52-certified-data-raw.json",
             "experiments/no-such-raw.json",
         ],
         "device": "cpu",
         "require_clean_tree": require_clean_tree,
         "approvals": approvals,
+        "recoveries": recoveries if recoveries is not None else [],
     }
     cfg_p = tmp_path / "p58-smoke-config.json"
     cfg_p.write_text(_json.dumps(cfg))
@@ -861,3 +866,73 @@ def test_p58_rejects_wrong_phase_config(tmp_path):
     cfg_p.write_text(_json.dumps({"phase": "P57"}))
     with _pytest.raises(ValueError, match="not a P58 configuration"):
         run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+
+
+def test_p58_recovery_copies_absent_dest_with_hash(tmp_path):
+    import hashlib as _hashlib
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    src = tmp_path / "transient-evidence.json"
+    src.write_text(_json.dumps({"phase": "PX", "verdict": "COMPLETE"}))
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        recoveries=[{"phase": "PX", "src": str(src), "dest": str(tmp_path / "durable-px.json")}],
+    )
+    out_p = tmp_path / "p58-acceptance.json"
+    report = run_p58_acceptance_baseline_audit(cfg_p, out_p)
+    assert report["verdict"] == "ACCEPTED"
+    assert report["counters"]["recovery_recovered"] == 1
+    rec = report["recovery"][0]
+    assert rec["status"] == "RECOVERED_UNSEALED"
+    assert rec["size"] == src.stat().st_size
+    assert rec["sha256"] == _hashlib.sha256(src.read_bytes()).hexdigest()
+    assert (tmp_path / "durable-px.json").read_bytes() == src.read_bytes()
+
+
+def test_p58_recovery_refuses_to_overwrite_durable(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    src = tmp_path / "transient-evidence.json"
+    src.write_text('{"new": true}')
+    dest = tmp_path / "durable-px.json"
+    dest.write_text('{"sealed": true}')
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        recoveries=[{"phase": "PX", "src": str(src), "dest": str(dest)}],
+    )
+    out_p = tmp_path / "p58-acceptance.json"
+    report = run_p58_acceptance_baseline_audit(cfg_p, out_p)
+    assert report["verdict"] == "ACCEPTED"
+    assert report["recovery"][0]["status"] == "ALREADY_DURABLE"
+    assert dest.read_text() == '{"sealed": true}'
+
+
+def test_p58_recovery_missing_both_is_blocked(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        recoveries=[
+            {
+                "phase": "PX",
+                "src": str(tmp_path / "no-transient.json"),
+                "dest": str(tmp_path / "no-durable.json"),
+            }
+        ],
+    )
+    out_p = tmp_path / "p58-acceptance.json"
+    report = run_p58_acceptance_baseline_audit(cfg_p, out_p)
+    assert report["verdict"] == "BLOCKED"
+    assert report["counters"]["recovery_missing"] == 1
+    assert any("MISSING_EVIDENCE" in f for f in report["findings"])

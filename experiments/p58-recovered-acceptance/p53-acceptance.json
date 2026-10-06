@@ -1,0 +1,93 @@
+{
+  "budgets": {
+    "max_epochs": 20,
+    "max_train_min": 30.0
+  },
+  "certificate_references": [],
+  "checks": {
+    "all_sampled_valid": true,
+    "checkpoint_by_validation": true,
+    "epochs_within_cap": true,
+    "exploration_floor_kept": true,
+    "independent_reload_samples": true,
+    "manifest_sealed": true,
+    "params_within_cap": true,
+    "single_model": true,
+    "time_within_cap": true,
+    "training_reproducible": true
+  },
+  "claim_scope": "one trained proposer, reproducible export; utility decided by P54",
+  "counters": {
+    "epochs_run": 20,
+    "params": 28184,
+    "sampled": 32
+  },
+  "dirty": "M benchmarks/math_specialist.py\n M benchmarks/science_matrix.py\n M docs/phases/P53-small-conditional-proposer.md\n M src/evobyte/generator.py\n M tests/test_generator.py\n M tests/test_science.py\n?? experiments/p53-config.json\n?? experiments/p53-proposer-manifest.json\n?? experiments/p53-proposer-raw.json\n?? experiments/p53-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 3.6741053619989543,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 8,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "Validity is a decoder property; solution quality is P54 business.",
+    "No architecture search ran; a single small model was trained once.",
+    "No KEEP/DROP here: promotion is decided by measured utility in P54."
+  ],
+  "model": {
+    "architecture": "SequentialHistoryProposer",
+    "gru_width": 64,
+    "param_cap": 1000000,
+    "param_count": 28184
+  },
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P53",
+  "resolved_config": {
+    "acceptance_phase": "P53",
+    "config_path": "experiments/p53-config.json",
+    "config_sha256": "e1e6186de23c2833fe96af90797e9a0913b2038ade77e644801f0be61ac239d8"
+  },
+  "revision": "aa653f98a4c4cb3751331818ea420010c4a56465",
+  "run_id": "c8923b45b3c0c78b",
+  "sampling": {
+    "floor_fraction": 0.125,
+    "n_sample": 32,
+    "sampling_reproducible": true,
+    "valid_rate": 1.0
+  },
+  "seeds_rng": "fixed seed 42; seeded retrain and resample compared",
+  "total_cost_sec": {
+    "collection_sec": 3.9211712900651037,
+    "elapsed_sec": 1.916000149998581,
+    "train_sec": 1.0155148620033287
+  },
+  "training": {
+    "batch_used": 32,
+    "best_epoch": 19,
+    "best_val_loss": 0.12784478068351746,
+    "epochs_run": 20,
+    "reproducible": true,
+    "stopped_by": "max_epochs",
+    "train_sec": 1.0155148620033287
+  },
+  "verdict": "ACCEPTED",
+  "weights": {
+    "path": "/tmp/p53-audit-proposer.pt",
+    "sha256": "9d5bc76dfdfccd93d8f611d851c70700c58747b0969f56eb35f016ae08b44105"
+  }
+}

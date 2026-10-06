@@ -1,0 +1,84 @@
+{
+  "area_distribution": {
+    "additive combinatorics": 12,
+    "arithmetic progressions": 3,
+    "combinatorics": 4,
+    "discrepancy": 1,
+    "distances": 1,
+    "geometry": 14,
+    "graph theory": 26,
+    "group theory": 1,
+    "number theory": 32,
+    "primes": 2,
+    "primitive sets": 1,
+    "sidon sets": 3
+  },
+  "catalogue_sha256": "bd976f3b315bab263cbb956e5b016467b326994c984cfa74baa41efbd75b37c2",
+  "checks": {
+    "count_ok": true,
+    "dedup_ok": true,
+    "independent_refetch_ok": true,
+    "schema_ok": true,
+    "source_pinned": true
+  },
+  "claim_scope": "catalogue metadata validation; curation approval is a human gate",
+  "counts": {
+    "finite_search_candidates": 34,
+    "min_open_confirmed": 100,
+    "open_confirmed": 100,
+    "solved_examples": 9,
+    "status_unconfirmed": 0,
+    "unsuitable": 0
+  },
+  "elapsed_sec": 116.07218961900071,
+  "errors": [],
+  "human_review": {
+    "gate_note": "P47 is blocked until a mathematician approves this curation; this audit cannot grant approval.",
+    "required": true,
+    "scope": "curation of the 100 open-confirmed entries before P47",
+    "status": "pending"
+  },
+  "independent_refetch": {
+    "dataset_file_sha256": "cd3f949a23c6597078c4207987b30e817effaea43501406e49daf0c1c923dfeb",
+    "entries": {
+      "finite_search_candidates": {
+        "checked": 34,
+        "ok": 34,
+        "problems": []
+      },
+      "open_confirmed": {
+        "checked": 100,
+        "ok": 100,
+        "problems": []
+      }
+    },
+    "errors": [],
+    "near_duplicate_count": 0,
+    "near_duplicates": [],
+    "ok": true
+  },
+  "phase": "P46",
+  "resolved_config": {
+    "acceptance_phase": "P46",
+    "catalogue_path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/docs/research/open-problems.json",
+    "config_path": "experiments/p46-config.json",
+    "config_sha256": "6dd55ca51ee84b80233d9eed7219fcb768785788cb82b01e10b81703ddf12713"
+  },
+  "sample_ids": [
+    "erdos-3",
+    "erdos-5",
+    "erdos-9",
+    "erdos-10",
+    "erdos-11"
+  ],
+  "source": {
+    "dataset": "github.com/Teorth/erdosproblems data/problems.yaml",
+    "dataset_commit": "6754c649e41328f461412eb1d08ea72f1d4bb5d1",
+    "dataset_commit_date": "2026-09-28T09:49:46Z",
+    "dataset_file_sha256": "cd3f949a23c6597078c4207987b30e817effaea43501406e49daf0c1c923dfeb",
+    "license": "Apache-2.0 (dataset metadata); statements stored as short excerpts with citation",
+    "primary": "Erdos Problems database (Thomas Bloom), erdosproblems.com"
+  },
+  "status": "PASS",
+  "verdict": "PENDING_HUMAN_REVIEW"
+}
