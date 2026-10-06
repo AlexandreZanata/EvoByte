@@ -6,8 +6,10 @@ diagnóstico; aceitação final e revisão humana pendentes).
 suja, raw ausente e aprovação pendente e recheca os 932 certificados P57
 com o checker exato; 18 evidências de aceitação P40–P57 recuperadas de
 `/tmp` para `experiments/p58-recovered-acceptance/` byte-idênticas com
-hash registrado (cópias sem selo prévio, seguem provisionais); dossiê
-atual BLOCKED (revisão de escopo pendente).
+hash registrado (cópias sem selo prévio, seguem provisionais); medição em
+árvore limpa confirma gate técnico integralmente verde (selos 3/3,
+932/932, raw 3/3, recovery 18/18 + 0 missing) e dossiê BLOCKED apenas
+por 6 aprovações humanas pendentes — único bloqueador restante.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P57 registrado como resultado histórico; árvore limpa e predecessor identificado.
 **Branch:** `codex/p58-accepted-research-baseline`.
