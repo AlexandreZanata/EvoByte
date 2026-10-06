@@ -21,6 +21,7 @@ from benchmarks.science_matrix import (
     compute_r2,
     generate_scientific_splits,
     run_p40_evidence_audit,
+    run_p58_acceptance_baseline_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -152,6 +153,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P55",
         "P56",
         "P57",
+        "P58",
     )
     import subprocess as _sp
 
@@ -160,7 +162,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P58",
+            "P59",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -172,7 +174,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P58'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P59'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -785,3 +787,77 @@ def test_p57_campaign_audit_smoke(tmp_path):
     assert "exhaustive-null" not in report["by_status"]
     blob = out_p.read_text().lower()
     assert "discovery claimed" not in blob or "no discovery claimed" in blob
+
+
+def _p58_smoke_config(tmp_path, repo, *, approvals, require_clean_tree, n_certs=3):
+    import json as _json
+
+    certs = _json.loads((repo / "experiments" / "p57-certificates.json").read_text())[:n_certs]
+    cert_path = tmp_path / "p58-smoke-certs.json"
+    cert_path.write_text(_json.dumps(certs))
+    cfg = {
+        "phase": "P58",
+        "sealed_manifests": ["experiments/p56-final-tasks.json"],
+        "certificates_path": str(cert_path),
+        "certificates_expected": n_certs,
+        "durable_raw": [
+            "experiments/p52-certified-data-raw.json",
+            "experiments/no-such-raw.json",
+        ],
+        "device": "cpu",
+        "require_clean_tree": require_clean_tree,
+        "approvals": approvals,
+    }
+    cfg_p = tmp_path / "p58-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p58_blocks_on_pending_approval_and_missing_raw(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "pending"}],
+        require_clean_tree=False,
+    )
+    out_p = tmp_path / "p58-acceptance.json"
+    report = run_p58_acceptance_baseline_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P58"
+    assert report["verdict"] == "BLOCKED"
+    assert report["certificates"]["rechecked_exact"] == 3
+    assert any("MISSING_EVIDENCE" in f for f in report["findings"])
+    assert any("PENDING_APPROVAL" in f for f in report["findings"])
+    assert "p58-scope-review" in report["approvals_pending"]
+
+
+def test_p58_accepts_when_evidence_complete_and_approved(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+    )
+    import json as _json
+
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["durable_raw"] = ["experiments/p52-certified-data-raw.json"]
+    cfg_p.write_text(_json.dumps(cfg))
+    out_p = tmp_path / "p58-acceptance.json"
+    report = run_p58_acceptance_baseline_audit(cfg_p, out_p)
+    assert report["verdict"] == "ACCEPTED"
+    assert report["counters"]["sealed_ok"] == 1
+    assert report["counters"]["certificates_rechecked"] == 3
+
+
+def test_p58_rejects_wrong_phase_config(tmp_path):
+    import json as _json
+
+    import pytest as _pytest
+
+    cfg_p = tmp_path / "p58-wrong-config.json"
+    cfg_p.write_text(_json.dumps({"phase": "P57"}))
+    with _pytest.raises(ValueError, match="not a P58 configuration"):
+        run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")

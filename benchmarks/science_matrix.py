@@ -696,6 +696,7 @@ ACCEPTANCE_PHASES = (
     "P55",
     "P56",
     "P57",
+    "P58",
 )
 
 
@@ -828,6 +829,194 @@ def main() -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 '''
+
+
+def run_p58_acceptance_baseline_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P58 audit: reconcile P40-P57 evidence and gate the research base.
+
+    Inspection and re-verification only: sealed P52/P53/P56 manifests must
+    verify, every P57 certificate is rechecked with the exact dual checker
+    under strict bounds, durable raw/weights must exist with recorded
+    size+hash (absent data is MISSING_EVIDENCE, never silently remade),
+    dirty-source final claims are rejected, and any pending scientific
+    approval keeps the dossier BLOCKED. Provisional labels (P56) and
+    P46/P47/P48/P54 pendencies are preserved, never waived.
+    """
+
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+        hash_file,
+        verify_manifest_integrity,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P58":
+        raise ValueError(f"Config {cfg_p} is not a P58 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P58 ACCEPTED-RESEARCH-BASELINE AUDIT (reconciliation only; no new search)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    manifests: list[dict[str, Any]] = []
+    for rel in config.get("sealed_manifests", []):
+        chk = verify_manifest_integrity(_REPO_ROOT / rel)
+        manifests.append({"path": rel, "ok": bool(chk["ok"]), "errors": chk["errors"][:3]})
+        print(f"  sealed {rel}: {'ok' if chk['ok'] else 'SEAL BROKEN'}")
+        if not chk["ok"]:
+            findings.append(f"SEAL_BROKEN: {rel} ({'; '.join(chk['errors'][:2])})")
+
+    cert_rel = config.get("certificates_path", "experiments/p57-certificates.json")
+    cert_p = _REPO_ROOT / cert_rel if not Path(cert_rel).is_absolute() else Path(cert_rel)
+    with open(cert_p, encoding="utf-8") as f:
+        certificates = json.load(f)
+    expected = int(config.get("certificates_expected", len(certificates)))
+    if len(certificates) != expected:
+        findings.append(
+            f"COUNT_MISMATCH: {cert_rel} has {len(certificates)} certificates, expected {expected}"
+        )
+
+    from open_problems import verify_independent_reproduction
+
+    device = _torch.device(config.get("device", "cpu"))
+    rechecked_ok = 0
+    recheck_failures: list[str] = []
+    for entry in certificates:
+        try:
+            repro = verify_independent_reproduction(
+                "erdos-straus",
+                {
+                    "n": int(entry["n"]),
+                    "x": int(entry["x"]),
+                    "y": int(entry["y"]),
+                    "z": int(entry["z"]),
+                },
+                bounds_strict=True,
+                device=device,
+            )
+            ok = bool(repro.get("status") == "PASS")
+        except Exception as exc:  # noqa: BLE001 - record, never hide
+            ok = False
+            recheck_failures.append(f"n={entry.get('n')}: {exc!r}"[:160])
+        if ok:
+            rechecked_ok += 1
+        elif len(recheck_failures) < 10:
+            recheck_failures.append(f"n={entry.get('n')}: reproduction not verified")
+    print(f"  certificates rechecked exact: {rechecked_ok}/{len(certificates)}")
+    if rechecked_ok != len(certificates):
+        findings.append(
+            f"RECHECK_FAILED: {len(certificates) - rechecked_ok} certificate(s) "
+            "not verified by the exact checker"
+        )
+
+    raw_inventory: list[dict[str, Any]] = []
+    for rel in config.get("durable_raw", []):
+        cand = _REPO_ROOT / rel if not Path(rel).is_absolute() else Path(rel)
+        if not cand.exists():
+            raw_inventory.append({"path": rel, "ok": False, "error": "MISSING_EVIDENCE"})
+            findings.append(f"MISSING_EVIDENCE: durable raw absent: {rel}")
+            print(f"  raw {rel}: MISSING_EVIDENCE")
+            continue
+        digest = hash_file(cand)
+        raw_inventory.append(
+            {"path": rel, "ok": True, "size": cand.stat().st_size, "sha256": digest}
+        )
+    print(f"  durable raw present: {sum(1 for r in raw_inventory if r['ok'])}/{len(raw_inventory)}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    pending = [a for a in config.get("approvals", []) if a.get("status") != "approved"]
+    for appr in pending:
+        print(f"  approval {appr.get('id')}: {appr.get('status')}")
+    if pending:
+        findings.append("PENDING_APPROVAL: " + ", ".join(str(a.get("id")) for a in pending))
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=42,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p58_config": config_sha[:16]},
+        config={"acceptance_phase": "P58"},
+    )
+    report = {
+        "phase": "P58",
+        "verdict": verdict,
+        "claim_scope": (
+            "P40-P57 evidence reconciliation only; no new search, no novelty "
+            "or discovery claim; provisional labels and review pendencies preserved"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "sealed_manifests": manifests,
+        "certificates": {
+            "path": cert_rel,
+            "expected": expected,
+            "rechecked_exact": rechecked_ok,
+            "rechecked_total": len(certificates),
+            "failures": recheck_failures[:10],
+        },
+        "durable_raw": raw_inventory,
+        "approvals": config.get("approvals", []),
+        "approvals_pending": [str(a.get("id")) for a in pending],
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P58",
+        },
+        "seeds_rng": "not-applicable: deterministic manifest inspection plus exact recheck (reason: no search)",
+        "budgets": {"audit_recheck_sec": time.perf_counter() - t0},
+        "certificate_references": [
+            {"n": c.get("n"), "sha256": c.get("sha256")} for c in certificates[:5]
+        ],
+        "counters": {
+            "sealed_manifests": len(manifests),
+            "sealed_ok": sum(1 for m in manifests if m["ok"]),
+            "certificates": len(certificates),
+            "certificates_rechecked": rechecked_ok,
+            "durable_raw": len(raw_inventory),
+            "durable_raw_ok": sum(1 for r in raw_inventory if r["ok"]),
+            "approvals_pending": len(pending),
+        },
+        "limitations": [
+            "Reconciliation audits recorded evidence; it re-executes no P40-P57 search.",
+            "BLOCKED on missing data, dirty source or pending approval is the honest gate, not a negative result.",
+            "P59 requires applicable scientific review completed plus an accepted code review.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P58 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -4796,6 +4985,8 @@ def main() -> int:
             run_p56_confirmation_audit(args.config, args.output)
         elif args.acceptance_phase == "P57":
             run_p57_campaign_audit(args.config, args.output)
+        elif args.acceptance_phase == "P58":
+            run_p58_acceptance_baseline_audit(args.config, args.output)
         return 0
 
     seeds = (
