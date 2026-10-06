@@ -49,6 +49,10 @@ P37 one controlled quantum-inspired sampling hypothesis
 P38 clean-environment confirmation + frozen model export
 P39 bounded mathematical campaign + novelty review
 P40–P57 guided formal-search program (see executor runbook and phase index)
+P58–P60 accepted base, equal-information controls and frozen workbench
+P61–P70 ten isolated speculative hypotheses
+P71 fresh independent confirmation with selection control
+P72 one precise novelty nomination and certified campaign
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -131,9 +135,32 @@ a fresh sealed test and an unchanged accepted implementation. End with one
 bounded campaign and human novelty review, not a universal theorem claim
 based on tested instances.
 
-P40 is next, subject to accepted-base reconciliation; none of P40–P57 has
-been executed by adding this plan. No historical H1, P14 or cross-family
-claim is unlocked. The existing quantum roadmap is preserved.
+P40 was the entry of D017. P40–P57 outcomes now exist in their phase files;
+their recorded human-review pendencies and provisional evidence are not
+waived by Done labels. No historical H1, P14 or cross-family claim is unlocked.
+The existing quantum roadmap is preserved.
+
+## Speculative hypotheses extension (D018)
+
+[P58–P72](phases/README.md#speculative-hypothesis-program-p58p72) and
+[the updated executor contract](FORMAL_SEARCH_PLAN.md#programa-especulativo-p58p72)
+are Proposed. P58 is next: reconcile dirty-run evidence, durable artifacts
+and outstanding review; P59 separates public problem inputs from private
+answers and establishes equal-cost comparisons. P60 preregisters one family,
+strong classical baselines, small models and bounded resource budgets.
+
+P61–P70 test modular shadows, error repair, verifier feedback, learned
+obstructions, backward constructions, composite jumps, verified macros,
+adversarial conjectures, residue-guided islands and parametric proof search.
+Each tests one mechanism; null results are retained and modules are not
+automatically stacked. P71 confirms at most two selected methods on fresh
+groups with independent review and selection/multiple-comparison control.
+P72 nominates one precise mathematical result and reviews correctness,
+novelty and reproduction. No universal claim follows from finite testing.
+
+Adding these files executes no new experiment and establishes no worldwide
+novelty, quantum advantage or solved open problem. Existing results remain
+unchanged; integrity failures block advancement, not honest negative findings.
 
 ## Quantum track (experimental, deferred expansion)
 

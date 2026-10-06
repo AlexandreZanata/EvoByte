@@ -1,8 +1,9 @@
 # Plano de busca matemática verificável — execução por agente econômico
 
-**Status: Proposed. Data: 2026-10-01.** Este documento é planejamento, não
-implementação, certificação das fases antigas ou promessa de descoberta.
-Novas fases: P40–P57. Não executar nenhuma delas durante a criação deste plano.
+**Plano atualizado: 2026-10-05.** P40–P57 são o programa histórico, com
+resultados e pendências nos arquivos individuais. A extensão P58–P72 tem
+Status Proposed. Este documento não certifica fases antigas nem promete
+descoberta. Criar o plano não executa os novos experimentos.
 
 ## Objetivo e limites
 
@@ -110,7 +111,7 @@ certificate references, counters, limitations e caminhos/tamanhos/hashes
 dos dados brutos. Campos sem aplicação são marcados explicitamente com
 motivo. Relatórios técnicos não precisam inventar medidas de desempenho.
 
-Os arquivos de fase têm Status Proposed. Marcar Done requer gate executado,
+Os novos arquivos P58–P72 têm Status Proposed. Marcar Done requer gate executado,
 artefato recuperável, commit e push; número de fases escritas não é progresso
 experimental. Runtime ausente, dado insuficiente ou fonte sem confirmação
 produzem BLOCKED/INCONCLUSIVE conforme o caso; nunca simular sucesso.
@@ -151,7 +152,8 @@ rótulo automático. Um empate ou modelo pior pode encerrar um experimento
 ## Prompt pronto para copiar ao agente executor
 
 > Trabalhe no EvoByte. Leia AGENTS.md, docs/FORMAL_SEARCH_PLAN.md e o arquivo
-> da primeira fase P40–P57 ainda não aceita cujos predecessores passaram.
+> da primeira fase ainda não aceita cujos predecessores passaram; a próxima
+> tarefa proposta é P58, conforme a extensão abaixo.
 > Execute somente uma microtarefa dessa fase. Reuse módulos existentes e
 > implemente apenas o contrato descrito; não redesenhe a arquitetura.
 > Antes de começar confirme árvore limpa, base aceita e gates do predecessor.
@@ -174,3 +176,150 @@ rótulo automático. Um empate ou modelo pior pode encerrar um experimento
   escrever este plano não confirma previamente 100 problemas abertos.
 
 O índice e os contratos completos estão em [phases/README.md](phases/README.md).
+
+## Programa especulativo P58–P72
+
+**Status: Proposed, 2026-10-05.** São hipóteses exploratórias; não há
+garantia de ineditismo mundial, vantagem quântica, ganho de velocidade ou
+solução de conjectura. Este plano implementa nenhuma das novas interfaces.
+Os resultados históricos P40–P57 continuam preservados e sujeitos a seus
+gates científicos, mesmo onde o arquivo registra Done.
+
+### Ordem e mapa das hipóteses
+
+```text
+P58 base aceita -> P59 entradas iguais -> P60 bancada congelada
+ -> P61 H02 sombras -> P62 H01 erros -> P63 H08 feedback
+ -> P64 H03 obstruções -> P65 H04 respostas/ponte -> P66 H05 saltos
+ -> P67 H06 macros -> P68 H07 adversários -> P69 H09 ilhas
+ -> P70 H10 famílias paramétricas -> P71 confirmação -> P72 novidade
+```
+
+Números H01–H10 correspondem às dez ideias da discussão; a ordem executa
+primeiro os mecanismos de menor custo. Cada arquivo de fase especifica
+escopo, trabalho, gate e Commit & Push. Não implementar dez mecanismos
+de uma vez, nem abrir agentes paralelos para executar fases simultâneas.
+
+P58 é a próxima tarefa, com auditoria e revisões pendentes. Antes de medir
+P61–P70, P58–P60 devem estar integralmente aceitas. Propostas e código podem
+ser preparados em microtarefas próprias, mas gate pendente bloqueia novos
+experimentos e qualquer aceitação científica.
+
+Cada piloto P61–P70 testa seu mecanismo isoladamente contra a base P59;
+não acrescenta automaticamente mecanismos experimentais anteriores.
+Hipótese íntegra NULL/INCONCLUSIVE pode encerrar a etapa e liberar a
+próxima. Nenhum sucessor depende de fabricar um ganho. Falha de checker,
+dados, aprovação ou isolamento é BLOCKED e interrompe a cadeia.
+
+### Bancada padrão para o agente executor
+
+- Família inicial: construções limitadas de Erdős–Straus, com domínio,
+  janelas de x/y, limites coordenados e tipos de candidato congelados em P60.
+  Preservar certificados exatos e espaço acessível igual em todos os braços.
+- Desenvolvimento pode usar resultados P57. Treino/validation separam n,
+  origem e variantes equivalentes; famílias paramétricas compartilhadas
+  precisam ser declaradas. Final usa grupos novos, sem acesso prévio.
+- Comparação principal: baseline P59 versus um mecanismo. Controles
+  embaralhados, clássicos ou desligados, quando especificados no arquivo,
+  são braços adicionais explícitos dentro do mesmo teto; não selecionar
+  só os controles que dão resultado favorável.
+- Piloto: seis tarefas development, três seeds fixadas antes de medir,
+  10 s totais por tentativa incluindo inferência/filtro/certificação,
+  teto de 30 min por hipótese incluindo dados/treino. A seed não transforma
+  a repetição de uma tarefa em um problema matemático independente.
+- Modelo inicial <=100 mil parâmetros; máximo 1 milhão combinado, inclusive
+  proponente/atacante. Usar uma arquitetura e um conjunto de parâmetros
+  por hipótese, sem busca oculta de hiperparâmetros.
+- VRAM: reservar max(1 GiB, 20% do total), lote inicial 256, um stream CUDA,
+  no máximo dois workers CPU. Quatro ilhas dividem a população disponível.
+  Não chamar uso máximo da 4060 sem medição representativa.
+- Dados brutos limitados a 1 GiB por execução, fila a 64 MiB, mapa a 100 mil
+  nós; checkpoints/replay registram cobertura. Todo certificado promovido
+  é conservado, mesmo quando o mapa de candidatos é amostrado.
+- Cinco horas são o teto inicial dos dez pilotos, não autorização para
+  aumentar individualmente um piloto. Confirmação P71: até duas horas por
+  método, no máximo dois; P72: uma hora. P58–P60 e confirmação dos controles
+  têm custos próprios declarados, sem inventar medições ou esconder gastos.
+
+Se um experimento precisar de mais recursos, registrar INCONCLUSIVE e
+preparar uma nova nominação antes de gastar além do teto. Smoke nunca
+substitui o orçamento registrado. Teto de busca não é garantia absoluta de
+ausência de crash; implementar parada controlada e medir estabilidade.
+
+### Informação e custo justos
+
+O braço de geração recebe somente entradas públicas. Fórmula-resposta,
+certificado-alvo e alvo privado de equivalência são restritos ao checker.
+Para symbolic regression, compilar ground truth é controle de compilação;
+o baseline de descoberta usa as mesmas amostras que os outros métodos.
+Para a campanha aritmética, todos recebem o mesmo n e mesmos bounds;
+warm-start/biblioteca entregue a um braço precisa de condição comparável
+ou de ablation registrada e custo de obtenção explícito.
+
+Publicar duas visões sem misturá-las: custo por consulta após preparação,
+com os mesmos 10 s por braço; e custo completo de coleta+treino+busca+
+checker+tracking. Uma vitória na primeira não estabelece vantagem na segunda.
+Uma afirmação de custo total equivalente exige uma campanha separada com
+o mesmo teto completo em ambos os braços, debitando a preparação do método
+aprendido desse teto. Projeções de amortização têm rótulo de projeção e
+horizonte declarado; não são observações de 10 mil tarefas.
+
+### Pré-registro e classificação
+
+P60 congela a regra antes dos dados. Proposta de triagem para revisão:
+PROMISING se o mesmo conjunto tiver mais tarefas certificadas, ou pelo
+menos 20% menor tempo limitado até certificado sem queda de sucesso;
+NULL quando o efeito registrado não ocorre; INCONCLUSIVE se faltarem
+soluções/grupos ou precisão. O custo integral deve ser apresentado e pode
+impedir promoção. Essa triagem é escolha operacional, não prova estatística.
+
+Timeout entra como observação censurada e nunca desaparece da análise.
+Reportar todos os braços, todas as tarefas e seeds, intervalos por grupo e
+soluções distintas. Não usar mediana só dos sucessos para esconder falhas.
+MSE, resíduo pequeno, diversidade e sobrevivência ao atacante são auxiliares.
+
+P71 pré-registra com revisor estatístico a análise dos dados censurados,
+efeito mínimo, critérios de sucesso e controle da seleção entre dez
+hipóteses. O piloto pequeno não garante poder para confirmar ganho. Não
+promover um mecanismo com zero sucessos, nem tratar zero versus zero como
+prova de equivalência. Sem revisão independente o rótulo é PROVISIONAL.
+
+Toda exclusão permanente exige prova/checker exato. Filtro aprendido sem
+prova apenas prioriza e mantém exploração sem filtro. Família de infinitos
+casos exige identidade, integridade, positividade e domínio demonstrados;
+amostras finitas não conferem esse status.
+
+### Microtarefas e revisão limpa
+
+Uma fase pode precisar de entregas pequenas distintas:
+A) capacidade + regressões + diagnóstico técnico;
+B) configuração/pré-registro revisados e congelados;
+C) medição read-only da revisão aceita + registro documental do resultado.
+Cada entrega é uma microtarefa com gate e um único commit; a fase continua
+Building até o seu gate integral. Não executar A/B/C em um único ciclo.
+
+Um diagnóstico de código ainda editado pode validar a capacidade técnica,
+mas registra dirty=true e não aceita a hipótese. Medição final começa com
+árvore limpa, revisão aceita e configurações congeladas; salva raw externamente.
+Depois de medir, registrar o manifesto/relatório em microtarefa documental.
+Um commit posterior não transforma um diagnóstico antigo em confirmação.
+
+Não adicionar handlers vazios P58–P72. Reusar interfaces e módulos reais;
+o science_matrix despacha, não recebe dez implementações inteiras. As chamadas
+novas dos arquivos de fase são contratos futuros, não CLI já disponível.
+Gates comuns permanecem git diff --check, python3 -m pytest tests -q e
+make verify; um gate vermelho bloqueia commit/push daquela microtarefa.
+
+### Prompt do novo ciclo
+
+> Leia AGENTS.md, docs/FORMAL_SEARCH_PLAN.md, seção Programa especulativo
+> P58–P72, e a primeira fase liberada começando por P58. Execute somente
+> uma microtarefa; nenhuma fase seguinte sem pré-requisitos aceitos.
+> Preserve dados P40–P57 e testes finais antigos. Não presuma aprovação
+> humana, novidade ou capacidade de CLI apenas porque existe um documento.
+> Antes do experimento confirme enunciado revisado, informação igual,
+> custo completo, configuração congelada e revisão limpa. Reuse o código;
+> não altere checker, thresholds ou bounds para fazer a hipótese vencer.
+> Resultado NULL/INCONCLUSIVE íntegro é válido; erro de integridade bloqueia.
+> Rode gates, faça um commit e push/PR apenas se todos passarem, registre
+> artefatos duráveis/hashes e pare. Não execute automaticamente os dez testes.
