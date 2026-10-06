@@ -9,6 +9,8 @@ aleatório 40/120 (só 2 tarefas fáceis); derrota publicada com intervalos
 de Wilson por tarefa; reverificação limpa ok (6 certificados, 2 controles,
 6 negativos, P43 resume, 4 selos); acesso registrado persistentemente.
 
+**Continuidade atual:** Resultado histórico provisório e final consumido; D019/P58 restringe seu uso e P71 exige confirmação nova.
+
 ## Objetivo e escopo
 
 Confirmar o método congelado em teste novo. Alterações permitidas: configuração previamente congelada, dados externos e relatório de reprodução. Usar interfaces já aceitas de benchmarks/full_matrix.py; nenhuma edição de algoritmo nesta fase.
@@ -43,6 +45,17 @@ python3 benchmarks/science_matrix.py --acceptance-phase P56 --config experiments
 Guardar configuração completa, comando real e artefato recuperável. Uma
 fase técnica mede sua condição técnica; não fabrica números de velocidade.
 Revisão científica, quando exigida acima, antecede a promoção do resultado.
+
+## Uso histórico na continuidade D019
+
+Preservar o relatório, incluindo `dirty`, `provisional-confirmation` e o log
+consumido. Recheck/restauração em processo limpo não transforma a busca antiga
+em campanha executada de revisão limpa; delegação não cria autoria independente.
+P58 pode aceitar arquivo provisório com uso restrito a referência/development;
+nunca como confirmação independente, teste fresco ou descoberta. Para promover
+um método, P71 cria final novo após congelamento e exige outro operador real.
+Não refazer o final P56 para ajustar método/hipótese nem apagar seu acesso.
+Aplicar [D019](../FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019).
 
 ## Risco principal
 

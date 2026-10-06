@@ -99,7 +99,10 @@ catalogue; run one nominated family, never 100 simultaneous conjecture hunts.
 keeps prior results and scientific-review pendencies intact. P58 audits
 acceptance first; P59 fixes information/cost equality; P60 freezes the
 workbench. Ten hypotheses are isolated pilots, followed by fresh independent
-confirmation and one novelty nomination. All new phase files are Proposed.
+confirmation and one novelty nomination. P58 is Building/BLOCKED; P59–P72
+remain Proposed. [D019](../FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019)
+specifies P58 R1–R4: repair approval validation, preserve restricted historical
+evidence, review/freeze the base and measure it cleanly before opening P59.
 
 - [P58 — Reconciliar evidências e liberar uma base de pesquisa](P58-accepted-research-baseline.md).
 - [P59 — Estabelecer comparações com a mesma informação](P59-equal-information-controls.md).

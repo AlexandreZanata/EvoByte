@@ -2,7 +2,9 @@
 
 **Status:** Proposed.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
-**Pré-requisito:** P58 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
+**Pré-requisito:** P58 R1–R4 aceita no escopo técnico D019 e predecessor
+integrado; módulos experimentais anteriores sem ganho permanecem desligados.
+P47 histórica não é pré-registro vigente; P54/P56 não sustentam superioridade.
 **Branch:** `codex/p59-equal-information-controls`.
 
 ## Hipótese, objetivo e escopo
@@ -25,6 +27,23 @@ confirmação final enquanto a revisão estiver suja.
 2. Para Erdős–Straus todos recebem n, limites, mesmo espaço de candidatos e mesmo warm-start quando houver. Incluir enumerador CPU, busca GPU existente e baseline clássico por fatoração/construção adequado à classe; famílias inaplicáveis não sustentam superioridade.
 
 3. Adicionar teste sentinela: trocar a fórmula privada sem alterar amostras, seed e configuração não muda as propostas geradas antes de verificar. Registrar custos de treino, geração, inferência, filtros, verificadores e tracking; nenhuma parcela é subtraída do orçamento total do braço.
+
+## Entregas por ciclo
+
+1. Implementar fronteira de informação e regressões sentinelas usando fixtures
+   conhecidas/development; não acessar P38/P56 nem gerar dados finais P71.
+2. Implementar baselines comparáveis e contabilização integral; famílias sem
+   baseline aplicável recebem restrição explícita de comparação.
+3. Revisar e congelar configuração completa, fontes, espaço de candidatos,
+   warm-start, custos e interface de aceitação realmente implementada.
+4. Medir controles em árvore limpa e revisão aceita; registrar evidência em
+   ciclo documental posterior. A confirmação de hipótese fica para P60/P71.
+
+Um controle de engenharia pode demonstrar igualdade de inputs sem declarar
+ganho estatístico. O compilador Horner permanece controle de resposta conhecida
+e seus custos são reportados separadamente. Não reabrir a P54 para refazer uma
+comparação retrospectiva nem exigir nova aprovação dos seus resultados para
+corrigir o vazamento na implementação atual.
 
 ## Gate de saída
 

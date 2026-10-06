@@ -26,6 +26,11 @@ confirmação final enquanto a revisão estiver suja.
 
 3. Revisor estatístico fixa análise pareada por grupo, censura e correção pela seleção entre dez hipóteses (Holm quando aplicável); não tratar seeds repetidos como problemas independentes. Outro operador reproduz resultados e checker exato/formal em revisão limpa.
 
+Delegação e disposições técnicas D019 não substituem esse outro operador.
+P38/P56 e dados P57 usados em desenvolvimento continuam inelegíveis como final.
+Sem reprodução independente, registrar PROVISIONAL e impedir promoção para
+P72; preservar dados e preparar o pacote de reprodução em microtarefa própria.
+
 ## Gate de saída
 
 Resultados completos, positivos e negativos, dados recuperáveis e revisão independente. Sem poder/soluções suficientes é INCONCLUSIVE; sem operador independente é PROVISIONAL. Somente método com evidência aceita entra em P72.
