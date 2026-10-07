@@ -714,6 +714,31 @@ def test_p59_comparison_scope_restricts_families():
         run_p59_matched_es_trial("gpu_search", p59_es_public_inputs(4))
 
 
+def test_p60_workbench_manifest_is_complete():
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    man = _json.loads((repo / "experiments" / "p60-workbench-manifest.json").read_text())
+    assert man["phase"] == "P60" and man["version"] == 1
+    assert len(man["development_tasks"]) == 6
+    assert len({t["task_id"] for t in man["development_tasks"]}) == 6
+    assert man["seeds"] == [7, 42, 101]
+    budgets = man["budgets"]
+    assert budgets["search_cert_per_attempt_sec"] == 10
+    assert budgets["per_hypothesis_ceiling_min"] == 30
+    assert budgets["model_reserve_params"] == 100000
+    assert budgets["model_absolute_cap_params"] == 1000000
+    assert all(v > 0 for v in budgets.values())
+    assert set(man["screening"]) == {"PROMISING", "NULL", "INCONCLUSIVE", "BLOCKED"}
+    assert len(man["mechanisms"]) == 10
+    assert [m["id"] for m in man["mechanisms"]] == [f"H{i:02d}" for i in range(1, 11)]
+    for mech in man["mechanisms"]:
+        assert mech["hypothesis"] and mech["literature_overlap"] and mech["phase_file"]
+        assert (repo / mech["phase_file"]).exists()
+    blob = _json.dumps(man, sort_keys=True)
+    assert "TBD" not in blob and "TODO" not in blob
+
+
 def _p59_smoke_config(tmp_path):
     import json as _json
 
