@@ -25,6 +25,7 @@ from benchmarks.science_matrix import (
     run_p59_equal_information_audit,
     run_p60_workbench_audit,
     run_p61_shadow_audit,
+    run_p62_repair_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -882,6 +883,52 @@ def test_p61_acceptance_blocks_empty_candidates(tmp_path):
     report = run_p61_shadow_audit(cfg_p, tmp_path / "p61-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("CONFIG_INVALID" in f for f in report["findings"])
+
+
+def _p62_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p62-config.json").read_text())
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p62-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p62_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p62-acceptance.json"
+    report = run_p62_repair_audit(_p62_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P62"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["hypothesis_outcome"] in ("PROMISING", "NULL")
+    assert set(report["comparison"]) == {"classical", "random", "learned"}
+    assert report["training"]["n_params"] <= 100000
+
+
+def test_p62_acceptance_blocks_split_leak(tmp_path):
+    import json as _json
+
+    cfg_p = _p62_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["dev_starts"] = [[4, [2, 4, 6]]]
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p62_repair_audit(cfg_p, tmp_path / "p62-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("SPLIT_LEAK" in f for f in report["findings"])
+
+
+def test_p62_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p62_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["notes_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p62_repair_audit(cfg_p, tmp_path / "p62-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
 
 
 def _p59_smoke_config(tmp_path):

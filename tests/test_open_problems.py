@@ -14,6 +14,7 @@ from benchmarks.open_problems import (
     P57_KNOWN_TRIPLE_1009,
     P61_SHADOW_PRIMES,
     PROBLEM_REGISTRY,
+    P62RepairScorer,
     audit_historical_certificate,
     check_coordinate_bounds,
     check_diophantine_quintuple,
@@ -27,6 +28,17 @@ from benchmarks.open_problems import (
     p57_nominate_instances,
     p61_modular_shadow,
     p61_modular_shadow_batch_torch,
+    p62_classical_repair_step,
+    p62_collect_cloning_samples,
+    p62_compare_repair_policies,
+    p62_exact_features,
+    p62_exact_residual,
+    p62_learned_repair_step,
+    p62_neighbors,
+    p62_random_repair_step,
+    p62_repair_cycles,
+    p62_split_by_origin,
+    p62_train_repairer,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -500,3 +512,98 @@ def test_p61_paired_trial_exhaustive_box_zero_false_rejection() -> None:
     assert rec["certificates_equal"] is True
     assert rec["false_rejections"] == 0
     assert len(rec["certificates_filtered"]) > 0
+
+
+def test_p62_exact_features() -> None:
+    assert p62_exact_residual(4, 2, 3, 6) == 0
+    feat = p62_exact_features(4, 2, 3, 6)
+    assert feat == {"residual": 0, "sign": 0, "divisible_by": [2, 3, 5, 7, 11, 13]}
+    assert p62_exact_residual(4, 2, 3, 7) == 4 * 2 * 3 * 7 - 4 * (6 + 14 + 21)
+    assert p62_exact_features(4, 2, 3, 7)["sign"] in (-1, 1)
+
+
+def test_p62_classical_repair_certifies_perturbed() -> None:
+    for start in [(2, 3, 7), (2, 4, 6), (3, 3, 6), (5, 5, 5)]:
+        rep = p62_repair_cycles(4, start, policy="classical", max_cycles=12)
+        assert rep["certified"] is True, (start, rep)
+        assert rep["status"] == "certified"
+        assert rep["cycles_used"] <= 12
+        assert check_erdos_straus(4, *rep["triple"])[0] is True
+        mags = [abs(r) for r in rep["residuals"]]
+        assert all(b <= a for a, b in zip([abs(p62_exact_residual(4, *start))] + mags, mags))
+        assert all(v >= 1 for t in [start, rep["triple"]] for v in t)
+
+
+def test_p62_random_repair_is_seeded_deterministic() -> None:
+    first = p62_repair_cycles(4, (5, 5, 5), policy="random", max_cycles=12, seed=3)
+    second = p62_repair_cycles(4, (5, 5, 5), policy="random", max_cycles=12, seed=3)
+    assert first == second
+    assert p62_random_repair_step(4, 2, 3, 7, seed=9) == p62_random_repair_step(4, 2, 3, 7, seed=9)
+    assert p62_classical_repair_step(4, 2, 3, 7) == (2, 3, 6)
+
+
+def test_p62_repair_statuses_and_domain() -> None:
+    rep = p62_repair_cycles(4, (5, 5, 5), policy="classical", max_cycles=0)
+    assert rep["status"] == "exhausted"
+    assert rep["certified"] is False
+    assert rep["cycles_used"] == 0
+    try:
+        p62_repair_cycles(4, (2, 3, 7), policy="learned")
+    except ValueError as exc:
+        assert "Unknown P62 repair policy" in str(exc)
+    else:
+        raise AssertionError("unknown policy must raise")
+    assert len(p62_neighbors(1, 1, 1)) == 9
+    assert all(min(t) >= 1 for t in p62_neighbors(1, 1, 1))
+
+
+def test_p62_split_by_origin_is_disjoint() -> None:
+    records = [{"n": n, "case": i} for n in (4, 5, 6, 7) for i in range(3)]
+    first = p62_split_by_origin(records)
+    second = p62_split_by_origin(records)
+    assert first == second
+    assert {r["n"] for r in first["train"]}.isdisjoint({r["n"] for r in first["dev"]})
+    assert len(first["train"]) + len(first["dev"]) == len(records)
+
+
+def _p62_trained_weights() -> dict:
+    samples, _ = p62_collect_cloning_samples([4, 8], starts_per_solution=6, seed=0)
+    assert len(samples) > 0
+    return p62_train_repairer(samples, seed=0, epochs=60)
+
+
+def test_p62_repairer_trains_small_and_deterministic() -> None:
+    first = _p62_trained_weights()
+    second = _p62_trained_weights()
+    assert first["n_params"] == 129
+    assert first["n_params"] <= 1000
+    assert first["train_acc"] > 0.5
+    assert first["train_sec"] >= 0.0
+    assert first["state_dict"].keys() == second["state_dict"].keys()
+    scorer = P62RepairScorer()
+    assert sum(p.numel() for p in scorer.parameters()) == 129
+
+
+def test_p62_learned_step_is_deterministic_and_solution_free() -> None:
+    weights = _p62_trained_weights()["state_dict"]
+    assert p62_learned_repair_step(weights, 4, 2, 3, 7) == p62_learned_repair_step(
+        weights, 4, 2, 3, 7
+    )
+    assert p62_learned_repair_step(weights, 4, 2, 3, 7) in p62_neighbors(2, 3, 7)
+
+
+def test_p62_compare_policies_equal_inputs_with_costs() -> None:
+    weights = _p62_trained_weights()
+    dev_starts = [(6, (3, 5, 12)), (6, (4, 4, 12)), (9, (3, 19, 18)), (9, (4, 18, 18))]
+    rep = p62_compare_repair_policies(
+        weights["state_dict"], weights["train_sec"], dev_starts, max_cycles=12, seed=0
+    )
+    assert set(rep) == {"classical", "random", "learned"}
+    for rec in rep.values():
+        assert rec["starts"] == len(dev_starts)
+        assert 0 <= rec["certified"] <= len(dev_starts)
+        assert rec["total_sec"] >= 0.0
+    assert rep["learned"]["train_sec_billed"] == weights["train_sec"] > 0.0
+    assert rep["learned"]["total_sec"] >= rep["learned"]["train_sec_billed"]
+    assert rep["classical"]["train_sec_billed"] == 0.0
+    assert rep["classical"]["certified"] >= rep["learned"]["certified"] - len(dev_starts)

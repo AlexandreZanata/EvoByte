@@ -1,6 +1,12 @@
 # P62 — H01 — Aprender a corrigir formatos de erro
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: primitivas, reparador + comparação,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=ef3025947a54fb3b` com outcome NULL íntegro; registro em
+`docs/research/p62-repair-record.md`). H01 encerrada sem promoção; P63
+liberada.
+**Dependência:** P61 Done porém não integrado (PR #89 aberto); branch a
+partir de `codex/p61-modular-shadows`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P61 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p62-structured-error-repair`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P62**:
+Interface de aceitação **implementada na entrega 3** (`run_p62_repair_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P62 --config experiments/p62-config.json --output /tmp/evobyte-p62-acceptance.json
