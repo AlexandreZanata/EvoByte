@@ -16,6 +16,7 @@ from benchmarks.open_problems import (
     P65_MAX_LIBRARY,
     PROBLEM_REGISTRY,
     P62RepairScorer,
+    P65BridgeScorer,
     audit_historical_certificate,
     check_coordinate_bounds,
     check_diophantine_quintuple,
@@ -48,8 +49,14 @@ from benchmarks.open_problems import (
     p64_rule_report,
     p64_suggest_rules,
     p65_build_library,
+    p65_compare_libraries,
+    p65_entry_features,
+    p65_entry_verifies,
     p65_find_bridge,
     p65_instantiate,
+    p65_model_pick,
+    p65_random_library,
+    p65_train_bridge_scorer,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -737,3 +744,57 @@ def test_p65_bridges_prove_the_fixed_target() -> None:
     assert check_erdos_straus(7, *other["triple"])[0] is False
     with pytest.raises(ValueError, match="exceeds frozen max"):
         p65_find_bridge(lib + lib + lib[:1], 6)
+
+
+def test_p65_random_library_is_seeded_public() -> None:
+    first = p65_random_library(6, 50, seed=0)
+    assert first == p65_random_library(6, 50, seed=0)
+    assert len(first) == 6
+    assert all(e["kind"] == "random" for e in first)
+    fa = p65_entry_features(6, first[0])
+    fb = p65_entry_features(6, first[1])
+    assert len(fa) == 11
+    assert fa == fb
+
+
+def test_p65_bridge_scorer_trains_and_picks() -> None:
+    lib = p65_build_library() + p65_random_library(6, 50, seed=0)
+    first = p65_train_bridge_scorer(lib, list(range(2, 21)), seed=0, epochs=30)
+    second = p65_train_bridge_scorer(lib, list(range(2, 21)), seed=0, epochs=30)
+    assert first["n_params"] <= 100000
+    assert first["train_acc"] > 0.5
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P65BridgeScorer().parameters()) == first["n_params"]
+    assert p65_entry_verifies({"kind": "random", "triple": [2, 3, 6]}, 4) is True
+    assert p65_entry_verifies({"kind": "random", "triple": [2, 3, 7]}, 4) is False
+    pick = p65_model_pick(lib, first["state_dict"], 6)
+    assert pick is not None
+    assert check_erdos_straus(6, *pick["triple"])[0] is True
+    miss = p65_model_pick(lib, first["state_dict"], 73)
+    if miss is not None:
+        assert check_erdos_straus(73, *miss["triple"])[0] is True
+
+
+def test_p65_compare_libraries_bills_costs() -> None:
+    rep = p65_compare_libraries(
+        [4, 5, 6, 9, 10, 73],
+        n_random=6,
+        coord_bound=50,
+        seed=0,
+        train_n=list(range(2, 21)),
+        epochs=30,
+    )
+    assert rep["library_size"] == 10
+    assert rep["train"]["n_params"] <= 100000
+    for arm in ("random-pick", "structured-first", "model-pick", "direct-search"):
+        rec = rep[arm]
+        assert rec["targets"] == 6
+        assert set(rec["ledger"]) == {"parts", "total_sec"}
+        parts = rec["ledger"]["parts"]
+        assert set(parts) == {"train", "generation", "inference", "filters", "checkers", "tracking"}
+        assert rec["ledger"]["total_sec"] == sum(parts.values())
+    assert rep["model-pick"]["ledger"]["parts"]["train"] == rep["train"]["train_sec"] > 0.0
+    assert rep["structured-first"]["ledger"]["parts"]["train"] == 0.0
+    assert rep["structured-first"]["certified"] == 5
+    assert rep["model-pick"]["certified"] >= 1

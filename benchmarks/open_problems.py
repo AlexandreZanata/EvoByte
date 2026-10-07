@@ -3270,6 +3270,234 @@ def p65_find_bridge(
     return None
 
 
+# ==============================================================================
+# P65 entrega 2 — H04 seletor pequeno e comparação de bibliotecas com custos
+# ==============================================================================
+#
+# Biblioteca mista (estruturada + construções aleatórias seedadas) e quatro
+# braços: sorteio aleatório, primeira cobertura estruturada (sem modelo),
+# escolha do seletor por features públicas e busca direta. Geração da
+# biblioteca, busca da ponte e certificação faturados por braço via ledger
+# completo; treino só no braço com modelo. Labels exatos (cobre-e-verifica).
+
+P65_BRIDGE_ARMS = ("random-pick", "structured-first", "model-pick", "direct-search")
+
+
+def p65_random_library(n_entries: int, coord_bound: int, seed: int) -> list[dict[str, Any]]:
+    """Seeded random constructions (honest weak baseline, usually covering nothing)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    return [
+        {
+            "id": f"random-{i}",
+            "kind": "random",
+            "triple": [
+                rng.randint(1, int(coord_bound)),
+                rng.randint(1, int(coord_bound)),
+                rng.randint(1, int(coord_bound)),
+            ],
+            "hypotheses": "no coverage claim",
+            "bounds": {"max_coord": 10**9},
+        }
+        for i in range(int(n_entries))
+    ]
+
+
+def p65_entry_features(n: int, entry: dict[str, Any]) -> list[float]:
+    """Public features only: residues of n plus entry kind/coverage class."""
+    kinds = ("parametric", "anchor", "random")
+    covers = ("even", "n=2-mod-3", "multiple-of-3", "anchor-1009", "none")
+    eid = str(entry.get("id"))
+    cover = eid if eid in covers else "none"
+    return [
+        float(int(n) % 2),
+        float(int(n) % 3),
+        float(int(n) % 4),
+        *[1.0 if entry.get("kind") == k else 0.0 for k in kinds],
+        *[1.0 if cover == c else 0.0 for c in covers],
+    ]
+
+
+class P65BridgeScorer(torch.nn.Module):
+    """Tiny coverage scorer (~100 params, CPU)."""
+
+    def __init__(self, hidden: int = 8) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(11, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p65_entry_verifies(entry: dict[str, Any], n: int, max_coord: int = 10**9) -> bool:
+    """Exact label: the entry covers n and its triple verifies (or anchor match)."""
+    if entry.get("kind") == "random":
+        (x, y, z) = (int(v) for v in entry["triple"])
+        if max((x, y, z)) > int(max_coord):
+            return False
+        ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+        return bool(ok1 and ok2)
+    triple = p65_instantiate(entry, int(n))
+    if triple is None or max(triple) > int(max_coord):
+        return False
+    ok1, _, _ = check_erdos_straus(int(n), *triple)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+    return bool(ok1 and ok2)
+
+
+def p65_train_bridge_scorer(
+    library: list[dict[str, Any]],
+    n_values: list[int],
+    seed: int = 0,
+    epochs: int = 30,
+    lr: float = 0.05,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Train the coverage scorer on exact covers-and-verifies labels."""
+    if not library or not n_values:
+        raise ValueError("P65 training needs a non-empty library and n values")
+    torch.manual_seed(int(seed))
+    model = P65BridgeScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+    rows = []
+    labels = []
+    for n in n_values:
+        for entry in library:
+            rows.append(p65_entry_features(int(n), entry))
+            labels.append(1.0 if p65_entry_verifies(entry, int(n), int(max_coord)) else 0.0)
+    feats = torch.tensor(rows, dtype=torch.float32)
+    target = torch.tensor(labels, dtype=torch.float32)
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        loss = loss_fn(model(feats), target)
+        loss.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        acc = float(((model(feats) > 0.0) == (target > 0.5)).float().mean().item())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_samples": len(rows),
+        "train_acc": acc,
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p65_model_pick(
+    library: list[dict[str, Any]], weights: dict[str, torch.Tensor], n: int
+) -> dict[str, Any] | None:
+    """Highest-scoring entry instantiated and verified (miss stays a miss)."""
+    model = P65BridgeScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    feats = torch.tensor([p65_entry_features(int(n), e) for e in library], dtype=torch.float32)
+    with torch.no_grad():
+        order = torch.argsort(model(feats), descending=True).tolist()
+    for idx in order:
+        entry = library[idx]
+        triple = (
+            tuple(int(v) for v in entry["triple"])
+            if entry.get("kind") == "random"
+            else p65_instantiate(entry, int(n))
+        )
+        if triple is None:
+            continue
+        ok1, _, _ = check_erdos_straus(int(n), *triple)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+        if ok1 and ok2:
+            return {
+                "entry_id": entry["id"],
+                "kind": entry["kind"],
+                "triple": list(triple),
+                "label": p57_classify_solved(int(n), tuple(triple)),
+                "verified_for_n": int(n),
+            }
+    return None
+
+
+def p65_compare_libraries(
+    targets: list[int],
+    n_random: int = 6,
+    coord_bound: int = 50,
+    seed: int = 0,
+    max_coord: int = 10**9,
+    train_n: list[int] | None = None,
+    epochs: int = 30,
+) -> dict[str, Any]:
+    """Four arms, same targets: random-pick, structured-first, model-pick,
+    direct-search. Library build, bridge search and certification billed per
+    arm through a complete ledger; training billed to model-pick only."""
+    import random as _random
+
+    structured = p65_build_library()
+    t_lib0 = time.perf_counter()
+    mixed = structured + p65_random_library(int(n_random), int(coord_bound), int(seed))
+    lib_sec = time.perf_counter() - t_lib0
+    scorer = p65_train_bridge_scorer(
+        mixed, list(train_n or []), seed=int(seed), epochs=int(epochs), max_coord=int(max_coord)
+    )
+    rng = _random.Random(int(seed))
+    out: dict[str, Any] = {}
+    for arm in P65_BRIDGE_ARMS:
+        t0 = time.perf_counter()
+        certified = 0
+        check_sec = 0.0
+        for n in targets:
+            if arm == "random-pick":
+                entry = rng.choice(mixed)
+                cand = (
+                    tuple(int(v) for v in entry["triple"])
+                    if entry.get("kind") == "random"
+                    else p65_instantiate(entry, int(n))
+                )
+                bridge = None
+                if cand is not None:
+                    t2 = time.perf_counter()
+                    ok1, _, _ = check_erdos_straus(int(n), *cand)
+                    ok2, _, _ = check_erdos_straus_fractions(int(n), *cand)
+                    check_sec += time.perf_counter() - t2
+                    if ok1 and ok2:
+                        bridge = {"entry_id": entry["id"]}
+            elif arm == "structured-first":
+                bridge = p65_find_bridge(structured, int(n), int(max_coord))
+            elif arm == "model-pick":
+                bridge = p65_model_pick(mixed, scorer["state_dict"], int(n))
+            else:
+                rec = run_p59_matched_es_trial(
+                    "cpu_enumeration",
+                    p59_es_public_inputs(int(n), max_coord=int(max_coord)),
+                )
+                bridge = {"entry_id": "cpu-enumeration"} if rec["status"] == "certified" else None
+            if bridge is not None:
+                certified += 1
+        loop_sec = time.perf_counter() - t0
+        ledger = p59_cost_ledger(
+            train=float(scorer["train_sec"]) if arm == "model-pick" else 0.0,
+            generation=lib_sec + loop_sec,
+            inference=0.0,
+            filters=0.0,
+            checkers=check_sec,
+            tracking=0.0,
+        )
+        out[arm] = {
+            "targets": len(targets),
+            "certified": certified,
+            "ledger": ledger,
+        }
+    out["library_size"] = len(mixed)
+    out["train"] = {k: v for k, v in scorer.items() if k != "state_dict"}
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
