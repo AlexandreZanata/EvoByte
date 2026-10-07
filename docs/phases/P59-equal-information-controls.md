@@ -1,6 +1,9 @@
 # P59 — Estabelecer comparações com a mesma informação
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: fronteira de informação +
+sentinelas; entregas 2–4 pendentes).
+**Dependência:** predecessor P58 aceito porém não integrado (PR #86 aberto);
+branch a partir de `codex/p58-accepted-research-baseline`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P58 R1–R4 aceita no escopo técnico D019 e predecessor
 integrado; módulos experimentais anteriores sem ganho permanecem desligados.

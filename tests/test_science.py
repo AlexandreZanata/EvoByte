@@ -590,6 +590,67 @@ def test_p50_classical_baseline_is_deterministic():
     assert all(c["rejected"] for c in false)
 
 
+def _p59_dev_samples():
+    import numpy as _np
+
+    xs = _np.linspace(-3.0, 3.0, 24, dtype=_np.float32)
+    ys = (xs**2 + 3.0 * xs + 7.0).astype(_np.float32)
+    return xs, ys
+
+
+def test_p59_leakage_sentinel_passes_structured_random():
+    from benchmarks.math_specialist import run_p59_leakage_sentinel
+
+    xs, ys = _p59_dev_samples()
+    rep = run_p59_leakage_sentinel(
+        "structured_random", xs, ys, "x**2 + 3*x + 10", "x**2 - 1", seed=7
+    )
+    assert rep["passed"] is True
+    assert rep["proposals_sha256"] == rep["swapped_sha256"]
+    assert rep["proposals_bytes"] > 0
+
+
+def test_p59_leakage_sentinel_passes_evolution():
+    from benchmarks.math_specialist import run_p59_leakage_sentinel
+
+    xs, ys = _p59_dev_samples()
+    rep = run_p59_leakage_sentinel(
+        "evolution",
+        xs,
+        ys,
+        "x**2 + 3*x + 10",
+        "x**2 - 1",
+        seed=7,
+        pop_size=8,
+        max_generations=2,
+    )
+    assert rep["passed"] is True
+    assert rep["proposals_sha256"] == rep["swapped_sha256"]
+
+
+def test_p59_compilation_control_depends_on_private_formula():
+    from benchmarks.math_specialist import run_p59_compilation_control
+
+    xs, ys = _p59_dev_samples()
+    ctl_a = run_p59_compilation_control("x**2 + 3*x + 10", xs, ys)
+    ctl_b = run_p59_compilation_control("x**2 - 1", xs, ys)
+    assert ctl_a["control_kind"].startswith("compilation")
+    assert ctl_a["construction_sec"] >= 0.0
+    assert ctl_a["program_sha256"] != ctl_b["program_sha256"]
+
+
+def test_p59_rejects_unknown_arm_and_vacuous_swap():
+    import pytest as _pytest
+
+    from benchmarks.math_specialist import p59_public_proposals, run_p59_leakage_sentinel
+
+    xs, ys = _p59_dev_samples()
+    with _pytest.raises(ValueError, match="Unknown P59 public arm"):
+        p59_public_proposals("classical", xs, ys, seed=7)
+    with _pytest.raises(ValueError, match="different private formulas"):
+        run_p59_leakage_sentinel("structured_random", xs, ys, "x**2", "x**2", seed=7)
+
+
 def test_p51_replay_map_audit_smoke(tmp_path):
     import json as _json
 
