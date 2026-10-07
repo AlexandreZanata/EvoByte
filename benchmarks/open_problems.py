@@ -4186,6 +4186,133 @@ def p69_compare_migrations(
     return out
 
 
+# ==============================================================================
+# P70 entrega 1 — H10 templates racionais e verificação algébrica
+# ==============================================================================
+#
+# Templates de grau ≤ 2 com coeficientes limitados sobre classes n = m*k+r
+# em domínio inteiro declarado. Verificação em quatro partes: identidade
+# (SymPy exato como função racional), denominadores não nulos, positividade
+# e coordenadas inteiras — tudo no domínio declarado. Controles conhecidos
+# verificam PROVEN; variantes quebradas falham com motivo registrado.
+
+P70_MAX_COEFF_ABS = 10
+
+P70_MAX_DEGREE = 2
+
+
+def p70_eval_poly(coeffs: list[int], n: int) -> int:
+    """Evaluate c0 + c1*n + c2*n^2 with exact ints (degree ≤ 2)."""
+    if len(coeffs) > P70_MAX_DEGREE + 1:
+        raise ValueError("P70 template degree exceeds 2")
+    return sum(int(c) * int(n) ** i for i, c in enumerate(coeffs))
+
+
+def p70_nominate_templates() -> list[dict[str, Any]]:
+    """Frozen nominated set: known controls plus bounded variants under test."""
+    return [
+        {
+            "id": "control-even",
+            "n_class": {"k": 2, "r": 0},
+            "triple": [([0, 1, 0], 2), ([2, 1, 0], 2), ([0, 2, 1], 4)],
+            "domain": [2, 200],
+            "note": "known even family as control",
+        },
+        {
+            "id": "control-2mod3",
+            "n_class": {"k": 3, "r": 2},
+            "triple": [([0, 1, 0], 1), ([1, 1, 0], 3), ([0, 1, 1], 3)],
+            "domain": [2, 200],
+            "note": "known (n+1)/3 family as control",
+        },
+        {
+            "id": "control-mult3",
+            "n_class": {"k": 3, "r": 0},
+            "triple": [([0, 1, 0], 3), ([0, 2, 0], 1), ([0, 2, 0], 1)],
+            "domain": [3, 200],
+            "note": "known multiple-of-3 family as control",
+        },
+        {
+            "id": "variant-broken-identity",
+            "n_class": {"k": 2, "r": 0},
+            "triple": [([0, 1, 0], 2), ([2, 1, 0], 2), ([4, 2, 1], 4)],
+            "domain": [2, 200],
+            "note": "x3 numerator shifted; identity must fail",
+        },
+        {
+            "id": "variant-broken-integers",
+            "n_class": {"k": 2, "r": 0},
+            "triple": [([1, 1, 0], 2), ([2, 1, 0], 2), ([0, 2, 1], 4)],
+            "domain": [2, 200],
+            "note": "x1 numerator shifted; integers must fail on even n",
+        },
+    ]
+
+
+def p70_class_values(n_class: dict[str, int], lo: int, hi: int) -> list[int]:
+    """All n = m*k+r inside [lo, hi]."""
+    k, r = int(n_class["k"]), int(n_class["r"])
+    return [n for n in range(int(lo), int(hi) + 1) if n % k == r % k]
+
+
+def p70_verify_template(template: dict[str, Any]) -> dict[str, Any]:
+    """Four-part verification over the declared integer domain."""
+    import sympy as _sympy
+
+    n_class = template["n_class"]
+    lo, hi = (int(v) for v in template["domain"])
+    triple = [([int(c) for c in num], int(d)) for num, d in template["triple"]]
+    for num, den in triple:
+        if den == 0 or any(abs(int(c)) > P70_MAX_COEFF_ABS for c in num):
+            return {"status": "FAILED", "reason": "coefficients out of frozen bounds", "checks": {}}
+    n_sym = _sympy.Symbol("n")
+    expr = _sympy.Integer(4) / n_sym
+    for num, den in triple:
+        poly = sum(_sympy.Integer(c) * n_sym**i for i, c in enumerate(num))
+        expr -= _sympy.Integer(den) / poly
+    identity = bool(_sympy.simplify(expr) == 0)
+    checks: dict[str, Any] = {"identity": identity}
+    if not identity:
+        return {"status": "FAILED", "reason": "rational identity false", "checks": checks}
+    members = p70_class_values(n_class, lo, hi)
+    if not members:
+        return {"status": "FAILED", "reason": "empty class domain", "checks": checks}
+    for n in members:
+        vals = []
+        for num, den in triple:
+            num_v = p70_eval_poly(num, n)
+            if num_v == 0:
+                return {
+                    "status": "FAILED",
+                    "reason": f"zero denominator at n={n}",
+                    "checks": checks,
+                }
+            if num_v <= 0:
+                return {
+                    "status": "FAILED",
+                    "reason": f"non-positive coordinate at n={n}",
+                    "checks": checks,
+                }
+            if num_v % den != 0:
+                return {
+                    "status": "FAILED",
+                    "reason": f"non-integer coordinate at n={n}",
+                    "checks": checks,
+                }
+            vals.append(num_v // den)
+        ok1, _, _ = check_erdos_straus(n, *vals)
+        ok2, _, _ = check_erdos_straus_fractions(n, *vals)
+        if not (ok1 and ok2):
+            return {"status": "FAILED", "reason": f"evaluates inexact at n={n}", "checks": checks}
+    checks.update({"denominators": True, "positivity": True, "integers": True, "spot_exact": True})
+    return {
+        "status": "PROVEN",
+        "reason": f"identity plus {len(members)} exact domain evaluations",
+        "checks": checks,
+        "members": len(members),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

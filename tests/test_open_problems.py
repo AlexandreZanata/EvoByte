@@ -22,6 +22,8 @@ from benchmarks.open_problems import (
     P68_TEMPLATE_FAMILIES,
     P69_ISLAND_COUNT,
     P69_MIGRATION_COMPARISON_ARMS,
+    P70_MAX_COEFF_ABS,
+    P70_MAX_DEGREE,
     PROBLEM_REGISTRY,
     P62RepairScorer,
     P65BridgeScorer,
@@ -84,6 +86,10 @@ from benchmarks.open_problems import (
     p68_train_attack_scorer,
     p69_compare_migrations,
     p69_island_search,
+    p70_class_values,
+    p70_eval_poly,
+    p70_nominate_templates,
+    p70_verify_template,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -1050,3 +1056,33 @@ def test_p69_compare_migrations_equal_resources() -> None:
         assert rec["total_sec"] >= rec["sync_sec"]
     assert rep["residue"]["recombinations"] > 0
     assert rep["none"]["recombinations"] == 0
+
+
+def test_p70_poly_and_class_values() -> None:
+    assert P70_MAX_DEGREE == 2 and P70_MAX_COEFF_ABS == 10
+    assert p70_eval_poly([4, 2, 1], 2) == 12
+    assert p70_class_values({"k": 2, "r": 0}, 2, 7) == [2, 4, 6]
+    assert p70_class_values({"k": 3, "r": 2}, 2, 8) == [2, 5, 8]
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError, match="degree exceeds"):
+        p70_eval_poly([0, 0, 0, 1], 2)
+
+
+def test_p70_controls_proven_variants_failed() -> None:
+    templates = {t["id"]: t for t in p70_nominate_templates()}
+    assert len(templates) == 5
+    for tid in ("control-even", "control-2mod3", "control-mult3"):
+        rep = p70_verify_template(templates[tid])
+        assert rep["status"] == "PROVEN", (tid, rep)
+        assert rep["checks"] == {
+            "identity": True,
+            "denominators": True,
+            "positivity": True,
+            "integers": True,
+            "spot_exact": True,
+        }
+    for tid in ("variant-broken-identity", "variant-broken-integers"):
+        rep = p70_verify_template(templates[tid])
+        assert rep["status"] == "FAILED"
+    assert p70_verify_template(templates["control-even"])["members"] == 100
