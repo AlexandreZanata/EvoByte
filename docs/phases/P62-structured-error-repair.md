@@ -1,8 +1,10 @@
 # P62 — H01 — Aprender a corrigir formatos de erro
 
-**Status:** Building (entregas 1–3: primitivas, reparador + comparação,
-interface + config congelada; entrega 4 pendente: medição em árvore limpa
-+ registro. Diagnóstico: outcome NULL — learned 2/4 vs clássico 4/4.)
+**Status:** Done (entregas 1–4: primitivas, reparador + comparação,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=ef3025947a54fb3b` com outcome NULL íntegro; registro em
+`docs/research/p62-repair-record.md`). H01 encerrada sem promoção; P63
+liberada.
 **Dependência:** P61 Done porém não integrado (PR #89 aberto); branch a
 partir de `codex/p61-modular-shadows`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
