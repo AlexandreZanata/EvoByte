@@ -739,6 +739,32 @@ def test_p60_workbench_manifest_is_complete():
     assert "TBD" not in blob and "TODO" not in blob
 
 
+def test_p60_frozen_config_matches_reviewed_manifest():
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    man = _json.loads((repo / "experiments" / "p60-workbench-manifest.json").read_text())
+    cfg = _json.loads((repo / "experiments" / "p60-config.json").read_text())
+    assert cfg["phase"] == "P60"
+    assert cfg["manifest_version"] == man["version"] == 1
+    assert cfg["manifest_path"] == "experiments/p60-workbench-manifest.json"
+    import hashlib as _hashlib
+
+    assert (
+        cfg["manifest_sha256"]
+        == _hashlib.sha256((repo / cfg["manifest_path"]).read_bytes()).hexdigest()
+    )
+    assert [t["task_id"] for t in cfg["development_tasks"]] == [
+        t["task_id"] for t in man["development_tasks"]
+    ]
+    assert cfg["seeds"] == man["seeds"]
+    assert cfg["review"]["status"] == "accepted"
+    assert (repo / cfg["review"]["record"]).exists()
+    blob = _json.dumps(cfg, sort_keys=True).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks"):
+        assert token not in blob
+
+
 def _p59_smoke_config(tmp_path):
     import json as _json
 

@@ -1,7 +1,7 @@
 # P60 — Congelar a bancada e o pré-registro das dez hipóteses
 
-**Status:** Building (entrega 1 neste ciclo: manifesto/procedimento da
-bancada; revisão/congelamento, aceitação e registro pendentes).
+**Status:** Building (entregas 1–2: manifesto/procedimento e revisão +
+pré-registro congelado; aceitação técnica e registro pendentes).
 **Dependência:** P59 Done porém não integrado (PR #87 aberto); branch a
 partir de `codex/p59-equal-information-controls`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
