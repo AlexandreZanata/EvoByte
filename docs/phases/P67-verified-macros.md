@@ -1,7 +1,9 @@
 # P67 — H06 — Criar novas instruções matemáticas verificadas
 
-**Status:** Building (entregas 1–2: mineração + comparação de bibliotecas
-com custos; congelamento/medição pendentes).
+**Status:** Building (entregas 1–3: mineração, comparação, interface +
+config congelada; entrega 4 pendente: medição em árvore limpa + registro.
+Diagnóstico: outcome PROMISING em compactação — ganho de certificado segue
+medida separada e não alegada.)
 **Dependência:** P66 Done porém não integrado (PR #94 aberto); branch a
 partir de `codex/p66-composite-search-jumps`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -47,7 +49,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P67**:
+Interface de aceitação **implementada na entrega 3** (`run_p67_macro_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P67 --config experiments/p67-config.json --output /tmp/evobyte-p67-acceptance.json

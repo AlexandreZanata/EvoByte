@@ -485,3 +485,23 @@ def p67_compare_libraries(
             "expand_sec": expand_sec,
         }
     return out
+
+
+def p67_dev_programs(n_programs: int = 8, seed: int = 0) -> list[np.ndarray]:
+    """Seeded dense valid development programs (no final data involved)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    safe_ops = [0x01, 0x02, 0x03, 0x0C, 0x0A, 0x0D, 0x0E]
+    progs = []
+    for _ in range(int(n_programs)):
+        prog = nop_program()
+        length = rng.randint(2, 6)
+        for i in range(length - 1):
+            prog[i] = encode_instr(
+                rng.choice(safe_ops), dst=rng.randint(0, 6), a=rng.randint(0, 6), b=1
+            )
+        prog[length - 1] = encode_instr(rng.choice(safe_ops), dst=7, a=rng.randint(0, 6), b=1)
+        assert is_valid(prog)
+        progs.append(prog)
+    return progs

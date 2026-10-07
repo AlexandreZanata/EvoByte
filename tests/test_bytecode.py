@@ -16,6 +16,7 @@ from evobyte.bytecode import (
     p67_classical_library,
     p67_compare_libraries,
     p67_compress_program,
+    p67_dev_programs,
     p67_expand_tokens,
     p67_mine_macros,
     p67_random_library,
@@ -249,3 +250,11 @@ def test_p67_compare_libraries_reports_costs() -> None:
         assert {k: v for k, v in rep[name].items() if not k.endswith("_sec")} == {
             k: v for k, v in again[name].items() if not k.endswith("_sec")
         }
+
+
+def test_p67_dev_programs_valid_and_deterministic() -> None:
+    first = p67_dev_programs(n_programs=8, seed=0)
+    second = p67_dev_programs(n_programs=8, seed=0)
+    assert [p.tolist() for p in first] == [p.tolist() for p in second]
+    assert len(first) == 8
+    assert all(is_valid(p) for p in first)
