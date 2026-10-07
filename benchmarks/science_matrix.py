@@ -708,6 +708,7 @@ ACCEPTANCE_PHASES = (
     "P67",
     "P68",
     "P69",
+    "P70",
 )
 
 
@@ -3259,6 +3260,168 @@ def run_p69_island_audit(config_path: str | Path, output_path: str | Path) -> di
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P69 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p70_template_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P70 audit: proposer vs structured vs classical template search (H10).
+
+    Builds the frozen bounded grid, trains the single proposer on exact
+    labels, compares the three arms under the same verification budget,
+    and scans the whole grid once for novel PROVEN templates (non-control
+    ids). PROMISING only with at least one novel proven template; finite
+    examples stay candidate and otherwise the outcome is an honest NULL.
+    No grammar change follows the result either way.
+    """
+    import torch as _torch
+    from open_problems import (
+        P70_PROPOSER_ARMS,
+        p70_compare_proposers,
+        p70_proposer_grid,
+        p70_train_proposer,
+        p70_verify_template,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P70":
+        raise ValueError(f"Config {cfg_p} is not a P70 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P70 PARAMETRIC PROOF SEARCH AUDIT (novelty needs proof; outcome reported)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("grid_seed", "budget", "training", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+    if int(config.get("budget", 0)) < 1:
+        findings.append("CONFIG_INVALID: verification budget must be >= 1")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    grid = p70_proposer_grid(seed=int(config.get("grid_seed", 0)))
+    print(f"  grid templates={len(grid)}")
+    controls = {"control-even", "control-2mod3", "control-mult3"}
+
+    training: dict[str, Any] = {}
+    comparison: dict[str, Any] = {}
+    novel: list[str] = []
+    try:
+        t_cfg = config.get("training", {})
+        trained = p70_train_proposer(
+            grid, seed=int(t_cfg.get("seed", 0)), epochs=int(t_cfg.get("epochs", 30))
+        )
+        weights = trained.pop("state_dict")
+        training = {k: v for k, v in trained.items()}
+        print(
+            f"  proposer params={training['n_params']} positives={training['positives']} "
+            f"train_acc={training['train_acc']:.3f}"
+        )
+        if training["n_params"] > int(config.get("param_cap", 100000)):
+            findings.append("BUDGET_EXCEEDED: proposer above registered param cap")
+        comparison = p70_compare_proposers(
+            grid, weights, budget=int(config.get("budget", 20)), seed=int(config.get("seed", 0))
+        )
+        for arm in P70_PROPOSER_ARMS:
+            found = comparison[arm]["found"]
+            print(f"  arm {arm}: found={found}")
+            if found is not None:
+                tmpl = next(t for t in grid if t["id"] == found)
+                if p70_verify_template(tmpl)["status"] != "PROVEN":
+                    findings.append(f"PROOF_GAP: arm={arm} found unverified template")
+        t_scan0 = time.perf_counter()
+        for tmpl in grid:
+            if tmpl["id"] not in controls and p70_verify_template(tmpl)["status"] == "PROVEN":
+                novel.append(str(tmpl["id"]))
+        scan_sec = time.perf_counter() - t_scan0
+        print(f"  grid scan: novel proven={novel} scan_sec={scan_sec:.2f}s")
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    if novel:
+        outcome, reason = "PROMISING", f"novel proven templates: {novel}"
+    else:
+        outcome, reason = "NULL", "no novel proven template in the frozen grid"
+    print(f"  outcome: {outcome} ({reason})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p70_config": config_sha[:16]},
+        config={"acceptance_phase": "P70"},
+    )
+    report = {
+        "phase": "P70",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "proposer vs structured vs classical search on a frozen grid with "
+            "a full novelty scan; outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "training": training,
+        "comparison": {
+            arm: {"found": rec["found"], "verifications": rec["verifications"]}
+            for arm, rec in comparison.items()
+        },
+        "novel_proven": novel,
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P70",
+        },
+        "seeds_rng": "frozen seeds; deterministic grid, training and search",
+        "counters": {
+            "grid_templates": len(grid),
+            "arms": len(comparison),
+            "novel_proven": len(novel),
+        },
+        "limitations": [
+            "Finite examples stay candidate; novelty needs human review first.",
+            "The grid is bounded and control-led; absence proves nothing general.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P70 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -7252,6 +7415,8 @@ def main() -> int:
             run_p68_duel_audit(args.config, args.output)
         elif args.acceptance_phase == "P69":
             run_p69_island_audit(args.config, args.output)
+        elif args.acceptance_phase == "P70":
+            run_p70_template_audit(args.config, args.output)
         return 0
 
     seeds = (

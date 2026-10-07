@@ -1,6 +1,12 @@
 # P70 — H10 — Buscar fórmulas para famílias de soluções
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: templates, proponente + comparação,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=7361352d632f5e45` com outcome NULL íntegro; registro em
+`docs/research/p70-template-record.md`). H10 encerrada sem promoção;
+bancada H01–H10 completa sem novidade. Próxima: P71.
+**Dependência:** P69 Done porém não integrado (PR #97 aberto); branch a
+partir de `codex/p69-residue-synchronized-islands`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P69 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p70-parametric-proof-search`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P70**:
+Interface de aceitação **implementada na entrega 3** (`run_p70_template_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P70 --config experiments/p70-config.json --output /tmp/evobyte-p70-acceptance.json
