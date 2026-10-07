@@ -1,6 +1,9 @@
 # P61 — H02 — Buscar usando sombras aritméticas
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: filtro + regressões; comparação
+pareada/congelamento/medição pendentes).
+**Dependência:** P60 Done porém não integrado (PR #88 aberto); branch a
+partir de `codex/p60-hypothesis-workbench`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P60 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p61-modular-shadows`.

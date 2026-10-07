@@ -11,6 +11,8 @@ sys.path.insert(0, str(_REPO_ROOT / "src"))
 sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
 
 from benchmarks.open_problems import (
+    P57_KNOWN_TRIPLE_1009,
+    P61_SHADOW_PRIMES,
     PROBLEM_REGISTRY,
     audit_historical_certificate,
     check_coordinate_bounds,
@@ -23,6 +25,8 @@ from benchmarks.open_problems import (
     p57_classical_constructions,
     p57_classify_solved,
     p57_nominate_instances,
+    p61_modular_shadow,
+    p61_modular_shadow_batch_torch,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -378,3 +382,80 @@ def test_p57_windowed_search_never_claims_exhaustive_null() -> None:
     assert res["instances"][0]["status"] == "budget-exhausted"
     assert res["time_capped"] is True
     assert "exhaustive-null" not in res["by_status"]
+
+
+def _p61_known_solutions() -> list[tuple[int, int, int, int]]:
+    sols = [(1009, *P57_KNOWN_TRIPLE_1009)]
+    for n in range(2, 31):
+        for fam in p57_classical_constructions(n):
+            if fam["verified"]:
+                sols.append((n, *fam["triple"]))
+    return sols
+
+
+def test_p61_shadow_keeps_every_exact_solution() -> None:
+    for n, x, y, z in _p61_known_solutions():
+        rep = p61_modular_shadow(n, x, y, z)
+        assert rep["keep"] is True, (n, x, y, z, rep["rejected_by"])
+        assert rep["rejected_by"] == []
+    assert set(P61_SHADOW_PRIMES) == {3, 5, 7, 11, 13}
+    for n in (2, 3, 4, 5, 6):
+        for x in range(1, 31):
+            for y in range(1, 31):
+                for z in range(1, 31):
+                    ok, _, _ = check_erdos_straus(n, x, y, z)
+                    if ok:
+                        assert p61_modular_shadow(n, x, y, z)["keep"] is True
+
+
+def test_p61_shadow_batch_agrees_with_reference() -> None:
+    import torch
+
+    triples = _p61_known_solutions()[:12]
+    triples += [(4, 1, 1, 1), (4, 2, 3, 7), (1009, 253, 85100, 1974822873)]
+    n = 4
+    xs = torch.tensor([t[1] for t in triples], dtype=torch.int64)
+    ys = torch.tensor([t[2] for t in triples], dtype=torch.int64)
+    zs = torch.tensor([t[3] for t in triples], dtype=torch.int64)
+    mask = p61_modular_shadow_batch_torch(n, xs, ys, zs)
+    for (nn, x, y, z), kept in zip(triples, mask.tolist()):
+        assert bool(kept) == p61_modular_shadow(n, x, y, z)["keep"], (nn, x, y, z)
+
+
+def test_p61_compatible_residues_are_not_certificate() -> None:
+    found = None
+    for n in (4, 5, 6):
+        for x in range(1, 51):
+            for y in range(1, 51):
+                for z in range(1, 51):
+                    ok, _, _ = check_erdos_straus(n, x, y, z)
+                    if not ok and p61_modular_shadow(n, x, y, z)["keep"]:
+                        found = (n, x, y, z)
+                        break
+                if found:
+                    break
+            if found:
+                break
+        if found:
+            break
+    assert found is not None
+    n, x, y, z = found
+    assert check_erdos_straus(n, x, y, z)[0] is False
+
+
+def test_p61_shadow_eliminates_false_and_reports_cost() -> None:
+    import random
+    import time
+
+    import torch
+
+    rng = random.Random(7)
+    xs = [rng.randint(1, 500) for _ in range(300)] + [2]
+    ys = [rng.randint(1, 500) for _ in range(300)] + [3]
+    zs = [rng.randint(1, 500) for _ in range(300)] + [6]
+    t0 = time.perf_counter()
+    mask = p61_modular_shadow_batch_torch(4, torch.tensor(xs), torch.tensor(ys), torch.tensor(zs))
+    elapsed = time.perf_counter() - t0
+    kept = int(mask.sum().item())
+    assert 0 < kept < len(xs)
+    assert elapsed >= 0.0

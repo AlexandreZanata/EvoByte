@@ -2035,6 +2035,66 @@ def run_p59_matched_es_trial(arm: str, inputs: dict[str, Any]) -> dict[str, Any]
     }
 
 
+# ==============================================================================
+# P61 entrega 1 — H02 sombras aritméticas (filtros modulares baratos)
+# ==============================================================================
+#
+# Condição necessária 4xyz = n(xy+xz+yz) módulo p em primos pequenos
+# congelados, reduzindo após cada multiplicação (sem overflow). Sem divisão
+# módulo p, sem reconstrução CRT: resíduo incompatível rejeita; resto segue
+# ao checker exato. Resíduos compatíveis nunca são certificado.
+
+P61_SHADOW_PRIMES = (3, 5, 7, 11, 13)
+
+
+def p61_modular_shadow(
+    n: int, x: int, y: int, z: int, primes: tuple[int, ...] = P61_SHADOW_PRIMES
+) -> dict[str, Any]:
+    """NumPy-free reference: necessary residue condition per frozen prime."""
+    per_prime: dict[int, bool] = {}
+    for p in primes:
+        lhs = (4 % p) * (int(x) % p) % p * (int(y) % p) % p * (int(z) % p) % p
+        xy = (int(x) % p) * (int(y) % p) % p
+        xz = (int(x) % p) * (int(z) % p) % p
+        yz = (int(y) % p) * (int(z) % p) % p
+        rhs = (int(n) % p) * ((xy + xz + yz) % p) % p
+        per_prime[int(p)] = bool(lhs == rhs)
+    rejected = [p for p, ok in per_prime.items() if not ok]
+    return {"keep": not rejected, "per_prime": per_prime, "rejected_by": rejected}
+
+
+def p61_modular_shadow_batch_torch(
+    n: int,
+    xs: torch.Tensor,
+    ys: torch.Tensor,
+    zs: torch.Tensor,
+    primes: tuple[int, ...] = P61_SHADOW_PRIMES,
+    device: torch.device | None = None,
+) -> torch.Tensor:
+    """Batched shadow filter reusing the campaign torch pattern (int64).
+
+    Inputs are reduced modulo p first (identical residues, overflow-safe:
+    every intermediate stays below max(p)^3), then the same necessary
+    condition as the reference. Returns a boolean keep mask; False entries
+    are impossible solutions, True entries stay inconclusive for the checker.
+    """
+    dev = device if device is not None else torch.device("cpu")
+    xv = xs.to(dtype=torch.int64, device=dev).ravel()
+    yv = ys.to(dtype=torch.int64, device=dev).ravel()
+    zv = zs.to(dtype=torch.int64, device=dev).ravel()
+    keep = torch.ones(xv.numel(), dtype=torch.bool, device=dev)
+    for p in primes:
+        pp = int(p)
+        lhs = (4 % pp) * (xv % pp) % pp * (yv % pp) % pp * (zv % pp) % pp
+        rhs = (
+            (int(n) % pp)
+            * (((xv % pp) * (yv % pp) + (xv % pp) * (zv % pp) + (yv % pp) * (zv % pp)) % pp)
+            % pp
+        )
+        keep &= lhs == rhs
+    return keep
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
