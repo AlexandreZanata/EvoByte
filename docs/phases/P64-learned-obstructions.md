@@ -1,6 +1,9 @@
 # P64 — H03 — Aprender regiões proibidas e tentar prová-las
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: regras + prova + regressões;
+custo de prova × busca poupada, congelamento e medição pendentes).
+**Dependência:** P63 Done porém não integrado (PR #91 aberto); branch a
+partir de `codex/p63-verifier-feedback`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P63 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p64-learned-obstructions`.

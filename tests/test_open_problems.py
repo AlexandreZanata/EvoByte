@@ -39,6 +39,11 @@ from benchmarks.open_problems import (
     p62_repair_cycles,
     p62_split_by_origin,
     p62_train_repairer,
+    p64_apply_rules,
+    p64_prove_rule,
+    p64_rule_matches,
+    p64_rule_report,
+    p64_suggest_rules,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -607,3 +612,46 @@ def test_p62_compare_policies_equal_inputs_with_costs() -> None:
     assert rep["learned"]["total_sec"] >= rep["learned"]["train_sec_billed"]
     assert rep["classical"]["train_sec_billed"] == 0.0
     assert rep["classical"]["certified"] >= rep["learned"]["certified"] - len(dev_starts)
+
+
+def test_p64_prove_refute_timeout_paths() -> None:
+    proven = p64_prove_rule({"kind": "interval", "bound": "sum_le", "value": 4}, 4, 6)
+    assert proven["status"] == "PROVEN"
+    assert proven["checks"] == 4
+    refuted = p64_prove_rule({"kind": "parity", "coord": 0, "residue": 1}, 4, 6)
+    assert refuted["status"] == "REFUTED"
+    assert check_erdos_straus(4, *refuted["counterexample"])[0] is True
+    assert p64_rule_matches(
+        {"kind": "parity", "coord": 0, "residue": 1}, tuple(refuted["counterexample"])
+    )
+    slow = p64_prove_rule({"kind": "parity", "coord": 0, "residue": 1}, 4, 100, max_checks=1000)
+    assert slow["status"] == "UNPROVEN"
+    assert slow["checks"] == 0
+
+
+def test_p64_only_proven_rules_eliminate() -> None:
+    proven_rule = {"kind": "interval", "bound": "sum_le", "value": 4}
+    proof = p64_prove_rule(proven_rule, 4, 6)
+    assert proof["status"] == "PROVEN"
+    triples = [(1, 1, 1), (1, 1, 2), (2, 3, 6), (2, 3, 7)]
+    res = p64_apply_rules(triples, [proven_rule], [{"kind": "parity", "coord": 0, "residue": 1}])
+    assert res["kept"] == [2, 3]
+    assert [e["triple"] for e in res["eliminated"]] == [[1, 1, 1], [1, 1, 2]]
+    assert all(e["rule"] == proven_rule for e in res["eliminated"])
+    assert res["priority"] == [1, 1, 0, 0]
+    empty = p64_apply_rules(triples, [], [{"kind": "parity", "coord": 0, "residue": 1}])
+    assert empty["kept"] == [0, 1, 2, 3]
+    assert empty["eliminated"] == []
+
+
+def test_p64_suggest_and_report() -> None:
+    errors = [(2, 3, 7), (5, 5, 5), (1, 2, 3)]
+    first = p64_suggest_rules(errors)
+    assert first == p64_suggest_rules(errors)
+    assert len(first) > 0
+    assert all(sum(1 for t in errors if p64_rule_matches(rule, t)) >= 1 for rule in first)
+    rule = {"kind": "interval", "bound": "sum_le", "value": 4}
+    rep = p64_rule_report(rule, p64_prove_rule(rule, 4, 6), errors)
+    assert rep["status"] == "PROVEN"
+    assert rep["coverage_fraction"] == 0.0
+    assert "only inside the proven box" in rep["limits"]
