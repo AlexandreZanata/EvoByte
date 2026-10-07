@@ -1,8 +1,9 @@
 # P59 — Estabelecer comparações com a mesma informação
 
-**Status:** Building (entregas 1–3 entregues: fronteira/sentinelas, trial
-pareado + ledger + escopo, interface de aceitação + config congelada;
-entrega 4 pendente: medição dos controles em árvore limpa).
+**Status:** Done (entregas 1–4: fronteira/sentinelas, trial pareado +
+ledger + escopo, interface + config congelada, medição ACCEPTED em árvore
+limpa `run_id=1655463c6f5b5bea`; registro em
+`docs/research/p59-controls-record.md`). Confirmação de hipótese em P60/P71.
 **Dependência:** predecessor P58 aceito porém não integrado (PR #86 aberto);
 branch a partir de `codex/p58-accepted-research-baseline`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -40,8 +41,11 @@ confirmação final enquanto a revisão estiver suja.
    baseline aplicável recebem restrição explícita de comparação.
 3. Revisar e congelar configuração completa, fontes, espaço de candidatos,
    warm-start, custos e interface de aceitação realmente implementada.
+   (Entregue: `experiments/p59-config.json`, `experiments/p59-run.sh`.)
 4. Medir controles em árvore limpa e revisão aceita; registrar evidência em
    ciclo documental posterior. A confirmação de hipótese fica para P60/P71.
+   (Entregue: ACCEPTED `1655463c6f5b5bea`, registro em
+   `docs/research/p59-controls-record.md`.)
 
 Um controle de engenharia pode demonstrar igualdade de inputs sem declarar
 ganho estatístico. O compilador Horner permanece controle de resposta conhecida
