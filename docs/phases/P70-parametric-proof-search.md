@@ -1,7 +1,7 @@
 # P70 — H10 — Buscar fórmulas para famílias de soluções
 
-**Status:** Building (entrega 1 neste ciclo: templates + verificação
-algébrica + regressões; proponente, comparação e medição pendentes).
+**Status:** Building (entregas 1–2: templates + proponente com comparação
+de 3 braços; congelamento/medição pendentes).
 **Dependência:** P69 Done porém não integrado (PR #97 aberto); branch a
 partir de `codex/p69-residue-synchronized-islands`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.

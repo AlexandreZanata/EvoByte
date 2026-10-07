@@ -4313,6 +4313,186 @@ def p70_verify_template(template: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+# ==============================================================================
+# P70 entrega 2 — H10 proponente pequeno e comparação com custos
+# ==============================================================================
+#
+# Grade limitada de templates (controles + perturbações + sorteados seedados,
+# coeficientes dentro dos limites congelados). Um único proponente (MLP tiny
+# sobre descritores públicos do template) treinado em rótulos exatos
+# verifica-ou-não. Braços: proponente (ranqueado), busca estruturada (ordem
+# fixa) e derivação clássica (só os controles); só filtros determinísticos
+# exatos, sem empilhar modelos anteriores. Todos os custos contam.
+
+P70_PROPOSER_ARMS = ("proposer", "structured", "classical")
+
+
+def p70_template_features(template: dict[str, Any]) -> list[float]:
+    """Public template descriptors: class, degree, coefficient stats."""
+    classes = [(2, 0), (3, 2), (3, 0)]
+    cls = (int(template["n_class"]["k"]), int(template["n_class"]["r"]))
+    coeffs = [int(c) for num, _ in template["triple"] for c in num]
+    denoms = [int(d) for _, d in template["triple"]]
+    degree = max((len(num) - 1 for num, _ in template["triple"]), default=0)
+    return [
+        *[1.0 if cls == c else 0.0 for c in classes],
+        float(degree) / 2.0,
+        sum(abs(c) for c in coeffs) / (P70_MAX_COEFF_ABS * 9.0),
+        sum(denoms) / 12.0,
+    ]
+
+
+class P70Proposer(torch.nn.Module):
+    """Tiny template scorer (~80 params, CPU)."""
+
+    def __init__(self, hidden: int = 8) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(6, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p70_proposer_grid(seed: int = 0) -> list[dict[str, Any]]:
+    """Bounded candidate grid: controls plus coefficient variants plus seeded draws."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    grid = list(p70_nominate_templates())
+    seen = {
+        (
+            t["n_class"]["k"],
+            t["n_class"]["r"],
+            tuple((tuple(n), d) for n, d in t["triple"]),
+        )
+        for t in grid
+    }
+    for base in p70_nominate_templates()[:3]:
+        for ci in range(3):
+            for pos in range(len(base["triple"][ci][0])):
+                for delta in (-2, -1, 1, 2):
+                    num = [list(n) for n, _ in base["triple"]]
+                    num[ci][pos] += delta
+                    if any(abs(c) > P70_MAX_COEFF_ABS for row in num for c in row):
+                        continue
+                    key = (
+                        base["n_class"]["k"],
+                        base["n_class"]["r"],
+                        tuple((tuple(n), d) for n, d in zip(num, [d for _, d in base["triple"]])),
+                    )
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    grid.append(
+                        {
+                            "id": f"variant-{len(grid):02d}",
+                            "n_class": dict(base["n_class"]),
+                            "triple": [(n, d) for n, d in zip(num, [d for _, d in base["triple"]])],
+                            "domain": list(base["domain"]),
+                            "note": "bounded coefficient variant under test",
+                        }
+                    )
+    while len([t for t in grid if t["id"].startswith("draw-")]) < 12:
+        num = [[rng.randint(-3, 3) for _ in range(rng.randint(1, 3))] for _ in range(3)]
+        dens = [rng.randint(1, 4) for _ in range(3)]
+        key = (2, 0, tuple((tuple(n), d) for n, d in zip(num, dens)))
+        if key in seen:
+            continue
+        seen.add(key)
+        grid.append(
+            {
+                "id": f"draw-{len(grid):02d}",
+                "n_class": {"k": 2, "r": 0},
+                "triple": [(n, d) for n, d in zip(num, dens)],
+                "domain": [2, 60],
+                "note": "seeded bounded draw under test",
+            }
+        )
+    return grid
+
+
+def p70_train_proposer(
+    grid: list[dict[str, Any]], seed: int = 0, epochs: int = 30, lr: float = 0.05
+) -> dict[str, Any]:
+    """Train the single proposer on exact verifies-or-not labels."""
+    if not grid:
+        raise ValueError("P70 training needs a non-empty grid")
+    torch.manual_seed(int(seed))
+    model = P70Proposer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+    t0 = time.perf_counter()
+    labels = [1.0 if p70_verify_template(t)["status"] == "PROVEN" else 0.0 for t in grid]
+    label_sec = time.perf_counter() - t0
+    feats = torch.stack([torch.tensor(p70_template_features(t)) for t in grid]).float()
+    target = torch.tensor(labels, dtype=torch.float32)
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        loss = loss_fn(model(feats), target)
+        loss.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        acc = float((((model(feats) > 0.0).float()) == target).float().mean().item())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_templates": len(grid),
+        "positives": int(target.sum().item()),
+        "train_acc": acc,
+        "label_sec": float(label_sec),
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p70_compare_proposers(
+    grid: list[dict[str, Any]],
+    weights: dict[str, torch.Tensor],
+    budget: int = 20,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Proposer vs structured scan vs classical derivation, same verification budget.
+
+    Each arm verifies templates in its own order until the first PROVEN (or
+    budget exhaustion). Verification is the deterministic exact verifier for
+    every arm; every check is counted and billed.
+    """
+    model = P70Proposer()
+    model.load_state_dict(weights)
+    model.eval()
+    feats = torch.stack([torch.tensor(p70_template_features(t)) for t in grid]).float()
+    with torch.no_grad():
+        ranked = torch.argsort(model(feats), descending=True).tolist()
+    classical_ids = {"control-even", "control-2mod3", "control-mult3"}
+    orders = {
+        "proposer": ranked,
+        "structured": list(range(len(grid))),
+        "classical": [i for i, t in enumerate(grid) if t["id"] in classical_ids],
+    }
+    out: dict[str, Any] = {}
+    for arm in P70_PROPOSER_ARMS:
+        t0 = time.perf_counter()
+        found = None
+        verifications = 0
+        for idx in orders[arm][: max(0, int(budget))]:
+            verifications += 1
+            if p70_verify_template(grid[idx])["status"] == "PROVEN":
+                found = grid[idx]["id"]
+                break
+        out[arm] = {
+            "templates": len(grid),
+            "budget": int(budget),
+            "verifications": verifications,
+            "found": found,
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

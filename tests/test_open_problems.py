@@ -24,11 +24,13 @@ from benchmarks.open_problems import (
     P69_MIGRATION_COMPARISON_ARMS,
     P70_MAX_COEFF_ABS,
     P70_MAX_DEGREE,
+    P70_PROPOSER_ARMS,
     PROBLEM_REGISTRY,
     P62RepairScorer,
     P65BridgeScorer,
     P66PacketScorer,
     P68AttackScorer,
+    P70Proposer,
     audit_historical_certificate,
     check_coordinate_bounds,
     check_diophantine_quintuple,
@@ -87,8 +89,12 @@ from benchmarks.open_problems import (
     p69_compare_migrations,
     p69_island_search,
     p70_class_values,
+    p70_compare_proposers,
     p70_eval_poly,
     p70_nominate_templates,
+    p70_proposer_grid,
+    p70_template_features,
+    p70_train_proposer,
     p70_verify_template,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
@@ -1086,3 +1092,44 @@ def test_p70_controls_proven_variants_failed() -> None:
         rep = p70_verify_template(templates[tid])
         assert rep["status"] == "FAILED"
     assert p70_verify_template(templates["control-even"])["members"] == 100
+
+
+def _p70_trained_proposer():
+    grid = p70_proposer_grid(seed=0)
+    assert grid == p70_proposer_grid(seed=0)
+    for t in grid:
+        assert all(abs(c) <= P70_MAX_COEFF_ABS for num, _ in t["triple"] for c in num)
+    assert {t["id"] for t in grid} >= {"control-even", "control-2mod3", "control-mult3"}
+    return grid, p70_train_proposer(grid, seed=0, epochs=30)
+
+
+def test_p70_proposer_trains_small_and_deterministic() -> None:
+    grid, first = _p70_trained_proposer()
+    _, second = _p70_trained_proposer()
+    assert first["n_params"] == 65
+    assert first["n_templates"] == len(grid) > 0
+    assert first["positives"] >= 3
+    assert first["train_acc"] > 0.9
+    assert first["label_sec"] >= 0.0
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P70Proposer().parameters()) == 65
+    assert len(p70_template_features(grid[0])) == 6
+
+
+def test_p70_compare_proposers_same_budget() -> None:
+    grid, weights = _p70_trained_proposer()
+    first = p70_compare_proposers(grid, weights["state_dict"], budget=20, seed=0)
+    second = p70_compare_proposers(grid, weights["state_dict"], budget=20, seed=0)
+    assert set(first) == set(P70_PROPOSER_ARMS) == {"proposer", "structured", "classical"}
+    for arm in P70_PROPOSER_ARMS:
+        rec = first[arm]
+        assert rec["templates"] == len(grid)
+        assert rec["verifications"] <= 20
+        assert {k: v for k, v in rec.items() if k != "loop_sec"} == {
+            k: v for k, v in second[arm].items() if k != "loop_sec"
+        }
+        if rec["found"] is not None:
+            tmpl = next(t for t in grid if t["id"] == rec["found"])
+            assert p70_verify_template(tmpl)["status"] == "PROVEN"
+    assert first["classical"]["found"] in {"control-even", "control-2mod3", "control-mult3"}
