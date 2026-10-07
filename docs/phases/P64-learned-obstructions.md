@@ -1,7 +1,8 @@
 # P64 — H03 — Aprender regiões proibidas e tentar prová-las
 
-**Status:** Building (entregas 1–2: regras + prova e custo×poupança com
-priorização ≥10%; congelamento/medição pendentes).
+**Status:** Building (entregas 1–3: regras + prova, economia + scan,
+interface + config congelada; entrega 4 pendente: medição em árvore limpa
++ registro. Diagnóstico: outcome NULL — net da regra provada −0.0002 s.)
 **Dependência:** P63 Done porém não integrado (PR #91 aberto); branch a
 partir de `codex/p63-verifier-feedback`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -47,7 +48,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P64**:
+Interface de aceitação **implementada na entrega 3** (`run_p64_obstruction_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P64 --config experiments/p64-config.json --output /tmp/evobyte-p64-acceptance.json
