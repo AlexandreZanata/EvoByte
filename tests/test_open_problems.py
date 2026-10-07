@@ -17,6 +17,9 @@ from benchmarks.open_problems import (
     P66_PACKET_ARMS,
     P66_PACKET_MAX_LEN,
     P66_PACKET_MIN_LEN,
+    P68_ATTACKERS,
+    P68_COMBINED_PARAM_CAP,
+    P68_TEMPLATE_FAMILIES,
     PROBLEM_REGISTRY,
     P62RepairScorer,
     P65BridgeScorer,
@@ -69,6 +72,8 @@ from benchmarks.open_problems import (
     p66_packet_features,
     p66_random_packet,
     p66_train_packet_scorer,
+    p68_attack_template,
+    p68_propose_template,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -892,3 +897,61 @@ def test_p66_compare_guided_equal_ops() -> None:
         assert {k: v for k, v in rec.items() if k != "loop_sec"} == {
             k: v for k, v in second[arm].items() if k != "loop_sec"
         }
+
+
+def test_p68_attack_documents_exact_refutations() -> None:
+    assert P68_COMBINED_PARAM_CAP == 1000000
+    assert set(P68_ATTACKERS) == {"systematic", "random"}
+    assert set(P68_TEMPLATE_FAMILIES) == {"even", "n=2-mod-3", "multiple-of-3"}
+    rep = p68_attack_template(p68_propose_template("even", 4, 20), attacker="systematic")
+    assert rep["refuted"] is True
+    assert rep["refutations"][0] == {
+        "n": 5,
+        "triple": None,
+        "reason": "not-covered",
+        "residual": None,
+        "exact": False,
+    }
+    for ref in rep["refutations"]:
+        if ref["reason"] == "inexact":
+            assert ref["residual"] != 0
+            assert check_erdos_straus(ref["n"], *ref["triple"])[0] is False
+        elif ref["reason"] == "out-of-bounds":
+            assert max(ref["triple"]) > 10**9
+    assert check_erdos_straus(4, 2, 3, 6)[0] is True
+
+
+def test_p68_out_of_bounds_survival_budget_and_leakage() -> None:
+    rep = p68_attack_template(
+        p68_propose_template("even", 100, 100), attacker="systematic", max_coord=1000
+    )
+    assert rep["refuted"] is True
+    assert rep["refutations"][0]["reason"] == "out-of-bounds"
+    calm = p68_attack_template(p68_propose_template("multiple-of-3", 3, 3))
+    assert calm == {
+        "family_id": "multiple-of-3",
+        "attacker": "systematic",
+        "queries": 1,
+        "refuted": False,
+        "refutations": [],
+        "survived": True,
+    }
+    first = p68_attack_template(p68_propose_template("even", 4, 20), attacker="random", seed=1)
+    assert first == p68_attack_template(
+        p68_propose_template("even", 4, 20), attacker="random", seed=1
+    )
+    assert first["queries"] <= 50
+    empty = p68_attack_template(p68_propose_template("even", 4, 20), budget=0)
+    assert empty["queries"] == 0 and empty["survived"] is True
+    import inspect as _inspect
+
+    params = set(_inspect.signature(p68_attack_template).parameters)
+    assert params <= {"template", "attacker", "budget", "seed", "max_coord"}
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError, match="Unknown P68 template family"):
+        p68_propose_template("odd", 4, 20)
+    with _pytest.raises(ValueError, match="domain needs"):
+        p68_propose_template("even", 20, 4)
+    with _pytest.raises(ValueError, match="Unknown P68 attacker"):
+        p68_attack_template(p68_propose_template("even", 4, 4), attacker="oracle")

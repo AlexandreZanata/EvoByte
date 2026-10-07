@@ -3803,6 +3803,101 @@ def p66_compare_guided(
     return out
 
 
+# ==============================================================================
+# P68 entrega 1 — H07 jogo proponente-atacante com refutações certificadas
+# ==============================================================================
+#
+# Templates (família + domínio público) atacados por instâncias do domínio:
+# sistemática (ordem) e aleatória (seeded). Cada refutação carrega prova
+# exata (não-cobertura, tripla inexata ou fora do limite). Refutar um
+# template nunca equivale a refutar Erdős–Straus. Teto combinado de 1M de
+# parâmetros para os dois modelos; atacante vê só o público.
+
+P68_COMBINED_PARAM_CAP = 1000000
+
+P68_ATTACKERS = ("systematic", "random")
+
+P68_TEMPLATE_FAMILIES = ("even", "n=2-mod-3", "multiple-of-3")
+
+
+def p68_propose_template(family_id: str, lo: int, hi: int) -> dict[str, Any]:
+    """Propose a template claim: family covers every n in [lo, hi]."""
+    if family_id not in P68_TEMPLATE_FAMILIES:
+        raise ValueError(f"Unknown P68 template family: {family_id}")
+    if not 2 <= int(lo) <= int(hi):
+        raise ValueError("P68 domain needs 2 <= lo <= hi")
+    return {"family_id": str(family_id), "domain": [int(lo), int(hi)]}
+
+
+def p68_attack_template(
+    template: dict[str, Any],
+    attacker: str = "systematic",
+    budget: int = 50,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Attack a template inside its public domain (no private answers seen).
+
+    Returns refutations with exact evidence, or survival when the budget
+    finds nothing. Survival is not a theorem.
+    """
+    import random as _random
+
+    if attacker not in P68_ATTACKERS:
+        raise ValueError(f"Unknown P68 attacker: {attacker}")
+    lo, hi = (int(v) for v in template["domain"])
+    order = list(range(lo, hi + 1))
+    if attacker == "random":
+        _random.Random(int(seed)).shuffle(order)
+    entry = {"id": template["family_id"], "kind": "parametric"}
+    refutations = []
+    queries = 0
+    for n in order[: max(0, int(budget))]:
+        queries += 1
+        triple = p65_instantiate(entry, n)
+        if triple is None:
+            refutations.append(
+                {
+                    "n": n,
+                    "triple": None,
+                    "reason": "not-covered",
+                    "residual": None,
+                    "exact": False,
+                }
+            )
+        elif max(triple) > int(max_coord):
+            refutations.append(
+                {
+                    "n": n,
+                    "triple": list(triple),
+                    "reason": "out-of-bounds",
+                    "residual": None,
+                    "exact": False,
+                }
+            )
+        else:
+            ok1, residual, _ = check_erdos_straus(n, *triple)
+            ok2, _, _ = check_erdos_straus_fractions(n, *triple)
+            if not (ok1 and ok2):
+                refutations.append(
+                    {
+                        "n": n,
+                        "triple": list(triple),
+                        "reason": "inexact",
+                        "residual": int(residual),
+                        "exact": False,
+                    }
+                )
+    return {
+        "family_id": template["family_id"],
+        "attacker": attacker,
+        "queries": queries,
+        "refuted": len(refutations) > 0,
+        "refutations": refutations,
+        "survived": len(refutations) == 0,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
