@@ -161,6 +161,13 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P56",
         "P57",
         "P58",
+        "P59",
+        "P60",
+        "P61",
+        "P62",
+        "P63",
+        "P64",
+        "P65",
     )
     import subprocess as _sp
 
@@ -169,7 +176,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P59",
+            "P99",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -181,7 +188,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P59'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P99'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():

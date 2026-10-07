@@ -1,6 +1,10 @@
 # P66 — H05 — Atravessar a busca com saltos compostos
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: pacotes + comparação com
+operações iguais + regressões; distribuição guiada, congelamento e medição
+pendentes. Inclui manutenção do pin do registro até P65.).
+**Dependência:** P65 Done porém não integrado (PR #93 aberto); branch a
+partir de `codex/p65-backward-constructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P65 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p66-composite-search-jumps`.

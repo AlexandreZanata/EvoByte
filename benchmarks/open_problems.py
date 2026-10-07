@@ -3498,6 +3498,115 @@ def p65_compare_libraries(
     return out
 
 
+# ==============================================================================
+# P66 entrega 1 — H05 pacotes de edições e comparação com operações iguais
+# ==============================================================================
+#
+# Pacotes de 2–4 edições válidas (uma coordenada, passos ±1..±3). No salto,
+# intermediários podem falhar na equação mas seguem objetos representáveis
+# (inteiros >= 1); pacote que sai do domínio é inválido, não silencioso.
+# Braço pacote avalia só finais (salta intermediários); braço isolado
+# avalia cada edição — mesmo total de operações, coberturas distintas.
+# Alcance, duplicação e certificados registrados; custo reconciliado.
+
+P66_PACKET_MIN_LEN = 2
+
+P66_PACKET_MAX_LEN = 4
+
+P66_PACKET_ARMS = ("packet", "isolated")
+
+
+def p66_random_packet(seed: int, length: int | None = None) -> tuple[tuple[int, int], ...]:
+    """Seeded packet of 2–4 single-coordinate edits (coord, step)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    size = (
+        int(length) if length is not None else rng.randint(P66_PACKET_MIN_LEN, P66_PACKET_MAX_LEN)
+    )
+    if not P66_PACKET_MIN_LEN <= size <= P66_PACKET_MAX_LEN:
+        raise ValueError(f"P66 packet length must be {P66_PACKET_MIN_LEN}..{P66_PACKET_MAX_LEN}")
+    return tuple((rng.randint(0, 2), rng.choice(P62_NEIGHBORHOOD_STEPS)) for _ in range(size))
+
+
+def p66_apply_packet(
+    start: tuple[int, int, int], packet: tuple[tuple[int, int], ...]
+) -> dict[str, Any]:
+    """Apply one packet; intermediates stay representable or packet is invalid."""
+    if not P66_PACKET_MIN_LEN <= len(packet) <= P66_PACKET_MAX_LEN:
+        return {"valid": False, "final": None, "intermediates": [], "ops": 0}
+    triple = [int(v) for v in start]
+    intermediates = []
+    for coord, step in packet:
+        triple[int(coord)] += int(step)
+        if min(triple) < 1:
+            return {
+                "valid": False,
+                "final": None,
+                "intermediates": intermediates,
+                "ops": len(packet),
+            }
+        intermediates.append((triple[0], triple[1], triple[2]))
+    return {
+        "valid": True,
+        "final": (triple[0], triple[1], triple[2]),
+        "intermediates": intermediates,
+        "ops": len(packet),
+    }
+
+
+def p66_compare_packets(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    n_packets: int = 8,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Packet jumps vs isolated edits under exactly equal total operations."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    packets = [p66_random_packet(rng.randint(0, 2**31 - 1)) for _ in range(int(n_packets))]
+    out: dict[str, Any] = {}
+    for arm in P66_PACKET_ARMS:
+        t0 = time.perf_counter()
+        evaluated: list[tuple[int, int, int]] = []
+        ops_total = 0
+        for start in starts:
+            if arm == "packet":
+                for packet in packets:
+                    res = p66_apply_packet(start, packet)
+                    ops_total += res["ops"]
+                    if res["valid"]:
+                        evaluated.append(res["final"])
+            else:
+                for packet in packets:
+                    triple = [int(v) for v in start]
+                    for coord, step in packet:
+                        triple[int(coord)] += int(step)
+                        ops_total += 1
+                        if min(triple) >= 1:
+                            evaluated.append((triple[0], triple[1], triple[2]))
+        certs: set[tuple[int, int, int]] = set()
+        for triple in evaluated:
+            if max(triple) > int(max_coord):
+                continue
+            ok1, _, _ = check_erdos_straus(int(n), *triple)
+            ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+            if ok1 and ok2:
+                certs.add(triple)
+        out[arm] = {
+            "starts": len(starts),
+            "ops_total": ops_total,
+            "evaluated": len(evaluated),
+            "reach": len(set(evaluated)),
+            "duplicates": len(evaluated) - len(set(evaluated)),
+            "certificates": sorted(certs),
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
