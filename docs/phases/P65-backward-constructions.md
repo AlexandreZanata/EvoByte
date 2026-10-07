@@ -1,6 +1,10 @@
 # P65 — H04 — Inventar respostas e procurar pontes para o alvo
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: biblioteca + pontes +
+regressões; seleção por modelo, comparação de bibliotecas, congelamento e
+medição pendentes).
+**Dependência:** P64 Done porém não integrado (PR #92 aberto); branch a
+partir de `codex/p64-learned-obstructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P64 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p65-backward-constructions`.

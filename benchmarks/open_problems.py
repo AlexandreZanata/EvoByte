@@ -3170,6 +3170,106 @@ def p64_prioritized_scan(
     }
 
 
+# ==============================================================================
+# P65 entrega 1 — H04 biblioteca de construções e pontes determinísticas
+# ==============================================================================
+#
+# Construções exatas paramétricas com representação compacta (família,
+# parâmetros, hipóteses de cobertura e limites). Ponte = instanciar a
+# primeira entrada que cobre o alvo e verificar com os checkers fixos
+# CONTRA O ALVO FIXADO — nunca um enunciado substituído. Âncoras conhecidas
+# entram rotuladas como rediscovery. Tamanho máximo congelado antes da coleta.
+
+P65_MAX_LIBRARY = 8
+
+
+def p65_build_library() -> list[dict[str, Any]]:
+    """Frozen construction library (parametric families plus labeled anchors)."""
+    return [
+        {
+            "id": "even",
+            "kind": "parametric",
+            "params": ["m"],
+            "hypotheses": "covers even n = 2m",
+            "bounds": {"max_coord": 10**9},
+        },
+        {
+            "id": "n=2-mod-3",
+            "kind": "parametric",
+            "params": ["n"],
+            "hypotheses": "covers n with (n+1) divisible by 3",
+            "bounds": {"max_coord": 10**9},
+        },
+        {
+            "id": "multiple-of-3",
+            "kind": "parametric",
+            "params": ["n"],
+            "hypotheses": "covers multiples of 3",
+            "bounds": {"max_coord": 10**9},
+        },
+        {
+            "id": "anchor-1009",
+            "kind": "anchor",
+            "params": [],
+            "hypotheses": "covers n = 1009 only; rediscovery, never discovery",
+            "bounds": {"max_coord": 10**9},
+        },
+    ]
+
+
+def p65_instantiate(entry: dict[str, Any], n: int) -> tuple[int, int, int] | None:
+    """Instantiate one entry for n, or None when the entry does not cover it."""
+    n = int(n)
+    eid = entry.get("id")
+    if eid == "even":
+        if n % 2 != 0:
+            return None
+        m = n // 2
+        return (m, m + 1, m * (m + 1))
+    if eid == "n=2-mod-3":
+        if (n + 1) % 3 != 0:
+            return None
+        return (n, (n + 1) // 3, n * (n + 1) // 3)
+    if eid == "multiple-of-3":
+        if n % 3 != 0:
+            return None
+        return (n // 3, 2 * n, 2 * n)
+    if eid == "anchor-1009":
+        if n != 1009:
+            return None
+        return tuple(int(v) for v in P57_KNOWN_TRIPLE_1009)
+    raise ValueError(f"Unknown P65 library entry: {eid}")
+
+
+def p65_find_bridge(
+    library: list[dict[str, Any]], n: int, max_coord: int = 10**9
+) -> dict[str, Any] | None:
+    """First covering entry, instantiated and dual-verified for the fixed n.
+
+    Returns None when no entry covers n (honest NULL path). Rediscovered
+    triples stay labeled rediscovery via the frozen classifier.
+    """
+    if len(library) > P65_MAX_LIBRARY:
+        raise ValueError(f"P65 library exceeds frozen max {P65_MAX_LIBRARY}")
+    for entry in library:
+        triple = p65_instantiate(entry, int(n))
+        if triple is None:
+            continue
+        if max(triple) > int(max_coord):
+            continue
+        ok1, _, _ = check_erdos_straus(int(n), *triple)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+        if ok1 and ok2:
+            return {
+                "entry_id": entry["id"],
+                "kind": entry["kind"],
+                "triple": list(triple),
+                "label": p57_classify_solved(int(n), tuple(triple)),
+                "verified_for_n": int(n),
+            }
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

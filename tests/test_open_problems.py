@@ -13,6 +13,7 @@ sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
 from benchmarks.open_problems import (
     P57_KNOWN_TRIPLE_1009,
     P61_SHADOW_PRIMES,
+    P65_MAX_LIBRARY,
     PROBLEM_REGISTRY,
     P62RepairScorer,
     audit_historical_certificate,
@@ -46,6 +47,9 @@ from benchmarks.open_problems import (
     p64_rule_matches,
     p64_rule_report,
     p64_suggest_rules,
+    p65_build_library,
+    p65_find_bridge,
+    p65_instantiate,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -703,3 +707,33 @@ def test_p64_proven_rules_discard_no_known_valid() -> None:
     res = p64_apply_rules(known, [rule], [])
     assert res["eliminated"] == []
     assert res["kept"] == [0, 1, 2, 3, 4]
+
+
+def test_p65_library_is_frozen_and_covering() -> None:
+    lib = p65_build_library()
+    assert len(lib) <= P65_MAX_LIBRARY == 8
+    assert [e["id"] for e in lib] == ["even", "n=2-mod-3", "multiple-of-3", "anchor-1009"]
+    assert p65_instantiate(lib[0], 6) == (3, 4, 12)
+    assert p65_instantiate(lib[0], 5) is None
+    assert p65_instantiate(lib[3], 1009) == tuple(P57_KNOWN_TRIPLE_1009)
+    assert p65_instantiate(lib[3], 6) is None
+
+
+def test_p65_bridges_prove_the_fixed_target() -> None:
+    import pytest
+
+    lib = p65_build_library()
+    for n in (4, 5, 6, 9, 10):
+        bridge = p65_find_bridge(lib, n)
+        assert bridge is not None
+        assert bridge["verified_for_n"] == n
+        assert check_erdos_straus(n, *bridge["triple"])[0] is True
+        assert check_erdos_straus_fractions(n, *bridge["triple"])[0] is True
+    assert p65_find_bridge(lib, 73) is None
+    anchor = p65_find_bridge(lib, 1009)
+    assert anchor is not None and anchor["label"] == "rediscovery"
+    other = p65_find_bridge(lib, 6)
+    assert other is not None
+    assert check_erdos_straus(7, *other["triple"])[0] is False
+    with pytest.raises(ValueError, match="exceeds frozen max"):
+        p65_find_bridge(lib + lib + lib[:1], 6)
