@@ -1,7 +1,8 @@
 # P70 — H10 — Buscar fórmulas para famílias de soluções
 
-**Status:** Building (entregas 1–2: templates + proponente com comparação
-de 3 braços; congelamento/medição pendentes).
+**Status:** Building (entregas 1–3: templates, proponente + comparação,
+interface + config congelada; entrega 4 pendente: medição em árvore limpa
++ registro. Diagnóstico: outcome NULL — só os 3 controles provam.)
 **Dependência:** P69 Done porém não integrado (PR #97 aberto); branch a
 partir de `codex/p69-residue-synchronized-islands`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -47,7 +48,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P70**:
+Interface de aceitação **implementada na entrega 3** (`run_p70_template_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P70 --config experiments/p70-config.json --output /tmp/evobyte-p70-acceptance.json
