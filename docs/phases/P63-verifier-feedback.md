@@ -1,8 +1,10 @@
 # P63 — H08 — Orientar o modelo por códigos de rejeição
 
-**Status:** Building (entregas 1–3: códigos, comparação de 3 braços,
-scorer único + interface/config congelada; entrega 4 pendente: medição em
-árvore limpa + registro. Diagnóstico: outcome NULL — real 4/4 = ablações.)
+**Status:** Done (entregas 1–4: códigos, comparação de 3 braços, scorer +
+interface/config congelada, medição ACCEPTED em árvore limpa
+`run_id=36167860b1e9f5f2` com outcome NULL íntegro; registro em
+`docs/research/p63-feedback-record.md`). H08 encerrada sem promoção; P64
+liberada.
 **Dependência:** P62 Done porém não integrado (PR #90 aberto); branch a
 partir de `codex/p62-structured-error-repair`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
