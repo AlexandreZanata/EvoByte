@@ -1,8 +1,10 @@
 # P60 — Congelar a bancada e o pré-registro das dez hipóteses
 
-**Status:** Building (entregas 1–3: manifesto/procedimento, revisão +
-pré-registro congelado, interface de aceitação + comando congelado;
-entrega 4 pendente: medição em árvore limpa + registro).
+**Status:** Done (entregas 1–4: manifesto, revisão + pré-registro,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=ced679eb2bdcb324`; registro em
+`docs/research/p60-acceptance-record.md`). P61–P70 desbloqueadas sob seus
+gates; confirmação em P71.
 **Dependência:** P59 Done porém não integrado (PR #87 aberto); branch a
 partir de `codex/p59-equal-information-controls`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
