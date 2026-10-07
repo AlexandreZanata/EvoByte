@@ -1,9 +1,10 @@
 # P65 — H04 — Inventar respostas e procurar pontes para o alvo
 
-**Status:** Building (entregas 1–3: biblioteca + pontes, seletor +
-comparação, interface + config congelada; entrega 4 pendente: medição em
-árvore limpa + registro. Diagnóstico: outcome NULL — model 5/6 =
-estruturada 5/6.)
+**Status:** Done (entregas 1–4: biblioteca + pontes, seletor + comparação,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=cf7562112ad0818c` com outcome NULL íntegro; registro em
+`docs/research/p65-bridge-record.md`). H04 encerrada sem promoção; P66
+liberada.
 **Dependência:** P64 Done porém não integrado (PR #92 aberto); branch a
 partir de `codex/p64-learned-obstructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
