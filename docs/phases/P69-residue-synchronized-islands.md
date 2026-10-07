@@ -1,9 +1,10 @@
 # P69 — H09 — Sincronizar ilhas por erros complementares
 
-**Status:** Building (entregas 1–3: migração, busca + comparação,
-interface + config congelada; entrega 4 pendente: medição em árvore limpa
-+ registro. Diagnóstico: outcome NULL — todos certificam, diversidade
-sem ganho não promove.)
+**Status:** Done (entregas 1–4: migração, busca + comparação, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=eccb658dc0739c18` com outcome NULL íntegro; registro em
+`docs/research/p69-island-record.md`). H09 encerrada sem promoção; P70
+liberada.
 **Dependência:** P68 Done porém não integrado (PR #96 aberto); branch a
 partir de `codex/p68-adversarial-conjectures`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
