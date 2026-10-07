@@ -1,8 +1,8 @@
 # Plano de busca matemática verificável — execução por agente econômico
 
-**Plano atualizado: 2026-10-05.** P40–P57 são o programa histórico, com
-resultados e pendências nos arquivos individuais. A extensão P58–P72 tem
-Status Proposed. Este documento não certifica fases antigas nem promete
+**Plano atualizado: 2026-10-06 (D019).** P40–P57 são o programa histórico, com
+resultados e pendências nos arquivos individuais. P58 está Building/BLOCKED;
+P59–P72 estão Proposed. Este documento não certifica fases antigas nem promete
 descoberta. Criar o plano não executa os novos experimentos.
 
 ## Objetivo e limites
@@ -40,6 +40,8 @@ matemático aprova curadoria P46, enunciado/hipótese P47, tradução formal P48
 procedimento estatístico P54 e novidade P57. Aprovação científica é registrada
 com autor/data/justificativa e não equivale a autorização de merge.
 Sem revisão necessária, preparar o material verificável e parar nessa fronteira.
+Para a continuidade técnica P58–P72, aplicar a disposição de evidências D019
+abaixo. Revisão de uso restrito não aprova a conclusão científica histórica.
 
 ## Como executar uma microtarefa
 
@@ -111,7 +113,7 @@ certificate references, counters, limitations e caminhos/tamanhos/hashes
 dos dados brutos. Campos sem aplicação são marcados explicitamente com
 motivo. Relatórios técnicos não precisam inventar medidas de desempenho.
 
-Os novos arquivos P58–P72 têm Status Proposed. Marcar Done requer gate executado,
+P58 está Building/BLOCKED e P59–P72 estão Proposed. Marcar Done requer gate executado,
 artefato recuperável, commit e push; número de fases escritas não é progresso
 experimental. Runtime ausente, dado insuficiente ou fonte sem confirmação
 produzem BLOCKED/INCONCLUSIVE conforme o caso; nunca simular sucesso.
@@ -179,9 +181,10 @@ O índice e os contratos completos estão em [phases/README.md](phases/README.md
 
 ## Programa especulativo P58–P72
 
-**Status: Proposed, 2026-10-05.** São hipóteses exploratórias; não há
+**Programa proposto em 2026-10-05; corrigido por D019 em 2026-10-06.** São hipóteses exploratórias; não há
 garantia de ineditismo mundial, vantagem quântica, ganho de velocidade ou
-solução de conjectura. Este plano implementa nenhuma das novas interfaces.
+solução de conjectura. P58 tem interface de auditoria existente; o contrato
+corretivo D019 e as interfaces P59–P72 ainda precisam de implementação.
 Os resultados históricos P40–P57 continuam preservados e sujeitos a seus
 gates científicos, mesmo onde o arquivo registra Done.
 
@@ -200,16 +203,81 @@ primeiro os mecanismos de menor custo. Cada arquivo de fase especifica
 escopo, trabalho, gate e Commit & Push. Não implementar dez mecanismos
 de uma vez, nem abrir agentes paralelos para executar fases simultâneas.
 
-P58 é a próxima tarefa, com auditoria e revisões pendentes. Antes de medir
-P61–P70, P58–P60 devem estar integralmente aceitas. Propostas e código podem
-ser preparados em microtarefas próprias, mas gate pendente bloqueia novos
-experimentos e qualquer aceitação científica.
+P58 é a próxima tarefa, com as correções R1–R4. Antes de medir P61–P70,
+P58–P60 devem estar integralmente aceitas no escopo aplicável de D019.
+Propostas, correções e dossiês podem ser preparados em microtarefas próprias;
+gate pendente do uso atual bloqueia sua medição e aceitação. Uma aprovação
+histórica ausente não vira dependência impossível se o uso correspondente
+for excluído e essa restrição passar pelo auditor.
 
 Cada piloto P61–P70 testa seu mecanismo isoladamente contra a base P59;
 não acrescenta automaticamente mecanismos experimentais anteriores.
 Hipótese íntegra NULL/INCONCLUSIVE pode encerrar a etapa e liberar a
 próxima. Nenhum sucessor depende de fabricar um ganho. Falha de checker,
 dados, aprovação ou isolamento é BLOCKED e interrompe a cadeia.
+
+### Correção de atuação e continuidade técnica (D019)
+
+Alexandre autorizou a revisão por delegação e solicitou ajustar as fases para
+continuar o projeto. Registrar essa autorização e o executor real nos pareceres
+correspondentes; não atribuir ao responsável uma execução pessoal inexistente.
+Ela não é autorização de merge nem certificação de independência ou novidade.
+Não presumir autorização para aprovar futuros escopos ainda não apresentados.
+
+O agente mantém dois estados explícitos: aceitação da capacidade técnica no
+escopo atual e validade das conclusões científicas. O gate exige integralmente
+o primeiro e todas as revisões científicas de que esse uso realmente depende.
+Dados antigos podem entrar somente como referência/development com revisão
+de uso e restrições verificáveis. Não entram como teste novo, evidência de
+superioridade, pré-registro prospectivo ou descoberta sem seus gates próprios.
+
+As seis decisões P58 permanecem obrigatórias, mesmo para itens excluídos.
+Cada registro identifica responsável, executor, origem/data da autorização,
+revisão/hash examinados, evidência recuperável, justificativa, disposição e
+usos permitidos/proibidos. `accepted_for_base` significa que a disposição foi
+revisada e é cumprida pela configuração; não altera a aprovação científica
+histórica. O auditor deve verificar essa diferença, os seis IDs únicos, hashes,
+restrições e revisão de código aceita. Esse contrato ainda precisa ser
+implementado/testado; a configuração atual não passa a ACCEPTED por este texto.
+
+- P46: snapshot datado, com revisão da curadoria aplicável ao uso. Fonte
+  inacessível impede afirmar estado aberto atual; referência histórica pode
+  ser admitida com essa limitação. Certificação/novidade exige fonte e
+  formulação atual confirmadas no escopo de P60/P72.
+- P47: preservar manifesto incompleto, selo e log já consumido. Excluir como
+  pré-registro vigente; nominação nova e integral será congelada em P60 antes
+  de medidas futuras. Não preencher limiares retrospectivos.
+- P48: revisar tradução, dependências e controles dos desafios que forem
+  efetivamente usados. O certificado de n=1009 não é teorema universal.
+  Sem runtime verificável, excluir uso formal ou manter seu gate BLOCKED.
+- P54: manter DROP, modelo desligado e análise exploratória. Não exigir que
+  uma revisão hoje seja chamada de prévia; não autorizar KEEP ou ganho justo
+  com compilação da fórmula privada. P59 corrige inputs; P60 revisa estatística
+  e censura prospectivamente.
+- P56: aceitar apenas arquivo provisório/development com o teste consumido
+  declarado. Não reabrir final nem tratar self-repeat como reprodução por outra
+  parte ou execução limpa da campanha original. P71 exige confirmação nova.
+- P58: aceitar enunciado/escopo técnico e código corrigido, medir read-only em
+  revisão aceita e preservar todas as restrições no relatório recuperável.
+
+Não mudar checks, thresholds ou bounds para obter aceitação. Uma corrupção,
+certificado inválido, vazamento atual ou ausência de evidência necessária ao
+uso continuam BLOCKED. Restringir o uso requer decisão explícita e implementação
+verificável; renomear a falha ou apagar uma pendência não libera a fase.
+
+Quando uma tentativa falhar, aplicar a parada de AGENTS.md àquela entrega:
+sem commit/push da implementação rejeitada. Reportar causa, arquivo/evidência,
+critério que faltou e próxima microtarefa corretiva; no ciclo seguinte, reparar
+o mesmo gate com autorização existente. Não voltar a solicitar uma autorização
+já concedida nem repetir o dossiê inalterado como única ação possível.
+Uma microtarefa documental de planejamento tem seus gates de documentação e
+regressão; pode registrar a correção de uma fase BLOCKED, mas não marcá-la Done.
+
+P58 fecha R1–R4 antes de P59. P59 valida engenharia/igualdade de informação
+com controles development; P60 congela o novo desenho completo antes dos pilotos.
+Revisão independente real continua obrigatória para promoção em P71/P72.
+O gate de cada fase identifica o uso aprovado, as restrições herdadas e o
+artefato exato que libera a próxima; falha nunca é deferida como aceitação.
 
 ### Bancada padrão para o agente executor
 
@@ -317,6 +385,10 @@ make verify; um gate vermelho bloqueia commit/push daquela microtarefa.
 > uma microtarefa; nenhuma fase seguinte sem pré-requisitos aceitos.
 > Preserve dados P40–P57 e testes finais antigos. Não presuma aprovação
 > humana, novidade ou capacidade de CLI apenas porque existe um documento.
+> Aplique D019 e execute a primeira microtarefa corretiva ainda não concluída
+> da P58 (começando por R1). Preserve pendências históricas com disposição
+> auditável; não tente aprová-las retrospectivamente nem omita os seis itens.
+> Registre autorizações já dadas e executor real, com escopo e evidências.
 > Antes do experimento confirme enunciado revisado, informação igual,
 > custo completo, configuração congelada e revisão limpa. Reuse o código;
 > não altere checker, thresholds ou bounds para fazer a hipótese vencer.

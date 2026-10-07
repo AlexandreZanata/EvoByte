@@ -24,7 +24,26 @@ confirmação final enquanto a revisão estiver suja.
 
 2. Congelar seis tarefas development, três seeds e comparação baseline versus uma hipótese por vez, 10 s totais de busca/certificação por tentativa e teto de 30 min por hipótese incluindo coleta e treino. Controles conhecidos/falsos ficam fora da métrica de descoberta. Reserva inicial de modelo <=100 mil parâmetros e teto absoluto de 1 milhão; não ampliar sem nova hipótese/ADR.
 
-3. Revisar literatura por mecanismo e registrar sobreposições com técnicas existentes; nome fantasioso não comprova novidade. Definir PROMISING, NULL, INCONCLUSIVE e BLOCKED, tratamento de censura e escolha do método antes das medidas. Aprovar com revisor matemático/estatístico, sem preencher aprovação pelo agente.
+3. Revisar literatura por mecanismo e registrar sobreposições com técnicas existentes; nome fantasioso não comprova novidade. Definir PROMISING, NULL, INCONCLUSIVE e BLOCKED, tratamento de censura e escolha do método antes das medidas. Registrar revisão matemática/estatística identificável antes de medir. Delegação explícita segue D019: responsável e executor separados, sem presumir reprodução independente ou aprovação que não foi autorizada.
+
+## Pré-registro prospectivo obrigatório
+
+Usar nova nominação, com versão/hash próprios, sem editar o selo P47 histórico.
+Resolver valores de todas as quantidades: efeito mínimo, razão de tempos,
+número de grupos/tarefas/seeds, orçamento por braço e global, parada e precisão
+necessária. O procedimento especifica desfecho primário e falsificação coerentes,
+unidade de agrupamento, censura, seleção e controles. Seeds repetidos são
+repetições dentro de uma tarefa; não se contam como problemas independentes.
+Não excluir timeouts para produzir o intervalo principal. Limiares P47 ainda
+pendentes não são herdados como aprovação, nem os números propostos aqui
+substituem revisão prévia. Seis tarefas/três seeds são desenho de triagem;
+não garantem poder estatístico ou confirmação.
+
+Entregar em ciclos separados: manifesto/procedimento e capacidades necessárias;
+revisão e congelamento antes das medidas; aceitação técnica limpa da bancada;
+registro documental. Registrar autorização efetiva para cada escopo revisado;
+ausência de revisão exigida bloqueia a medição, mas permite preparar a correção
+ou o dossiê em próxima microtarefa. Reservar final novo e fechado para P71.
 
 ## Gate de saída
 

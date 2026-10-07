@@ -1,0 +1,316 @@
+{
+  "arms": [
+    "structured_random",
+    "evolution",
+    "classical"
+  ],
+  "budgets": {
+    "actual_search_sec": 102.36683508400165,
+    "actual_verification_sec": 0.36255355800676625,
+    "budget_sec_per_task": 10.0,
+    "requested_search_sec": 300.0
+  },
+  "certificate_references": [
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 42,
+      "task": "k1"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 101,
+      "task": "k1"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 202,
+      "task": "k1"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 303,
+      "task": "k1"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 404,
+      "task": "k1"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 42,
+      "task": "k1"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 101,
+      "task": "k1"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 202,
+      "task": "k1"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 303,
+      "task": "k1"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 404,
+      "task": "k1"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 42,
+      "task": "k1"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 101,
+      "task": "k1"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 202,
+      "task": "k1"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 303,
+      "task": "k1"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 404,
+      "task": "k1"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 42,
+      "task": "k2"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 101,
+      "task": "k2"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 202,
+      "task": "k2"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 303,
+      "task": "k2"
+    },
+    {
+      "arm": "structured_random",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 404,
+      "task": "k2"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 42,
+      "task": "k2"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 101,
+      "task": "k2"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 202,
+      "task": "k2"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 303,
+      "task": "k2"
+    },
+    {
+      "arm": "evolution",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 404,
+      "task": "k2"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 42,
+      "task": "k2"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 101,
+      "task": "k2"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 202,
+      "task": "k2"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 303,
+      "task": "k2"
+    },
+    {
+      "arm": "classical",
+      "certified": true,
+      "proof_type": "exact_certificate",
+      "seed": 404,
+      "task": "k2"
+    }
+  ],
+  "claim_scope": "search arms under one exact criterion; no isolated-generator win claimed",
+  "counters": {
+    "candidates_total": 748702,
+    "certified": 30,
+    "duplicates": 434384,
+    "false_rejected": 4,
+    "false_total": 4,
+    "invalid": 0,
+    "trials": 30
+  },
+  "criterion": {
+    "checker": "verify_l2 exact_certificate",
+    "domain": [
+      -3.0,
+      3.0
+    ],
+    "error_threshold": 0.0001,
+    "same_for_all_arms": true
+  },
+  "dirty": "M benchmarks/math_specialist.py\n M benchmarks/science_matrix.py\n M src/evobyte/grammar.py\n M tests/test_science.py\n?? experiments/p50-config.json\n?? experiments/p50-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 103.04675540999597,
+  "false_controls": [
+    {
+      "id": "f1",
+      "proof_type": "numerical_evidence",
+      "rejected": true
+    },
+    {
+      "id": "f2",
+      "proof_type": "mismatch",
+      "rejected": true
+    },
+    {
+      "id": "f3",
+      "proof_type": "numerical_evidence",
+      "rejected": true
+    },
+    {
+      "id": "f4",
+      "proof_type": "numerical_evidence",
+      "rejected": true
+    }
+  ],
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "Classical solving immediately is recorded, never hidden; it does not prove generality.",
+    "False controls guard promotion; they never prove a bounded search complete.",
+    "A narrow-family comparison does not authorize model training or discovery claims."
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P50",
+  "resolved_config": {
+    "acceptance_phase": "P50",
+    "config_path": "experiments/p50-config.json",
+    "config_sha256": "a61155eb557a16ecc0dd96de983b40fb671707bb9ab51fb6925293ef785625ab"
+  },
+  "revision": "b0a6856ec4ee27b38f855ae3b541b136781abd9a",
+  "run_id": "da1b2eec0c04f447",
+  "seeds_rng": "fixed seeds [42, 101, 202, 303, 404]; deterministic classical, seeded sampling/evolution",
+  "tasks_known": {
+    "k1": {
+      "certified_trials": 15,
+      "rediscovered": true,
+      "trials": 15
+    },
+    "k2": {
+      "certified_trials": 15,
+      "rediscovered": true,
+      "trials": 15
+    }
+  },
+  "verdict": "ACCEPTED"
+}

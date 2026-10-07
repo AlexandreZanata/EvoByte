@@ -1,0 +1,97 @@
+{
+  "budgets": "fixed generation counts (30 determinism, 25 profile iters); wall-clock recorded, never an equality criterion",
+  "claim_scope": "resident torch mutation; per-backend determinism; no host round-trip",
+  "conformance": {
+    "fields_in_range": true,
+    "locality_ok": true,
+    "python_reference_ran": true,
+    "torch_all_valid": true
+  },
+  "counters": {
+    "determinism_backends": 2,
+    "profile_components": 4
+  },
+  "determinism": {
+    "cpu": {
+      "equal": true,
+      "measured": true
+    },
+    "cuda": {
+      "equal": true,
+      "measured": true
+    }
+  },
+  "dirty": "M benchmarks/science_matrix.py\n M src/evobyte/grammar.py\n M src/evobyte/resident.py\n M tests/test_resident_evolution.py\n?? experiments/p44-config.json\n?? experiments/p44-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 3.4098405790027755,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "host_transfers": {
+    "cpu": {
+      "checked": true,
+      "host_transfer_calls": 0
+    },
+    "cuda": {
+      "checked": true,
+      "host_transfer_calls": 0
+    }
+  },
+  "invalidity": {
+    "gate_flags": [
+      false,
+      false,
+      false
+    ],
+    "rejected": true
+  },
+  "limitations": [
+    "Canonical form not guaranteed by the torch path; validity and field semantics preserved.",
+    "Injection sampling stays a CPU-built batch upload (generation, profiled separately).",
+    "Scalar logging syncs (O(1) bytes) remain; no population-sized host transfers in the loop."
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P44",
+  "profile_cuda": {
+    "iters": 25,
+    "mean_ms": {
+      "execution": 14.528031520021614,
+      "full_step": 15.421719599980861,
+      "generation": 2.6343699199787807,
+      "mutation": 1.5332228399347514,
+      "selection": 0.15638868004316464
+    },
+    "measured": true,
+    "share": {
+      "execution": 0.7706355576385264,
+      "generation": 0.1397394498704934,
+      "mutation": 0.08132939666388365,
+      "selection": 0.00829559582709647
+    }
+  },
+  "resolved_config": {
+    "acceptance_phase": "P44",
+    "config_path": "experiments/p44-config.json",
+    "config_sha256": "75c14386a78a9d0af2672b6ee7990eebf387eb6b7de8e3d3a6aac41ff6f64697"
+  },
+  "revision": "30a08b4cc20cdb90c6054c9e506a4286754d8b09",
+  "run_id": "d23a4d6a2b69b79c",
+  "seeds_rng": "fixed seed 7; cross-backend bit equality not required (reason: distinct RNG streams)",
+  "verdict": "ACCEPTED"
+}

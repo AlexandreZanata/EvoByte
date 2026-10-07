@@ -9,6 +9,8 @@ hash do enunciado, recheck): 2 desafios aceitos (identidade + certificado
 numérico n=1009), 4 controles falsos rejeitados; tradução do enunciado
 aguarda aprovação matemática humana.
 
+**Continuidade atual:** D019/P58 revisa os desafios usados ou exclui o uso formal indisponível; não promove prova universal.
+
 ## Objetivo e escopo
 
 Adicionar a fronteira de prova formal. Alterações permitidas: src/evobyte/verifier.py, integração fora do ciclo e uma pasta isolada de provas Lean com toolchain/dependências fixadas.
@@ -43,6 +45,17 @@ python3 benchmarks/science_matrix.py --acceptance-phase P48 --config experiments
 Guardar configuração completa, comando real e artefato recuperável. Uma
 fase técnica mede sua condição técnica; não fabrica números de velocidade.
 Revisão científica, quando exigida acima, antecede a promoção do resultado.
+
+## Uso histórico na continuidade D019
+
+Revisar os dois desafios traduzidos e a evidência dos controles, com registro
+de responsável/executor e hashes. Restringir a conclusão à identidade sobre ℚ
+e à testemunha numérica n=1009. Para usar a fronteira formal em uma aceitação
+nova, conferir runtime, toolchain/imports e controles da revisão usada;
+evidência arquivada não é compilação nova. Se Lean estiver indisponível, registrar
+o bloqueio desse uso; a base de certificados inteiros exatos pode excluí-lo,
+com disposição auditada, sem simular uma prova formal ou mudar seu checker.
+Aplicar [D019](../FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019).
 
 ## Risco principal
 

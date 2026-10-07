@@ -19,6 +19,8 @@ fonte viva (páginas 19, 506, 551, 556, 742, 848) — movidas para o bucket
 solved com evidência `solved_after_pin`; total solved = 9. O comando de
 aceitação agora executa essa re-verificação (`independent_refetch: true`).
 
+**Continuidade atual:** Snapshot histórico sujeito à disposição D019/P58; confirmação de estado aberto atual é exigida para novos usos científicos.
+
 ## Objetivo e escopo
 
 Catalogar 100 problemas com fontes. Alterações permitidas: docs/research/open-problems.json e um validador de metadados em benchmarks/science_matrix.py.
@@ -53,6 +55,17 @@ python3 benchmarks/science_matrix.py --acceptance-phase P46 --config experiments
 Guardar configuração completa, comando real e artefato recuperável. Uma
 fase técnica mede sua condição técnica; não fabrica números de velocidade.
 Revisão científica, quando exigida acima, antecede a promoção do resultado.
+
+## Uso histórico na continuidade D019
+
+O gate científico original acima permanece pendente até revisão adequada.
+Em P58, o catálogo pode ser aceito como snapshot datado de referência após
+revisão identificável desse uso, sem afirmar que todos os estados continuam
+abertos hoje. Registrar falhas de acesso e limites de deduplicação/tipos de
+certificado inferidos por palavras. Confirmar fonte e enunciado de cada problema
+efetivamente selecionado para novo experimento em P60; P72 revalida novidade.
+Não sobrescrever as contagens/evidências de 2026-10-02 para atualizar a história.
+Aplicar [D019](../FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019).
 
 ## Risco principal
 

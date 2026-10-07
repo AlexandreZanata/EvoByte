@@ -144,10 +144,15 @@ The existing quantum roadmap is preserved.
 
 [P58–P72](phases/README.md#speculative-hypothesis-program-p58p72) and
 [the updated executor contract](FORMAL_SEARCH_PLAN.md#programa-especulativo-p58p72)
-are Proposed. P58 is next: reconcile dirty-run evidence, durable artifacts
+track P58 as Building/BLOCKED and P59–P72 as Proposed. P58 is next:
+reconcile dirty-run evidence, durable artifacts
 and outstanding review; P59 separates public problem inputs from private
 answers and establishes equal-cost comparisons. P60 preregisters one family,
 strong classical baselines, small models and bounded resource budgets.
+The [D019 repair contract](FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019)
+defines P58 R1–R4 and scoped dispositions for historical evidence. Technical
+continuation requires enforced restrictions and accepted review; it neither
+retroactively approves P47/P54/P56 nor promotes their scientific claims.
 
 P61–P70 test modular shadows, error repair, verifier feedback, learned
 obstructions, backward constructions, composite jumps, verified macros,

@@ -696,6 +696,7 @@ ACCEPTANCE_PHASES = (
     "P55",
     "P56",
     "P57",
+    "P58",
 )
 
 
@@ -828,6 +829,445 @@ def main() -> int:
 if __name__ == "__main__":
     raise SystemExit(main())
 '''
+
+
+_P58_REQUIRED_DECISION_IDS = (
+    "p46-catalogue-review",
+    "p47-nomination-review",
+    "p48-translation-review",
+    "p54-statistical-review",
+    "p56-independent-review",
+    "p58-scope-review",
+)
+
+_P58_DECISION_DISPOSITIONS = frozenset(
+    {"reference_only", "excluded_from_claims", "approved_for_current_use"}
+)
+
+_P58_DECISION_REQUIRED_FIELDS = (
+    "owner",
+    "executor",
+    "date",
+    "scope",
+    "justification",
+    "authorization_origin",
+    "reviewed_review",
+    "evidence_path",
+    "evidence_sha256",
+    "disposition",
+    "allowed_uses",
+    "prohibited_uses",
+)
+
+
+def _validate_p58_decisions(config: dict[str, Any], repo_root: Path) -> tuple[list[str], set[str]]:
+    """R1 decision contract: six evidence-bound dispositions, no name-only approval.
+
+    Returns findings plus the set of decision ids failing the contract.
+    R3 uses the invalid set so a pending approval is excused only by a
+    fully valid restrictive disposition, never by a broken record.
+    """
+    findings: list[str] = []
+    invalid: set[str] = set()
+    decisions = config.get("decisions")
+    if not isinstance(decisions, list) or not decisions:
+        return (
+            [
+                (
+                    "DECISION_CONTRACT: decisions list absent or empty; "
+                    "six evidence-bound dispositions required"
+                )
+            ],
+            set(_P58_REQUIRED_DECISION_IDS),
+        )
+    ids = [d.get("id") for d in decisions if isinstance(d, dict)]
+    for required in _P58_REQUIRED_DECISION_IDS:
+        count = ids.count(required)
+        if count == 0:
+            findings.append(f"DECISION_CONTRACT: missing decision id: {required}")
+            invalid.add(required)
+        elif count > 1:
+            findings.append(f"DECISION_CONTRACT: duplicated decision id: {required}")
+            invalid.add(required)
+    for got in ids:
+        if got not in _P58_REQUIRED_DECISION_IDS:
+            findings.append(f"DECISION_CONTRACT: unexpected decision id: {got}")
+            invalid.add(str(got))
+    for dec in decisions:
+        if not isinstance(dec, dict):
+            findings.append("DECISION_CONTRACT: decision entry is not an object")
+            continue
+        did = str(dec.get("id", "?"))
+
+        def _flag(msg: str, _did: str = did) -> None:
+            findings.append(msg)
+            invalid.add(_did)
+
+        if dec.get("status") == "rejected":
+            _flag(f"DECISION_CONTRACT: {did} rejected in current scope")
+            continue
+        for required_field in _P58_DECISION_REQUIRED_FIELDS:
+            val = dec.get(required_field)
+            if val is None or (isinstance(val, str) and not val.strip()):
+                _flag(f"DECISION_CONTRACT: {did} missing field: {required_field}")
+        disp = dec.get("disposition")
+        if disp not in _P58_DECISION_DISPOSITIONS:
+            _flag(f"DECISION_CONTRACT: {did} invalid disposition: {disp!r}")
+            continue
+        allowed = dec.get("allowed_uses")
+        prohibited = dec.get("prohibited_uses")
+        if not isinstance(allowed, list) or not isinstance(prohibited, list):
+            _flag(f"DECISION_CONTRACT: {did} allowed/prohibited uses must be lists")
+            continue
+        if set(map(str, allowed)) & set(map(str, prohibited)):
+            _flag(f"DECISION_CONTRACT: {did} allowed/prohibited uses overlap")
+        if disp in ("reference_only", "excluded_from_claims") and not prohibited:
+            _flag(
+                f"DECISION_CONTRACT: {did} restricted disposition requires "
+                "non-empty prohibited_uses"
+            )
+        if disp == "approved_for_current_use":
+            sci = dec.get("scientific_approval", "pending")
+            if sci not in ("approved", "not_required"):
+                _flag(
+                    f"DECISION_CONTRACT: {did} approved_for_current_use requires "
+                    f"scientific_approval approved/not_required, got {sci!r}"
+                )
+            if not allowed:
+                _flag(
+                    f"DECISION_CONTRACT: {did} approved_for_current_use requires "
+                    "non-empty allowed_uses"
+                )
+        ev_rel = dec.get("evidence_path")
+        ev_hash = dec.get("evidence_sha256")
+        if (
+            isinstance(ev_rel, str)
+            and ev_rel.strip()
+            and isinstance(ev_hash, str)
+            and ev_hash.strip()
+        ):
+            cand = Path(ev_rel) if Path(ev_rel).is_absolute() else repo_root / ev_rel
+            if not cand.exists():
+                _flag(f"DECISION_CONTRACT: {did} evidence absent: {ev_rel}")
+            else:
+                try:
+                    from evobyte.provenance import hash_file as _hash_file
+
+                    actual = _hash_file(cand)
+                except OSError as exc:
+                    _flag(f"DECISION_CONTRACT: {did} evidence unreadable: {exc}")
+                else:
+                    if actual.lower() != str(ev_hash).lower():
+                        _flag(f"DECISION_CONTRACT: {did} evidence hash mismatch")
+        date_val = dec.get("date")
+        if (
+            isinstance(date_val, str)
+            and date_val.strip()
+            and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_val.strip())
+        ):
+            _flag(f"DECISION_CONTRACT: {did} invalid date (YYYY-MM-DD required)")
+    return findings, invalid
+
+
+def _validate_p58_code_review(config: dict[str, Any]) -> list[str]:
+    """R1 code-review gate: accepted review with an identifiable record."""
+    cr = config.get("code_review")
+    if not isinstance(cr, dict):
+        return ["CODE_REVIEW: absent; accepted code review with identifiable record required"]
+    if cr.get("status") != "accepted":
+        return [f"CODE_REVIEW: status {cr.get('status')!r} is not accepted"]
+    if not cr.get("reviewer") or not str(cr.get("reviewer")).strip():
+        return ["CODE_REVIEW: reviewer missing"]
+    record = cr.get("review_id") or cr.get("record") or cr.get("pr") or cr.get("commit")
+    if not record or not str(record).strip():
+        return ["CODE_REVIEW: identifiable record missing (review_id/record/pr/commit)"]
+    return []
+
+
+def run_p58_acceptance_baseline_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P58 audit: reconcile P40-P57 evidence and gate the research base.
+
+    Inspection and re-verification only: sealed P52/P53/P56 manifests must
+    verify, every P57 certificate is rechecked with the exact dual checker
+    under strict bounds, durable raw/weights must exist with recorded
+    size+hash (absent data is MISSING_EVIDENCE, never silently remade),
+    transient-only evidence listed in ``recoveries`` is copied byte-identical
+    to its durable destination with hash recorded (non-empty destinations are
+    never overwritten; unsealed copies stay labeled unsealed), dirty-source
+    final claims are rejected, and any pending scientific approval keeps the
+    dossier BLOCKED. Provisional labels (P56) and P46/P47/P48/P54 pendencies
+    are preserved, never waived.
+    """
+
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+        hash_file,
+        verify_manifest_integrity,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P58":
+        raise ValueError(f"Config {cfg_p} is not a P58 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P58 ACCEPTED-RESEARCH-BASELINE AUDIT (reconciliation only; no new search)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    manifests: list[dict[str, Any]] = []
+    for rel in config.get("sealed_manifests", []):
+        chk = verify_manifest_integrity(_REPO_ROOT / rel)
+        manifests.append({"path": rel, "ok": bool(chk["ok"]), "errors": chk["errors"][:3]})
+        print(f"  sealed {rel}: {'ok' if chk['ok'] else 'SEAL BROKEN'}")
+        if not chk["ok"]:
+            findings.append(f"SEAL_BROKEN: {rel} ({'; '.join(chk['errors'][:2])})")
+
+    cert_rel = config.get("certificates_path", "experiments/p57-certificates.json")
+    cert_p = _REPO_ROOT / cert_rel if not Path(cert_rel).is_absolute() else Path(cert_rel)
+    with open(cert_p, encoding="utf-8") as f:
+        certificates = json.load(f)
+    expected = int(config.get("certificates_expected", len(certificates)))
+    if len(certificates) != expected:
+        findings.append(
+            f"COUNT_MISMATCH: {cert_rel} has {len(certificates)} certificates, expected {expected}"
+        )
+
+    from open_problems import verify_independent_reproduction
+
+    device = _torch.device(config.get("device", "cpu"))
+    rechecked_ok = 0
+    recheck_failures: list[str] = []
+    for entry in certificates:
+        try:
+            repro = verify_independent_reproduction(
+                "erdos-straus",
+                {
+                    "n": int(entry["n"]),
+                    "x": int(entry["x"]),
+                    "y": int(entry["y"]),
+                    "z": int(entry["z"]),
+                },
+                bounds_strict=True,
+                device=device,
+            )
+            ok = bool(repro.get("status") == "PASS")
+        except Exception as exc:  # noqa: BLE001 - record, never hide
+            ok = False
+            recheck_failures.append(f"n={entry.get('n')}: {exc!r}"[:160])
+        if ok:
+            rechecked_ok += 1
+        elif len(recheck_failures) < 10:
+            recheck_failures.append(f"n={entry.get('n')}: reproduction not verified")
+    print(f"  certificates rechecked exact: {rechecked_ok}/{len(certificates)}")
+    if rechecked_ok != len(certificates):
+        findings.append(
+            f"RECHECK_FAILED: {len(certificates) - rechecked_ok} certificate(s) "
+            "not verified by the exact checker"
+        )
+
+    raw_inventory: list[dict[str, Any]] = []
+    for rel in config.get("durable_raw", []):
+        cand = _REPO_ROOT / rel if not Path(rel).is_absolute() else Path(rel)
+        if not cand.exists():
+            raw_inventory.append({"path": rel, "ok": False, "error": "MISSING_EVIDENCE"})
+            findings.append(f"MISSING_EVIDENCE: durable raw absent: {rel}")
+            print(f"  raw {rel}: MISSING_EVIDENCE")
+            continue
+        digest = hash_file(cand)
+        raw_inventory.append(
+            {"path": rel, "ok": True, "size": cand.stat().st_size, "sha256": digest}
+        )
+    print(f"  durable raw present: {sum(1 for r in raw_inventory if r['ok'])}/{len(raw_inventory)}")
+
+    recovery: list[dict[str, Any]] = []
+    for item in config.get("recoveries", []):
+        src = Path(item["src"])
+        if not src.is_absolute():
+            src = _REPO_ROOT / item["src"]
+        dest = Path(item["dest"])
+        if not dest.is_absolute():
+            dest = _REPO_ROOT / item["dest"]
+        rec: dict[str, Any] = {
+            "phase": item.get("phase"),
+            "src": item["src"],
+            "dest": item["dest"],
+        }
+        if dest.exists() and dest.stat().st_size > 0:
+            digest = hash_file(dest)
+            rec.update(
+                {
+                    "status": "ALREADY_DURABLE",
+                    "size": dest.stat().st_size,
+                    "sha256": digest,
+                    "seal": "none (hash recorded at audit; no prior seal to compare)",
+                }
+            )
+            print(f"  recover {item.get('phase')}: ALREADY_DURABLE {item['dest']}")
+        elif not src.exists():
+            rec.update({"status": "MISSING_EVIDENCE"})
+            findings.append(f"MISSING_EVIDENCE: neither durable nor transient copy: {item['dest']}")
+            print(f"  recover {item.get('phase')}: MISSING_EVIDENCE")
+        else:
+            blob = src.read_bytes()
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            with open(dest, "wb") as f:
+                f.write(blob)
+            digest = hashlib.sha256(blob).hexdigest()
+            rec.update(
+                {
+                    "status": "RECOVERED_UNSEALED",
+                    "size": len(blob),
+                    "sha256": digest,
+                    "seal": "none (recovered transient copy; hash recorded at recovery)",
+                    "src_mtime": src.stat().st_mtime,
+                }
+            )
+            print(
+                f"  recover {item.get('phase')}: RECOVERED_UNSEALED {len(blob)}B -> {item['dest']}"
+            )
+        recovery.append(rec)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    pending = [a for a in config.get("approvals", []) if a.get("status") != "approved"]
+    for appr in pending:
+        print(f"  approval {appr.get('id')}: {appr.get('status')}")
+
+    decision_findings, decision_invalid = _validate_p58_decisions(config, _REPO_ROOT)
+    for finding in decision_findings:
+        print(f"  decision {finding}")
+    findings.extend(decision_findings)
+    code_review_findings = _validate_p58_code_review(config)
+    for finding in code_review_findings:
+        print(f"  code-review {finding}")
+    findings.extend(code_review_findings)
+
+    # R3 waiver (D019): a pending approval is excused for the technical-base
+    # scope only by a fully valid restrictive disposition
+    # (reference_only/excluded_from_claims) for the same id. A broken record
+    # never excuses; an approved_for_current_use decision still needs its own
+    # scientific approval. Excused ids stay reported, never hidden.
+    decisions_by_id = {d.get("id"): d for d in config.get("decisions", []) if isinstance(d, dict)}
+    excused: list[str] = []
+    blocking: list[str] = []
+    for appr in pending:
+        did = str(appr.get("id"))
+        dec = decisions_by_id.get(did)
+        if (
+            dec is not None
+            and dec.get("disposition") in ("reference_only", "excluded_from_claims")
+            and did not in decision_invalid
+        ):
+            excused.append(did)
+            print(f"  approval {did}: pending excused by valid restrictive disposition")
+        else:
+            blocking.append(did)
+    if blocking:
+        findings.append("PENDING_APPROVAL: " + ", ".join(blocking))
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=42,
+        device=_torch.device("cpu"),
+        dataset_hashes={"p58_config": config_sha[:16]},
+        config={"acceptance_phase": "P58"},
+    )
+    report = {
+        "phase": "P58",
+        "verdict": verdict,
+        "claim_scope": (
+            "P40-P57 evidence reconciliation only; no new search, no novelty "
+            "or discovery claim; provisional labels and review pendencies preserved"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "sealed_manifests": manifests,
+        "certificates": {
+            "path": cert_rel,
+            "expected": expected,
+            "rechecked_exact": rechecked_ok,
+            "rechecked_total": len(certificates),
+            "failures": recheck_failures[:10],
+        },
+        "durable_raw": raw_inventory,
+        "recovery": recovery,
+        "approvals": config.get("approvals", []),
+        "approvals_pending": blocking,
+        "approvals_excused": excused,
+        "decisions": config.get("decisions", []),
+        "decisions_findings": decision_findings,
+        "code_review": config.get("code_review"),
+        "code_review_findings": code_review_findings,
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P58",
+        },
+        "seeds_rng": "not-applicable: deterministic manifest inspection plus exact recheck (reason: no search)",
+        "budgets": {"audit_recheck_sec": time.perf_counter() - t0},
+        "certificate_references": [
+            {"n": c.get("n"), "sha256": c.get("sha256")} for c in certificates[:5]
+        ],
+        "counters": {
+            "sealed_manifests": len(manifests),
+            "sealed_ok": sum(1 for m in manifests if m["ok"]),
+            "certificates": len(certificates),
+            "certificates_rechecked": rechecked_ok,
+            "durable_raw": len(raw_inventory),
+            "durable_raw_ok": sum(1 for r in raw_inventory if r["ok"]),
+            "recovery": len(recovery),
+            "recovery_durable": sum(1 for r in recovery if r["status"] == "ALREADY_DURABLE"),
+            "recovery_recovered": sum(1 for r in recovery if r["status"] == "RECOVERED_UNSEALED"),
+            "recovery_missing": sum(1 for r in recovery if r["status"] == "MISSING_EVIDENCE"),
+            "approvals_pending": len(blocking),
+            "approvals_excused": len(excused),
+            "decisions": len(config.get("decisions", []))
+            if isinstance(config.get("decisions"), list)
+            else 0,
+            "decision_findings": len(decision_findings),
+            "code_review_findings": len(code_review_findings),
+        },
+        "limitations": [
+            "Reconciliation audits recorded evidence; it re-executes no P40-P57 search.",
+            "Recovered transient copies carry no prior seal; their hash is recorded at recovery and they stay provisional.",
+            "BLOCKED on missing data, dirty source or pending approval is the honest gate, not a negative result.",
+            "P59 requires applicable scientific review completed plus an accepted code review.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P58 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -4796,6 +5236,8 @@ def main() -> int:
             run_p56_confirmation_audit(args.config, args.output)
         elif args.acceptance_phase == "P57":
             run_p57_campaign_audit(args.config, args.output)
+        elif args.acceptance_phase == "P58":
+            run_p58_acceptance_baseline_audit(args.config, args.output)
         return 0
 
     seeds = (

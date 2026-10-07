@@ -1,0 +1,103 @@
+{
+  "budgets": "per-file compile timeouts; wall-clock recorded, never a claim",
+  "challenges": [
+    {
+      "accepted": true,
+      "axioms_recorded": [],
+      "reasons": [],
+      "theorem": "es_identity"
+    },
+    {
+      "accepted": true,
+      "axioms_recorded": [],
+      "reasons": [],
+      "theorem": "erdos_straus_1009"
+    }
+  ],
+  "claim_scope": "compiler boundary mechanics; statement translation review stays human",
+  "controls": [
+    {
+      "expected": "rejected_compile",
+      "id": "false_equality",
+      "reasons": [
+        "compile_rejected: /home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/lean_proofs/controls/false_equality.lean:4:55: error: unsolved goals"
+      ],
+      "rejected": true
+    },
+    {
+      "expected": "rejected_mismatch",
+      "id": "swapped_statement",
+      "reasons": [
+        "theorem_mismatch: file proves 'other_identity', challenged 'es_identity'",
+        "theorem_mismatch: proved 'other_identity', challenged 'es_identity'"
+      ],
+      "rejected": true
+    },
+    {
+      "expected": "rejected_sorry",
+      "id": "sorry_proof",
+      "reasons": [
+        "sorry_tokens: ['sorry']"
+      ],
+      "rejected": true
+    },
+    {
+      "expected": "rejected_axiom",
+      "id": "extra_axiom",
+      "reasons": [
+        "extra_axioms: ['myOracle']"
+      ],
+      "rejected": true
+    }
+  ],
+  "counters": {
+    "challenges": 2,
+    "challenges_accepted": 2,
+    "controls": 4,
+    "controls_rejected": 4
+  },
+  "dirty": "M .gitignore\n M benchmarks/science_matrix.py\n M src/evobyte/verifier.py\n M tests/test_science.py\n M tests/test_verifier_l2.py\n?? experiments/p48-config.json\n?? experiments/p48-run.sh\n?? lean_proofs/",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 6.596132144994044,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "The checker confirms the formal statement and its hypotheses, not the translation.",
+    "Repeat compiles guard transients; they are not independent authorship."
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P48",
+  "resolved_config": {
+    "acceptance_phase": "P48",
+    "config_path": "experiments/p48-config.json",
+    "config_sha256": "e5fbaf47947a28ed3d497decc907f79bc81c0e8e87ba7227ef37b069207113d7"
+  },
+  "revision": "30b981077ded6fdad396e158a731cfe42e88d082",
+  "run_id": "22dbe713f71ec697",
+  "seeds_rng": "not-applicable: deterministic proof checking (reason: no search)",
+  "toolchain_pin": "leanprover/lean4:v4.34.0",
+  "translation_review": {
+    "gate_note": "A finite-test proven-theorem label additionally requires translation approval; this audit cannot grant it.",
+    "required": true,
+    "scope": "challenge statements vs intended mathematics",
+    "status": "pending"
+  },
+  "verdict": "ACCEPTED"
+}
