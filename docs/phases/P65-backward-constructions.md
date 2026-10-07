@@ -1,7 +1,9 @@
 # P65 — H04 — Inventar respostas e procurar pontes para o alvo
 
-**Status:** Building (entregas 1–2: biblioteca + pontes e seletor com
-comparação de 4 braços; congelamento/medição pendentes).
+**Status:** Building (entregas 1–3: biblioteca + pontes, seletor +
+comparação, interface + config congelada; entrega 4 pendente: medição em
+árvore limpa + registro. Diagnóstico: outcome NULL — model 5/6 =
+estruturada 5/6.)
 **Dependência:** P64 Done porém não integrado (PR #92 aberto); branch a
 partir de `codex/p64-learned-obstructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -47,7 +49,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P65**:
+Interface de aceitação **implementada na entrega 3** (`run_p65_bridge_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P65 --config experiments/p65-config.json --output /tmp/evobyte-p65-acceptance.json

@@ -28,6 +28,7 @@ from benchmarks.science_matrix import (
     run_p62_repair_audit,
     run_p63_feedback_audit,
     run_p64_obstruction_audit,
+    run_p65_bridge_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -1022,6 +1023,54 @@ def test_p64_acceptance_blocks_final_reference(tmp_path):
     cfg["notes_path"] = "experiments/p56-final-tasks.json"
     cfg_p.write_text(_json.dumps(cfg))
     report = run_p64_obstruction_audit(cfg_p, tmp_path / "p64-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def _p65_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p65-config.json").read_text())
+    cfg["targets"] = [4, 6]
+    cfg["epochs"] = 5
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p65-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p65_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p65-acceptance.json"
+    report = run_p65_bridge_audit(_p65_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P65"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["hypothesis_outcome"] in ("PROMISING", "NULL")
+    assert set(report["arms"]) == {"random-pick", "structured-first", "model-pick", "direct-search"}
+    assert report["counters"]["targets"] == 2
+
+
+def test_p65_acceptance_blocks_empty_targets(tmp_path):
+    import json as _json
+
+    cfg_p = _p65_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["targets"] = []
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p65_bridge_audit(cfg_p, tmp_path / "p65-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("CONFIG_INVALID" in f for f in report["findings"])
+
+
+def test_p65_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p65_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["notes_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p65_bridge_audit(cfg_p, tmp_path / "p65-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("FINAL_ACCESS" in f for f in report["findings"])
 
