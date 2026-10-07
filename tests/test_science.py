@@ -789,8 +789,64 @@ def test_p57_campaign_audit_smoke(tmp_path):
     assert "discovery claimed" not in blob or "no discovery claimed" in blob
 
 
+_P58_R1_IDS = [
+    "p46-catalogue-review",
+    "p47-nomination-review",
+    "p48-translation-review",
+    "p54-statistical-review",
+    "p56-independent-review",
+    "p58-scope-review",
+]
+
+
+def _p58_valid_decisions(tmp_path, *, disposition="reference_only", scientific_approval="pending"):
+    import hashlib as _hashlib
+    import json as _json
+
+    decisions = []
+    for did in _P58_R1_IDS:
+        ev = tmp_path / f"evidence-{did}.json"
+        ev.write_text(_json.dumps({"id": did, "opinion": "restricted reference only"}))
+        sha = _hashlib.sha256(ev.read_bytes()).hexdigest()
+        decisions.append(
+            {
+                "id": did,
+                "owner": "alexandre",
+                "executor": "executor-agent",
+                "date": "2026-10-07",
+                "scope": "p58 technical base only",
+                "justification": "preserve pendency with restriction",
+                "authorization_origin": "D019 delegated review 2026-10-06",
+                "reviewed_review": "phase file plus acceptance artifact",
+                "evidence_path": str(ev),
+                "evidence_sha256": sha,
+                "disposition": disposition,
+                "allowed_uses": ["reconciliation-audit"],
+                "prohibited_uses": ["novelty-claim", "final-test", "superiority-claim"],
+                "scientific_approval": scientific_approval,
+            }
+        )
+    code_review = {
+        "status": "accepted",
+        "reviewer": "test-reviewer",
+        "review_id": "p58-r1-test-review-001",
+        "date": "2026-10-07",
+        "scope": "R1 decision contract",
+    }
+    return decisions, code_review
+
+
 def _p58_smoke_config(
-    tmp_path, repo, *, approvals, require_clean_tree, n_certs=3, durable_raw=None, recoveries=None
+    tmp_path,
+    repo,
+    *,
+    approvals,
+    require_clean_tree,
+    n_certs=3,
+    durable_raw=None,
+    recoveries=None,
+    decisions="valid",
+    code_review="valid",
 ):
     import json as _json
 
@@ -813,6 +869,26 @@ def _p58_smoke_config(
         "approvals": approvals,
         "recoveries": recoveries if recoveries is not None else [],
     }
+    if decisions == "valid":
+        valid_decisions, valid_review = _p58_valid_decisions(tmp_path)
+        cfg["decisions"] = valid_decisions
+        if code_review == "valid":
+            cfg["code_review"] = valid_review
+        elif code_review != "omit":
+            cfg["code_review"] = code_review
+    elif decisions != "omit":
+        cfg["decisions"] = decisions
+        if code_review == "valid":
+            _, valid_review = _p58_valid_decisions(tmp_path)
+            cfg["code_review"] = valid_review
+        elif code_review != "omit":
+            cfg["code_review"] = code_review
+    else:
+        if code_review == "valid":
+            _, valid_review = _p58_valid_decisions(tmp_path)
+            cfg["code_review"] = valid_review
+        elif code_review != "omit":
+            cfg["code_review"] = code_review
     cfg_p = tmp_path / "p58-smoke-config.json"
     cfg_p.write_text(_json.dumps(cfg))
     return cfg_p
@@ -936,3 +1012,106 @@ def test_p58_recovery_missing_both_is_blocked(tmp_path):
     assert report["verdict"] == "BLOCKED"
     assert report["counters"]["recovery_missing"] == 1
     assert any("MISSING_EVIDENCE" in f for f in report["findings"])
+
+
+def test_p58_r1_rejects_absent_decisions(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        decisions="omit",
+    )
+    report = run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("DECISION_CONTRACT" in f for f in report["findings"])
+
+
+def test_p58_r1_rejects_duplicate_decision_id(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    decisions, _ = _p58_valid_decisions(tmp_path)
+    decisions = decisions + [dict(decisions[0])]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        decisions=decisions,
+    )
+    cfg = _json.loads(cfg_p.read_text())
+    assert len(cfg["decisions"]) == 7
+    report = run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("duplicated" in f for f in report["findings"])
+
+
+def test_p58_r1_rejects_evidence_hash_mismatch(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    decisions, _ = _p58_valid_decisions(tmp_path)
+    decisions[0] = dict(decisions[0], evidence_sha256="0" * 64)
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        decisions=decisions,
+    )
+    report = run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("hash mismatch" in f for f in report["findings"])
+
+
+def test_p58_r1_rejects_missing_code_review(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        code_review="omit",
+    )
+    report = run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("CODE_REVIEW" in f for f in report["findings"])
+
+
+def test_p58_r1_rejects_approved_use_without_scientific_approval(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    decisions, _ = _p58_valid_decisions(tmp_path)
+    decisions[0] = dict(
+        decisions[0], disposition="approved_for_current_use", scientific_approval="pending"
+    )
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        decisions=decisions,
+    )
+    report = run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("approved_for_current_use" in f for f in report["findings"])
+
+
+def test_p58_r1_accepts_restricted_base_with_valid_contract(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "approved"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+    )
+    report = run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+    assert report["verdict"] == "ACCEPTED"
+    assert report["counters"]["decision_findings"] == 0
+    assert report["counters"]["code_review_findings"] == 0
+    assert len(report["decisions"]) == 6

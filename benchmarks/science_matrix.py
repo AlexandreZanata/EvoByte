@@ -831,6 +831,142 @@ if __name__ == "__main__":
 '''
 
 
+_P58_REQUIRED_DECISION_IDS = (
+    "p46-catalogue-review",
+    "p47-nomination-review",
+    "p48-translation-review",
+    "p54-statistical-review",
+    "p56-independent-review",
+    "p58-scope-review",
+)
+
+_P58_DECISION_DISPOSITIONS = frozenset(
+    {"reference_only", "excluded_from_claims", "approved_for_current_use"}
+)
+
+_P58_DECISION_REQUIRED_FIELDS = (
+    "owner",
+    "executor",
+    "date",
+    "scope",
+    "justification",
+    "authorization_origin",
+    "reviewed_review",
+    "evidence_path",
+    "evidence_sha256",
+    "disposition",
+    "allowed_uses",
+    "prohibited_uses",
+)
+
+
+def _validate_p58_decisions(config: dict[str, Any], repo_root: Path) -> list[str]:
+    """R1 decision contract: six evidence-bound dispositions, no name-only approval."""
+    findings: list[str] = []
+    decisions = config.get("decisions")
+    if not isinstance(decisions, list) or not decisions:
+        return [
+            (
+                "DECISION_CONTRACT: decisions list absent or empty; "
+                "six evidence-bound dispositions required"
+            )
+        ]
+    ids = [d.get("id") for d in decisions if isinstance(d, dict)]
+    for required in _P58_REQUIRED_DECISION_IDS:
+        count = ids.count(required)
+        if count == 0:
+            findings.append(f"DECISION_CONTRACT: missing decision id: {required}")
+        elif count > 1:
+            findings.append(f"DECISION_CONTRACT: duplicated decision id: {required}")
+    for got in ids:
+        if got not in _P58_REQUIRED_DECISION_IDS:
+            findings.append(f"DECISION_CONTRACT: unexpected decision id: {got}")
+    for dec in decisions:
+        if not isinstance(dec, dict):
+            findings.append("DECISION_CONTRACT: decision entry is not an object")
+            continue
+        did = str(dec.get("id", "?"))
+        if dec.get("status") == "rejected":
+            findings.append(f"DECISION_CONTRACT: {did} rejected in current scope")
+            continue
+        for required_field in _P58_DECISION_REQUIRED_FIELDS:
+            val = dec.get(required_field)
+            if val is None or (isinstance(val, str) and not val.strip()):
+                findings.append(f"DECISION_CONTRACT: {did} missing field: {required_field}")
+        disp = dec.get("disposition")
+        if disp not in _P58_DECISION_DISPOSITIONS:
+            findings.append(f"DECISION_CONTRACT: {did} invalid disposition: {disp!r}")
+            continue
+        allowed = dec.get("allowed_uses")
+        prohibited = dec.get("prohibited_uses")
+        if not isinstance(allowed, list) or not isinstance(prohibited, list):
+            findings.append(f"DECISION_CONTRACT: {did} allowed/prohibited uses must be lists")
+            continue
+        if set(map(str, allowed)) & set(map(str, prohibited)):
+            findings.append(f"DECISION_CONTRACT: {did} allowed/prohibited uses overlap")
+        if disp in ("reference_only", "excluded_from_claims") and not prohibited:
+            findings.append(
+                f"DECISION_CONTRACT: {did} restricted disposition requires "
+                "non-empty prohibited_uses"
+            )
+        if disp == "approved_for_current_use":
+            sci = dec.get("scientific_approval", "pending")
+            if sci not in ("approved", "not_required"):
+                findings.append(
+                    f"DECISION_CONTRACT: {did} approved_for_current_use requires "
+                    f"scientific_approval approved/not_required, got {sci!r}"
+                )
+            if not allowed:
+                findings.append(
+                    f"DECISION_CONTRACT: {did} approved_for_current_use requires "
+                    "non-empty allowed_uses"
+                )
+        ev_rel = dec.get("evidence_path")
+        ev_hash = dec.get("evidence_sha256")
+        if (
+            isinstance(ev_rel, str)
+            and ev_rel.strip()
+            and isinstance(ev_hash, str)
+            and ev_hash.strip()
+        ):
+            cand = Path(ev_rel) if Path(ev_rel).is_absolute() else repo_root / ev_rel
+            if not cand.exists():
+                findings.append(f"DECISION_CONTRACT: {did} evidence absent: {ev_rel}")
+            else:
+                try:
+                    from evobyte.provenance import hash_file as _hash_file
+
+                    actual = _hash_file(cand)
+                except OSError as exc:
+                    findings.append(f"DECISION_CONTRACT: {did} evidence unreadable: {exc}")
+                else:
+                    if actual.lower() != str(ev_hash).lower():
+                        findings.append(f"DECISION_CONTRACT: {did} evidence hash mismatch")
+        date_val = dec.get("date")
+        if (
+            isinstance(date_val, str)
+            and date_val.strip()
+            and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_val.strip())
+        ):
+            findings.append(f"DECISION_CONTRACT: {did} invalid date (YYYY-MM-DD required)")
+    return findings
+
+
+def _validate_p58_code_review(config: dict[str, Any]) -> list[str]:
+    """R1 code-review gate: accepted review with an identifiable record."""
+    cr = config.get("code_review")
+    if not isinstance(cr, dict):
+        return ["CODE_REVIEW: absent; accepted code review with identifiable record required"]
+    if cr.get("status") != "accepted":
+        return [f"CODE_REVIEW: status {cr.get('status')!r} is not accepted"]
+    if not cr.get("reviewer") or not str(cr.get("reviewer")).strip():
+        return ["CODE_REVIEW: reviewer missing"]
+    record = cr.get("review_id") or cr.get("record") or cr.get("pr") or cr.get("commit")
+    if not record or not str(record).strip():
+        return ["CODE_REVIEW: identifiable record missing (review_id/record/pr/commit)"]
+    return []
+
+
 def run_p58_acceptance_baseline_audit(
     config_path: str | Path, output_path: str | Path
 ) -> dict[str, Any]:
@@ -999,6 +1135,15 @@ def run_p58_acceptance_baseline_audit(
     if pending:
         findings.append("PENDING_APPROVAL: " + ", ".join(str(a.get("id")) for a in pending))
 
+    decision_findings = _validate_p58_decisions(config, _REPO_ROOT)
+    for finding in decision_findings:
+        print(f"  decision {finding}")
+    findings.extend(decision_findings)
+    code_review_findings = _validate_p58_code_review(config)
+    for finding in code_review_findings:
+        print(f"  code-review {finding}")
+    findings.extend(code_review_findings)
+
     verdict = "BLOCKED" if findings else "ACCEPTED"
     prov = collect_provenance(
         seed=42,
@@ -1029,6 +1174,10 @@ def run_p58_acceptance_baseline_audit(
         "recovery": recovery,
         "approvals": config.get("approvals", []),
         "approvals_pending": [str(a.get("id")) for a in pending],
+        "decisions": config.get("decisions", []),
+        "decisions_findings": decision_findings,
+        "code_review": config.get("code_review"),
+        "code_review_findings": code_review_findings,
         "hardware": prov["hardware"],
         "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
         "package_versions": {
@@ -1059,6 +1208,11 @@ def run_p58_acceptance_baseline_audit(
             "recovery_recovered": sum(1 for r in recovery if r["status"] == "RECOVERED_UNSEALED"),
             "recovery_missing": sum(1 for r in recovery if r["status"] == "MISSING_EVIDENCE"),
             "approvals_pending": len(pending),
+            "decisions": len(config.get("decisions", []))
+            if isinstance(config.get("decisions"), list)
+            else 0,
+            "decision_findings": len(decision_findings),
+            "code_review_findings": len(code_review_findings),
         },
         "limitations": [
             "Reconciliation audits recorded evidence; it re-executes no P40-P57 search.",
