@@ -20,6 +20,7 @@ from benchmarks.open_problems import (
     PROBLEM_REGISTRY,
     P62RepairScorer,
     P65BridgeScorer,
+    P66PacketScorer,
     audit_historical_certificate,
     check_coordinate_bounds,
     check_diophantine_quintuple,
@@ -61,8 +62,13 @@ from benchmarks.open_problems import (
     p65_random_library,
     p65_train_bridge_scorer,
     p66_apply_packet,
+    p66_collect_packet_samples,
+    p66_compare_guided,
     p66_compare_packets,
+    p66_guided_packets,
+    p66_packet_features,
     p66_random_packet,
+    p66_train_packet_scorer,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -847,3 +853,42 @@ def test_p66_compare_packets_equal_ops() -> None:
     assert {k: v for k, v in first["packet"].items() if k != "loop_sec"} == {
         k: v for k, v in second["packet"].items() if k != "loop_sec"
     }
+
+
+def _p66_guided_weights():
+    samples, _ = p66_collect_packet_samples(4, [(2, 3, 7), (5, 5, 5)], n_packets=16, seed=0)
+    assert len(samples) == 32
+    assert {s["label"] for s in samples} <= {0.0, 1.0}
+    return p66_train_packet_scorer(samples, seed=0, epochs=40)
+
+
+def test_p66_guided_scorer_trains_deterministic() -> None:
+    first = _p66_guided_weights()
+    second = _p66_guided_weights()
+    assert first["n_params"] == 65
+    assert first["train_acc"] > 0.5
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P66PacketScorer().parameters()) == 65
+    assert len(p66_packet_features(4, (2, 3, 7), ((0, 1), (2, -1)))) == 6
+    top = p66_guided_packets(first["state_dict"], 4, (2, 3, 7), n_packets=8, seed=0)
+    assert top == p66_guided_packets(first["state_dict"], 4, (2, 3, 7), n_packets=8, seed=0)
+    assert len(top) == 8
+    assert all(2 <= len(p) <= 4 for p in top)
+
+
+def test_p66_compare_guided_equal_ops() -> None:
+    weights = _p66_guided_weights()["state_dict"]
+    first = p66_compare_guided(4, [(2, 3, 7), (5, 5, 5)], weights, n_packets=8, seed=0)
+    second = p66_compare_guided(4, [(2, 3, 7), (5, 5, 5)], weights, n_packets=8, seed=0)
+    assert set(first) == {"guided", "random", "isolated"}
+    assert first["guided"]["ops_total"] == first["isolated"]["ops_total"] > 0
+    for arm in ("guided", "random", "isolated"):
+        rec = first[arm]
+        assert rec["reach"] + rec["duplicates"] == rec["evaluated"]
+        for triple in rec["certificates"]:
+            assert check_erdos_straus(4, *triple)[0] is True
+            assert check_erdos_straus_fractions(4, *triple)[0] is True
+        assert {k: v for k, v in rec.items() if k != "loop_sec"} == {
+            k: v for k, v in second[arm].items() if k != "loop_sec"
+        }

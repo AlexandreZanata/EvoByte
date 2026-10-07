@@ -1,8 +1,7 @@
 # P66 — H05 — Atravessar a busca com saltos compostos
 
-**Status:** Building (entrega 1 neste ciclo: pacotes + comparação com
-operações iguais + regressões; distribuição guiada, congelamento e medição
-pendentes. Inclui manutenção do pin do registro até P65.).
+**Status:** Building (entregas 1–2: pacotes + distribuição guiada com
+comparação de 3 braços; congelamento/medição pendentes).
 **Dependência:** P65 Done porém não integrado (PR #93 aberto); branch a
 partir de `codex/p65-backward-constructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
