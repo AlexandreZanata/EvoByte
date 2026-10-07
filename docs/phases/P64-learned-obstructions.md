@@ -1,8 +1,10 @@
 # P64 — H03 — Aprender regiões proibidas e tentar prová-las
 
-**Status:** Building (entregas 1–3: regras + prova, economia + scan,
-interface + config congelada; entrega 4 pendente: medição em árvore limpa
-+ registro. Diagnóstico: outcome NULL — net da regra provada −0.0002 s.)
+**Status:** Done (entregas 1–4: regras + prova, economia + scan,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=b25f80931994a537` com outcome NULL íntegro; registro em
+`docs/research/p64-obstruction-record.md`). H03 encerrada sem promoção;
+P65 liberada.
 **Dependência:** P63 Done porém não integrado (PR #91 aberto); branch a
 partir de `codex/p63-verifier-feedback`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
