@@ -1,6 +1,11 @@
 # P59 — Estabelecer comparações com a mesma informação
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: fronteira/sentinelas, trial pareado +
+ledger + escopo, interface + config congelada, medição ACCEPTED em árvore
+limpa `run_id=1655463c6f5b5bea`; registro em
+`docs/research/p59-controls-record.md`). Confirmação de hipótese em P60/P71.
+**Dependência:** predecessor P58 aceito porém não integrado (PR #86 aberto);
+branch a partir de `codex/p58-accepted-research-baseline`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P58 R1–R4 aceita no escopo técnico D019 e predecessor
 integrado; módulos experimentais anteriores sem ganho permanecem desligados.
@@ -36,8 +41,11 @@ confirmação final enquanto a revisão estiver suja.
    baseline aplicável recebem restrição explícita de comparação.
 3. Revisar e congelar configuração completa, fontes, espaço de candidatos,
    warm-start, custos e interface de aceitação realmente implementada.
+   (Entregue: `experiments/p59-config.json`, `experiments/p59-run.sh`.)
 4. Medir controles em árvore limpa e revisão aceita; registrar evidência em
    ciclo documental posterior. A confirmação de hipótese fica para P60/P71.
+   (Entregue: ACCEPTED `1655463c6f5b5bea`, registro em
+   `docs/research/p59-controls-record.md`.)
 
 Um controle de engenharia pode demonstrar igualdade de inputs sem declarar
 ganho estatístico. O compilador Horner permanece controle de resposta conhecida
@@ -63,7 +71,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P59**:
+Interface de aceitação **implementada na entrega 3** (`run_p59_equal_information_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P59 --config experiments/p59-config.json --output /tmp/evobyte-p59-acceptance.json

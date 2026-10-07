@@ -22,6 +22,7 @@ from benchmarks.science_matrix import (
     generate_scientific_splits,
     run_p40_evidence_audit,
     run_p58_acceptance_baseline_audit,
+    run_p59_equal_information_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -588,6 +589,180 @@ def test_p50_classical_baseline_is_deterministic():
     false = check_p50_false_controls()
     assert len(false) == 4
     assert all(c["rejected"] for c in false)
+
+
+def _p59_dev_samples():
+    import numpy as _np
+
+    xs = _np.linspace(-3.0, 3.0, 24, dtype=_np.float32)
+    ys = (xs**2 + 3.0 * xs + 7.0).astype(_np.float32)
+    return xs, ys
+
+
+def test_p59_leakage_sentinel_passes_structured_random():
+    from benchmarks.math_specialist import run_p59_leakage_sentinel
+
+    xs, ys = _p59_dev_samples()
+    rep = run_p59_leakage_sentinel(
+        "structured_random", xs, ys, "x**2 + 3*x + 10", "x**2 - 1", seed=7
+    )
+    assert rep["passed"] is True
+    assert rep["proposals_sha256"] == rep["swapped_sha256"]
+    assert rep["proposals_bytes"] > 0
+
+
+def test_p59_leakage_sentinel_passes_evolution():
+    from benchmarks.math_specialist import run_p59_leakage_sentinel
+
+    xs, ys = _p59_dev_samples()
+    rep = run_p59_leakage_sentinel(
+        "evolution",
+        xs,
+        ys,
+        "x**2 + 3*x + 10",
+        "x**2 - 1",
+        seed=7,
+        pop_size=8,
+        max_generations=2,
+    )
+    assert rep["passed"] is True
+    assert rep["proposals_sha256"] == rep["swapped_sha256"]
+
+
+def test_p59_compilation_control_depends_on_private_formula():
+    from benchmarks.math_specialist import run_p59_compilation_control
+
+    xs, ys = _p59_dev_samples()
+    ctl_a = run_p59_compilation_control("x**2 + 3*x + 10", xs, ys)
+    ctl_b = run_p59_compilation_control("x**2 - 1", xs, ys)
+    assert ctl_a["control_kind"].startswith("compilation")
+    assert ctl_a["construction_sec"] >= 0.0
+    assert ctl_a["program_sha256"] != ctl_b["program_sha256"]
+
+
+def test_p59_rejects_unknown_arm_and_vacuous_swap():
+    import pytest as _pytest
+
+    from benchmarks.math_specialist import p59_public_proposals, run_p59_leakage_sentinel
+
+    xs, ys = _p59_dev_samples()
+    with _pytest.raises(ValueError, match="Unknown P59 public arm"):
+        p59_public_proposals("classical", xs, ys, seed=7)
+    with _pytest.raises(ValueError, match="different private formulas"):
+        run_p59_leakage_sentinel("structured_random", xs, ys, "x**2", "x**2", seed=7)
+
+
+def test_p59_matched_es_same_inputs_both_arms():
+    from benchmarks.open_problems import p59_es_public_inputs, run_p59_matched_es_trial
+
+    inputs = p59_es_public_inputs(4)
+    cpu = run_p59_matched_es_trial("cpu_enumeration", inputs)
+    cls = run_p59_matched_es_trial("classical_construction", inputs)
+    assert cpu["inputs_hash"] == cls["inputs_hash"]
+    assert cpu["status"] == "certified" and cls["status"] == "certified"
+    assert cpu["triple"] == [2, 3, 6] and cls["triple"] == [2, 3, 6]
+    for rec in (cpu, cls):
+        parts = rec["ledger"]["parts"]
+        assert set(parts) == {"train", "generation", "inference", "filters", "checkers", "tracking"}
+        assert rec["ledger"]["total_sec"] == sum(parts.values())
+
+
+def test_p59_warm_start_origin_is_reported():
+    from benchmarks.open_problems import p59_es_public_inputs, run_p59_matched_es_trial
+
+    warm = p59_es_public_inputs(4, warm_start=[(2, 3, 6)])
+    assert run_p59_matched_es_trial("classical_construction", warm)["origin"] == "warm-start"
+    assert run_p59_matched_es_trial("cpu_enumeration", warm)["origin"] == "warm-start"
+    cold = p59_es_public_inputs(4)
+    assert run_p59_matched_es_trial("classical_construction", cold)["origin"] == ("classical-even")
+
+
+def test_p59_cost_ledger_guards():
+    import pytest as _pytest
+
+    from benchmarks.open_problems import p59_cost_ledger
+
+    good = p59_cost_ledger(
+        train=0.0, generation=1.5, inference=0.0, filters=0.0, checkers=0.5, tracking=0.0
+    )
+    assert good["total_sec"] == 2.0
+    with _pytest.raises(ValueError, match="exactly"):
+        p59_cost_ledger(train=0.0, generation=1.0)
+    with _pytest.raises(ValueError, match="must not be negative"):
+        p59_cost_ledger(
+            train=-1.0, generation=0.0, inference=0.0, filters=0.0, checkers=0.0, tracking=0.0
+        )
+
+
+def test_p59_comparison_scope_restricts_families():
+    import pytest as _pytest
+
+    from benchmarks.open_problems import (
+        p59_comparison_scope,
+        p59_es_public_inputs,
+        run_p59_matched_es_trial,
+    )
+
+    scope = p59_comparison_scope("erdos-straus")
+    assert scope["comparable"] is True
+    assert set(scope["arms"]) == {"cpu_enumeration", "classical_construction"}
+    for family in ("taxicab", "diophantine-quintuple", "no-such-family"):
+        restricted = p59_comparison_scope(family)
+        assert restricted["comparable"] is False
+        assert restricted["reason"]
+    with _pytest.raises(ValueError, match="Unknown P59 ES arm"):
+        run_p59_matched_es_trial("gpu_search", p59_es_public_inputs(4))
+
+
+def _p59_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p59-config.json").read_text())
+    cfg["es_instances"] = [4]
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p59-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p59_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p59-acceptance.json"
+    report = run_p59_equal_information_audit(_p59_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P59"
+    assert report["verdict"] == "ACCEPTED"
+    assert {t["inputs_hash"] for t in report["es_trials"]} == {
+        report["es_trials"][0]["inputs_hash"]
+    }
+    assert report["counters"]["es_certified"] == 2
+    assert report["counters"]["sentinels_passed"] == report["counters"]["sentinels"] == 2
+    assert report["counters"]["compilations"] == 1
+    assert "no statistical gain claimed" in report["claim_scope"]
+
+
+def test_p59_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p59_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["final_tasks_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p59_equal_information_audit(cfg_p, tmp_path / "p59-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def test_p59_acceptance_blocks_uncomparable_family(tmp_path):
+    import json as _json
+
+    cfg_p = _p59_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["families"] = ["taxicab"]
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p59_equal_information_audit(cfg_p, tmp_path / "p59-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("SCOPE_RESTRICTED" in f for f in report["findings"])
 
 
 def test_p51_replay_map_audit_smoke(tmp_path):

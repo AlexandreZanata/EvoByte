@@ -1873,6 +1873,168 @@ def run_p57_bounded_campaign(
     }
 
 
+# ==============================================================================
+# P59 entrega 2 — baselines comparáveis e contabilização integral (Erdős–Straus)
+# ==============================================================================
+#
+# Todos os braços recebem as mesmas entradas públicas (n, limites, espaço de
+# candidatos, warm-start). Custos de treino, geração, inferência, filtros,
+# verificadores e tracking são todos contabilizados; o total é calculado,
+# nunca declarado pelo braço. Famílias sem baseline pareado têm comparação
+# explicitamente restrita. Fixtures development, sem finais P38/P56/P71.
+
+P59_ES_ARMS = ("cpu_enumeration", "classical_construction")
+
+P59_COST_PARTS = ("train", "generation", "inference", "filters", "checkers", "tracking")
+
+P59_COMPARISON_SCOPE: dict[str, dict[str, Any]] = {
+    "erdos-straus": {
+        "comparable": True,
+        "arms": list(P59_ES_ARMS),
+        "note": "matched trial with identical public inputs and full cost ledger",
+    },
+    "taxicab": {"comparable": False, "reason": "no matched baseline implemented"},
+    "diophantine-quintuple": {
+        "comparable": False,
+        "reason": "no matched baseline implemented",
+    },
+}
+
+
+def p59_comparison_scope(family: str) -> dict[str, Any]:
+    """Allowed comparison scope for a family; unknown families stay restricted."""
+    scope = P59_COMPARISON_SCOPE.get(str(family))
+    if scope is None:
+        return {"comparable": False, "reason": f"unknown family: {family}"}
+    return {"family": str(family), **scope}
+
+
+def p59_cost_ledger(**parts: float) -> dict[str, Any]:
+    """Full cost ledger: every part billed, total computed, nothing subtracted."""
+    keys = set(parts)
+    if keys != set(P59_COST_PARTS):
+        raise ValueError(f"P59 ledger needs exactly {list(P59_COST_PARTS)}, got {sorted(keys)}")
+    for key, val in parts.items():
+        if not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+            raise ValueError(f"P59 ledger part {key} must be a finite number")
+        if float(val) < 0.0:
+            raise ValueError(f"P59 ledger part {key} must not be negative")
+    total = sum(float(parts[k]) for k in P59_COST_PARTS)
+    return {"parts": {k: float(parts[k]) for k in P59_COST_PARTS}, "total_sec": total}
+
+
+def p59_es_public_inputs(
+    n: int,
+    max_coord: int = 10**9,
+    x_steps: int = 50,
+    y_cap: int = 200_000,
+    warm_start: tuple[tuple[int, int, int], ...] = (),
+) -> dict[str, Any]:
+    """Frozen public input bundle for one Erdős–Straus instance (all arms alike)."""
+    if int(n) < 2 or int(max_coord) <= 0 or int(x_steps) <= 0 or int(y_cap) <= 0:
+        raise ValueError("P59 ES inputs need n>=2 with positive bounds")
+    warm = [tuple(int(v) for v in t) for t in warm_start]
+    if any(len(t) != 3 for t in warm):
+        raise ValueError("P59 warm-start entries must be (x, y, z) triples")
+    return {
+        "n": int(n),
+        "max_coord": int(max_coord),
+        "x_steps": int(x_steps),
+        "y_cap": int(y_cap),
+        "warm_start": warm,
+    }
+
+
+def _p59_inputs_hash(inputs: dict[str, Any]) -> str:
+    canon = {
+        "n": inputs["n"],
+        "max_coord": inputs["max_coord"],
+        "x_steps": inputs["x_steps"],
+        "y_cap": inputs["y_cap"],
+        "warm_start": [list(t) for t in inputs["warm_start"]],
+    }
+    return hashlib.sha256(json.dumps(canon, sort_keys=True).encode()).hexdigest()
+
+
+def run_p59_matched_es_trial(arm: str, inputs: dict[str, Any]) -> dict[str, Any]:
+    """One deterministic Erdős–Straus arm trial under identical public inputs.
+
+    Arms: ``cpu_enumeration`` (bounded (x, y) scan, dual exact checkers) and
+    ``classical_construction`` (verified parametric families only). A triple
+    already in warm-start reports origin ``warm-start``: reusing a handed
+    answer is never discovery. No wall-clock dependence: fixed step caps.
+    """
+    if arm not in P59_ES_ARMS:
+        raise ValueError(f"Unknown P59 ES arm: {arm}")
+    n = int(inputs["n"])
+    max_coord = int(inputs["max_coord"])
+    warm = {tuple(t) for t in inputs["warm_start"]}
+    t_gen0 = time.perf_counter()
+    evaluated = 0
+    found: tuple[int, int, int] | None = None
+    origin = "none"
+    if arm == "classical_construction":
+        for fam in p57_classical_constructions(n):
+            if not fam["verified"]:
+                continue
+            triple = tuple(int(v) for v in fam["triple"])
+            if max(triple) > max_coord:
+                continue
+            found = triple
+            origin = "warm-start" if triple in warm else f"classical-{fam['family']}"
+            evaluated = 1
+            break
+    else:
+        x0 = n // 4 + 1
+        for x_val in range(x0, x0 + int(inputs["x_steps"])):
+            r = 4 * x_val - n
+            if r <= 0:
+                continue
+            y_min = (n * x_val) // r + 1
+            for y_val in range(y_min, y_min + int(inputs["y_cap"])):
+                denom = 4 * x_val * y_val - n * (x_val + y_val)
+                if denom > 0 and (n * x_val * y_val) % denom == 0:
+                    z_val = (n * x_val * y_val) // denom
+                    evaluated += 1
+                    ok1, _, _ = check_erdos_straus(n, x_val, y_val, z_val)
+                    ok2, _, _ = check_erdos_straus_fractions(n, x_val, y_val, z_val)
+                    if ok1 and ok2 and max(x_val, y_val, z_val) <= max_coord:
+                        found = (x_val, y_val, z_val)
+                        origin = "warm-start" if found in warm else "enumerated"
+                        break
+                else:
+                    evaluated += 1
+            if found is not None:
+                break
+    t_gen1 = time.perf_counter()
+    t_chk0 = time.perf_counter()
+    checkers_ok = False
+    if found is not None:
+        c1, _, _ = check_erdos_straus(n, *found)
+        c2, _, _ = check_erdos_straus_fractions(n, *found)
+        checkers_ok = bool(c1 and c2)
+    t_chk1 = time.perf_counter()
+    ledger = p59_cost_ledger(
+        train=0.0,
+        generation=t_gen1 - t_gen0,
+        inference=0.0,
+        filters=0.0,
+        checkers=t_chk1 - t_chk0,
+        tracking=0.0,
+    )
+    return {
+        "arm": arm,
+        "n": n,
+        "inputs_hash": _p59_inputs_hash(inputs),
+        "found": found is not None and checkers_ok,
+        "triple": list(found) if found is not None else None,
+        "origin": origin if found is not None else "none",
+        "status": "certified" if (found is not None and checkers_ok) else "budget-exhausted",
+        "evaluated": evaluated,
+        "ledger": ledger,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
