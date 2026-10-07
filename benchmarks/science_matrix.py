@@ -709,6 +709,7 @@ ACCEPTANCE_PHASES = (
     "P68",
     "P69",
     "P70",
+    "P71",
 )
 
 
@@ -3422,6 +3423,340 @@ def run_p70_template_audit(config_path: str | Path, output_path: str | Path) -> 
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P70 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def _p71_sign_pvalue(wins: int, losses: int) -> float:
+    """Exact two-sided paired sign-test p-value (ties already excluded)."""
+    import math as _math
+
+    n = int(wins) + int(losses)
+    if n == 0:
+        return 1.0
+    extreme = min(int(wins), int(losses))
+    tail = sum(_math.comb(n, k) for k in range(extreme + 1)) / 2**n
+    return min(1.0, 2.0 * tail)
+
+
+def run_p71_confirmation_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P71 audit: fresh confirmation of at most two triage results (H06, H08).
+
+    Runs the frozen final on fresh groups with the frozen procedure (paired
+    exact sign tests, Holm over two tracks, censoring reported). Track
+    outcomes are PROVISIONAL on a passed test (independent reproduction
+    pending), NULL, or INCONCLUSIVE; CONFIRMED needs the operator record,
+    which only the independent rerun provides. No discovery is declared.
+    """
+    import random as _random
+    import statistics as _statistics
+
+    import torch as _torch
+    from open_problems import (
+        P68AttackScorer,
+        p68_instance_features,
+        p68_n_refutes,
+        p68_propose_template,
+    )
+
+    from evobyte.bytecode import (
+        p67_classical_library,
+        p67_compress_program,
+        p67_dev_programs,
+        p67_expand_tokens,
+        p67_random_library,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P71":
+        raise ValueError(f"Config {cfg_p} is not a P71 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P71 INDEPENDENT CONFIRMATION AUDIT (fresh final; provisional at best)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("final_path", "final_sha256", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+
+    cfg_blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "final_tasks"):
+        if token in cfg_blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    final: dict[str, Any] = {}
+    final_p = _REPO_ROOT / str(config.get("final_path", ""))
+    try:
+        final = json.loads(final_p.read_bytes())
+    except OSError as exc:
+        findings.append(f"FINAL_MISSING: {exc}")
+    if final:
+        if hashlib.sha256(final_p.read_bytes()).hexdigest() != config.get("final_sha256"):
+            findings.append("FINAL_DRIFT: frozen final changed; re-freeze required")
+        blob = json.dumps(final, sort_keys=True, default=str).lower()
+        for token in (
+            "p38",
+            "p56-final",
+            "p57-certificates",
+            "p52-certified-data",
+            "p47-nomination",
+            "final-test",
+        ):
+            if token in blob:
+                findings.append(f"FINAL_ACCESS: final references development: {token}")
+
+    tracks: dict[str, Any] = {}
+    try:
+        # --- Track H06: fresh-program compression, paired by group. ---
+        h06 = final.get("h06", {})
+        lib_doc = json.loads((_REPO_ROOT / str(h06.get("library_path", ""))).read_bytes())
+        if hashlib.sha256(
+            (_REPO_ROOT / str(h06.get("library_path", ""))).read_bytes()
+        ).hexdigest() != h06.get("library_sha256"):
+            findings.append("FINAL_DRIFT: H06 library changed")
+        learned_lib = lib_doc.get("macros", [])
+        h06_wins = h06_losses = h06_ties = 0
+        h06_groups = []
+        t_h06 = time.perf_counter()
+        for group in h06.get("groups", []):
+            progs = p67_dev_programs(n_programs=int(group["n_programs"]), seed=int(group["seed"]))
+            classical = p67_classical_library(len(learned_lib))
+            rand_cs = []
+            for seed in h06.get("random_library_seeds", []):
+                rand = p67_random_library(len(learned_lib), seed=int(seed))
+                vals = []
+                for prog in progs:
+                    body = len([w for w in prog.tolist() if w != 0])
+                    toks = p67_compress_program(prog, rand)
+                    rebuilt = p67_expand_tokens(toks, rand)
+                    ok = rebuilt is not None and [
+                        int(w) for w in rebuilt.tolist() if int(w) != 0
+                    ] == [int(w) for w in prog.tolist() if int(w) != 0]
+                    vals.append(1.0 - len(toks) / max(1, body) if ok else 0.0)
+                rand_cs.append(sum(vals) / len(vals))
+            comps = {}
+            for name, lib in (("learned", learned_lib), ("classical", classical)):
+                vals = []
+                for prog in progs:
+                    body = len([w for w in prog.tolist() if w != 0])
+                    toks = p67_compress_program(prog, lib)
+                    rebuilt = p67_expand_tokens(toks, lib)
+                    ok = rebuilt is not None and [
+                        int(w) for w in rebuilt.tolist() if int(w) != 0
+                    ] == [int(w) for w in prog.tolist() if int(w) != 0]
+                    if not ok:
+                        findings.append(f"ROUNDTRIP_FAIL: H06 {name} group {group['seed']}")
+                    vals.append(1.0 - len(toks) / max(1, body) if ok else 0.0)
+                comps[name] = sum(vals) / len(vals)
+            comps["random"] = _statistics.median(rand_cs)
+            best_other = max(comps["classical"], comps["random"])
+            if comps["learned"] > best_other:
+                h06_wins += 1
+                result = "win"
+            elif comps["learned"] < best_other:
+                h06_losses += 1
+                result = "loss"
+            else:
+                h06_ties += 1
+                result = "tie"
+            h06_groups.append(
+                {
+                    "seed": group["seed"],
+                    "result": result,
+                    **{k: round(v, 4) for k, v in comps.items()},
+                }
+            )
+        h06_sec = time.perf_counter() - t_h06
+        # --- Track H08: fresh-template attacker duel, paired by template. ---
+        h08 = final.get("h08", {})
+        w_doc = json.loads((_REPO_ROOT / str(h08.get("weights_path", ""))).read_bytes())
+        if hashlib.sha256(
+            (_REPO_ROOT / str(h08.get("weights_path", ""))).read_bytes()
+        ).hexdigest() != h08.get("weights_sha256"):
+            findings.append("FINAL_DRIFT: H08 weights changed")
+        scorer = P68AttackScorer()
+        scorer.load_state_dict({k: _torch.tensor(v) for k, v in w_doc["state_dict"].items()})
+        h08_detail = []
+        h08_wins = h08_losses = h08_ties = 0
+        t_h08 = time.perf_counter()
+        budget = int(h08.get("budget", 60))
+        for spec in h08.get("templates", []):
+            template = p68_propose_template(spec["family_id"], spec["lo"], spec["hi"])
+            entry = {"id": spec["family_id"], "kind": "parametric"}
+            lo, hi = int(spec["lo"]), int(spec["hi"])
+            domain = list(range(lo, hi + 1))
+            feats = _torch.stack(
+                [_torch.tensor(p68_instance_features(template, n)) for n in domain]
+            ).float()
+            with _torch.no_grad():
+                ranked = _torch.argsort(scorer(feats), descending=True).tolist()
+            learned_order = [domain[i] for i in ranked]
+            rand_q = []
+            for seed in h08.get("attacker_seeds", []):
+                shuffled = domain[:]
+                _random.Random(int(seed)).shuffle(shuffled)
+                rand_q.append(
+                    next(
+                        (
+                            k + 1
+                            for k, n in enumerate(shuffled[:budget])
+                            if p68_n_refutes(entry, n)[0]
+                        ),
+                        None,
+                    )
+                )
+            sys_q = next(
+                (k + 1 for k, n in enumerate(domain[:budget]) if p68_n_refutes(entry, n)[0]),
+                None,
+            )
+            learned_q = next(
+                (k + 1 for k, n in enumerate(learned_order[:budget]) if p68_n_refutes(entry, n)[0]),
+                None,
+            )
+            rand_hit_any = any(q is not None for q in rand_q)
+            sys_hit = sys_q is not None
+            learned_hit = learned_q is not None
+            rand_med = _statistics.median([q if q is not None else budget + 1 for q in rand_q])
+            sys_val = sys_q if sys_hit else budget + 1
+            learned_val = learned_q if learned_hit else budget + 1
+            if learned_hit and learned_val < rand_med and learned_val < sys_val:
+                h08_wins += 1
+                result = "win"
+            elif (
+                not learned_hit
+                and (rand_hit_any or sys_hit)
+                or learned_hit
+                and (rand_med < learned_val or sys_val < learned_val)
+            ):
+                h08_losses += 1
+                result = "loss"
+            else:
+                h08_ties += 1
+                result = "tie"
+            h08_detail.append(
+                {
+                    "template": spec,
+                    "result": result,
+                    "queries": {
+                        "learned": learned_q,
+                        "random_median": rand_med,
+                        "systematic": sys_q,
+                    },
+                    "hit": {"learned": learned_hit, "random": rand_hit_any, "systematic": sys_hit},
+                }
+            )
+        h08_sec = time.perf_counter() - t_h08
+        stats = final.get("stats", {})
+        min_decisive = int(stats.get("min_decisive_groups", 4))
+        p_h06 = _p71_sign_pvalue(h06_wins, h06_losses)
+        p_h08 = _p71_sign_pvalue(h08_wins, h08_losses)
+        ordered = sorted([("H06", p_h06), ("H08", p_h08)], key=lambda kv: kv[1])
+        holm = {}
+        holm[ordered[0][0]] = min(1.0, ordered[0][1] * 2)
+        holm[ordered[1][0]] = min(1.0, ordered[1][1] * 1)
+        tracks = {
+            "H06": {
+                "wins": h06_wins,
+                "losses": h06_losses,
+                "ties": h06_ties,
+                "p_value": p_h06,
+                "holm_adjusted": holm["H06"],
+                "elapsed_sec": h06_sec,
+                "groups": h06_groups,
+            },
+            "H08": {
+                "wins": h08_wins,
+                "losses": h08_losses,
+                "ties": h08_ties,
+                "p_value": p_h08,
+                "holm_adjusted": holm["H08"],
+                "elapsed_sec": h08_sec,
+                "details": h08_detail,
+            },
+        }
+        for name, rec in tracks.items():
+            if rec["wins"] + rec["losses"] < min_decisive:
+                rec["outcome"] = "INCONCLUSIVE"
+                rec["reason"] = "fewer than 4 decisive groups"
+            elif rec["holm_adjusted"] < float(stats.get("alpha", 0.05)):
+                rec["outcome"] = "PROVISIONAL"
+                rec["reason"] = "test passed; independent reproduction pending"
+            else:
+                rec["outcome"] = "NULL"
+                rec["reason"] = "no significant paired difference"
+            print(
+                f"  track {name}: W={rec['wins']} L={rec['losses']} T={rec['ties']} "
+                f"p={rec['p_value']:.4f} holm={rec['holm_adjusted']:.4f} -> {rec['outcome']}"
+            )
+            if rec["elapsed_sec"] > 7200:
+                findings.append(f"BUDGET_EXCEEDED: track {name} above 2h ceiling")
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p71_config": config_sha[:16]},
+        config={"acceptance_phase": "P71"},
+    )
+    report = {
+        "phase": "P71",
+        "verdict": verdict,
+        "claim_scope": (
+            "fresh confirmation of at most two triage results with frozen "
+            "procedure; provisional at best without the independent rerun"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "tracks": tracks,
+        "operator": final.get("operator", {}),
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P71",
+        },
+        "seeds_rng": "frozen final seeds; deterministic tracks",
+        "counters": {"tracks": len(tracks)},
+        "limitations": [
+            "PROVISIONAL is not CONFIRMED: only the independent rerun promotes.",
+            "Censored and tied groups are reported, excluded from denominators.",
+            "The reserved fresh final stays single-use for this confirmation.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P71 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -7417,6 +7752,8 @@ def main() -> int:
             run_p69_island_audit(args.config, args.output)
         elif args.acceptance_phase == "P70":
             run_p70_template_audit(args.config, args.output)
+        elif args.acceptance_phase == "P71":
+            run_p71_confirmation_audit(args.config, args.output)
         return 0
 
     seeds = (

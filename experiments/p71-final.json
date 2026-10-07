@@ -1,0 +1,139 @@
+{
+  "phase": "P71",
+  "note": "Frozen fresh confirmation final. At most two triage results (H06 compression, H08 attacker efficiency); no mathematical discovery declared. Older development data and bench seeds ineligible and unreferenced.",
+  "methods": [
+    "H06-macro-compression",
+    "H08-attacker-efficiency"
+  ],
+  "h06": {
+    "library_path": "experiments/p71-h06-library.json",
+    "library_sha256": "6761cdd4566058097e6afcc08d48b8fd38595377380a22f1219cc41c08e1d00e",
+    "groups": [
+      {
+        "seed": 1000,
+        "n_programs": 8
+      },
+      {
+        "seed": 1001,
+        "n_programs": 8
+      },
+      {
+        "seed": 1002,
+        "n_programs": 8
+      },
+      {
+        "seed": 1003,
+        "n_programs": 8
+      },
+      {
+        "seed": 1004,
+        "n_programs": 8
+      },
+      {
+        "seed": 1005,
+        "n_programs": 8
+      }
+    ],
+    "random_library_seeds": [
+      200,
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210,
+      211,
+      212,
+      213,
+      214,
+      215,
+      216,
+      217,
+      218,
+      219
+    ],
+    "ceiling_sec": 7200
+  },
+  "h08": {
+    "weights_path": "experiments/p71-h08-weights.json",
+    "weights_sha256": "f28bf8a87e4582d2dba4c437316df24683ffba7ce80fdacfa79988f6a60e8c2d",
+    "templates": [
+      {
+        "family_id": "even",
+        "lo": 62,
+        "hi": 81
+      },
+      {
+        "family_id": "even",
+        "lo": 82,
+        "hi": 101
+      },
+      {
+        "family_id": "multiple-of-3",
+        "lo": 63,
+        "hi": 81
+      },
+      {
+        "family_id": "multiple-of-3",
+        "lo": 84,
+        "hi": 102
+      },
+      {
+        "family_id": "n=2-mod-3",
+        "lo": 62,
+        "hi": 80
+      },
+      {
+        "family_id": "n=2-mod-3",
+        "lo": 83,
+        "hi": 101
+      }
+    ],
+    "attacker_seeds": [
+      100,
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119
+    ],
+    "budget": 60,
+    "ceiling_sec": 7200,
+    "design_note": "domains start inside family coverage so every arm must search; discriminative by construction, winner unknown at freeze time"
+  },
+  "stats": {
+    "test": "exact two-sided paired sign test per track",
+    "alpha": 0.05,
+    "holm_m": 2,
+    "min_decisive_groups": 4,
+    "censoring": "ties and censored groups reported with counts, excluded from sign-test denominator",
+    "seeds_rule": "seeds are repeats within a group, not independent problems",
+    "random_summary": "median over 20 pre-registered seeds",
+    "win_rule_h06": "learned compression strictly greater than classical and random-median",
+    "win_rule_h08": "learned refutes and uses strictly fewer queries than any refuting arm; non-refuting learned is a loss if another arm refutes"
+  },
+  "operator": {
+    "required": true,
+    "status": "pending",
+    "who": "independent AI on another machine (user-confirmed 2026-10-07)",
+    "instruction": "rerun experiments/p71-run.sh in a clean review and report run_id plus report sha256"
+  }
+}

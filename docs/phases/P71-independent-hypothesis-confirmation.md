@@ -1,6 +1,11 @@
 # P71 — Confirmar as hipóteses selecionadas sem reabrir testes antigos
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: final congelado + procedimento
++ interface de aceitação; medição em árvore limpa + pacote de reprodução
+pendentes. Diagnóstico: H06/H08 INCONCLUSIVE, só DIRTY_SOURCE bloqueia.
+Operador independente confirmado: IA independente em outra máquina.).
+**Dependência:** P70 Done porém não integrado; branch a partir de
+`codex/p70-parametric-proof-search`.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P70 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p71-independent-hypothesis-confirmation`.
@@ -49,7 +54,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P71**:
+Interface de aceitação **implementada na entrega 1** (`run_p71_confirmation_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P71 --config experiments/p71-config.json --output /tmp/evobyte-p71-acceptance.json

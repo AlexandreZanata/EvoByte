@@ -34,6 +34,7 @@ from benchmarks.science_matrix import (
     run_p68_duel_audit,
     run_p69_island_audit,
     run_p70_template_audit,
+    run_p71_confirmation_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -178,6 +179,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P68",
         "P69",
         "P70",
+        "P71",
     )
     import subprocess as _sp
 
@@ -1318,6 +1320,119 @@ def test_p70_acceptance_blocks_final_reference(tmp_path):
     cfg["notes_path"] = "experiments/p56-final-tasks.json"
     cfg_p.write_text(_json.dumps(cfg))
     report = run_p70_template_audit(cfg_p, tmp_path / "p70-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def _p71_smoke_final(tmp_path):
+    import hashlib as _hashlib
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    lib_sha = _hashlib.sha256(
+        (repo / "experiments" / "p71-h06-library.json").read_bytes()
+    ).hexdigest()
+    w_sha = _hashlib.sha256(
+        (repo / "experiments" / "p71-h08-weights.json").read_bytes()
+    ).hexdigest()
+    final = {
+        "phase": "P71",
+        "note": "mini final for interface smoke only",
+        "methods": ["H06-macro-compression", "H08-attacker-efficiency"],
+        "h06": {
+            "library_path": "experiments/p71-h06-library.json",
+            "library_sha256": lib_sha,
+            "groups": [{"seed": 2000, "n_programs": 4}, {"seed": 2001, "n_programs": 4}],
+            "random_library_seeds": [300, 301, 302],
+            "ceiling_sec": 7200,
+        },
+        "h08": {
+            "weights_path": "experiments/p71-h08-weights.json",
+            "weights_sha256": w_sha,
+            "templates": [
+                {"family_id": "even", "lo": 200, "hi": 205},
+                {"family_id": "multiple-of-3", "lo": 204, "hi": 209},
+            ],
+            "attacker_seeds": [400, 401, 402],
+            "budget": 10,
+            "ceiling_sec": 7200,
+        },
+        "stats": {
+            "test": "exact two-sided paired sign test per track",
+            "alpha": 0.05,
+            "holm_m": 2,
+            "min_decisive_groups": 4,
+            "censoring": "reported",
+            "seeds_rule": "repeats",
+        },
+        "operator": {"required": True, "status": "pending"},
+    }
+    final_p = tmp_path / "p71-mini-final.json"
+    final_p.write_text(_json.dumps(final))
+    return final_p
+
+
+def _p71_smoke_config(tmp_path, final_p):
+    import hashlib as _hashlib
+    import json as _json
+
+    cfg = {
+        "phase": "P71",
+        "device": "cpu",
+        "seed": 0,
+        "require_clean_tree": False,
+        "final_path": str(final_p),
+        "final_sha256": _hashlib.sha256(final_p.read_bytes()).hexdigest(),
+    }
+    cfg_p = tmp_path / "p71-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p71_sign_pvalue_exact() -> None:
+    import pytest as _pytest
+
+    from benchmarks.science_matrix import _p71_sign_pvalue
+
+    assert _p71_sign_pvalue(0, 0) == 1.0
+    assert _p71_sign_pvalue(6, 0) == _pytest.approx(2 * (1 / 64))
+    assert _p71_sign_pvalue(3, 3) == 1.0
+    assert 0.0 < _p71_sign_pvalue(5, 1) < 1.0
+
+
+def test_p71_acceptance_smoke_inconclusive(tmp_path):
+    out_p = tmp_path / "p71-acceptance.json"
+    report = run_p71_confirmation_audit(
+        _p71_smoke_config(tmp_path, _p71_smoke_final(tmp_path)), out_p
+    )
+    assert out_p.exists()
+    assert report["phase"] == "P71"
+    assert report["verdict"] == "ACCEPTED"
+    assert set(report["tracks"]) == {"H06", "H08"}
+    assert all(t["outcome"] == "INCONCLUSIVE" for t in report["tracks"].values())
+
+
+def test_p71_acceptance_blocks_final_drift(tmp_path):
+    import json as _json
+
+    final_p = _p71_smoke_final(tmp_path)
+    cfg_p = _p71_smoke_config(tmp_path, final_p)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["final_sha256"] = "0" * 64
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p71_confirmation_audit(cfg_p, tmp_path / "p71-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_DRIFT" in f for f in report["findings"])
+
+
+def test_p71_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p71_smoke_config(tmp_path, _p71_smoke_final(tmp_path))
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["notes_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p71_confirmation_audit(cfg_p, tmp_path / "p71-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("FINAL_ACCESS" in f for f in report["findings"])
 
