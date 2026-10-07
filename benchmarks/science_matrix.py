@@ -702,6 +702,7 @@ ACCEPTANCE_PHASES = (
     "P61",
     "P62",
     "P63",
+    "P64",
 )
 
 
@@ -2219,6 +2220,172 @@ def run_p63_feedback_audit(config_path: str | Path, output_path: str | Path) -> 
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P63 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p64_obstruction_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P64 audit: obstruction rules with proven economics (H03).
+
+    Proves each frozen rule in its declared box, measures proof cost versus
+    checker cost saved on the search box, enforces that no known valid
+    triple is ever eliminated, and verifies the unfiltered exploration
+    fraction of the priority scan. PROMISING only with a PROVEN rule whose
+    net saving is positive; otherwise honest NULL. Acceptance never exceeds
+    what was proven inside the declared boxes.
+    """
+    import torch as _torch
+    from open_problems import (
+        p64_apply_rules,
+        p64_prioritized_scan,
+        p64_proof_vs_saved,
+        p64_prove_rule,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P64":
+        raise ValueError(f"Config {cfg_p} is not a P64 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P64 LEARNED OBSTRUCTIONS AUDIT (proven boxes only; outcome reported)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("rules", "search_box", "known_valid", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+    if not config.get("rules"):
+        findings.append("CONFIG_INVALID: empty rule set")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    rule_reports: list[dict[str, Any]] = []
+    proven: list[dict[str, Any]] = []
+    try:
+        for entry in config.get("rules", []):
+            rule, n, box = entry["rule"], int(entry["n"]), int(entry["proof_box"])
+            proof = p64_prove_rule(rule, n, box, max_checks=int(config.get("max_checks", 200000)))
+            econ = p64_proof_vs_saved(
+                rule,
+                n,
+                box,
+                int(config.get("search_box", 12)),
+                int(config.get("max_checks", 200000)),
+            )
+            print(f"  rule {rule}: {proof['status']} net={econ['net_sec']:.4f}s")
+            if proof["status"] == "PROVEN":
+                proven.append(rule)
+            rule_reports.append(
+                {"rule": rule, "n": n, "proof_box": box, "proof": proof, "economics": econ}
+            )
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    known = [tuple(int(v) for v in t) for t in config.get("known_valid", [])]
+    dropped = p64_apply_rules(known, proven, [])["eliminated"]
+    if dropped:
+        findings.append(f"CERT_DROPPED: proven rules discard known valid: {dropped}")
+    print(f"  known valid kept: {len(known) - len(dropped)}/{len(known)}")
+
+    scan_boxes = [(x, y, z) for x in range(1, 7) for y in range(1, 7) for z in range(1, 4)]
+    scan = p64_prioritized_scan(
+        scan_boxes,
+        config.get("priority_rules", []),
+        explore_frac=float(config.get("explore_frac", 0.1)),
+        seed=int(config.get("seed", 0)),
+    )
+    print(f"  priority scan unfiltered fraction: {scan['unfiltered_fraction']:.3f}")
+    if scan["unfiltered_fraction"] < float(config.get("explore_frac", 0.1)):
+        findings.append("EXPLORATION_SHORTFALL: unfiltered fraction below registered floor")
+
+    nets = [r["economics"]["net_sec"] for r in rule_reports if r["proof"]["status"] == "PROVEN"]
+    if nets and max(nets) > 0:
+        outcome, reason = "PROMISING", "a proven rule saves more search than its proof costs"
+    else:
+        outcome, reason = "NULL", "no proven rule with positive net saving"
+    print(f"  outcome: {outcome} ({reason})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p64_config": config_sha[:16]},
+        config={"acceptance_phase": "P64"},
+    )
+    report = {
+        "phase": "P64",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "obstruction rules proven inside declared boxes with measured "
+            "economics; outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "rules": [
+            {
+                "rule": r["rule"],
+                "status": r["proof"]["status"],
+                "net_sec": r["economics"]["net_sec"],
+                "eliminated": r["economics"]["eliminated"],
+            }
+            for r in rule_reports
+        ],
+        "known_valid_kept": len(known) - len(dropped),
+        "scan_unfiltered_fraction": scan["unfiltered_fraction"],
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P64",
+        },
+        "seeds_rng": "frozen seeds; deterministic proofs and scans",
+        "counters": {
+            "rules": len(rule_reports),
+            "proven": sum(1 for r in rule_reports if r["proof"]["status"] == "PROVEN"),
+        },
+        "limitations": [
+            "Proven boxes are tiny; economics do not generalize beyond them.",
+            "Rare is not impossible: unproven regions stay priority-only.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P64 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -6200,6 +6367,8 @@ def main() -> int:
             run_p62_repair_audit(args.config, args.output)
         elif args.acceptance_phase == "P63":
             run_p63_feedback_audit(args.config, args.output)
+        elif args.acceptance_phase == "P64":
+            run_p64_obstruction_audit(args.config, args.output)
         return 0
 
     seeds = (

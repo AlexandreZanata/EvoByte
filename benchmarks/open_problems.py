@@ -2924,6 +2924,252 @@ def p63_compare_learned_feedback(
     return out
 
 
+# ==============================================================================
+# P64 entrega 1 — H03 regras de obstrução: sugestão, prova e aplicação
+# ==============================================================================
+#
+# Regras pequenas sobre paridade, divisibilidade e intervalos. A rede (ou
+# qualquer heurística) SUGERE; a verdade se decide por demonstração no
+# domínio declarado ou enumeração completa de domínio finito pequeno.
+# Timeout de busca nunca vira label impossível. Só regra PROVEN elimina
+# permanentemente; sem prova, no máximo prioridade com exploração.
+
+P64_RULE_KINDS = ("parity", "divisibility", "interval")
+
+P64_RULE_STATUS = ("PROVEN", "REFUTED", "UNPROVEN")
+
+
+def p64_rule_matches(rule: dict[str, Any], triple: tuple[int, int, int]) -> bool:
+    """Whether a triple falls in the rule region (deterministic)."""
+    x, y, z = (int(v) for v in triple)
+    kind = rule.get("kind")
+    if kind == "parity":
+        return (x, y, z)[int(rule["coord"])] % 2 == int(rule["residue"])
+    if kind == "divisibility":
+        return (x, y, z)[int(rule["coord"])] % int(rule["mod"]) == int(rule["residue"])
+    if kind == "interval":
+        if rule.get("bound") == "sum_le":
+            return x + y + z <= int(rule["value"])
+        if rule.get("op") == "le":
+            return (x, y, z)[int(rule["coord"])] <= int(rule["value"])
+        return (x, y, z)[int(rule["coord"])] >= int(rule["value"])
+    raise ValueError(f"Unknown P64 rule kind: {kind}")
+
+
+def p64_suggest_rules(
+    errors: list[tuple[int, int, int]], min_coverage: int = 1
+) -> list[dict[str, Any]]:
+    """Deterministic candidate rules covering development errors (suggestion only)."""
+    candidates: list[dict[str, Any]] = []
+    for coord in range(3):
+        for residue in (0, 1):
+            candidates.append({"kind": "parity", "coord": coord, "residue": residue})
+    for coord in range(3):
+        for mod in (3, 5):
+            for residue in range(mod):
+                candidates.append(
+                    {"kind": "divisibility", "coord": coord, "mod": mod, "residue": residue}
+                )
+    for value in (4, 6, 8, 12):
+        candidates.append({"kind": "interval", "bound": "sum_le", "value": value})
+    return [
+        rule
+        for rule in candidates
+        if sum(1 for t in errors if p64_rule_matches(rule, t)) >= int(min_coverage)
+    ]
+
+
+def p64_prove_rule(
+    rule: dict[str, Any],
+    n: int,
+    box: int,
+    max_checks: int = 200000,
+) -> dict[str, Any]:
+    """Prove a forbidden region by complete enumeration of [1..box]^3.
+
+    Every matching triple must fail the dual exact checkers; an exact match
+    REFUTEs the rule (with counterexample). A box bigger than the check
+    budget stays UNPROVEN: search timeout is never an impossibility label.
+    """
+    volume = int(box) ** 3
+    if volume > int(max_checks):
+        return {
+            "status": "UNPROVEN",
+            "checks": 0,
+            "counterexample": None,
+            "reason": f"box volume {volume} exceeds check budget {max_checks}",
+        }
+    checks = 0
+    matched = 0
+    for x in range(1, int(box) + 1):
+        for y in range(1, int(box) + 1):
+            for z in range(1, int(box) + 1):
+                if not p64_rule_matches(rule, (x, y, z)):
+                    continue
+                matched += 1
+                checks += 1
+                ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+                ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+                if ok1 and ok2:
+                    return {
+                        "status": "REFUTED",
+                        "checks": checks,
+                        "counterexample": [x, y, z],
+                        "reason": "exact solution inside the rule region",
+                    }
+    return {
+        "status": "PROVEN",
+        "checks": checks,
+        "counterexample": None,
+        "matched": matched,
+        "reason": f"no exact solution in {matched} matching triples of box {box}",
+    }
+
+
+def p64_apply_rules(
+    triples: list[tuple[int, int, int]],
+    proven_rules: list[dict[str, Any]],
+    priority_rules: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Eliminate only via PROVEN rules; unproven rules only prioritize.
+
+    Returns kept indices, eliminated indices (with the proving rule recorded)
+    and a priority score per triple (count of matching unproven rules).
+    """
+    kept: list[int] = []
+    eliminated: list[dict[str, Any]] = []
+    for i, triple in enumerate(triples):
+        hit = next((r for r in proven_rules if p64_rule_matches(r, triple)), None)
+        if hit is not None:
+            eliminated.append({"index": i, "triple": list(triple), "rule": hit})
+        else:
+            kept.append(i)
+    return {
+        "kept": kept,
+        "eliminated": eliminated,
+        "priority": [sum(1 for r in priority_rules if p64_rule_matches(r, t)) for t in triples],
+    }
+
+
+def p64_rule_report(
+    rule: dict[str, Any],
+    proof: dict[str, Any],
+    errors: list[tuple[int, int, int]],
+) -> dict[str, Any]:
+    """Published coverage and limits of one rule (no promotion inside)."""
+    covered = sum(1 for t in errors if p64_rule_matches(rule, t))
+    return {
+        "rule": rule,
+        "status": proof.get("status"),
+        "checks": proof.get("checks", 0),
+        "coverage": f"{covered}/{len(errors)} development errors",
+        "coverage_fraction": (covered / len(errors)) if errors else 0.0,
+        "limits": "claim holds only inside the proven box; outside it the rule is priority-only",
+    }
+
+
+def p64_proof_vs_saved(
+    rule: dict[str, Any],
+    n: int,
+    proof_box: int,
+    search_box: int = 12,
+    max_checks: int = 200000,
+) -> dict[str, Any]:
+    """Compare proof cost against checker cost saved on a search box.
+
+    Proves the rule (timed), then applies it to every triple of the search
+    box: eliminated triples are still checker-timed once, and that measured
+    time is the saved search. UNPROVEN/REFUTED rules save nothing and
+    eliminate nothing. Net may be negative; it is reported, not assumed.
+    """
+    t0 = time.perf_counter()
+    proof = p64_prove_rule(rule, int(n), int(proof_box), max_checks=int(max_checks))
+    proof_sec = time.perf_counter() - t0
+    if proof.get("status") != "PROVEN":
+        return {
+            "status": proof.get("status"),
+            "proof_sec": proof_sec,
+            "proof_checks": proof.get("checks", 0),
+            "eliminated": 0,
+            "saved_sec": 0.0,
+            "net_sec": -proof_sec,
+            "reason": "only PROVEN rules save search",
+        }
+    eliminated = 0
+    saved_sec = 0.0
+    for x in range(1, int(search_box) + 1):
+        for y in range(1, int(search_box) + 1):
+            for z in range(1, int(search_box) + 1):
+                if not p64_rule_matches(rule, (x, y, z)):
+                    continue
+                eliminated += 1
+                t1 = time.perf_counter()
+                check_erdos_straus(int(n), x, y, z)
+                check_erdos_straus_fractions(int(n), x, y, z)
+                saved_sec += time.perf_counter() - t1
+    return {
+        "status": "PROVEN",
+        "proof_sec": proof_sec,
+        "proof_checks": proof.get("checks", 0),
+        "eliminated": eliminated,
+        "saved_sec": saved_sec,
+        "net_sec": saved_sec - proof_sec,
+        "reason": f"{eliminated} triples eliminated from search box {search_box}",
+    }
+
+
+def p64_prioritized_scan(
+    triples: list[tuple[int, int, int]],
+    priority_rules: list[dict[str, Any]],
+    explore_frac: float = 0.1,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Scan order with guaranteed unfiltered exploration fraction.
+
+    Unproven rules only prioritize: all triples appear exactly once, but at
+    least explore_frac of positions hold filter-independent picks (seeded
+    uniform sample of the whole set), so exploration never collapses to the
+    filter even when few triples escape it. Nothing is eliminated here.
+    """
+    import math as _math
+    import random as _random
+
+    if not 0.0 < float(explore_frac) <= 1.0:
+        raise ValueError("P64 explore_frac must lie in (0, 1]")
+    n_total = len(triples)
+    if n_total == 0:
+        return {"order": [], "unfiltered_fraction": 0.0, "explore_frac": float(explore_frac)}
+    rng = _random.Random(int(seed))
+    shuffled = list(range(n_total))
+    rng.shuffle(shuffled)
+    n_exp = _math.ceil(float(explore_frac) * n_total)
+    explore = set(shuffled[:n_exp])
+    rest = [i for i, t in enumerate(triples) if i not in explore]
+    rest.sort(
+        key=lambda i: (0 if any(p64_rule_matches(r, triples[i]) for r in priority_rules) else 1, i)
+    )
+    explore_sorted = sorted(explore)
+    k = max(1, round(n_total / n_exp))
+    order: list[int] = []
+    ei = ri = 0
+    for pos in range(1, n_total + 1):
+        if pos % k == 0 and ei < len(explore_sorted):
+            order.append(explore_sorted[ei])
+            ei += 1
+        elif ri < len(rest):
+            order.append(rest[ri])
+            ri += 1
+        else:
+            order.append(explore_sorted[ei])
+            ei += 1
+    unfiltered = sum(1 for i in order if i in explore)
+    return {
+        "order": order,
+        "unfiltered_fraction": unfiltered / n_total,
+        "explore_frac": float(explore_frac),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

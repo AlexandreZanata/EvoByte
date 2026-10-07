@@ -1,6 +1,12 @@
 # P64 — H03 — Aprender regiões proibidas e tentar prová-las
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: regras + prova, economia + scan,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=b25f80931994a537` com outcome NULL íntegro; registro em
+`docs/research/p64-obstruction-record.md`). H03 encerrada sem promoção;
+P65 liberada.
+**Dependência:** P63 Done porém não integrado (PR #91 aberto); branch a
+partir de `codex/p63-verifier-feedback`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P63 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p64-learned-obstructions`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P64**:
+Interface de aceitação **implementada na entrega 3** (`run_p64_obstruction_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P64 --config experiments/p64-config.json --output /tmp/evobyte-p64-acceptance.json
