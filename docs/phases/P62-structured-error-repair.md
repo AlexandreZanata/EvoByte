@@ -1,6 +1,9 @@
 # P62 — H01 — Aprender a corrigir formatos de erro
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: primitivas de reparo +
+baselines + regressões; reparador treinado, congelamento e medição pendentes).
+**Dependência:** P61 Done porém não integrado (PR #89 aberto); branch a
+partir de `codex/p61-modular-shadows`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P61 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p62-structured-error-repair`.

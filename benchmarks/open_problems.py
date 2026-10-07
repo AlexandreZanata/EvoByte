@@ -2177,6 +2177,141 @@ def run_p61_paired_filter_trial(
     }
 
 
+# ==============================================================================
+# P62 entrega 1 — H01 primitivas de reparo estruturado de erros
+# ==============================================================================
+#
+# Perturbações limitadas de certificados development com resíduo inteiro
+# exato, sinais e divisibilidade. Vizinhança congelada de edições inteiras
+# (uma coordenada, passos ±1..±3, domínio >= 1). Baselines clássico
+# (menor |resíduo|) e aleatório sob a mesma vizinhança; políticas recebem
+# só (n, x, y, z) — nunca a solução privada. Aceitação só pelos checkers.
+
+P62_NEIGHBORHOOD_STEPS = (-3, -2, -1, 1, 2, 3)
+
+P62_DIVISIBILITY_PRIMES = (2, 3, 5, 7, 11, 13)
+
+
+def p62_exact_residual(n: int, x: int, y: int, z: int) -> int:
+    """Exact integer residual 4xyz - n(xy+xz+yz); zero iff exact identity."""
+    return 4 * int(x) * int(y) * int(z) - int(n) * (
+        int(x) * int(y) + int(x) * int(z) + int(y) * int(z)
+    )
+
+
+def p62_exact_features(n: int, x: int, y: int, z: int) -> dict[str, Any]:
+    """Exact perturbation features: residual, sign, small-prime divisibility."""
+    r = p62_exact_residual(n, x, y, z)
+    return {
+        "residual": r,
+        "sign": (1 if r > 0 else (-1 if r < 0 else 0)),
+        "divisible_by": [p for p in P62_DIVISIBILITY_PRIMES if r % p == 0],
+    }
+
+
+def p62_neighbors(x: int, y: int, z: int) -> list[tuple[int, int, int]]:
+    """Frozen bounded neighborhood: one coordinate, steps ±1..±3, domain >= 1."""
+    out = []
+    for coord in range(3):
+        for step in P62_NEIGHBORHOOD_STEPS:
+            t = [int(x), int(y), int(z)]
+            t[coord] += step
+            if min(t) >= 1:
+                out.append((t[0], t[1], t[2]))
+    return out
+
+
+def p62_classical_repair_step(n: int, x: int, y: int, z: int) -> tuple[int, int, int] | None:
+    """Classical baseline: valid neighbor with smallest |residual| (ties broken
+    lexicographically for determinism)."""
+    best: tuple[int, tuple[int, int, int]] | None = None
+    for nb in p62_neighbors(x, y, z):
+        r = abs(p62_exact_residual(n, *nb))
+        if best is None or (r, nb) < (best[0], best[1]):
+            best = (r, nb)
+    return None if best is None else best[1]
+
+
+def p62_random_repair_step(
+    n: int, x: int, y: int, z: int, seed: int
+) -> tuple[int, int, int] | None:
+    """Random baseline: seeded uniform choice among valid neighbors."""
+    import random as _random
+
+    _ = n
+    opts = p62_neighbors(x, y, z)
+    if not opts:
+        return None
+    return _random.Random(int(seed)).choice(opts)
+
+
+def p62_split_by_origin(
+    records: list[dict[str, Any]], key: str = "n"
+) -> dict[str, list[dict[str, Any]]]:
+    """Deterministic split with disjoint origins: sorted unique key values go
+    alternately to train/dev, so no origin ever appears on both sides."""
+    origins = sorted({r[key] for r in records})
+    train_origins = set(origins[::2])
+    return {
+        "train": [r for r in records if r[key] in train_origins],
+        "dev": [r for r in records if r[key] not in train_origins],
+    }
+
+
+def p62_repair_cycles(
+    n: int,
+    start: tuple[int, int, int],
+    policy: str = "classical",
+    max_cycles: int = 12,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Bounded repair loop from a perturbed triple until the fixed checkers
+    certify, a state repeats (stalled) or the cycle cap hits (exhausted)."""
+    if policy not in ("classical", "random"):
+        raise ValueError(f"Unknown P62 repair policy: {policy}")
+    x, y, z = (int(v) for v in start)
+    residuals: list[int] = []
+    visited = {(x, y, z)}
+    cycles = 0
+    while cycles < int(max_cycles):
+        ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+        if ok1 and ok2:
+            return {
+                "certified": True,
+                "triple": (x, y, z),
+                "cycles_used": cycles,
+                "residuals": residuals,
+                "status": "certified",
+            }
+        if policy == "classical":
+            nxt = p62_classical_repair_step(int(n), x, y, z)
+        else:
+            nxt = p62_random_repair_step(int(n), x, y, z, int(seed) + cycles)
+        if nxt is None or nxt in visited:
+            return {
+                "certified": False,
+                "triple": (x, y, z),
+                "cycles_used": cycles,
+                "residuals": residuals,
+                "status": "stalled",
+            }
+        visited.add(nxt)
+        x, y, z = nxt
+        residuals.append(p62_exact_residual(int(n), x, y, z))
+        cycles += 1
+    ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+    certified = bool(ok1 and ok2)
+    return {
+        "certified": certified,
+        "triple": (x, y, z),
+        "cycles_used": cycles,
+        "residuals": residuals,
+        "status": "certified" if certified else "exhausted",
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
