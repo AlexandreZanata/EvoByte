@@ -1,6 +1,12 @@
 # P65 — H04 — Inventar respostas e procurar pontes para o alvo
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: biblioteca + pontes, seletor + comparação,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=cf7562112ad0818c` com outcome NULL íntegro; registro em
+`docs/research/p65-bridge-record.md`). H04 encerrada sem promoção; P66
+liberada.
+**Dependência:** P64 Done porém não integrado (PR #92 aberto); branch a
+partir de `codex/p64-learned-obstructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P64 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p65-backward-constructions`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P65**:
+Interface de aceitação **implementada na entrega 3** (`run_p65_bridge_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P65 --config experiments/p65-config.json --output /tmp/evobyte-p65-acceptance.json

@@ -703,6 +703,7 @@ ACCEPTANCE_PHASES = (
     "P62",
     "P63",
     "P64",
+    "P65",
 )
 
 
@@ -2386,6 +2387,161 @@ def run_p64_obstruction_audit(config_path: str | Path, output_path: str | Path) 
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P64 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p65_bridge_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P65 audit: paired library comparison with frozen curated cap (H04).
+
+    Compares random-pick, structured-first, model-pick and direct-search on
+    the same frozen targets with complete billed ledgers. The curated
+    library respects the frozen max size; training is billed to model-pick
+    only. PROMISING only when model-pick strictly out-certifies
+    structured-first on the same targets; otherwise honest NULL. Bridges
+    prove the fixed target or the arm scores nothing.
+    """
+    import torch as _torch
+    from open_problems import (
+        P65_BRIDGE_ARMS,
+        P65_MAX_LIBRARY,
+        p59_cost_ledger,
+        p65_build_library,
+        p65_compare_libraries,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P65":
+        raise ValueError(f"Config {cfg_p} is not a P65 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P65 BACKWARD CONSTRUCTIONS AUDIT (paired libraries; outcome reported)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("targets", "n_random", "train_n", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+    if not config.get("targets"):
+        findings.append("CONFIG_INVALID: empty target set")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    if len(p65_build_library()) > P65_MAX_LIBRARY:
+        findings.append("LIBRARY_OVERFLOW: curated library exceeds frozen max")
+
+    comparison: dict[str, Any] = {}
+    try:
+        comparison = p65_compare_libraries(
+            [int(n) for n in config.get("targets", [])],
+            n_random=int(config.get("n_random", 6)),
+            coord_bound=int(config.get("coord_bound", 50)),
+            seed=int(config.get("seed", 0)),
+            max_coord=int(config.get("max_coord", 10**9)),
+            train_n=[int(n) for n in config.get("train_n", [])],
+            epochs=int(config.get("epochs", 30)),
+        )
+        for arm in P65_BRIDGE_ARMS:
+            rec = comparison[arm]
+            expect = p59_cost_ledger(**rec["ledger"]["parts"])
+            if abs(expect["total_sec"] - rec["ledger"]["total_sec"]) > 1e-9:
+                findings.append(f"COST_SUBTRACTED: arm={arm}")
+            print(f"  arm {arm}: certified={rec['certified']}/{rec['targets']}")
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    arms = {a: comparison.get(a, {}) for a in P65_BRIDGE_ARMS}
+    if comparison:
+        model_c = arms["model-pick"].get("certified", -1)
+        struct_c = arms["structured-first"].get("certified", 0)
+        if model_c > struct_c:
+            outcome, reason = "PROMISING", "model-pick out-certifies structured-first"
+        else:
+            outcome, reason = "NULL", "model-pick adds no certificate over structured-first"
+    else:
+        outcome, reason = "NULL", "comparison did not run"
+    print(f"  outcome: {outcome} ({reason})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p65_config": config_sha[:16]},
+        config={"acceptance_phase": "P65"},
+    )
+    report = {
+        "phase": "P65",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "paired library arms on frozen targets with billed ledgers; "
+            "outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "arms": {
+            arm: {
+                "targets": rec["targets"],
+                "certified": rec["certified"],
+                "total_sec": rec["ledger"]["total_sec"],
+            }
+            for arm, rec in comparison.items()
+            if arm in P65_BRIDGE_ARMS
+        },
+        "library_size": comparison.get("library_size", 0),
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P65",
+        },
+        "seeds_rng": "frozen seeds; deterministic libraries, training and trials",
+        "counters": {
+            "targets": len(config.get("targets", [])),
+            "arms": sum(1 for a in P65_BRIDGE_ARMS if a in comparison),
+        },
+        "limitations": [
+            "A mixed library with seeded distractors is a development proxy.",
+            "Direct search certifying more proves enumeration, not discovery.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P65 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -6369,6 +6525,8 @@ def main() -> int:
             run_p63_feedback_audit(args.config, args.output)
         elif args.acceptance_phase == "P64":
             run_p64_obstruction_audit(args.config, args.output)
+        elif args.acceptance_phase == "P65":
+            run_p65_bridge_audit(args.config, args.output)
         return 0
 
     seeds = (
