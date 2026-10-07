@@ -1,7 +1,7 @@
 # P64 — H03 — Aprender regiões proibidas e tentar prová-las
 
-**Status:** Building (entrega 1 neste ciclo: regras + prova + regressões;
-custo de prova × busca poupada, congelamento e medição pendentes).
+**Status:** Building (entregas 1–2: regras + prova e custo×poupança com
+priorização ≥10%; congelamento/medição pendentes).
 **Dependência:** P63 Done porém não integrado (PR #91 aberto); branch a
 partir de `codex/p63-verifier-feedback`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.

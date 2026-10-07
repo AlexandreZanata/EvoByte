@@ -3068,6 +3068,108 @@ def p64_rule_report(
     }
 
 
+def p64_proof_vs_saved(
+    rule: dict[str, Any],
+    n: int,
+    proof_box: int,
+    search_box: int = 12,
+    max_checks: int = 200000,
+) -> dict[str, Any]:
+    """Compare proof cost against checker cost saved on a search box.
+
+    Proves the rule (timed), then applies it to every triple of the search
+    box: eliminated triples are still checker-timed once, and that measured
+    time is the saved search. UNPROVEN/REFUTED rules save nothing and
+    eliminate nothing. Net may be negative; it is reported, not assumed.
+    """
+    t0 = time.perf_counter()
+    proof = p64_prove_rule(rule, int(n), int(proof_box), max_checks=int(max_checks))
+    proof_sec = time.perf_counter() - t0
+    if proof.get("status") != "PROVEN":
+        return {
+            "status": proof.get("status"),
+            "proof_sec": proof_sec,
+            "proof_checks": proof.get("checks", 0),
+            "eliminated": 0,
+            "saved_sec": 0.0,
+            "net_sec": -proof_sec,
+            "reason": "only PROVEN rules save search",
+        }
+    eliminated = 0
+    saved_sec = 0.0
+    for x in range(1, int(search_box) + 1):
+        for y in range(1, int(search_box) + 1):
+            for z in range(1, int(search_box) + 1):
+                if not p64_rule_matches(rule, (x, y, z)):
+                    continue
+                eliminated += 1
+                t1 = time.perf_counter()
+                check_erdos_straus(int(n), x, y, z)
+                check_erdos_straus_fractions(int(n), x, y, z)
+                saved_sec += time.perf_counter() - t1
+    return {
+        "status": "PROVEN",
+        "proof_sec": proof_sec,
+        "proof_checks": proof.get("checks", 0),
+        "eliminated": eliminated,
+        "saved_sec": saved_sec,
+        "net_sec": saved_sec - proof_sec,
+        "reason": f"{eliminated} triples eliminated from search box {search_box}",
+    }
+
+
+def p64_prioritized_scan(
+    triples: list[tuple[int, int, int]],
+    priority_rules: list[dict[str, Any]],
+    explore_frac: float = 0.1,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Scan order with guaranteed unfiltered exploration fraction.
+
+    Unproven rules only prioritize: all triples appear exactly once, but at
+    least explore_frac of positions hold filter-independent picks (seeded
+    uniform sample of the whole set), so exploration never collapses to the
+    filter even when few triples escape it. Nothing is eliminated here.
+    """
+    import math as _math
+    import random as _random
+
+    if not 0.0 < float(explore_frac) <= 1.0:
+        raise ValueError("P64 explore_frac must lie in (0, 1]")
+    n_total = len(triples)
+    if n_total == 0:
+        return {"order": [], "unfiltered_fraction": 0.0, "explore_frac": float(explore_frac)}
+    rng = _random.Random(int(seed))
+    shuffled = list(range(n_total))
+    rng.shuffle(shuffled)
+    n_exp = _math.ceil(float(explore_frac) * n_total)
+    explore = set(shuffled[:n_exp])
+    rest = [i for i, t in enumerate(triples) if i not in explore]
+    rest.sort(
+        key=lambda i: (0 if any(p64_rule_matches(r, triples[i]) for r in priority_rules) else 1, i)
+    )
+    explore_sorted = sorted(explore)
+    k = max(1, round(n_total / n_exp))
+    order: list[int] = []
+    ei = ri = 0
+    for pos in range(1, n_total + 1):
+        if pos % k == 0 and ei < len(explore_sorted):
+            order.append(explore_sorted[ei])
+            ei += 1
+        elif ri < len(rest):
+            order.append(rest[ri])
+            ri += 1
+        else:
+            order.append(explore_sorted[ei])
+            ei += 1
+    unfiltered = sum(1 for i in order if i in explore)
+    return {
+        "order": order,
+        "unfiltered_fraction": unfiltered / n_total,
+        "explore_frac": float(explore_frac),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

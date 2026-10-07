@@ -40,6 +40,8 @@ from benchmarks.open_problems import (
     p62_split_by_origin,
     p62_train_repairer,
     p64_apply_rules,
+    p64_prioritized_scan,
+    p64_proof_vs_saved,
     p64_prove_rule,
     p64_rule_matches,
     p64_rule_report,
@@ -655,3 +657,49 @@ def test_p64_suggest_and_report() -> None:
     assert rep["status"] == "PROVEN"
     assert rep["coverage_fraction"] == 0.0
     assert "only inside the proven box" in rep["limits"]
+
+
+def test_p64_proof_vs_saved_measured() -> None:
+    rule = {"kind": "interval", "bound": "sum_le", "value": 4}
+    rep = p64_proof_vs_saved(rule, 4, proof_box=6, search_box=12)
+    assert rep["status"] == "PROVEN"
+    assert rep["eliminated"] == 4
+    assert rep["saved_sec"] > 0.0
+    assert rep["proof_sec"] >= 0.0
+    assert rep["net_sec"] == rep["saved_sec"] - rep["proof_sec"]
+    cold = p64_proof_vs_saved(
+        {"kind": "parity", "coord": 0, "residue": 1}, 4, proof_box=100, max_checks=1000
+    )
+    assert cold["status"] == "UNPROVEN"
+    assert cold["eliminated"] == 0
+    assert cold["saved_sec"] == 0.0
+    dead = p64_proof_vs_saved({"kind": "parity", "coord": 0, "residue": 1}, 4, proof_box=6)
+    assert dead["status"] == "REFUTED"
+    assert dead["eliminated"] == 0
+
+
+def test_p64_prioritized_scan_guarantees_exploration() -> None:
+    triples = [(x, y, z) for x in range(1, 7) for y in range(1, 7) for z in range(1, 3)]
+    rules = [{"kind": "parity", "coord": 0, "residue": 1}]
+    first = p64_prioritized_scan(triples, rules, explore_frac=0.1, seed=3)
+    assert first == p64_prioritized_scan(triples, rules, explore_frac=0.1, seed=3)
+    assert sorted(first["order"]) == list(range(len(triples)))
+    assert first["unfiltered_fraction"] >= 0.1
+    narrow = p64_prioritized_scan(triples, rules, explore_frac=0.5, seed=3)
+    assert narrow["unfiltered_fraction"] >= 0.5
+    assert p64_prioritized_scan([], rules)["order"] == []
+    try:
+        p64_prioritized_scan(triples, rules, explore_frac=0.0)
+    except ValueError as exc:
+        assert "explore_frac" in str(exc)
+    else:
+        raise AssertionError("explore_frac=0 must raise")
+
+
+def test_p64_proven_rules_discard_no_known_valid() -> None:
+    rule = {"kind": "interval", "bound": "sum_le", "value": 4}
+    assert p64_prove_rule(rule, 4, 6)["status"] == "PROVEN"
+    known = [(2, 3, 6), (2, 4, 4), (3, 3, 3), (3, 4, 12), (2, 3, 6)]
+    res = p64_apply_rules(known, [rule], [])
+    assert res["eliminated"] == []
+    assert res["kept"] == [0, 1, 2, 3, 4]
