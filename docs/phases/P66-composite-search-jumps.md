@@ -1,8 +1,10 @@
 # P66 — H05 — Atravessar a busca com saltos compostos
 
-**Status:** Building (entregas 1–3: pacotes, distribuição guiada,
-interface + config congelada; entrega 4 pendente: medição em árvore limpa
-+ registro. Diagnóstico: outcome NULL — 0 certificados nos starts dev.)
+**Status:** Done (entregas 1–4: pacotes, distribuição guiada, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=5bed77c91ce3f0b5` com outcome NULL íntegro; registro em
+`docs/research/p66-jump-record.md`). H05 encerrada sem promoção; P67
+liberada.
 **Dependência:** P65 Done porém não integrado (PR #93 aberto); branch a
 partir de `codex/p65-backward-constructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
