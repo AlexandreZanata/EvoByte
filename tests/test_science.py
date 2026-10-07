@@ -651,6 +651,68 @@ def test_p59_rejects_unknown_arm_and_vacuous_swap():
         run_p59_leakage_sentinel("structured_random", xs, ys, "x**2", "x**2", seed=7)
 
 
+def test_p59_matched_es_same_inputs_both_arms():
+    from benchmarks.open_problems import p59_es_public_inputs, run_p59_matched_es_trial
+
+    inputs = p59_es_public_inputs(4)
+    cpu = run_p59_matched_es_trial("cpu_enumeration", inputs)
+    cls = run_p59_matched_es_trial("classical_construction", inputs)
+    assert cpu["inputs_hash"] == cls["inputs_hash"]
+    assert cpu["status"] == "certified" and cls["status"] == "certified"
+    assert cpu["triple"] == [2, 3, 6] and cls["triple"] == [2, 3, 6]
+    for rec in (cpu, cls):
+        parts = rec["ledger"]["parts"]
+        assert set(parts) == {"train", "generation", "inference", "filters", "checkers", "tracking"}
+        assert rec["ledger"]["total_sec"] == sum(parts.values())
+
+
+def test_p59_warm_start_origin_is_reported():
+    from benchmarks.open_problems import p59_es_public_inputs, run_p59_matched_es_trial
+
+    warm = p59_es_public_inputs(4, warm_start=[(2, 3, 6)])
+    assert run_p59_matched_es_trial("classical_construction", warm)["origin"] == "warm-start"
+    assert run_p59_matched_es_trial("cpu_enumeration", warm)["origin"] == "warm-start"
+    cold = p59_es_public_inputs(4)
+    assert run_p59_matched_es_trial("classical_construction", cold)["origin"] == ("classical-even")
+
+
+def test_p59_cost_ledger_guards():
+    import pytest as _pytest
+
+    from benchmarks.open_problems import p59_cost_ledger
+
+    good = p59_cost_ledger(
+        train=0.0, generation=1.5, inference=0.0, filters=0.0, checkers=0.5, tracking=0.0
+    )
+    assert good["total_sec"] == 2.0
+    with _pytest.raises(ValueError, match="exactly"):
+        p59_cost_ledger(train=0.0, generation=1.0)
+    with _pytest.raises(ValueError, match="must not be negative"):
+        p59_cost_ledger(
+            train=-1.0, generation=0.0, inference=0.0, filters=0.0, checkers=0.0, tracking=0.0
+        )
+
+
+def test_p59_comparison_scope_restricts_families():
+    import pytest as _pytest
+
+    from benchmarks.open_problems import (
+        p59_comparison_scope,
+        p59_es_public_inputs,
+        run_p59_matched_es_trial,
+    )
+
+    scope = p59_comparison_scope("erdos-straus")
+    assert scope["comparable"] is True
+    assert set(scope["arms"]) == {"cpu_enumeration", "classical_construction"}
+    for family in ("taxicab", "diophantine-quintuple", "no-such-family"):
+        restricted = p59_comparison_scope(family)
+        assert restricted["comparable"] is False
+        assert restricted["reason"]
+    with _pytest.raises(ValueError, match="Unknown P59 ES arm"):
+        run_p59_matched_es_trial("gpu_search", p59_es_public_inputs(4))
+
+
 def test_p51_replay_map_audit_smoke(tmp_path):
     import json as _json
 
