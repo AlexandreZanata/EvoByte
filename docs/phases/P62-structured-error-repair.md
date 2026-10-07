@@ -1,7 +1,8 @@
 # P62 — H01 — Aprender a corrigir formatos de erro
 
-**Status:** Building (entregas 1–2: primitivas + reparador pequeno com
-comparação e custos; congelamento/medição pendentes).
+**Status:** Building (entregas 1–3: primitivas, reparador + comparação,
+interface + config congelada; entrega 4 pendente: medição em árvore limpa
++ registro. Diagnóstico: outcome NULL — learned 2/4 vs clássico 4/4.)
 **Dependência:** P61 Done porém não integrado (PR #89 aberto); branch a
 partir de `codex/p61-modular-shadows`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -47,7 +48,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P62**:
+Interface de aceitação **implementada na entrega 3** (`run_p62_repair_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P62 --config experiments/p62-config.json --output /tmp/evobyte-p62-acceptance.json
