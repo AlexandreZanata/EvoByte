@@ -1,7 +1,23 @@
 """Verifier tests (P04 gate, runnable already on the skeleton)."""
 
+import sys
+from pathlib import Path
+
 import numpy as np
 
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(_REPO_ROOT))
+sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
+
+from benchmarks.open_problems import (
+    P63_REJECTION_CODES,
+    check_erdos_straus,
+    check_erdos_straus_fractions,
+    p63_code_tensor,
+    p63_rejection_code,
+    p63_scalar_score,
+    p63_shuffle_codes,
+)
 from evobyte.bytecode import encode_instr, nop_program
 from evobyte.verifier import (
     cascade_evaluate,
@@ -133,3 +149,123 @@ def test_hidden_never_imported_in_src():
         check=False,
     )
     assert result.returncode == 1, f"Found forbidden 'hidden' reference in src/:\n{result.stdout}"
+
+
+def test_p63_rejection_codebook_frozen() -> None:
+    assert P63_REJECTION_CODES == {
+        "ACCEPT": 0,
+        "ZERO_DENOMINATOR": 1,
+        "BOUND_VIOLATED": 2,
+        "NONZERO_RESIDUAL": 3,
+        "INVALID_DOMAIN": 4,
+        "INCOMPLETE_PROOF": 5,
+    }
+
+
+def test_p63_rejection_codes_cover_cases() -> None:
+    C = P63_REJECTION_CODES
+    assert p63_rejection_code(4, 2, 3, 6) == C["ACCEPT"]
+    assert p63_rejection_code(4, 2, 3, 7) == C["NONZERO_RESIDUAL"]
+    assert p63_rejection_code(4, 0, 3, 6) == C["INVALID_DOMAIN"]
+    assert p63_rejection_code(4, -1, 3, 6) == C["INVALID_DOMAIN"]
+    assert p63_rejection_code(4, 1, 1, 10**9 + 1) == C["BOUND_VIOLATED"]
+    assert p63_rejection_code(4, 2, 2, 5) == C["ZERO_DENOMINATOR"]
+
+
+def test_p63_false_stays_false_and_accept_matches_checkers() -> None:
+    C = P63_REJECTION_CODES
+    for n in (4, 5, 6):
+        for x in range(1, 16):
+            for y in range(1, 16):
+                for z in range(1, 16):
+                    code = p63_rejection_code(n, x, y, z)
+                    ok1, _, _ = check_erdos_straus(n, x, y, z)
+                    ok2 = code == C["ACCEPT"]
+                    ok3, _, _ = check_erdos_straus_fractions(n, x, y, z)
+                    assert ok2 == (ok1 and ok3)
+                    if not (ok1 and ok3):
+                        assert code != C["ACCEPT"]
+
+
+def test_p63_tensor_shuffle_scalar() -> None:
+
+    C = P63_REJECTION_CODES
+    t = p63_code_tensor([0, 3, 5])
+    assert t.shape == (3, 6)
+    assert t[0, C["ACCEPT"]].item() == 1.0
+    assert t[1].sum().item() == 1.0
+    assert p63_shuffle_codes(7) == p63_shuffle_codes(7)
+    perm = p63_shuffle_codes(7)
+    assert sorted(perm.values()) == list(range(6))
+    assert p63_scalar_score(4, 2, 3, 6) == 1.0
+    s = p63_scalar_score(4, 2, 3, 7)
+    assert 0.0 < s < 1.0
+    assert p63_scalar_score(4, 0, 3, 6) == 0.0
+    assert p63_scalar_score(4, 2, 3, 6) > p63_scalar_score(4, 2, 3, 7)
+
+
+def _p63_strip(rec):
+    return {
+        arm: {k: v for k, v in arm_rec.items() if k != "loop_sec"} for arm, arm_rec in rec.items()
+    }
+
+
+def test_p63_compare_arms_deterministic_and_counted() -> None:
+    from benchmarks.open_problems import p63_compare_feedback_arms
+
+    starts = [(2, 3, 7), (5, 5, 5)]
+    first = p63_compare_feedback_arms(4, starts, max_cycles=6)
+    second = p63_compare_feedback_arms(4, starts, max_cycles=6)
+    assert _p63_strip(first) == _p63_strip(second)
+    assert set(first) == {"real", "shuffled", "scalar"}
+    for rec in first.values():
+        assert rec["starts"] == len(starts)
+        assert rec["queries_total"] > 0
+        assert rec["loop_sec"] >= 0.0
+        for det in rec["details"]:
+            assert det["status"] in ("certified", "stalled", "exhausted", "query-capped")
+            if det["status"] == "certified":
+                assert check_erdos_straus(4, *det["triple"])[0] is True
+    assert first["real"]["queries_total"] >= first["scalar"]["queries_total"]
+
+
+def test_p63_query_cap_and_unknown_arm() -> None:
+    import pytest
+
+    from benchmarks.open_problems import (
+        P63_CODE_PRIORITY,
+        p63_compare_feedback_arms,
+        p63_neighbor_key,
+    )
+
+    assert P63_CODE_PRIORITY == (0, 3, 4, 2, 5, 1)
+    rec = p63_compare_feedback_arms(4, [(5, 5, 5)], max_cycles=12, query_limit=1)
+    for arm_rec in rec.values():
+        assert [d["status"] for d in arm_rec["details"]] == ["query-capped"]
+    with pytest.raises(ValueError, match="Unknown P63 feedback arm"):
+        p63_neighbor_key("oracle", 0, 0, (1, 1, 1), {})
+
+
+def test_p63_feedback_scorer_trains_deterministic() -> None:
+    from benchmarks.open_problems import (
+        P63FeedbackScorer,
+        p62_collect_cloning_samples,
+        p63_compare_learned_feedback,
+        p63_train_feedback_scorer,
+    )
+
+    samples, _ = p62_collect_cloning_samples([4], starts_per_solution=2, seed=0)
+    assert len(samples) > 0
+    first = p63_train_feedback_scorer(samples, seed=0, epochs=5)
+    second = p63_train_feedback_scorer(samples, seed=0, epochs=5)
+    assert first["n_params"] == 145
+    assert 0.0 <= first["train_acc"] <= 1.0
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P63FeedbackScorer().parameters()) == 145
+    starts = [(6, (3, 5, 12)), (9, (3, 19, 18))]
+    rep = p63_compare_learned_feedback(first["state_dict"], starts, max_cycles=6)
+    assert set(rep) == {"real", "shuffled", "scalar"}
+    for arm_rec in rep.values():
+        assert arm_rec["starts"] == len(starts)
+        assert arm_rec["queries_total"] > 0

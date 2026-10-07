@@ -1,6 +1,12 @@
 # P63 — H08 — Orientar o modelo por códigos de rejeição
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: códigos, comparação de 3 braços, scorer +
+interface/config congelada, medição ACCEPTED em árvore limpa
+`run_id=36167860b1e9f5f2` com outcome NULL íntegro; registro em
+`docs/research/p63-feedback-record.md`). H08 encerrada sem promoção; P64
+liberada.
+**Dependência:** P62 Done porém não integrado (PR #90 aberto); branch a
+partir de `codex/p62-structured-error-repair`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P62 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p63-verifier-feedback`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P63**:
+Interface de aceitação **implementada na entrega 3** (`run_p63_feedback_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P63 --config experiments/p63-config.json --output /tmp/evobyte-p63-acceptance.json
