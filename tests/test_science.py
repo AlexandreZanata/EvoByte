@@ -23,6 +23,7 @@ from benchmarks.science_matrix import (
     run_p40_evidence_audit,
     run_p58_acceptance_baseline_audit,
     run_p59_equal_information_audit,
+    run_p60_workbench_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -712,6 +713,109 @@ def test_p59_comparison_scope_restricts_families():
         assert restricted["reason"]
     with _pytest.raises(ValueError, match="Unknown P59 ES arm"):
         run_p59_matched_es_trial("gpu_search", p59_es_public_inputs(4))
+
+
+def test_p60_workbench_manifest_is_complete():
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    man = _json.loads((repo / "experiments" / "p60-workbench-manifest.json").read_text())
+    assert man["phase"] == "P60" and man["version"] == 1
+    assert len(man["development_tasks"]) == 6
+    assert len({t["task_id"] for t in man["development_tasks"]}) == 6
+    assert man["seeds"] == [7, 42, 101]
+    budgets = man["budgets"]
+    assert budgets["search_cert_per_attempt_sec"] == 10
+    assert budgets["per_hypothesis_ceiling_min"] == 30
+    assert budgets["model_reserve_params"] == 100000
+    assert budgets["model_absolute_cap_params"] == 1000000
+    assert all(v > 0 for v in budgets.values())
+    assert set(man["screening"]) == {"PROMISING", "NULL", "INCONCLUSIVE", "BLOCKED"}
+    assert len(man["mechanisms"]) == 10
+    assert [m["id"] for m in man["mechanisms"]] == [f"H{i:02d}" for i in range(1, 11)]
+    for mech in man["mechanisms"]:
+        assert mech["hypothesis"] and mech["literature_overlap"] and mech["phase_file"]
+        assert (repo / mech["phase_file"]).exists()
+    blob = _json.dumps(man, sort_keys=True)
+    assert "TBD" not in blob and "TODO" not in blob
+
+
+def test_p60_frozen_config_matches_reviewed_manifest():
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    man = _json.loads((repo / "experiments" / "p60-workbench-manifest.json").read_text())
+    cfg = _json.loads((repo / "experiments" / "p60-config.json").read_text())
+    assert cfg["phase"] == "P60"
+    assert cfg["manifest_version"] == man["version"] == 1
+    assert cfg["manifest_path"] == "experiments/p60-workbench-manifest.json"
+    import hashlib as _hashlib
+
+    assert (
+        cfg["manifest_sha256"]
+        == _hashlib.sha256((repo / cfg["manifest_path"]).read_bytes()).hexdigest()
+    )
+    assert [t["task_id"] for t in cfg["development_tasks"]] == [
+        t["task_id"] for t in man["development_tasks"]
+    ]
+    assert cfg["seeds"] == man["seeds"]
+    assert cfg["review"]["status"] == "accepted"
+    assert (repo / cfg["review"]["record"]).exists()
+    from benchmarks.science_matrix import _p60_final_tokens
+
+    assert _p60_final_tokens(cfg) == []
+    assert _p60_final_tokens({"ref": "experiments/p56-final-tasks.json"}) == ["p56-final"]
+    assert _p60_final_tokens({"budgets": {"p71_per_method_h": 2}}) == []
+
+
+def _p60_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p60-config.json").read_text())
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p60-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p60_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p60-acceptance.json"
+    report = run_p60_workbench_audit(_p60_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P60"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["counters"]["dev_tasks"] == 6
+    assert report["counters"]["dev_certified"] == report["counters"]["dev_trials"] == 12
+    by_task: dict[str, set[str]] = {}
+    for entry in report["dev_trials"]:
+        by_task.setdefault(entry["task"], set()).add(entry["inputs_hash"])
+    assert all(hashes == {next(iter(hashes))} for hashes in by_task.values())
+    assert report["budgets"]["measured_sec"] <= report["budgets"]["ceiling_sec"]
+
+
+def test_p60_acceptance_blocks_manifest_mismatch(tmp_path):
+    import json as _json
+
+    cfg_p = _p60_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["manifest_sha256"] = "0" * 64
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p60_workbench_audit(cfg_p, tmp_path / "p60-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("MANIFEST_MISMATCH" in f for f in report["findings"])
+
+
+def test_p60_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p60_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["notes_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p60_workbench_audit(cfg_p, tmp_path / "p60-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
 
 
 def _p59_smoke_config(tmp_path):

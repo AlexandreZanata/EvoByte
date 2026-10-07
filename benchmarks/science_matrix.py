@@ -698,6 +698,7 @@ ACCEPTANCE_PHASES = (
     "P57",
     "P58",
     "P59",
+    "P60",
 )
 
 
@@ -1486,6 +1487,200 @@ def run_p59_equal_information_audit(
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P59 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def _p60_final_tokens(config: dict[str, Any]) -> list[str]:
+    """Final references as path-like tokens (word boundaries, so budget keys
+    like ``p71_per_method_h`` do not trip the guard; ``p56-final-tasks.json``
+    does)."""
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    pattern = re.compile(r"(?<![a-z0-9_])(p38|p56-final|final-test|p71|final_tasks)(?![a-z0-9_])")
+    return sorted(set(pattern.findall(blob)))
+
+
+def run_p60_workbench_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P60 audit: clean technical acceptance of the hypothesis workbench.
+
+    Verifies frozen pre-registration (manifest version/hash, tasks, seeds,
+    budgets, accepted review), equal public inputs across arms on all six
+    development tasks, dual-checker exact re-verification inside the declared
+    domain (no approximate indicator substitutes certification), measured
+    cost within the registered ceiling, and no future-final reference.
+    No hypothesis is confirmed or promoted here.
+    """
+    import torch as _torch
+    from open_problems import (
+        check_erdos_straus,
+        check_erdos_straus_fractions,
+        p59_cost_ledger,
+        p59_es_public_inputs,
+        run_p59_matched_es_trial,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P60":
+        raise ValueError(f"Config {cfg_p} is not a P60 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P60 HYPOTHESIS WORKBENCH AUDIT (technical acceptance; nothing promoted)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("manifest_path", "manifest_sha256", "development_tasks", "seeds", "review"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+
+    for token in _p60_final_tokens(config):
+        findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    man: dict[str, Any] = {}
+    man_p = _REPO_ROOT / str(config.get("manifest_path", ""))
+    try:
+        man = json.loads(man_p.read_bytes())
+    except OSError as exc:
+        findings.append(f"MANIFEST_MISSING: {exc}")
+    if man:
+        if man.get("version") != config.get("manifest_version", man.get("version")):
+            findings.append("MANIFEST_MISMATCH: version drift between config and manifest")
+        if hashlib.sha256(man_p.read_bytes()).hexdigest() != config.get("manifest_sha256"):
+            findings.append("MANIFEST_MISMATCH: manifest hash drift; re-review required")
+        if [t["task_id"] for t in config.get("development_tasks", [])] != [
+            t["task_id"] for t in man.get("development_tasks", [])
+        ]:
+            findings.append("MANIFEST_MISMATCH: development tasks drift")
+        if list(config.get("seeds", [])) != list(man.get("seeds", [])):
+            findings.append("MANIFEST_MISMATCH: seeds drift")
+        for key, val in man.get("budgets", {}).items():
+            if config.get("budgets", {}).get(key) != val:
+                findings.append(f"MANIFEST_MISMATCH: budget drift: {key}")
+    review = config.get("review", {})
+    if review.get("status") != "accepted":
+        findings.append("REVIEW_MISSING: accepted workbench review required before acceptance")
+    elif not (_REPO_ROOT / str(review.get("record", ""))).exists():
+        findings.append("REVIEW_MISSING: review record absent")
+
+    trials: list[dict[str, Any]] = []
+    dev_entries: list[dict[str, Any]] = []
+    measured_sec = 0.0
+    try:
+        space = dict(config.get("es_space", {}))
+        for task in config.get("development_tasks", []):
+            inputs = p59_es_public_inputs(int(task["n"]), **space)
+            if int(task.get("max_coord", 0)) != int(inputs["max_coord"]):
+                findings.append(f"DOMAIN_DRIFT: {task.get('task_id')} max_coord mismatch")
+            recs = [
+                run_p59_matched_es_trial(arm, inputs)
+                for arm in ("cpu_enumeration", "classical_construction")
+            ]
+            if {r["inputs_hash"] for r in recs} != {recs[0]["inputs_hash"]}:
+                findings.append(f"INPUT_MISMATCH: {task.get('task_id')}")
+            for rec in recs:
+                expect = p59_cost_ledger(**rec["ledger"]["parts"])
+                if abs(expect["total_sec"] - rec["ledger"]["total_sec"]) > 1e-9:
+                    findings.append(f"COST_SUBTRACTED: {task.get('task_id')} {rec['arm']}")
+                measured_sec += rec["ledger"]["total_sec"]
+                triple = rec["triple"]
+                if rec["status"] != "certified" or triple is None:
+                    findings.append(f"CONTROL_FAILED: {task.get('task_id')} {rec['arm']}")
+                    continue
+                if max(int(v) for v in triple) > inputs["max_coord"]:
+                    findings.append(f"DOMAIN_OVERFLOW: {task.get('task_id')} {rec['arm']}")
+                    continue
+                c1, _, _ = check_erdos_straus(int(task["n"]), *[int(v) for v in triple])
+                c2, _, _ = check_erdos_straus_fractions(int(task["n"]), *[int(v) for v in triple])
+                if not (c1 and c2):
+                    findings.append(f"CONTROL_FAILED: {task.get('task_id')} recheck rejected")
+                else:
+                    print(f"  dev {task.get('task_id')}: {rec['arm']} certified {triple}")
+                dev_entries.append(
+                    {
+                        "task": task.get("task_id"),
+                        "arm": rec["arm"],
+                        "inputs_hash": rec["inputs_hash"],
+                        "status": rec["status"],
+                        "origin": rec["origin"],
+                    }
+                )
+            trials.extend(recs)
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    ceiling = float(config.get("budgets", {}).get("per_hypothesis_ceiling_min", 30)) * 60.0
+    print(f"  measured workbench cost: {measured_sec:.3f}s vs ceiling {ceiling:.0f}s")
+    if measured_sec > ceiling:
+        findings.append("BUDGET_EXCEEDED: measured cost above registered ceiling")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seeds", [7])[0]),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p60_config": config_sha[:16]},
+        config={"acceptance_phase": "P60"},
+    )
+    report = {
+        "phase": "P60",
+        "verdict": verdict,
+        "claim_scope": (
+            "workbench technical acceptance on development tasks; "
+            "no hypothesis confirmed or promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "dev_trials": dev_entries,
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P60",
+        },
+        "seeds_rng": f"fixed seeds {config.get('seeds')}; deterministic trials",
+        "budgets": {"measured_sec": measured_sec, "ceiling_sec": ceiling},
+        "counters": {
+            "dev_tasks": len(config.get("development_tasks", [])),
+            "dev_certified": sum(1 for r in trials if r["status"] == "certified"),
+            "dev_trials": len(trials),
+        },
+        "limitations": [
+            "Development equality proves no generality and no statistical gain.",
+            "Approximate indicators never substitute exact dual-checker certification.",
+            "The reserved fresh final stays closed; P71 defines and freezes it.",
+            "BLOCKED on drift, leak-by-inequality, overflow or budget is honest, not negative.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P60 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -5459,6 +5654,8 @@ def main() -> int:
             run_p58_acceptance_baseline_audit(args.config, args.output)
         elif args.acceptance_phase == "P59":
             run_p59_equal_information_audit(args.config, args.output)
+        elif args.acceptance_phase == "P60":
+            run_p60_workbench_audit(args.config, args.output)
         return 0
 
     seeds = (
