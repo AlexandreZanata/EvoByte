@@ -29,6 +29,7 @@ from benchmarks.science_matrix import (
     run_p63_feedback_audit,
     run_p64_obstruction_audit,
     run_p65_bridge_audit,
+    run_p66_jump_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -161,6 +162,14 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P56",
         "P57",
         "P58",
+        "P59",
+        "P60",
+        "P61",
+        "P62",
+        "P63",
+        "P64",
+        "P65",
+        "P66",
     )
     import subprocess as _sp
 
@@ -169,7 +178,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
             sys.executable,
             "benchmarks/science_matrix.py",
             "--acceptance-phase",
-            "P59",
+            "P99",
             "--config",
             "experiments/p40-config.json",
             "--output",
@@ -181,7 +190,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     assert proc.returncode != 0
-    assert "Unknown acceptance phase 'P59'" in (proc.stdout + proc.stderr)
+    assert "Unknown acceptance phase 'P99'" in (proc.stdout + proc.stderr)
 
 
 def test_p40_path_helper_quantifiers():
@@ -1071,6 +1080,52 @@ def test_p65_acceptance_blocks_final_reference(tmp_path):
     cfg["notes_path"] = "experiments/p56-final-tasks.json"
     cfg_p.write_text(_json.dumps(cfg))
     report = run_p65_bridge_audit(cfg_p, tmp_path / "p65-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def _p66_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p66-config.json").read_text())
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p66-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p66_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p66-acceptance.json"
+    report = run_p66_jump_audit(_p66_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P66"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["hypothesis_outcome"] in ("PROMISING", "NULL")
+    assert set(report["comparison"]) == {"guided", "random", "isolated"}
+    assert report["training"]["n_params"] <= 100000
+
+
+def test_p66_acceptance_blocks_split_leak(tmp_path):
+    import json as _json
+
+    cfg_p = _p66_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["dev_starts"] = [[2, 3, 7]]
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p66_jump_audit(cfg_p, tmp_path / "p66-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("SPLIT_LEAK" in f for f in report["findings"])
+
+
+def test_p66_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p66_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["notes_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p66_jump_audit(cfg_p, tmp_path / "p66-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("FINAL_ACCESS" in f for f in report["findings"])
 

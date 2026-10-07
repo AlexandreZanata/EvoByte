@@ -3498,6 +3498,311 @@ def p65_compare_libraries(
     return out
 
 
+# ==============================================================================
+# P66 entrega 1 — H05 pacotes de edições e comparação com operações iguais
+# ==============================================================================
+#
+# Pacotes de 2–4 edições válidas (uma coordenada, passos ±1..±3). No salto,
+# intermediários podem falhar na equação mas seguem objetos representáveis
+# (inteiros >= 1); pacote que sai do domínio é inválido, não silencioso.
+# Braço pacote avalia só finais (salta intermediários); braço isolado
+# avalia cada edição — mesmo total de operações, coberturas distintas.
+# Alcance, duplicação e certificados registrados; custo reconciliado.
+
+P66_PACKET_MIN_LEN = 2
+
+P66_PACKET_MAX_LEN = 4
+
+P66_PACKET_ARMS = ("packet", "isolated")
+
+
+def p66_random_packet(seed: int, length: int | None = None) -> tuple[tuple[int, int], ...]:
+    """Seeded packet of 2–4 single-coordinate edits (coord, step)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    size = (
+        int(length) if length is not None else rng.randint(P66_PACKET_MIN_LEN, P66_PACKET_MAX_LEN)
+    )
+    if not P66_PACKET_MIN_LEN <= size <= P66_PACKET_MAX_LEN:
+        raise ValueError(f"P66 packet length must be {P66_PACKET_MIN_LEN}..{P66_PACKET_MAX_LEN}")
+    return tuple((rng.randint(0, 2), rng.choice(P62_NEIGHBORHOOD_STEPS)) for _ in range(size))
+
+
+def p66_apply_packet(
+    start: tuple[int, int, int], packet: tuple[tuple[int, int], ...]
+) -> dict[str, Any]:
+    """Apply one packet; intermediates stay representable or packet is invalid."""
+    if not P66_PACKET_MIN_LEN <= len(packet) <= P66_PACKET_MAX_LEN:
+        return {"valid": False, "final": None, "intermediates": [], "ops": 0}
+    triple = [int(v) for v in start]
+    intermediates = []
+    for coord, step in packet:
+        triple[int(coord)] += int(step)
+        if min(triple) < 1:
+            return {
+                "valid": False,
+                "final": None,
+                "intermediates": intermediates,
+                "ops": len(packet),
+            }
+        intermediates.append((triple[0], triple[1], triple[2]))
+    return {
+        "valid": True,
+        "final": (triple[0], triple[1], triple[2]),
+        "intermediates": intermediates,
+        "ops": len(packet),
+    }
+
+
+def p66_compare_packets(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    n_packets: int = 8,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Packet jumps vs isolated edits under exactly equal total operations."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    packets = [p66_random_packet(rng.randint(0, 2**31 - 1)) for _ in range(int(n_packets))]
+    out: dict[str, Any] = {}
+    for arm in P66_PACKET_ARMS:
+        t0 = time.perf_counter()
+        evaluated: list[tuple[int, int, int]] = []
+        ops_total = 0
+        for start in starts:
+            if arm == "packet":
+                for packet in packets:
+                    res = p66_apply_packet(start, packet)
+                    ops_total += res["ops"]
+                    if res["valid"]:
+                        evaluated.append(res["final"])
+            else:
+                for packet in packets:
+                    triple = [int(v) for v in start]
+                    for coord, step in packet:
+                        triple[int(coord)] += int(step)
+                        ops_total += 1
+                        if min(triple) >= 1:
+                            evaluated.append((triple[0], triple[1], triple[2]))
+        certs: set[tuple[int, int, int]] = set()
+        for triple in evaluated:
+            if max(triple) > int(max_coord):
+                continue
+            ok1, _, _ = check_erdos_straus(int(n), *triple)
+            ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+            if ok1 and ok2:
+                certs.add(triple)
+        out[arm] = {
+            "starts": len(starts),
+            "ops_total": ops_total,
+            "evaluated": len(evaluated),
+            "reach": len(set(evaluated)),
+            "duplicates": len(evaluated) - len(set(evaluated)),
+            "certificates": sorted(certs),
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
+# ==============================================================================
+# P66 entrega 2 — H05 distribuição guiada e comparação de três braços
+# ==============================================================================
+#
+# No máximo UMA distribuição de pacotes aprendida: scorer tiny sobre
+# descritores públicos (start + pacote, sem solução) treinado em
+# cobre-e-verifica exatos. Braço guiado ranqueia um pool seedado e toma os
+# melhores; comparação com pacote aleatório e edições isoladas sob o MESMO
+# total de operações (isolado espelha as ops do guiado). Histogramas de
+# comprimento reportados; amplitude sem certificado não promove nada.
+
+P66_GUIDED_ARMS = ("guided", "random", "isolated")
+
+
+def p66_packet_features(
+    n: int, start: tuple[int, int, int], packet: tuple[tuple[int, int], ...]
+) -> list[float]:
+    """Public packet descriptors: start residual plus packet shape."""
+    counts = [0.0, 0.0, 0.0]
+    steps = 0
+    for coord, step in packet:
+        counts[int(coord)] += 1.0
+        steps += abs(int(step))
+    size = max(1, len(packet))
+    return [
+        abs(p62_exact_residual(int(n), *start)) / 10000.0,
+        len(packet) / 4.0,
+        counts[0] / size,
+        counts[1] / size,
+        counts[2] / size,
+        steps / (3.0 * size),
+    ]
+
+
+class P66PacketScorer(torch.nn.Module):
+    """Tiny packet scorer (~70 params, CPU)."""
+
+    def __init__(self, hidden: int = 8) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(6, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p66_collect_packet_samples(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    n_packets: int = 16,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> tuple[list[dict[str, Any]], float]:
+    """Random packets labeled by exact covers-and-verifies (development)."""
+    import random as _random
+
+    t0 = time.perf_counter()
+    rng = _random.Random(int(seed))
+    samples: list[dict[str, Any]] = []
+    for start in starts:
+        for _ in range(int(n_packets)):
+            packet = p66_random_packet(rng.randint(0, 2**31 - 1))
+            res = p66_apply_packet(start, packet)
+            label = 0.0
+            if res["valid"] and max(res["final"]) <= int(max_coord):
+                ok1, _, _ = check_erdos_straus(int(n), *res["final"])
+                ok2, _, _ = check_erdos_straus_fractions(int(n), *res["final"])
+                label = 1.0 if (ok1 and ok2) else 0.0
+            samples.append({"n": int(n), "start": start, "packet": packet, "label": label})
+    return samples, time.perf_counter() - t0
+
+
+def p66_train_packet_scorer(
+    samples: list[dict[str, Any]], seed: int = 0, epochs: int = 40, lr: float = 0.05
+) -> dict[str, Any]:
+    """Train the single packet distribution (BCE on exact labels)."""
+    if not samples:
+        raise ValueError("P66 training needs non-empty samples")
+    torch.manual_seed(int(seed))
+    model = P66PacketScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+    feats = torch.stack(
+        [torch.tensor(p66_packet_features(s["n"], s["start"], s["packet"])) for s in samples]
+    ).float()
+    target = torch.tensor([float(s["label"]) for s in samples], dtype=torch.float32)
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        loss = loss_fn(model(feats), target)
+        loss.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        acc = float((((model(feats) > 0.0).float()) == target).float().mean().item())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_samples": len(samples),
+        "positives": int(target.sum().item()),
+        "train_acc": acc,
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p66_guided_packets(
+    weights: dict[str, torch.Tensor],
+    n: int,
+    start: tuple[int, int, int],
+    n_packets: int = 8,
+    pool_factor: int = 8,
+    seed: int = 0,
+) -> list[tuple[tuple[int, int], ...]]:
+    """Top-ranked packets from a seeded pool under the learned scorer."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    model = P66PacketScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    pool = [
+        p66_random_packet(rng.randint(0, 2**31 - 1))
+        for _ in range(int(n_packets) * int(pool_factor))
+    ]
+    feats = torch.stack([torch.tensor(p66_packet_features(int(n), start, p)) for p in pool]).float()
+    with torch.no_grad():
+        order = torch.argsort(model(feats), descending=True).tolist()
+    return [pool[i] for i in order[: int(n_packets)]]
+
+
+def p66_compare_guided(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    weights: dict[str, torch.Tensor],
+    n_packets: int = 8,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Guided vs random packets vs isolated edits under equal total ops."""
+    guided = {
+        idx: p66_guided_packets(weights, int(n), start, int(n_packets), seed=int(seed) + idx)
+        for idx, start in enumerate(starts)
+    }
+    out: dict[str, Any] = {}
+    for arm in P66_GUIDED_ARMS:
+        t0 = time.perf_counter()
+        evaluated: list[tuple[int, int, int]] = []
+        ops_total = 0
+        lengths: list[int] = []
+        for idx, start in enumerate(starts):
+            packets = (
+                guided[idx]
+                if arm in ("guided", "isolated")
+                else [p66_random_packet(int(seed) + 1000 * idx + j) for j in range(int(n_packets))]
+            )
+            if arm == "isolated":
+                triple = [int(v) for v in start]
+                for packet in packets:
+                    for coord, step in packet:
+                        triple[int(coord)] += int(step)
+                        ops_total += 1
+                        lengths.append(1)
+                        if min(triple) >= 1:
+                            evaluated.append((triple[0], triple[1], triple[2]))
+            else:
+                for packet in packets:
+                    res = p66_apply_packet(start, packet)
+                    ops_total += res["ops"]
+                    lengths.append(len(packet))
+                    if res["valid"]:
+                        evaluated.append(res["final"])
+        certs: set[tuple[int, int, int]] = set()
+        for triple in evaluated:
+            if max(triple) > int(max_coord):
+                continue
+            ok1, _, _ = check_erdos_straus(int(n), *triple)
+            ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+            if ok1 and ok2:
+                certs.add(triple)
+        out[arm] = {
+            "starts": len(starts),
+            "ops_total": ops_total,
+            "evaluated": len(evaluated),
+            "reach": len(set(evaluated)),
+            "duplicates": len(evaluated) - len(set(evaluated)),
+            "certificates": sorted(certs),
+            "certified": len(certs),
+            "length_histogram": {k: lengths.count(k) for k in sorted(set(lengths))},
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

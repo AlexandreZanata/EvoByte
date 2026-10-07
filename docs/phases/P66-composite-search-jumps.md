@@ -1,6 +1,12 @@
 # P66 — H05 — Atravessar a busca com saltos compostos
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: pacotes, distribuição guiada, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=5bed77c91ce3f0b5` com outcome NULL íntegro; registro em
+`docs/research/p66-jump-record.md`). H05 encerrada sem promoção; P67
+liberada.
+**Dependência:** P65 Done porém não integrado (PR #93 aberto); branch a
+partir de `codex/p65-backward-constructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P65 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p66-composite-search-jumps`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P66**:
+Interface de aceitação **implementada na entrega 3** (`run_p66_jump_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P66 --config experiments/p66-config.json --output /tmp/evobyte-p66-acceptance.json
