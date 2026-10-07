@@ -1,8 +1,10 @@
 # P70 — H10 — Buscar fórmulas para famílias de soluções
 
-**Status:** Building (entregas 1–3: templates, proponente + comparação,
-interface + config congelada; entrega 4 pendente: medição em árvore limpa
-+ registro. Diagnóstico: outcome NULL — só os 3 controles provam.)
+**Status:** Done (entregas 1–4: templates, proponente + comparação,
+interface + comando congelado, medição ACCEPTED em árvore limpa
+`run_id=7361352d632f5e45` com outcome NULL íntegro; registro em
+`docs/research/p70-template-record.md`). H10 encerrada sem promoção;
+bancada H01–H10 completa sem novidade. Próxima: P71.
 **Dependência:** P69 Done porém não integrado (PR #97 aberto); branch a
 partir de `codex/p69-residue-synchronized-islands`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
