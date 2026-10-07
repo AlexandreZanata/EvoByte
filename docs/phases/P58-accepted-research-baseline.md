@@ -42,7 +42,7 @@ as seis flags para `approved` como implementação da revisão.
 
 ## Microtarefas corretivas (D019)
 
-**R1 — Contrato das decisões e auditor. Próxima microtarefa.** Exigir exatamente
+**R1 — Contrato das decisões e auditor. Entregue em 57c6c88.** Exigir exatamente
 uma decisão para cada ID: `p46-catalogue-review`, `p47-nomination-review`,
 `p48-translation-review`, `p54-statistical-review`, `p56-independent-review`
 e `p58-scope-review`. Exigir responsável, executor, data, escopo, justificativa,
@@ -63,7 +63,7 @@ Testar esses casos e a base restrita válida; manter regressões de fonte suja,
 raw ausente, selo quebrado e certificado inválido. Não alterar o checker.
 R1 entrega capacidade e diagnóstico, sem liberar P59.
 
-**R2 — Dossiê rastreável e recuperação.** Versionar pareceres atuais e manifesto
+**R2 — Dossiê rastreável e recuperação. Próxima microtarefa.** Versionar pareceres atuais e manifesto
 de artefatos duráveis com tamanhos/hashes. Conferir destino de recuperação dos
 pesos ignorados pelo Git, para que outro checkout possa recuperá-los sem depender
 de `/tmp`; presença local não demonstra recuperação externa. Fonte externa

@@ -1115,3 +1115,28 @@ def test_p58_r1_accepts_restricted_base_with_valid_contract(tmp_path):
     assert report["counters"]["decision_findings"] == 0
     assert report["counters"]["code_review_findings"] == 0
     assert len(report["decisions"]) == 6
+
+
+def test_p58_durable_manifest_matches_files():
+    import hashlib as _hashlib
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    man = _json.loads((repo / "experiments" / "p58-durable-manifest.json").read_text())
+    assert man["phase"] == "P58"
+    assert man["n_entries"] == len(man["entries"]) == 25
+    paths = {e["path"] for e in man["entries"]}
+    assert {
+        "experiments/p52-certified-data.json",
+        "experiments/p53-proposer-manifest.json",
+        "experiments/p56-final-tasks.json",
+        "experiments/p57-certificates.json",
+        "experiments/p52-certified-data-raw.json",
+        "experiments/p53-proposer.pt",
+        "experiments/p53-proposer-raw.json",
+    } <= paths
+    for entry in man["entries"]:
+        blob = (repo / entry["path"]).read_bytes()
+        assert entry["size"] == len(blob)
+        assert entry["sha256"] == _hashlib.sha256(blob).hexdigest()
+        assert entry["git_tracked"] is True
