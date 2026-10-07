@@ -699,6 +699,7 @@ ACCEPTANCE_PHASES = (
     "P58",
     "P59",
     "P60",
+    "P61",
 )
 
 
@@ -1681,6 +1682,177 @@ def run_p60_workbench_audit(config_path: str | Path, output_path: str | Path) ->
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P60 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p61_shadow_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P61 audit: paired with/without-filter comparison (H02 modular shadows).
+
+    Builds the frozen development candidate sets deterministically, runs the
+    paired trial per instance, and requires identical certificates, zero false
+    rejection and CPU/GPU agreement. The hypothesis outcome is PROMISING only
+    when the filtered arm is cheaper with the same certificates; otherwise an
+    honest NULL is recorded (valid end, no promotion). BLOCKED on integrity
+    failure, final access or dirty source.
+    """
+    import random as _random
+
+    import torch as _torch
+    from open_problems import run_p61_paired_filter_trial
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P61":
+        raise ValueError(f"Config {cfg_p} is not a P61 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P61 MODULAR SHADOWS AUDIT (paired comparison; outcome reported, not promoted)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("instances", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    trials: list[dict[str, Any]] = []
+    try:
+        for spec in config.get("instances", []):
+            n = int(spec["n"])
+            rng = _random.Random(int(spec.get("seed", 7)))
+            triples: list[tuple[int, int, int]] = [
+                tuple(map(int, t)) for t in spec.get("must_include", [])
+            ]
+            for _ in range(int(spec.get("random_count", 0))):
+                bound = int(spec.get("random_bound", 300))
+                triples.append(
+                    (rng.randint(1, bound), rng.randint(1, bound), rng.randint(1, bound))
+                )
+            for lo, hi in spec.get("boxes", []):
+                lo_i, hi_i = int(lo), int(hi)
+                for x in range(lo_i, hi_i + 1):
+                    for y in range(lo_i, hi_i + 1):
+                        for z in range(lo_i, hi_i + 1):
+                            triples.append((x, y, z))
+            if not triples:
+                findings.append(f"CONFIG_INVALID: n={n} empty candidate set")
+                continue
+            rec = run_p61_paired_filter_trial(n, triples)
+            print(
+                f"  n={n}: candidates={rec['candidates']} kept={rec['kept']} "
+                f"certs={len(rec['certificates_filtered'])} "
+                f"with={rec['costs']['total_with_sec']:.4f}s "
+                f"without={rec['costs']['total_without_sec']:.4f}s "
+                f"devices={rec['devices_compared']}"
+            )
+            if not rec["certificates_equal"]:
+                findings.append(f"CERT_MISMATCH: n={n} filtered arm lost certificates")
+            if rec["false_rejections"] > 0:
+                findings.append(f"FALSE_REJECTION: n={n} filter rejected exact solutions")
+            if not rec["device_agreement"]:
+                findings.append(f"DEVICE_MISMATCH: n={n} CPU/GPU masks disagree")
+            for t in spec.get("must_include", []):
+                if tuple(map(int, t)) not in rec["certificates_filtered"]:
+                    findings.append(f"CONTROL_FAILED: n={n} known solution missing: {list(t)}")
+            trials.append({"instance": n, **rec})
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    with_sec = sum(t["costs"]["total_with_sec"] for t in trials)
+    without_sec = sum(t["costs"]["total_without_sec"] for t in trials)
+    n_certs = sum(len(t["certificates_filtered"]) for t in trials)
+    if n_certs == 0:
+        outcome, reason = "NULL", "no certificate appeared"
+    elif with_sec < without_sec:
+        outcome, reason = "PROMISING", "filtered arm cheaper with identical certificates"
+    else:
+        outcome, reason = "NULL", "filtered arm not cheaper"
+    print(f"  outcome: {outcome} ({reason}); with={with_sec:.4f}s without={without_sec:.4f}s")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 7)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p61_config": config_sha[:16]},
+        config={"acceptance_phase": "P61"},
+    )
+    report = {
+        "phase": "P61",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "paired with/without-filter comparison on frozen development sets; "
+            "outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "trials": [
+            {
+                "n": t["instance"],
+                "candidates": t["candidates"],
+                "kept": t["kept"],
+                "certificates": len(t["certificates_filtered"]),
+                "devices": t["devices_compared"],
+                "total_with_sec": t["costs"]["total_with_sec"],
+                "total_without_sec": t["costs"]["total_without_sec"],
+            }
+            for t in trials
+        ],
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P61",
+        },
+        "seeds_rng": "candidate sets from frozen seeds; deterministic trials",
+        "budgets": {"total_with_sec": with_sec, "total_without_sec": without_sec},
+        "counters": {
+            "instances": len(trials),
+            "certificates": n_certs,
+        },
+        "limitations": [
+            "Development paired comparison proves no generality and no statistical gain.",
+            "NULL is an honest end, not a failure; PROMISING is triage, not confirmation.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P61 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -5656,6 +5828,8 @@ def main() -> int:
             run_p59_equal_information_audit(args.config, args.output)
         elif args.acceptance_phase == "P60":
             run_p60_workbench_audit(args.config, args.output)
+        elif args.acceptance_phase == "P61":
+            run_p61_shadow_audit(args.config, args.output)
         return 0
 
     seeds = (

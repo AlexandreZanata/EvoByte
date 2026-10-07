@@ -1,6 +1,12 @@
 # P61 — H02 — Buscar usando sombras aritméticas
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: filtro, comparação pareada, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=19f999d156db749d` com outcome NULL íntegro; registro em
+`docs/research/p61-shadow-record.md`). H02 encerrada sem promoção; P62
+liberada.
+**Dependência:** P60 Done porém não integrado (PR #88 aberto); branch a
+partir de `codex/p60-hypothesis-workbench`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P60 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p61-modular-shadows`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P61**:
+Interface de aceitação **implementada na entrega 3** (`run_p61_shadow_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P61 --config experiments/p61-config.json --output /tmp/evobyte-p61-acceptance.json

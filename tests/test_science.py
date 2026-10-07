@@ -24,6 +24,7 @@ from benchmarks.science_matrix import (
     run_p58_acceptance_baseline_audit,
     run_p59_equal_information_audit,
     run_p60_workbench_audit,
+    run_p61_shadow_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -816,6 +817,71 @@ def test_p60_acceptance_blocks_final_reference(tmp_path):
     report = run_p60_workbench_audit(cfg_p, tmp_path / "p60-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def _p61_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p61-config.json").read_text())
+    cfg["instances"] = [
+        {
+            "n": 4,
+            "seed": 11,
+            "must_include": [[2, 3, 6]],
+            "random_count": 50,
+            "random_bound": 100,
+            "boxes": [[1, 10]],
+        }
+    ]
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p61-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p61_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p61-acceptance.json"
+    report = run_p61_shadow_audit(_p61_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P61"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["hypothesis_outcome"] in ("PROMISING", "NULL")
+    assert report["counters"]["certificates"] >= 1
+    assert report["counters"]["instances"] == 1
+
+
+def test_p61_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p61_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["notes_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p61_shadow_audit(cfg_p, tmp_path / "p61-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def test_p61_acceptance_blocks_empty_candidates(tmp_path):
+    import json as _json
+
+    cfg_p = _p61_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["instances"] = [
+        {
+            "n": 4,
+            "seed": 11,
+            "must_include": [],
+            "random_count": 0,
+            "random_bound": 100,
+            "boxes": [],
+        }
+    ]
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p61_shadow_audit(cfg_p, tmp_path / "p61-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("CONFIG_INVALID" in f for f in report["findings"])
 
 
 def _p59_smoke_config(tmp_path):

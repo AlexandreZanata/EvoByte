@@ -2035,6 +2035,148 @@ def run_p59_matched_es_trial(arm: str, inputs: dict[str, Any]) -> dict[str, Any]
     }
 
 
+# ==============================================================================
+# P61 entrega 1 — H02 sombras aritméticas (filtros modulares baratos)
+# ==============================================================================
+#
+# Condição necessária 4xyz = n(xy+xz+yz) módulo p em primos pequenos
+# congelados, reduzindo após cada multiplicação (sem overflow). Sem divisão
+# módulo p, sem reconstrução CRT: resíduo incompatível rejeita; resto segue
+# ao checker exato. Resíduos compatíveis nunca são certificado.
+
+P61_SHADOW_PRIMES = (3, 5, 7, 11, 13)
+
+
+def p61_modular_shadow(
+    n: int, x: int, y: int, z: int, primes: tuple[int, ...] = P61_SHADOW_PRIMES
+) -> dict[str, Any]:
+    """NumPy-free reference: necessary residue condition per frozen prime."""
+    per_prime: dict[int, bool] = {}
+    for p in primes:
+        lhs = (4 % p) * (int(x) % p) % p * (int(y) % p) % p * (int(z) % p) % p
+        xy = (int(x) % p) * (int(y) % p) % p
+        xz = (int(x) % p) * (int(z) % p) % p
+        yz = (int(y) % p) * (int(z) % p) % p
+        rhs = (int(n) % p) * ((xy + xz + yz) % p) % p
+        per_prime[int(p)] = bool(lhs == rhs)
+    rejected = [p for p, ok in per_prime.items() if not ok]
+    return {"keep": not rejected, "per_prime": per_prime, "rejected_by": rejected}
+
+
+def p61_modular_shadow_batch_torch(
+    n: int,
+    xs: torch.Tensor,
+    ys: torch.Tensor,
+    zs: torch.Tensor,
+    primes: tuple[int, ...] = P61_SHADOW_PRIMES,
+    device: torch.device | None = None,
+) -> torch.Tensor:
+    """Batched shadow filter reusing the campaign torch pattern (int64).
+
+    Inputs are reduced modulo p first (identical residues, overflow-safe:
+    every intermediate stays below max(p)^3), then the same necessary
+    condition as the reference. Returns a boolean keep mask; False entries
+    are impossible solutions, True entries stay inconclusive for the checker.
+    """
+    dev = device if device is not None else torch.device("cpu")
+    xv = xs.to(dtype=torch.int64, device=dev).ravel()
+    yv = ys.to(dtype=torch.int64, device=dev).ravel()
+    zv = zs.to(dtype=torch.int64, device=dev).ravel()
+    keep = torch.ones(xv.numel(), dtype=torch.bool, device=dev)
+    for p in primes:
+        pp = int(p)
+        lhs = (4 % pp) * (xv % pp) % pp * (yv % pp) % pp * (zv % pp) % pp
+        rhs = (
+            (int(n) % pp)
+            * (((xv % pp) * (yv % pp) + (xv % pp) * (zv % pp) + (yv % pp) * (zv % pp)) % pp)
+            % pp
+        )
+        keep &= lhs == rhs
+    return keep
+
+
+def run_p61_paired_filter_trial(
+    n: int,
+    triples: list[tuple[int, int, int]],
+    device: torch.device | None = None,
+) -> dict[str, Any]:
+    """Paired with/without-filter comparison on exactly the same candidates.
+
+    Unfiltered arm runs the dual exact checkers on every candidate; filtered
+    arm runs the shadow mask first (with CPU/GPU transfers billed) and the
+    checkers only on kept entries. Certificates must be identical in both
+    arms and no exact solution may be rejected (else ``false_rejections`` > 0
+    and the trial is unusable). Reports paired total costs; cheaper-or-not is
+    a measurement outcome, never assumed here.
+    """
+    dev = device if device is not None else torch.device("cpu")
+    xs = torch.tensor([t[0] for t in triples], dtype=torch.int64)
+    ys = torch.tensor([t[1] for t in triples], dtype=torch.int64)
+    zs = torch.tensor([t[2] for t in triples], dtype=torch.int64)
+
+    def _check_all(idxs: list[int]) -> tuple[set[tuple[int, int, int]], float]:
+        t0 = time.perf_counter()
+        certs: set[tuple[int, int, int]] = set()
+        for i in idxs:
+            x, y, z = triples[i]
+            ok1, _, _ = check_erdos_straus(n, x, y, z)
+            ok2, _, _ = check_erdos_straus_fractions(n, x, y, z)
+            if ok1 and ok2:
+                certs.add((x, y, z))
+        return certs, time.perf_counter() - t0
+
+    t_all0 = time.perf_counter()
+    certs_all, check_all_sec = _check_all(list(range(len(triples))))
+    total_without_sec = time.perf_counter() - t_all0
+
+    t_tx0 = time.perf_counter()
+    mask_cpu = p61_modular_shadow_batch_torch(int(n), xs, ys, zs, device=torch.device("cpu"))
+    devices_compared = ["cpu"]
+    agreement = True
+    mask_main = mask_cpu
+    if torch.cuda.is_available():
+        try:
+            mask_cuda = p61_modular_shadow_batch_torch(
+                int(n), xs, ys, zs, device=torch.device("cuda")
+            ).cpu()
+            devices_compared.append("cuda")
+            agreement = bool((mask_cuda == mask_cpu).all().item())
+            if dev.type == "cuda":
+                mask_main = mask_cuda
+        except RuntimeError:
+            pass
+    transfer_sec = time.perf_counter() - t_tx0
+    kept = [i for i, k in enumerate(mask_main.tolist()) if k]
+    t_f0 = time.perf_counter()
+    mask_ref = [p61_modular_shadow(int(n), *triples[i])["keep"] for i in range(len(triples))]
+    filter_sec = time.perf_counter() - t_f0
+    if [bool(v) for v in mask_ref] != [bool(v) for v in mask_main.tolist()]:
+        agreement = False
+    certs_kept, check_kept_sec = _check_all(kept)
+    total_with_sec = transfer_sec + filter_sec + check_kept_sec
+    false_rejections = len(certs_all - certs_kept)
+    return {
+        "n": int(n),
+        "candidates": len(triples),
+        "kept": len(kept),
+        "eliminated": len(triples) - len(kept),
+        "certificates_unfiltered": sorted(certs_all),
+        "certificates_filtered": sorted(certs_kept),
+        "certificates_equal": certs_all == certs_kept,
+        "false_rejections": false_rejections,
+        "devices_compared": devices_compared,
+        "device_agreement": bool(agreement),
+        "costs": {
+            "check_all_sec": check_all_sec,
+            "total_without_sec": total_without_sec,
+            "transfer_sec": transfer_sec,
+            "filter_sec": filter_sec,
+            "check_kept_sec": check_kept_sec,
+            "total_with_sec": total_with_sec,
+        },
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
