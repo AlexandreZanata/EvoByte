@@ -4054,6 +4054,138 @@ def p68_compare_attackers(
     return out
 
 
+# ==============================================================================
+# P69 entrega 2 — H09 loop de busca em ilhas e comparação de migrações
+# ==============================================================================
+#
+# Quatro ilhas lógicas com população total constante, mesmo número de
+# gerações e mesmos starts em todos os braços (residue/elite/random/none).
+# Passo local guloso por |R| com vizinhança de edição única (mesma definição
+# congelada de P62); migração via p69_migrate com custo de sincronização
+# faturado à parte. Diversidade útil = triplas distintas / total;
+# certificados só pelos checkers exatos; ancestralidade nas moves.
+
+P69_ISLAND_COUNT = 4
+
+P69_MIGRATION_COMPARISON_ARMS = ("residue", "elite", "random", "none")
+
+
+def p69_island_search(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    policy: str = "residue",
+    generations: int = 6,
+    pop_per_island: int = 4,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Island hill-climb with one migration round per generation."""
+    import random as _random
+
+    from evobyte.islands import p69_migrate as _migrate
+
+    if not starts:
+        raise ValueError("P69 island search needs non-empty starts")
+    rng = _random.Random(int(seed))
+    islands = [
+        [starts[(i * int(pop_per_island) + j) % len(starts)] for j in range(int(pop_per_island))]
+        for i in range(P69_ISLAND_COUNT)
+    ]
+    sync_sec = 0.0
+    search_sec = 0.0
+    all_moves: list[dict[str, Any]] = []
+    t0 = time.perf_counter()
+    for gen in range(int(generations)):
+        t1 = time.perf_counter()
+        for isl in islands:
+            for idx, member in enumerate(isl):
+                best, best_r = member, abs(p62_exact_residual(int(n), *member))
+                for _ in range(2):
+                    cand = p62_random_repair_step(int(n), *best, seed=rng.randint(0, 2**31 - 1))
+                    if cand is None:
+                        continue
+                    r_cand = abs(p62_exact_residual(int(n), *cand))
+                    if r_cand < best_r:
+                        best, best_r = cand, r_cand
+                isl[idx] = best
+        search_sec += time.perf_counter() - t1
+        t1 = time.perf_counter()
+        rep = _migrate(
+            islands, int(n), policy=policy, seed=int(seed) + gen, max_coord=int(max_coord)
+        )
+        sync_sec += time.perf_counter() - t1
+        islands = rep["islands"]
+        all_moves.extend(rep["moves"])
+    total = time.perf_counter() - t0
+    seen: set[tuple[int, int, int]] = set()
+    certs: set[tuple[int, int, int]] = set()
+    for isl in islands:
+        for triple in isl:
+            seen.add(tuple(int(v) for v in triple))
+            ok1, _, _ = check_erdos_straus(int(n), *triple)
+            ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+            if ok1 and ok2:
+                certs.add(tuple(int(v) for v in triple))
+    pop_total = sum(len(isl) for isl in islands)
+    return {
+        "policy": policy,
+        "islands": [[tuple(int(v) for v in t) for t in isl] for isl in islands],
+        "population_total": pop_total,
+        "generations": int(generations),
+        "distinct": len(seen),
+        "diversity": len(seen) / pop_total if pop_total else 0.0,
+        "certificates": sorted(certs),
+        "recombinations": sum(1 for m in all_moves if m.get("recombined")),
+        "moves": all_moves,
+        "search_sec": search_sec,
+        "sync_sec": sync_sec,
+        "total_sec": total,
+    }
+
+
+def p69_compare_migrations(
+    n_values: list[int],
+    starts: list[tuple[int, int, int]],
+    generations: int = 6,
+    pop_per_island: int = 4,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Four migration arms, same resources: islands, generations, starts."""
+    out: dict[str, Any] = {}
+    for arm in P69_MIGRATION_COMPARISON_ARMS:
+        cert_n = 0
+        diversity_sum = 0.0
+        sync_total = 0.0
+        loop_total = 0.0
+        recomb_total = 0
+        for n in n_values:
+            rep = p69_island_search(
+                int(n),
+                starts,
+                policy=arm,
+                generations=int(generations),
+                pop_per_island=int(pop_per_island),
+                seed=int(seed),
+                max_coord=int(max_coord),
+            )
+            assert rep["population_total"] == P69_ISLAND_COUNT * int(pop_per_island)
+            cert_n += 1 if rep["certificates"] else 0
+            diversity_sum += rep["diversity"]
+            sync_total += rep["sync_sec"]
+            loop_total += rep["total_sec"]
+            recomb_total += rep["recombinations"]
+        out[arm] = {
+            "problems": len(n_values),
+            "certified_problems": cert_n,
+            "diversity_mean": diversity_sum / len(n_values) if n_values else 0.0,
+            "sync_sec": sync_total,
+            "total_sec": loop_total,
+            "recombinations": recomb_total,
+        }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
