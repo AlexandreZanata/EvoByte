@@ -244,3 +244,28 @@ def test_p63_query_cap_and_unknown_arm() -> None:
         assert [d["status"] for d in arm_rec["details"]] == ["query-capped"]
     with pytest.raises(ValueError, match="Unknown P63 feedback arm"):
         p63_neighbor_key("oracle", 0, 0, (1, 1, 1), {})
+
+
+def test_p63_feedback_scorer_trains_deterministic() -> None:
+    from benchmarks.open_problems import (
+        P63FeedbackScorer,
+        p62_collect_cloning_samples,
+        p63_compare_learned_feedback,
+        p63_train_feedback_scorer,
+    )
+
+    samples, _ = p62_collect_cloning_samples([4], starts_per_solution=2, seed=0)
+    assert len(samples) > 0
+    first = p63_train_feedback_scorer(samples, seed=0, epochs=5)
+    second = p63_train_feedback_scorer(samples, seed=0, epochs=5)
+    assert first["n_params"] == 145
+    assert 0.0 <= first["train_acc"] <= 1.0
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P63FeedbackScorer().parameters()) == 145
+    starts = [(6, (3, 5, 12)), (9, (3, 19, 18))]
+    rep = p63_compare_learned_feedback(first["state_dict"], starts, max_cycles=6)
+    assert set(rep) == {"real", "shuffled", "scalar"}
+    for arm_rec in rep.values():
+        assert arm_rec["starts"] == len(starts)
+        assert arm_rec["queries_total"] > 0

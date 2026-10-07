@@ -2738,6 +2738,192 @@ def p63_compare_feedback_arms(
     return out
 
 
+# ==============================================================================
+# P63 entrega 3 — H08 scorer único treinado em development + interface
+# ==============================================================================
+#
+# Um único scorer ([one-hot(6) do código, escalar]) clonado das escolhas
+# clássicas em origens de treino. Na inferência, os três braços usam OS
+# MESMOS pesos: real (códigos verdadeiros), shuffled (one-hot permutado,
+# mesma distribuição) e scalar (one-hot zerado). Custo de coleta/treino
+# faturado uma vez; loops com mesmo teto de ciclos/queries. Trajetórias de
+# códigos + tripla final persistidas por start para replay.
+
+P63_FEEDBACK_INPUT_DIM = 7
+
+
+class P63FeedbackScorer(torch.nn.Module):
+    """Tiny shared scorer over [code one-hot, scalar] (~160 params, CPU)."""
+
+    def __init__(self, hidden: int = 16) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(P63_FEEDBACK_INPUT_DIM, hidden),
+            torch.nn.Tanh(),
+            torch.nn.Linear(hidden, 1),
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p63_feedback_neighbor_features(
+    n: int, x: int, y: int, z: int, max_coord: int = 10**9
+) -> tuple[torch.Tensor, list[tuple[int, int, int]], list[int]]:
+    """Per-neighbor [code one-hot, scalar] rows plus neighbors and codes."""
+    rows = []
+    nbs = p62_neighbors(x, y, z)
+    codes = [p63_rejection_code(int(n), *nb, max_coord=int(max_coord)) for nb in nbs]
+    for nb, code in zip(nbs, codes):
+        onehot = [0.0] * len(P63_REJECTION_CODES)
+        onehot[int(code)] = 1.0
+        rows.append([*onehot, p63_scalar_score(int(n), *nb, max_coord=int(max_coord))])
+    return torch.tensor(rows, dtype=torch.float32), nbs, codes
+
+
+def p63_train_feedback_scorer(
+    samples: list[dict[str, Any]],
+    seed: int = 0,
+    epochs: int = 40,
+    lr: float = 0.05,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Behavior-clone classical choices from true-code feedback (development)."""
+    if not samples:
+        raise ValueError("P63 training needs non-empty samples")
+    torch.manual_seed(int(seed))
+    model = P63FeedbackScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.CrossEntropyLoss()
+    feats = [
+        p63_feedback_neighbor_features(s["n"], *s["state"], max_coord=int(max_coord))[0]
+        for s in samples
+    ]
+    labels = [int(s["choice"]) for s in samples]
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        total = sum(
+            loss_fn(model(f).unsqueeze(0), torch.tensor([y])) for f, y in zip(feats, labels)
+        ) / len(feats)
+        total.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        hits = sum(int(model(f).argmax().item()) == y for f, y in zip(feats, labels))
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_samples": len(samples),
+        "train_acc": hits / len(feats),
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p63_feedback_repair_cycles(
+    n: int,
+    start: tuple[int, int, int],
+    weights: dict[str, torch.Tensor],
+    arm: str,
+    perm: dict[int, int],
+    max_cycles: int = 12,
+    query_limit: int = 2000,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Bounded repair loop under one feedback arm of the shared scorer."""
+    if arm not in P63_FEEDBACK_ARMS:
+        raise ValueError(f"Unknown P63 feedback arm: {arm}")
+    model = P63FeedbackScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    x, y, z = (int(v) for v in start)
+    visited = {(x, y, z)}
+    codes_traj: list[int] = []
+    queries = 0
+    cycles = 0
+    status = "exhausted"
+    while cycles < int(max_cycles):
+        queries += 1
+        ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+        if ok1 and ok2:
+            status = "certified"
+            break
+        if queries >= int(query_limit):
+            status = "query-capped"
+            break
+        nbs = p62_neighbors(x, y, z)
+        if not nbs:
+            status = "stalled"
+            break
+        rows = []
+        for nb in nbs:
+            if arm == "scalar":
+                onehot = [0.0] * len(P63_REJECTION_CODES)
+            else:
+                code = p63_rejection_code(int(n), *nb, max_coord=int(max_coord))
+                queries += 1
+                if arm == "shuffled":
+                    code = int(perm.get(int(code), int(code)))
+                onehot = [0.0] * len(P63_REJECTION_CODES)
+                onehot[int(code)] = 1.0
+            rows.append([*onehot, p63_scalar_score(int(n), *nb, max_coord=int(max_coord))])
+        with torch.no_grad():
+            nxt = nbs[int(model(torch.tensor(rows, dtype=torch.float32)).argmax().item())]
+        if nxt in visited:
+            status = "stalled"
+            break
+        visited.add(nxt)
+        x, y, z = nxt
+        codes_traj.append(p63_rejection_code(int(n), x, y, z, max_coord=int(max_coord)))
+        queries += 1
+        cycles += 1
+    ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+    if status != "certified":
+        status = "certified" if (ok1 and ok2) else status
+    return {
+        "certified": status == "certified",
+        "triple": [x, y, z],
+        "cycles_used": cycles,
+        "queries": queries,
+        "codes": codes_traj,
+        "status": status,
+    }
+
+
+def p63_compare_learned_feedback(
+    weights: dict[str, torch.Tensor],
+    starts: list[tuple[int, tuple[int, int, int]]],
+    shuffle_seed: int = 7,
+    max_cycles: int = 12,
+    query_limit: int = 2000,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Same weights, three feedbacks: real vs shuffled vs scalar."""
+    perm = p63_shuffle_codes(int(shuffle_seed))
+    out: dict[str, Any] = {}
+    for arm in P63_FEEDBACK_ARMS:
+        t0 = time.perf_counter()
+        reps = [
+            p63_feedback_repair_cycles(
+                n, start, weights, arm, perm, max_cycles, query_limit, max_coord
+            )
+            for n, start in starts
+        ]
+        out[arm] = {
+            "starts": len(starts),
+            "certified": sum(1 for r in reps if r["certified"]),
+            "cycles_total": sum(r["cycles_used"] for r in reps),
+            "queries_total": sum(r["queries"] for r in reps),
+            "loop_sec": time.perf_counter() - t0,
+            "details": reps,
+        }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

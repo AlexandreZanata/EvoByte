@@ -701,6 +701,7 @@ ACCEPTANCE_PHASES = (
     "P60",
     "P61",
     "P62",
+    "P63",
 )
 
 
@@ -2034,6 +2035,190 @@ def run_p62_repair_audit(config_path: str | Path, output_path: str | Path) -> di
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P62 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p63_feedback_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P63 audit: one feedback scorer trained on development, three arms compared.
+
+    Trains the shared [code one-hot, scalar] scorer by cloning classical
+    choices on train origins, then compares real vs shuffled vs scalar
+    feedback with the SAME weights on frozen dev starts. PROMISING only with
+    more dev certificates (or >=20% faster repair loop without success drop)
+    for the real arm; otherwise honest NULL. Acceptance uses fixed checkers.
+    """
+    import torch as _torch
+    from open_problems import (
+        p62_collect_cloning_samples,
+        p63_compare_learned_feedback,
+        p63_train_feedback_scorer,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P63":
+        raise ValueError(f"Config {cfg_p} is not a P63 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P63 VERIFIER FEEDBACK AUDIT (one scorer, three feedbacks; outcome reported)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("train_origins", "dev_starts", "training", "max_cycles", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    train_n = [int(n) for n in config.get("train_origins", [])]
+    dev_starts = [
+        (int(n), (int(t[0]), int(t[1]), int(t[2]))) for n, t in config.get("dev_starts", [])
+    ]
+    if set(train_n) & {n for n, _ in dev_starts}:
+        findings.append(
+            f"SPLIT_LEAK: origins on both sides: {sorted(set(train_n) & {n for n, _ in dev_starts})}"
+        )
+    print(f"  train origins={train_n} dev starts={len(dev_starts)}")
+
+    training: dict[str, Any] = {}
+    comparison: dict[str, Any] = {}
+    try:
+        t_cfg = config.get("training", {})
+        samples, collect_sec = p62_collect_cloning_samples(
+            train_n,
+            starts_per_solution=int(t_cfg.get("starts_per_solution", 4)),
+            seed=int(t_cfg.get("seed", 0)),
+            max_cycles=int(config.get("max_cycles", 12)),
+        )
+        print(f"  cloning samples={len(samples)} collection={collect_sec:.3f}s")
+        if not samples:
+            findings.append("DATA_EMPTY: no cloning samples from train origins")
+        else:
+            trained = p63_train_feedback_scorer(
+                samples,
+                seed=int(t_cfg.get("seed", 0)),
+                epochs=int(t_cfg.get("epochs", 40)),
+                lr=float(t_cfg.get("lr", 0.05)),
+                max_coord=int(config.get("max_coord", 10**9)),
+            )
+            training = {k: v for k, v in trained.items() if k != "state_dict"}
+            print(f"  scorer params={training['n_params']} train_acc={training['train_acc']:.3f}")
+            if training["n_params"] > int(config.get("param_cap", 100000)):
+                findings.append("BUDGET_EXCEEDED: scorer above registered param cap")
+            comparison = p63_compare_learned_feedback(
+                trained["state_dict"],
+                dev_starts,
+                shuffle_seed=int(config.get("shuffle_seed", 7)),
+                max_cycles=int(config.get("max_cycles", 12)),
+                query_limit=int(config.get("query_limit", 2000)),
+                max_coord=int(config.get("max_coord", 10**9)),
+            )
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    real = comparison.get("real", {})
+    if comparison:
+        print(
+            f"  real={real['certified']} shuffled={comparison['shuffled']['certified']} scalar={comparison['scalar']['certified']}"
+        )
+        if real["certified"] > max(
+            comparison["shuffled"]["certified"], comparison["scalar"]["certified"]
+        ):
+            outcome, reason = "PROMISING", "real feedback certifies more dev starts"
+        elif (
+            real.get("loop_sec", 0.0) > 0
+            and real["certified"]
+            >= max(comparison["shuffled"]["certified"], comparison["scalar"]["certified"])
+            and real["loop_sec"]
+            <= 0.8 * min(comparison["shuffled"]["loop_sec"], comparison["scalar"]["loop_sec"])
+        ):
+            outcome, reason = "PROMISING", ">=20% faster loop, no success drop"
+        else:
+            outcome, reason = "NULL", "real feedback adds no certificate or speed"
+    else:
+        outcome, reason = "NULL", "comparison did not run"
+    print(f"  outcome: {outcome} ({reason})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p63_config": config_sha[:16]},
+        config={"acceptance_phase": "P63"},
+    )
+    report = {
+        "phase": "P63",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "one feedback scorer, three feedback arms on frozen dev starts; "
+            "outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "training": training,
+        "comparison": {
+            arm: {
+                "starts": rec["starts"],
+                "certified": rec["certified"],
+                "cycles_total": rec["cycles_total"],
+                "queries_total": rec["queries_total"],
+            }
+            for arm, rec in comparison.items()
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P63",
+        },
+        "seeds_rng": "frozen seeds; deterministic collection, training and loops",
+        "counters": {
+            "dev_starts": len(dev_starts),
+            "arms": len(comparison),
+        },
+        "limitations": [
+            "Cloning classical choices cannot exceed the teacher by design.",
+            "Structured codes help only if the real arm beats both ablations.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P63 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -6013,6 +6198,8 @@ def main() -> int:
             run_p61_shadow_audit(args.config, args.output)
         elif args.acceptance_phase == "P62":
             run_p62_repair_audit(args.config, args.output)
+        elif args.acceptance_phase == "P63":
+            run_p63_feedback_audit(args.config, args.output)
         return 0
 
     seeds = (
