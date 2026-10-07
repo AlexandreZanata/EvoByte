@@ -1,7 +1,7 @@
 # P62 — H01 — Aprender a corrigir formatos de erro
 
-**Status:** Building (entrega 1 neste ciclo: primitivas de reparo +
-baselines + regressões; reparador treinado, congelamento e medição pendentes).
+**Status:** Building (entregas 1–2: primitivas + reparador pequeno com
+comparação e custos; congelamento/medição pendentes).
 **Dependência:** P61 Done porém não integrado (PR #89 aberto); branch a
 partir de `codex/p61-modular-shadows`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.

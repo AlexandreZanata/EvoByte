@@ -2312,6 +2312,245 @@ def p62_repair_cycles(
     }
 
 
+# ==============================================================================
+# P62 entrega 2 — H01 reparador pequeno treinado e comparação com custos
+# ==============================================================================
+#
+# Um único reparador (MLP ~150 parâmetros, clonagem comportamental das
+# trajetórias clássicas em origens de treino) escolhe entre os 18 vizinhos
+# a partir de descritores computáveis sem a solução: |R| e Δ|R| do vizinho,
+# coordenada e passo. Baselines aleatório e clássico sob a mesma vizinhança;
+# comparação com entradas iguais, custo de coleta/treino faturado ao braço
+# aprendido. Splits por origem: nenhuma origem treina e avalia.
+
+P62_REPAIR_FEATURE_SCALE = 10000.0
+
+
+class P62RepairScorer(torch.nn.Module):
+    """Tiny shared per-neighbor scorer (~150 params, CPU)."""
+
+    def __init__(self, hidden: int = 16) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(6, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p62_neighbor_features(n: int, x: int, y: int, z: int) -> torch.Tensor:
+    """Solution-free neighbor descriptors: scaled |R|, Δ|R|, coord, step."""
+    cur = abs(p62_exact_residual(n, x, y, z))
+    rows = []
+    for idx, nb in enumerate(p62_neighbors(x, y, z)):
+        r_nb = abs(p62_exact_residual(n, *nb))
+        onehot = [0.0, 0.0, 0.0]
+        onehot[idx // 6] = 1.0
+        step = P62_NEIGHBORHOOD_STEPS[idx % 6] / 3.0
+        rows.append(
+            [
+                r_nb / P62_REPAIR_FEATURE_SCALE,
+                (r_nb - cur) / P62_REPAIR_FEATURE_SCALE,
+                *onehot,
+                step,
+            ]
+        )
+    return torch.tensor(rows, dtype=torch.float32)
+
+
+def p62_collect_cloning_samples(
+    n_values: list[int],
+    starts_per_solution: int = 6,
+    seed: int = 0,
+    max_cycles: int = 12,
+) -> tuple[list[dict[str, Any]], float]:
+    """Classical repair trajectories on train origins as imitation samples.
+
+    Each step records neighbor descriptors plus the classical choice index
+    (exact label from the fixed checkers' residual, never a private answer:
+    the label is argmin |R| over the same public neighborhood).
+    """
+    import random as _random
+
+    t0 = time.perf_counter()
+    rng = _random.Random(int(seed))
+    samples: list[dict[str, Any]] = []
+    for n in n_values:
+        sols = [
+            tuple(int(v) for v in fam["triple"])
+            for fam in p57_classical_constructions(int(n))
+            if fam["verified"]
+        ]
+        for sol in sols:
+            cand_starts = {sol}
+            while len(cand_starts) < starts_per_solution + 1:
+                cand_starts.add(
+                    (
+                        max(1, sol[0] + rng.randint(-4, 4)),
+                        max(1, sol[1] + rng.randint(-4, 4)),
+                        max(1, sol[2] + rng.randint(-4, 4)),
+                    )
+                )
+            for start in sorted(cand_starts - {sol}):
+                x, y, z = start
+                visited = {(x, y, z)}
+                for _ in range(int(max_cycles)):
+                    ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+                    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+                    if ok1 and ok2:
+                        break
+                    nbs = p62_neighbors(x, y, z)
+                    choice = p62_classical_repair_step(int(n), x, y, z)
+                    if choice is None or choice in visited:
+                        break
+                    samples.append(
+                        {
+                            "n": int(n),
+                            "state": (x, y, z),
+                            "choice": nbs.index(choice),
+                        }
+                    )
+                    visited.add(choice)
+                    x, y, z = choice
+    return samples, time.perf_counter() - t0
+
+
+def p62_train_repairer(
+    samples: list[dict[str, Any]], seed: int = 0, epochs: int = 60, lr: float = 0.05
+) -> dict[str, Any]:
+    """Train the single small repairer (behavior cloning, full-batch CPU)."""
+    if not samples:
+        raise ValueError("P62 training needs non-empty samples")
+    torch.manual_seed(int(seed))
+    model = P62RepairScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.CrossEntropyLoss()
+    feats = [p62_neighbor_features(s["n"], *s["state"]) for s in samples]
+    labels = [int(s["choice"]) for s in samples]
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        total = sum(
+            loss_fn(model(f).unsqueeze(0), torch.tensor([y])) for f, y in zip(feats, labels)
+        ) / len(feats)
+        total.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        hits = sum(int(model(f).argmax().item()) == y for f, y in zip(feats, labels))
+        train_acc = hits / len(feats)
+    n_params = sum(p.numel() for p in model.parameters())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(n_params),
+        "n_samples": len(samples),
+        "train_acc": train_acc,
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p62_learned_repair_step(
+    weights: dict[str, torch.Tensor], n: int, x: int, y: int, z: int
+) -> tuple[int, int, int] | None:
+    """Learned policy: argmax shared-scorer choice (deterministic, solution-free)."""
+    nbs = p62_neighbors(x, y, z)
+    if not nbs:
+        return None
+    model = P62RepairScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    with torch.no_grad():
+        scores = model(p62_neighbor_features(int(n), x, y, z))
+    return nbs[int(scores.argmax().item())]
+
+
+def p62_repair_cycles_learned(
+    n: int,
+    start: tuple[int, int, int],
+    weights: dict[str, torch.Tensor],
+    max_cycles: int = 12,
+) -> dict[str, Any]:
+    """Bounded repair loop under the learned policy (same gates as classical)."""
+    x, y, z = (int(v) for v in start)
+    residuals: list[int] = []
+    visited = {(x, y, z)}
+    cycles = 0
+    while cycles < int(max_cycles):
+        ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+        if ok1 and ok2:
+            return {
+                "certified": True,
+                "triple": (x, y, z),
+                "cycles_used": cycles,
+                "residuals": residuals,
+                "status": "certified",
+            }
+        nxt = p62_learned_repair_step(weights, int(n), x, y, z)
+        if nxt is None or nxt in visited:
+            return {
+                "certified": False,
+                "triple": (x, y, z),
+                "cycles_used": cycles,
+                "residuals": residuals,
+                "status": "stalled",
+            }
+        visited.add(nxt)
+        x, y, z = nxt
+        residuals.append(p62_exact_residual(int(n), x, y, z))
+        cycles += 1
+    ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+    certified = bool(ok1 and ok2)
+    return {
+        "certified": certified,
+        "triple": (x, y, z),
+        "cycles_used": cycles,
+        "residuals": residuals,
+        "status": "certified" if certified else "exhausted",
+    }
+
+
+def p62_compare_repair_policies(
+    weights: dict[str, torch.Tensor],
+    train_sec: float,
+    starts: list[tuple[int, tuple[int, int, int]]],
+    max_cycles: int = 12,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Equal-input comparison: classical vs random vs learned on same starts.
+
+    Collection/training cost is billed to the learned arm only; repair-loop
+    cost is measured per policy. No promotion here: numbers are reported.
+    """
+    out: dict[str, Any] = {}
+    for policy in ("classical", "random", "learned"):
+        t0 = time.perf_counter()
+        certified = 0
+        cycles_total = 0
+        for n, start in starts:
+            if policy == "learned":
+                rep = p62_repair_cycles_learned(n, start, weights, max_cycles)
+            else:
+                rep = p62_repair_cycles(n, start, policy=policy, max_cycles=max_cycles, seed=seed)
+            certified += 1 if rep["certified"] else 0
+            cycles_total += rep["cycles_used"]
+        loop_sec = time.perf_counter() - t0
+        billed = loop_sec + (float(train_sec) if policy == "learned" else 0.0)
+        out[policy] = {
+            "starts": len(starts),
+            "certified": certified,
+            "cycles_total": cycles_total,
+            "loop_sec": loop_sec,
+            "train_sec_billed": float(train_sec) if policy == "learned" else 0.0,
+            "total_sec": billed,
+        }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
