@@ -1,7 +1,23 @@
 """Verifier tests (P04 gate, runnable already on the skeleton)."""
 
+import sys
+from pathlib import Path
+
 import numpy as np
 
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(_REPO_ROOT))
+sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
+
+from benchmarks.open_problems import (
+    P63_REJECTION_CODES,
+    check_erdos_straus,
+    check_erdos_straus_fractions,
+    p63_code_tensor,
+    p63_rejection_code,
+    p63_scalar_score,
+    p63_shuffle_codes,
+)
 from evobyte.bytecode import encode_instr, nop_program
 from evobyte.verifier import (
     cascade_evaluate,
@@ -133,3 +149,56 @@ def test_hidden_never_imported_in_src():
         check=False,
     )
     assert result.returncode == 1, f"Found forbidden 'hidden' reference in src/:\n{result.stdout}"
+
+
+def test_p63_rejection_codebook_frozen() -> None:
+    assert P63_REJECTION_CODES == {
+        "ACCEPT": 0,
+        "ZERO_DENOMINATOR": 1,
+        "BOUND_VIOLATED": 2,
+        "NONZERO_RESIDUAL": 3,
+        "INVALID_DOMAIN": 4,
+        "INCOMPLETE_PROOF": 5,
+    }
+
+
+def test_p63_rejection_codes_cover_cases() -> None:
+    C = P63_REJECTION_CODES
+    assert p63_rejection_code(4, 2, 3, 6) == C["ACCEPT"]
+    assert p63_rejection_code(4, 2, 3, 7) == C["NONZERO_RESIDUAL"]
+    assert p63_rejection_code(4, 0, 3, 6) == C["INVALID_DOMAIN"]
+    assert p63_rejection_code(4, -1, 3, 6) == C["INVALID_DOMAIN"]
+    assert p63_rejection_code(4, 1, 1, 10**9 + 1) == C["BOUND_VIOLATED"]
+    assert p63_rejection_code(4, 2, 2, 5) == C["ZERO_DENOMINATOR"]
+
+
+def test_p63_false_stays_false_and_accept_matches_checkers() -> None:
+    C = P63_REJECTION_CODES
+    for n in (4, 5, 6):
+        for x in range(1, 16):
+            for y in range(1, 16):
+                for z in range(1, 16):
+                    code = p63_rejection_code(n, x, y, z)
+                    ok1, _, _ = check_erdos_straus(n, x, y, z)
+                    ok2 = code == C["ACCEPT"]
+                    ok3, _, _ = check_erdos_straus_fractions(n, x, y, z)
+                    assert ok2 == (ok1 and ok3)
+                    if not (ok1 and ok3):
+                        assert code != C["ACCEPT"]
+
+
+def test_p63_tensor_shuffle_scalar() -> None:
+
+    C = P63_REJECTION_CODES
+    t = p63_code_tensor([0, 3, 5])
+    assert t.shape == (3, 6)
+    assert t[0, C["ACCEPT"]].item() == 1.0
+    assert t[1].sum().item() == 1.0
+    assert p63_shuffle_codes(7) == p63_shuffle_codes(7)
+    perm = p63_shuffle_codes(7)
+    assert sorted(perm.values()) == list(range(6))
+    assert p63_scalar_score(4, 2, 3, 6) == 1.0
+    s = p63_scalar_score(4, 2, 3, 7)
+    assert 0.0 < s < 1.0
+    assert p63_scalar_score(4, 0, 3, 6) == 0.0
+    assert p63_scalar_score(4, 2, 3, 6) > p63_scalar_score(4, 2, 3, 7)

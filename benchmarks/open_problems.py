@@ -2551,6 +2551,85 @@ def p62_compare_repair_policies(
     return out
 
 
+# ==============================================================================
+# P63 entrega 1 — H08 códigos estruturados de rejeição do verificador
+# ==============================================================================
+#
+# Códigos fixos (IDs inteiros/tensores no ciclo, sem texto ou parsing):
+# denominador zero, limite violado, resíduo não nulo, domínio inválido e
+# prova incompleta. Emissão pura sobre os checkers existentes — enunciado,
+# axiomas e regra de aceitação inalterados. INCOMPLETE_PROOF reserva
+# divergência entre checkers (ex.: fronteira formal); em triplas inteiras
+# os dois checkers coincidem, então ele segue não observado aqui.
+
+P63_REJECTION_CODES = {
+    "ACCEPT": 0,
+    "ZERO_DENOMINATOR": 1,
+    "BOUND_VIOLATED": 2,
+    "NONZERO_RESIDUAL": 3,
+    "INVALID_DOMAIN": 4,
+    "INCOMPLETE_PROOF": 5,
+}
+
+
+def p63_rejection_code(n: int, x: int, y: int, z: int, max_coord: int = 10**9) -> int:
+    """Structured rejection ID for one candidate (deterministic, exact ints)."""
+    C = P63_REJECTION_CODES
+    if (
+        not isinstance(x, int)
+        or not isinstance(y, int)
+        or not isinstance(z, int)
+        or isinstance(x, bool)
+        or isinstance(y, bool)
+        or isinstance(z, bool)
+        or x < 1
+        or y < 1
+        or z < 1
+    ):
+        return C["INVALID_DOMAIN"]
+    if max(x, y, z) > int(max_coord):
+        return C["BOUND_VIOLATED"]
+    if 4 * x * y - int(n) * (x + y) == 0:
+        return C["ZERO_DENOMINATOR"]
+    ok1, residual, _ = check_erdos_straus(int(n), x, y, z)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+    if ok1 and ok2:
+        return C["ACCEPT"]
+    if residual != 0:
+        return C["NONZERO_RESIDUAL"]
+    return C["INCOMPLETE_PROOF"]
+
+
+def p63_code_tensor(codes: list[int], device: torch.device | None = None) -> torch.Tensor:
+    """One-hot float tensor over the frozen codebook (loop-safe, no text)."""
+    dev = device if device is not None else torch.device("cpu")
+    width = len(P63_REJECTION_CODES)
+    out = torch.zeros((len(codes), width), dtype=torch.float32, device=dev)
+    for i, code in enumerate(codes):
+        if 0 <= int(code) < width:
+            out[i, int(code)] = 1.0
+    return out
+
+
+def p63_shuffle_codes(seed: int) -> dict[int, int]:
+    """Deterministic codebook permutation for the shuffled ablation arm."""
+    import random as _random
+
+    ids = list(range(len(P63_REJECTION_CODES)))
+    perm = ids[:]
+    _random.Random(int(seed)).shuffle(perm)
+    return dict(zip(ids, perm))
+
+
+def p63_scalar_score(n: int, x: int, y: int, z: int, max_coord: int = 10**9) -> float:
+    """Single-scalar baseline feedback: 1.0 iff exact, decaying with |R|."""
+    if not all(isinstance(v, int) and not isinstance(v, bool) for v in (x, y, z)):
+        return 0.0
+    if min(x, y, z) < 1 or max(x, y, z) > int(max_coord):
+        return 0.0
+    return 1.0 / (1.0 + abs(p62_exact_residual(int(n), x, y, z)))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
