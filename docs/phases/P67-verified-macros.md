@@ -1,6 +1,9 @@
 # P67 — H06 — Criar novas instruções matemáticas verificadas
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: mineração + equivalência +
+regressões; comparação de bibliotecas, congelamento e medição pendentes).
+**Dependência:** P66 Done porém não integrado (PR #94 aberto); branch a
+partir de `codex/p66-composite-search-jumps`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P66 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p67-verified-macros`.

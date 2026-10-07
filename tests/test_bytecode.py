@@ -12,6 +12,10 @@ from evobyte.bytecode import (
     encode_instr,
     is_valid,
     nop_program,
+    p67_canonical_seq,
+    p67_compress_program,
+    p67_expand_tokens,
+    p67_mine_macros,
 )
 
 
@@ -152,3 +156,63 @@ def test_p49_compact_rejects_invalid_refs_and_versions():
         assert "64 bytes" in str(exc)
     else:
         raise AssertionError("short blob must be rejected")
+
+
+def _p67_dense_programs():
+    first = nop_program()
+    first[0] = encode_instr(0x03, dst=2, a=0, b=0)
+    first[1] = encode_instr(0x01, dst=7, a=2, b=2)
+    second = nop_program()
+    second[0] = encode_instr(0x03, dst=4, a=0, b=0)
+    second[1] = encode_instr(0x01, dst=7, a=4, b=4)
+    third = nop_program()
+    third[0] = encode_instr(0x02, dst=1, a=0, b=0)
+    third[1] = encode_instr(0x03, dst=2, a=0, b=0)
+    third[2] = encode_instr(0x01, dst=7, a=2, b=2)
+    return [first, second, third]
+
+
+def test_p67_canonical_seq_renames_registers():
+    a = [int(encode_instr(0x03, dst=2, a=0, b=1)), int(encode_instr(0x01, dst=7, a=2, b=1))]
+    b = [int(encode_instr(0x03, dst=4, a=0, b=1)), int(encode_instr(0x01, dst=7, a=4, b=1))]
+    assert p67_canonical_seq(a) == p67_canonical_seq(b)
+    c = [int(encode_instr(0x02, dst=2, a=0, b=1)), int(encode_instr(0x01, dst=7, a=2, b=1))]
+    assert p67_canonical_seq(a) != p67_canonical_seq(c)
+    d = [int(encode_instr(0x03, dst=2, a=0, b=1)), int(encode_instr(0x01, dst=7, a=2, b=9))]
+    assert p67_canonical_seq(a) != p67_canonical_seq(d)
+
+
+def test_p67_mine_macros_deterministic_and_capped():
+    progs = _p67_dense_programs()
+    first = p67_mine_macros(progs)
+    assert first == p67_mine_macros(progs)
+    assert len(first) <= 32
+    assert first[0]["count"] >= 2
+    assert first[0]["length"] in (2, 3, 4)
+    assert all(r < 8 for r in first[0]["domain"]["registers"])
+    assert first[0]["domain"]["opcode_version"] == 0
+    assert [m["id"] for m in first] == [f"M{i:02d}" for i in range(len(first))]
+
+
+def test_p67_roundtrip_and_execution_equality():
+    from evobyte.verifier import evaluate
+
+    progs = _p67_dense_programs()
+    macros = p67_mine_macros(progs)
+    xs = np.linspace(-2, 2, 64, dtype=np.float32)
+    ys = xs * xs
+    for prog in progs:
+        tokens = p67_compress_program(prog, macros)
+        rebuilt = p67_expand_tokens(tokens, macros)
+        assert rebuilt is not None
+        assert list(np.asarray(rebuilt).tolist()) == list(np.asarray(prog).tolist())
+        if is_valid(prog):
+            assert evaluate(rebuilt, xs, ys)["fitness"] == evaluate(prog, xs, ys)["fitness"]
+
+
+def test_p67_expand_rejects_overflow_and_unknown():
+    macros = p67_mine_macros(_p67_dense_programs())
+    assert p67_expand_tokens([("macro", "M99")], macros) is None
+    assert p67_expand_tokens([("bogus", 0)], macros) is None
+    many = [("instr", int(encode_instr(0x01, dst=7, a=0, b=0)))] * 17
+    assert p67_expand_tokens(many, macros) is None
