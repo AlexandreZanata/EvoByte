@@ -1,8 +1,9 @@
 # P58 — Reconciliar evidências e liberar uma base de pesquisa
 
-**Status:** Building / BLOCKED para P59; R1–R2 entregues, R3 em entrega
-neste ciclo (seis pareceres + revisão de código + configuração congelada),
-R4 pendente (medição final em árvore limpa).
+**Status:** Done (aceitação R4 medida em 2026-10-07: ACCEPTED, achados [],
+run `af5b084d4e47f886`, revisão `8890aa5`; registro em
+`docs/research/p58-acceptance-record.md`). P59 elegível após Commit & Push;
+integração do predecessor ainda necessária para usar a base aceita.
 **Resultado parcial:** auditor `run_p58_acceptance_baseline_audit` rejeita fonte
 suja, raw ausente e aprovação pendente e recheca os 932 certificados P57
 com o checker exato; 18 evidências de aceitação P40–P57 recuperadas de
@@ -72,9 +73,9 @@ inacessível deve ter data/erro registrados e uso restrito ao snapshot disponív
 Não afirmar estado aberto atual sem fonte confirmada. Concluir revisão dos
 objetos matemáticos e controles efetivamente usados pela base.
 
-**R3 — Disposição dos seis itens e revisão de código. Em entrega neste ciclo:**
-seis pareceres evidenciados, revisão do código R1 e configuração congelada;
-R4 mede em árvore limpa. Contrato D019 aplicado: P46 como referência datada quando não
+**R3 — Disposição dos seis itens e revisão de código. Entregue em 8890aa5.**
+Seis pareceres evidenciados, revisão do código R1 e configuração congelada.
+Contrato D019 aplicado: P46 como referência datada quando não
 revalidada; P47 incompleta excluída como pré-registro vigente; P48 limitada aos
 dois desafios e evidência conferida; P54 DROP, modelo desligado e estatística
 exploratória; P56 provisória, final consumido; P58 com escopo técnico explícito.
@@ -83,6 +84,9 @@ com execução pelo agente identificada. Nenhuma disposição certifica retrospe
 limiares, revisão prévia, independência, ganho ou descoberta. Se um uso atual
 depender de aprovação ainda ausente, restringir esse uso ou manter BLOCKED.
 Congelar configuração e comando; todo campo deve estar resolvido.
+**R4 entregue neste ciclo:** medição final read-only em árvore limpa com
+ACCEPTED, sem escrita versionada; resultado/hash em
+`docs/research/p58-acceptance-record.md`.
 
 **R4 — Medição final read-only.** Em revisão aceita e árvore limpa, executar a
 interface existente abaixo, rechecar 932 certificados e salvar saída externa.
