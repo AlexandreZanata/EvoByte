@@ -357,3 +357,131 @@ def p67_compress_program(
             tokens.append(("macro", hit[0]))
             i += hit[1]
     return tokens
+
+
+# ==============================================================================
+# P67 entrega 2 — H06 comparação de bibliotecas com custos
+# ==============================================================================
+#
+# Aprendida (minerada) × clássica de mesmo tamanho × aleatória. Clássica =
+# idiomas fixos documentados (quadrado, dobro, negação, deslocamento…);
+# aleatória = bigramas seedados. Custos de mineração, verificação
+# (equivalência de cada macro) e expansão faturados por biblioteca; sem
+# mineração no final. Compactação e certificado são medidas separadas:
+# aqui só compactação + round-trip.
+
+P67_CLASSICAL_SHAPES = (
+    ((0x03, 0, 0), (0x01, 0, 0)),
+    ((0x03, 0, 0), (0x02, 0, 0)),
+    ((0x01, 0, 1), (0x01, 0, 0)),
+    ((0x0C, 0, 0), (0x01, 0, 0)),
+    ((0x0A, 0, 0), (0x03, 0, 0)),
+    ((0x02, 0, 1), (0x02, 0, 0)),
+    ((0x03, 0, 1), (0x0C, 0, 0)),
+    ((0x01, 0, 2), (0x03, 0, 0)),
+)
+
+
+def p67_classical_library(size: int) -> list[dict[str, object]]:
+    """Frozen classical idioms over r0–r2, truncated to the requested size."""
+    macros = []
+    for idx, shape in enumerate(P67_CLASSICAL_SHAPES[: int(size)]):
+        expansion = [int(encode_instr(op, dst=2, a=reg, b=1)) for op, reg, _ in shape]
+        macros.append(
+            {
+                "id": f"C{idx:02d}",
+                "length": len(expansion),
+                "count": 0,
+                "canonical": [list(t) for t in p67_canonical_seq(expansion)],
+                "expansion": expansion,
+                "domain": {"registers": [0, 2], "n_regs": N_REGS, "opcode_version": OPCODE_VERSION},
+            }
+        )
+    return macros
+
+
+def p67_random_library(size: int, seed: int = 0) -> list[dict[str, object]]:
+    """Seeded random bigrams over safe arithmetic ops (honest weak baseline)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    ops = [0x01, 0x02, 0x03, 0x0C]
+    macros = []
+    for idx in range(int(size)):
+        expansion = [
+            int(encode_instr(rng.choice(ops), dst=rng.randint(0, 7), a=rng.randint(0, 7), b=1)),
+            int(encode_instr(rng.choice(ops), dst=rng.randint(0, 7), a=rng.randint(0, 7), b=1)),
+        ]
+        macros.append(
+            {
+                "id": f"R{idx:02d}",
+                "length": len(expansion),
+                "count": 0,
+                "canonical": [list(t) for t in p67_canonical_seq(expansion)],
+                "expansion": expansion,
+                "domain": {"registers": [0, 7], "n_regs": N_REGS, "opcode_version": OPCODE_VERSION},
+            }
+        )
+    return macros
+
+
+def p67_compare_libraries(
+    programs: list[np.ndarray], library_size: int = 8, seed: int = 0
+) -> dict[str, object]:
+    """Learned vs same-size classical vs random: compression plus billed costs."""
+    import time as _time
+
+    libs: dict[str, list[dict[str, object]]] = {}
+    costs: dict[str, dict[str, float]] = {}
+    t0 = _time.perf_counter()
+    libs["learned"] = p67_mine_macros(programs, top_k=int(library_size))
+    costs["learned"] = {"mine_sec": _time.perf_counter() - t0}
+    t0 = _time.perf_counter()
+    libs["classical"] = p67_classical_library(len(libs["learned"]))
+    costs["classical"] = {"mine_sec": _time.perf_counter() - t0}
+    t0 = _time.perf_counter()
+    libs["random"] = p67_random_library(len(libs["learned"]), seed=int(seed))
+    costs["random"] = {"mine_sec": _time.perf_counter() - t0}
+    out: dict[str, object] = {}
+    for name, lib in libs.items():
+        t1 = _time.perf_counter()
+        verified = 0
+        for macro in lib:
+            rebuilt = p67_expand_tokens([("macro", macro["id"])], lib)
+            if rebuilt is not None and [int(w) for w in rebuilt if decode_instr(w)[0] != 0x00] == [
+                int(w)
+                for w in macro["expansion"]  # type: ignore[union-attr]
+            ]:
+                verified += 1
+        verify_sec = _time.perf_counter() - t1
+        t1 = _time.perf_counter()
+        ratios = []
+        roundtrip = 0
+        for prog in programs:
+            tokens = p67_compress_program(prog, lib)
+            rebuilt = p67_expand_tokens(tokens, lib)
+            body = [
+                int(w) for w in np.asarray(prog).tolist() if decode_instr(np.uint32(w))[0] != 0x00
+            ]
+            if (
+                rebuilt is not None
+                and [
+                    int(w)
+                    for w in np.asarray(rebuilt).tolist()
+                    if decode_instr(np.uint32(w))[0] != 0x00
+                ]
+                == body
+            ):
+                roundtrip += 1
+                ratios.append(1.0 - len(tokens) / max(1, len(body)))
+        expand_sec = _time.perf_counter() - t1
+        out[name] = {
+            "size": len(lib),
+            "mine_sec": costs[name]["mine_sec"],
+            "verified": verified,
+            "verify_sec": verify_sec,
+            "roundtrip_ok": roundtrip,
+            "compression_mean": (sum(ratios) / len(ratios)) if ratios else 0.0,
+            "expand_sec": expand_sec,
+        }
+    return out

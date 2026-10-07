@@ -13,9 +13,12 @@ from evobyte.bytecode import (
     is_valid,
     nop_program,
     p67_canonical_seq,
+    p67_classical_library,
+    p67_compare_libraries,
     p67_compress_program,
     p67_expand_tokens,
     p67_mine_macros,
+    p67_random_library,
 )
 
 
@@ -216,3 +219,33 @@ def test_p67_expand_rejects_overflow_and_unknown():
     assert p67_expand_tokens([("bogus", 0)], macros) is None
     many = [("instr", int(encode_instr(0x01, dst=7, a=0, b=0)))] * 17
     assert p67_expand_tokens(many, macros) is None
+
+
+def test_p67_libraries_same_size_and_frozen() -> None:
+    learned_n = len(p67_mine_macros(_p67_dense_programs(), top_k=8))
+    classical = p67_classical_library(learned_n)
+    random_first = p67_random_library(learned_n, seed=0)
+    assert len(classical) == len(random_first) == learned_n
+    assert random_first == p67_random_library(learned_n, seed=0)
+    assert [m["id"] for m in classical] == [f"C{i:02d}" for i in range(learned_n)]
+    assert [m["id"] for m in random_first] == [f"R{i:02d}" for i in range(learned_n)]
+
+
+def test_p67_compare_libraries_reports_costs() -> None:
+    progs = _p67_dense_programs()
+    rep = p67_compare_libraries(progs, library_size=8, seed=0)
+    assert set(rep) == {"learned", "classical", "random"}
+    sizes = {rec["size"] for rec in rep.values()}
+    assert len(sizes) == 1
+    for rec in rep.values():
+        assert rec["roundtrip_ok"] == len(progs)
+        assert rec["verified"] == rec["size"]
+        assert 0.0 <= rec["compression_mean"] < 1.0
+        assert rec["mine_sec"] >= 0.0
+        assert rec["verify_sec"] >= 0.0
+        assert rec["expand_sec"] >= 0.0
+    again = p67_compare_libraries(progs, library_size=8, seed=0)
+    for name in rep:
+        assert {k: v for k, v in rep[name].items() if not k.endswith("_sec")} == {
+            k: v for k, v in again[name].items() if not k.endswith("_sec")
+        }

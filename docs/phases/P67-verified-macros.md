@@ -1,7 +1,7 @@
 # P67 — H06 — Criar novas instruções matemáticas verificadas
 
-**Status:** Building (entrega 1 neste ciclo: mineração + equivalência +
-regressões; comparação de bibliotecas, congelamento e medição pendentes).
+**Status:** Building (entregas 1–2: mineração + comparação de bibliotecas
+com custos; congelamento/medição pendentes).
 **Dependência:** P66 Done porém não integrado (PR #94 aberto); branch a
 partir de `codex/p66-composite-search-jumps`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
