@@ -30,6 +30,7 @@ from benchmarks.science_matrix import (
     run_p64_obstruction_audit,
     run_p65_bridge_audit,
     run_p66_jump_audit,
+    run_p67_macro_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -170,6 +171,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P64",
         "P65",
         "P66",
+        "P67",
     )
     import subprocess as _sp
 
@@ -1126,6 +1128,52 @@ def test_p66_acceptance_blocks_final_reference(tmp_path):
     cfg["notes_path"] = "experiments/p56-final-tasks.json"
     cfg_p.write_text(_json.dumps(cfg))
     report = run_p66_jump_audit(cfg_p, tmp_path / "p66-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def _p67_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p67-config.json").read_text())
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p67-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p67_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p67-acceptance.json"
+    report = run_p67_macro_audit(_p67_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P67"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["hypothesis_outcome"] in ("PROMISING", "NULL")
+    assert set(report["libraries"]) == {"learned", "classical", "random"}
+    assert all(rec["exec_equal"] for rec in report["libraries"].values())
+
+
+def test_p67_acceptance_blocks_empty_programs(tmp_path):
+    import json as _json
+
+    cfg_p = _p67_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["n_programs"] = 0
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p67_macro_audit(cfg_p, tmp_path / "p67-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("CONFIG_INVALID" in f for f in report["findings"])
+
+
+def test_p67_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p67_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["notes_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p67_macro_audit(cfg_p, tmp_path / "p67-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("FINAL_ACCESS" in f for f in report["findings"])
 

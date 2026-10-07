@@ -109,3 +109,17 @@ interpreter fork** (a bump would additionally require an ADR first):
 - Coverage: the defined grammar only (Horner degree ≤ 3 / expression
   trees depth ≤ 3 over bank rationals). Compactness claims nothing about
   universality and reduces no search complexity by itself.
+
+## P67 verified macros (references, no new opcodes)
+
+- Macros are references to existing instruction blocks, expanded before
+  execution (`p67_expand_tokens`); opcode table, codec and semantics are
+  unchanged, so no ADR and no `OPCODE_VERSION` bump.
+- Mining (`p67_mine_macros`): recurrent non-NOP subsequences of length
+  2–4, canonicalized by register renaming in order of first appearance,
+  top 32 by exact count. Macro≡expansion holds by construction (same
+  stream under the frozen interpreter); round-trip and execution equality
+  are tested, never assumed.
+- Compression (`p67_compress_program`): greedy longest match, deterministic;
+  expansion rejects overflow, unknown ids and invalid words with `None`
+  (never silent truncation).

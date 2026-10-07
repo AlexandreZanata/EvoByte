@@ -705,6 +705,7 @@ ACCEPTANCE_PHASES = (
     "P64",
     "P65",
     "P66",
+    "P67",
 )
 
 
@@ -2722,6 +2723,180 @@ def run_p66_jump_audit(config_path: str | Path, output_path: str | Path) -> dict
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P66 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p67_macro_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P67 audit: macro library comparison with execution equality (H06).
+
+    Generates the frozen development programs, compares learned vs
+    same-size classical vs random libraries on compression with billed
+    costs, and requires 100% round-trip plus identical execution fitness
+    for every program under every library. PROMISING only when the learned
+    library strictly out-compresses both others with full equality;
+    otherwise honest NULL. Compression gain and certificate gain stay
+    separate measures: nothing here certifies search improvement.
+    """
+    import torch as _torch
+
+    from evobyte.bytecode import (
+        p67_classical_library,
+        p67_compare_libraries,
+        p67_compress_program,
+        p67_dev_programs,
+        p67_expand_tokens,
+        p67_mine_macros,
+        p67_random_library,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.verifier import evaluate as _evaluate
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P67":
+        raise ValueError(f"Config {cfg_p} is not a P67 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P67 VERIFIED MACROS AUDIT (compression only; outcome reported)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("n_programs", "library_size", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+    if int(config.get("n_programs", 0)) <= 0:
+        findings.append("CONFIG_INVALID: empty development program set")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    comparison: dict[str, Any] = {}
+    equality: dict[str, bool] = {}
+    try:
+        progs = p67_dev_programs(
+            n_programs=int(config.get("n_programs", 8)), seed=int(config.get("seed", 0))
+        )
+        print(f"  dev programs={len(progs)}")
+        mined = {
+            m["id"]: m for m in p67_mine_macros(progs, top_k=int(config.get("library_size", 8)))
+        }
+        libs = {
+            "learned": list(mined.values()),
+            "classical": p67_classical_library(len(mined)),
+            "random": p67_random_library(len(mined), seed=int(config.get("seed", 0))),
+        }
+        xs = np.linspace(-2, 2, 32, dtype=np.float32)
+        ys = xs * xs
+        for name, lib in libs.items():
+            ok = True
+            for prog in progs:
+                rebuilt = p67_expand_tokens(p67_compress_program(prog, lib), lib)
+                if (
+                    rebuilt is None
+                    or _evaluate(rebuilt, xs, ys)["fitness"] != _evaluate(prog, xs, ys)["fitness"]
+                ):
+                    ok = False
+                    findings.append(f"EXEC_MISMATCH: library={name}")
+                    break
+            equality[name] = ok
+            print(f"  library {name}: size={len(lib)} exec_equal={ok}")
+        comparison = p67_compare_libraries(
+            progs, library_size=int(config.get("library_size", 8)), seed=int(config.get("seed", 0))
+        )
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    libs_cmp = {k: comparison.get(k, {}) for k in ("learned", "classical", "random")}
+    if comparison and all(equality.values()):
+        learned_c = libs_cmp["learned"].get("compression_mean", -1.0)
+        others = max(
+            libs_cmp["classical"].get("compression_mean", 0.0),
+            libs_cmp["random"].get("compression_mean", 0.0),
+        )
+        if learned_c > others:
+            outcome, reason = "PROMISING", "learned library compresses strictly more"
+        else:
+            outcome, reason = "NULL", "learned library adds no compression"
+    else:
+        outcome, reason = "NULL", "equality or comparison did not hold"
+    print(f"  outcome: {outcome} ({reason})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p67_config": config_sha[:16]},
+        config={"acceptance_phase": "P67"},
+    )
+    report = {
+        "phase": "P67",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "macro compression with execution equality on frozen development "
+            "programs; outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "libraries": {
+            name: {
+                "size": rec.get("size", 0),
+                "compression_mean": rec.get("compression_mean", 0.0),
+                "roundtrip_ok": rec.get("roundtrip_ok", 0),
+                "exec_equal": equality.get(name, False),
+            }
+            for name, rec in comparison.items()
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P67",
+        },
+        "seeds_rng": "frozen seeds; deterministic programs, libraries and trials",
+        "counters": {
+            "dev_programs": int(config.get("n_programs", 0)),
+            "libraries": len(comparison),
+        },
+        "limitations": [
+            "Compression gain is not certificate gain; search improvement unmeasured.",
+            "Execution equality holds under the frozen interpreter only.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P67 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -6709,6 +6884,8 @@ def main() -> int:
             run_p65_bridge_audit(args.config, args.output)
         elif args.acceptance_phase == "P66":
             run_p66_jump_audit(args.config, args.output)
+        elif args.acceptance_phase == "P67":
+            run_p67_macro_audit(args.config, args.output)
         return 0
 
     seeds = (

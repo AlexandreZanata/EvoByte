@@ -1,6 +1,12 @@
 # P67 — H06 — Criar novas instruções matemáticas verificadas
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: mineração, comparação, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=96e55cd85f07d98c` com outcome PROMISING em compactação apenas;
+registro em `docs/research/p67-macro-record.md`). H06 sem promoção de
+certificado/novidade; P68 liberada.
+**Dependência:** P66 Done porém não integrado (PR #94 aberto); branch a
+partir de `codex/p66-composite-search-jumps`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P66 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p67-verified-macros`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P67**:
+Interface de aceitação **implementada na entrega 3** (`run_p67_macro_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P67 --config experiments/p67-config.json --output /tmp/evobyte-p67-acceptance.json
