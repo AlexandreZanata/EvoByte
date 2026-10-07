@@ -3796,6 +3796,7 @@ def p66_compare_guided(
             "reach": len(set(evaluated)),
             "duplicates": len(evaluated) - len(set(evaluated)),
             "certificates": sorted(certs),
+            "certified": len(certs),
             "length_histogram": {k: lengths.count(k) for k in sorted(set(lengths))},
             "loop_sec": time.perf_counter() - t0,
         }

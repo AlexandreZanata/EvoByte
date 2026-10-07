@@ -704,6 +704,7 @@ ACCEPTANCE_PHASES = (
     "P63",
     "P64",
     "P65",
+    "P66",
 )
 
 
@@ -2542,6 +2543,185 @@ def run_p65_bridge_audit(config_path: str | Path, output_path: str | Path) -> di
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P65 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p66_jump_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P66 audit: guided vs random packets vs isolated edits (H05).
+
+    Trains the single packet distribution on train starts, compares the
+    three arms on disjoint dev starts under reconciled operation counts
+    (isolated mirrors guided ops exactly), and requires every listed
+    certificate to re-verify. PROMISING only when guided strictly
+    out-certifies both other arms on the same starts; otherwise honest
+    NULL. Jump amplitude without certified gain sustains nothing.
+    """
+    import torch as _torch
+    from open_problems import (
+        P66_GUIDED_ARMS,
+        p66_collect_packet_samples,
+        p66_compare_guided,
+        p66_train_packet_scorer,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P66":
+        raise ValueError(f"Config {cfg_p} is not a P66 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P66 COMPOSITE SEARCH JUMPS AUDIT (equal ops; outcome reported)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("n", "train_starts", "dev_starts", "training", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    n = int(config.get("n", 4))
+    train_starts = [tuple(int(v) for v in t) for t in config.get("train_starts", [])]
+    dev_starts = [tuple(int(v) for v in t) for t in config.get("dev_starts", [])]
+    if not dev_starts:
+        findings.append("CONFIG_INVALID: empty dev starts")
+    if set(train_starts) & set(dev_starts):
+        findings.append("SPLIT_LEAK: starts on both train and dev sides")
+    print(f"  train starts={len(train_starts)} dev starts={len(dev_starts)}")
+
+    training: dict[str, Any] = {}
+    comparison: dict[str, Any] = {}
+    try:
+        t_cfg = config.get("training", {})
+        samples, collect_sec = p66_collect_packet_samples(
+            n,
+            train_starts,
+            n_packets=int(t_cfg.get("n_packets", 16)),
+            seed=int(t_cfg.get("seed", 0)),
+        )
+        print(f"  packet samples={len(samples)} collection={collect_sec:.3f}s")
+        if not samples:
+            findings.append("DATA_EMPTY: no packet samples from train starts")
+        else:
+            trained = p66_train_packet_scorer(
+                samples,
+                seed=int(t_cfg.get("seed", 0)),
+                epochs=int(t_cfg.get("epochs", 40)),
+            )
+            weights = trained.pop("state_dict")
+            training = {k: v for k, v in trained.items()}
+            print(f"  scorer params={training['n_params']} train_acc={training['train_acc']:.3f}")
+            if training["n_params"] > int(config.get("param_cap", 100000)):
+                findings.append("BUDGET_EXCEEDED: scorer above registered param cap")
+            comparison = p66_compare_guided(
+                n,
+                dev_starts,
+                weights,
+                n_packets=int(config.get("n_packets", 8)),
+                seed=int(config.get("seed", 0)),
+            )
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    arms = {a: comparison.get(a, {}) for a in P66_GUIDED_ARMS}
+    if comparison:
+        if arms["guided"]["ops_total"] != arms["isolated"]["ops_total"]:
+            findings.append("OPS_MISMATCH: guided and isolated operation counts differ")
+        print(
+            f"  guided={arms['guided']['certified']} "
+            f"random={arms['random']['certified']} "
+            f"isolated={arms['isolated']['certified']}"
+        )
+        if arms["guided"]["certified"] > max(
+            arms["random"]["certified"], arms["isolated"]["certified"]
+        ):
+            outcome, reason = "PROMISING", "guided out-certifies both other arms"
+        else:
+            outcome, reason = "NULL", "guided adds no certificate over controls"
+    else:
+        outcome, reason = "NULL", "comparison did not run"
+    print(f"  outcome: {outcome} ({reason})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p66_config": config_sha[:16]},
+        config={"acceptance_phase": "P66"},
+    )
+    report = {
+        "phase": "P66",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "guided vs random packets vs isolated edits on frozen dev starts "
+            "with reconciled ops; outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "training": training,
+        "comparison": {
+            arm: {
+                "starts": rec["starts"],
+                "certified": rec["certified"],
+                "ops_total": rec["ops_total"],
+                "reach": rec["reach"],
+            }
+            for arm, rec in comparison.items()
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P66",
+        },
+        "seeds_rng": "frozen seeds; deterministic pools, training and trials",
+        "counters": {
+            "dev_starts": len(dev_starts),
+            "arms": len(comparison),
+        },
+        "limitations": [
+            "Equal operations do not imply equal information per evaluation.",
+            "Amplitude without certified gain sustains nothing; no tunneling claimed.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P66 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -6527,6 +6707,8 @@ def main() -> int:
             run_p64_obstruction_audit(args.config, args.output)
         elif args.acceptance_phase == "P65":
             run_p65_bridge_audit(args.config, args.output)
+        elif args.acceptance_phase == "P66":
+            run_p66_jump_audit(args.config, args.output)
         return 0
 
     seeds = (

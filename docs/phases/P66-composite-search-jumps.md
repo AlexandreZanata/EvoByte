@@ -1,7 +1,8 @@
 # P66 — H05 — Atravessar a busca com saltos compostos
 
-**Status:** Building (entregas 1–2: pacotes + distribuição guiada com
-comparação de 3 braços; congelamento/medição pendentes).
+**Status:** Building (entregas 1–3: pacotes, distribuição guiada,
+interface + config congelada; entrega 4 pendente: medição em árvore limpa
++ registro. Diagnóstico: outcome NULL — 0 certificados nos starts dev.)
 **Dependência:** P65 Done porém não integrado (PR #93 aberto); branch a
 partir de `codex/p65-backward-constructions`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -47,7 +48,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P66**:
+Interface de aceitação **implementada na entrega 3** (`run_p66_jump_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P66 --config experiments/p66-config.json --output /tmp/evobyte-p66-acceptance.json
