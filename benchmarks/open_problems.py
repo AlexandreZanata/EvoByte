@@ -2630,6 +2630,114 @@ def p63_scalar_score(n: int, x: int, y: int, z: int, max_coord: int = 10**9) -> 
     return 1.0 / (1.0 + abs(p62_exact_residual(int(n), x, y, z)))
 
 
+# ==============================================================================
+# P63 entrega 2 — H08 comparação real × embaralhado × escalar com custos
+# ==============================================================================
+#
+# Mesmo loop de reparo e mesmo orçamento para os três braços; só o feedback
+# muda. Real usa o código verdadeiro, embaralhado passa pela permutação
+# congelada (ablação: mesma distribuição, estrutura destruída) e escalar usa
+# só 1/(1+|R|). Toda consulta ao verificador é contada e há teto registrado;
+# estourar o teto encerra como query-capped. Pesos de prioridade congelados
+# e arbitrários (não ajustados): só o contraste entre braços importa.
+
+P63_CODE_PRIORITY = (0, 3, 4, 2, 5, 1)
+
+P63_FEEDBACK_ARMS = ("real", "shuffled", "scalar")
+
+
+def p63_neighbor_key(
+    arm: str, code: int, residual_abs: int, coords: tuple[int, int, int], perm: dict[int, int]
+) -> tuple[int, int, tuple[int, int, int]]:
+    """Frozen ranking key per arm (ties broken by |R| then coordinates)."""
+    if arm == "real":
+        shown = int(code)
+    elif arm == "shuffled":
+        shown = int(perm.get(int(code), int(code)))
+    elif arm == "scalar":
+        shown = 0 if int(residual_abs) == 0 else 2
+    else:
+        raise ValueError(f"Unknown P63 feedback arm: {arm}")
+    return (P63_CODE_PRIORITY[shown], int(residual_abs), coords)
+
+
+def p63_compare_feedback_arms(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    max_cycles: int = 12,
+    query_limit: int = 2000,
+    shuffle_seed: int = 7,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Equal-budget repair comparison across the three feedback arms."""
+    perm = p63_shuffle_codes(int(shuffle_seed))
+    out: dict[str, Any] = {}
+    for arm in P63_FEEDBACK_ARMS:
+        t0 = time.perf_counter()
+        certified = 0
+        cycles_total = 0
+        queries_total = 0
+        details = []
+        for start in starts:
+            x, y, z = (int(v) for v in start)
+            visited = {(x, y, z)}
+            traj: list[int] = []
+            cycles = 0
+            status = "exhausted"
+            while cycles < int(max_cycles):
+                queries_total += 1
+                ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+                ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+                if ok1 and ok2:
+                    status = "certified"
+                    certified += 1
+                    break
+                if queries_total >= int(query_limit):
+                    status = "query-capped"
+                    break
+                ranked = []
+                for nb in p62_neighbors(x, y, z):
+                    if arm == "scalar":
+                        code = P63_REJECTION_CODES["NONZERO_RESIDUAL"]
+                    else:
+                        code = p63_rejection_code(int(n), *nb, max_coord=int(max_coord))
+                        queries_total += 1
+                    r_nb = abs(p62_exact_residual(int(n), *nb))
+                    ranked.append((p63_neighbor_key(arm, code, r_nb, nb, perm), nb))
+                if not ranked:
+                    status = "stalled"
+                    break
+                ranked.sort(key=lambda kv: kv[0])
+                nxt = ranked[0][1]
+                if nxt in visited:
+                    status = "stalled"
+                    break
+                visited.add(nxt)
+                x, y, z = nxt
+                traj.append(p63_rejection_code(int(n), x, y, z, max_coord=int(max_coord)))
+                queries_total += 1
+                cycles += 1
+            cycles_total += cycles
+            details.append(
+                {
+                    "start": list(start),
+                    "status": status,
+                    "cycles": cycles,
+                    "codes": traj,
+                    "triple": [x, y, z],
+                }
+            )
+        out[arm] = {
+            "starts": len(starts),
+            "certified": certified,
+            "cycles_total": cycles_total,
+            "queries_total": queries_total,
+            "loop_sec": time.perf_counter() - t0,
+            "details": details,
+        }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

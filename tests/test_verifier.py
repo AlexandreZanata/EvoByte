@@ -202,3 +202,45 @@ def test_p63_tensor_shuffle_scalar() -> None:
     assert 0.0 < s < 1.0
     assert p63_scalar_score(4, 0, 3, 6) == 0.0
     assert p63_scalar_score(4, 2, 3, 6) > p63_scalar_score(4, 2, 3, 7)
+
+
+def _p63_strip(rec):
+    return {
+        arm: {k: v for k, v in arm_rec.items() if k != "loop_sec"} for arm, arm_rec in rec.items()
+    }
+
+
+def test_p63_compare_arms_deterministic_and_counted() -> None:
+    from benchmarks.open_problems import p63_compare_feedback_arms
+
+    starts = [(2, 3, 7), (5, 5, 5)]
+    first = p63_compare_feedback_arms(4, starts, max_cycles=6)
+    second = p63_compare_feedback_arms(4, starts, max_cycles=6)
+    assert _p63_strip(first) == _p63_strip(second)
+    assert set(first) == {"real", "shuffled", "scalar"}
+    for rec in first.values():
+        assert rec["starts"] == len(starts)
+        assert rec["queries_total"] > 0
+        assert rec["loop_sec"] >= 0.0
+        for det in rec["details"]:
+            assert det["status"] in ("certified", "stalled", "exhausted", "query-capped")
+            if det["status"] == "certified":
+                assert check_erdos_straus(4, *det["triple"])[0] is True
+    assert first["real"]["queries_total"] >= first["scalar"]["queries_total"]
+
+
+def test_p63_query_cap_and_unknown_arm() -> None:
+    import pytest
+
+    from benchmarks.open_problems import (
+        P63_CODE_PRIORITY,
+        p63_compare_feedback_arms,
+        p63_neighbor_key,
+    )
+
+    assert P63_CODE_PRIORITY == (0, 3, 4, 2, 5, 1)
+    rec = p63_compare_feedback_arms(4, [(5, 5, 5)], max_cycles=12, query_limit=1)
+    for arm_rec in rec.values():
+        assert [d["status"] for d in arm_rec["details"]] == ["query-capped"]
+    with pytest.raises(ValueError, match="Unknown P63 feedback arm"):
+        p63_neighbor_key("oracle", 0, 0, (1, 1, 1), {})

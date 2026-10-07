@@ -1,7 +1,7 @@
 # P63 — H08 — Orientar o modelo por códigos de rejeição
 
-**Status:** Building (entrega 1 neste ciclo: códigos + emissão +
-regressões; comparação real/embaralhada/escalar, congelamento e medição pendentes).
+**Status:** Building (entregas 1–2: códigos + comparação de 3 braços com
+custos; treino em development, congelamento e medição pendentes).
 **Dependência:** P62 Done porém não integrado (PR #90 aberto); branch a
 partir de `codex/p62-structured-error-repair`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
