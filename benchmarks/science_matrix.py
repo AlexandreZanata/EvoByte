@@ -707,6 +707,7 @@ ACCEPTANCE_PHASES = (
     "P66",
     "P67",
     "P68",
+    "P69",
 )
 
 
@@ -3079,6 +3080,185 @@ def run_p68_duel_audit(config_path: str | Path, output_path: str | Path) -> dict
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P68 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p69_island_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P69 audit: island migration comparison with constant population (H09).
+
+    Compares residue vs elite vs random vs no migration on frozen problems
+    with identical islands, generations and starts, verifies ancestry
+    completeness on a residue search, and requires constant total
+    population. PROMISING only with strictly more certified problems than
+    every other arm; diversity without certified gain never promotes.
+    """
+    import torch as _torch
+    from open_problems import (
+        P69_ISLAND_COUNT,
+        P69_MIGRATION_COMPARISON_ARMS,
+        p69_compare_migrations,
+        p69_island_search,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P69":
+        raise ValueError(f"Config {cfg_p} is not a P69 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P69 RESIDUE-SYNCHRONIZED ISLANDS AUDIT (constant population; outcome reported)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("n_values", "starts", "generations", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+    if not config.get("n_values"):
+        findings.append("CONFIG_INVALID: empty problem set")
+    if not config.get("starts"):
+        findings.append("CONFIG_INVALID: empty start set")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    n_values = [int(n) for n in config.get("n_values", [])]
+    starts = [tuple(int(v) for v in t) for t in config.get("starts", [])]
+    pop_per_island = int(config.get("pop_per_island", 4))
+    print(f"  problems={n_values} islands={P69_ISLAND_COUNT} pop/island={pop_per_island}")
+
+    comparison: dict[str, Any] = {}
+    try:
+        comparison = p69_compare_migrations(
+            n_values,
+            starts,
+            generations=int(config.get("generations", 6)),
+            pop_per_island=pop_per_island,
+            seed=int(config.get("seed", 0)),
+            max_coord=int(config.get("max_coord", 10**9)),
+        )
+        for arm in P69_MIGRATION_COMPARISON_ARMS:
+            rec = comparison[arm]
+            print(
+                f"  arm {arm}: certified={rec['certified_problems']}/{rec['problems']} "
+                f"diversity={rec['diversity_mean']:.3f}"
+            )
+    except (ValueError, TypeError, KeyError, AssertionError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    try:
+        if n_values and starts:
+            probe = p69_island_search(
+                n_values[0],
+                starts,
+                policy="residue",
+                generations=1,
+                pop_per_island=pop_per_island,
+                seed=int(config.get("seed", 0)),
+            )
+            orphans = [
+                m for m in probe["moves"] if m.get("recombined") and len(m.get("parents", [])) != 2
+            ]
+            if orphans:
+                findings.append(f"ANCESTRY_GAP: {len(orphans)} recombinations without two parents")
+            if probe["population_total"] != P69_ISLAND_COUNT * pop_per_island:
+                findings.append("POPULATION_DRIFT: total population changed")
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    arms = {a: comparison.get(a, {}) for a in P69_MIGRATION_COMPARISON_ARMS}
+    if comparison:
+        residue_c = arms["residue"].get("certified_problems", -1)
+        best_other = max(
+            arms["elite"].get("certified_problems", 0),
+            arms["random"].get("certified_problems", 0),
+            arms["none"].get("certified_problems", 0),
+        )
+        if residue_c > best_other:
+            outcome, reason = "PROMISING", "residue migration certifies more problems"
+        else:
+            outcome, reason = "NULL", "no certified gain over the other arms"
+    else:
+        outcome, reason = "NULL", "comparison did not run"
+    print(f"  outcome: {outcome} ({reason})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p69_config": config_sha[:16]},
+        config={"acceptance_phase": "P69"},
+    )
+    report = {
+        "phase": "P69",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "four migration arms on frozen problems with constant population; "
+            "outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "arms": {
+            arm: {
+                "problems": rec["problems"],
+                "certified_problems": rec["certified_problems"],
+                "diversity_mean": rec["diversity_mean"],
+                "sync_sec": rec["sync_sec"],
+            }
+            for arm, rec in comparison.items()
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P69",
+        },
+        "seeds_rng": "frozen seeds; deterministic islands and migrations",
+        "counters": {
+            "problems": len(n_values),
+            "arms": len(comparison),
+        },
+        "limitations": [
+            "Diversity without certified gain never promotes the hypothesis.",
+            "One stream on one device; four islands need no extra hardware.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P69 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -7070,6 +7250,8 @@ def main() -> int:
             run_p67_macro_audit(args.config, args.output)
         elif args.acceptance_phase == "P68":
             run_p68_duel_audit(args.config, args.output)
+        elif args.acceptance_phase == "P69":
+            run_p69_island_audit(args.config, args.output)
         return 0
 
     seeds = (

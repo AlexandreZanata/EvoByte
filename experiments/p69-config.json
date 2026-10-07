@@ -1,0 +1,36 @@
+{
+  "phase": "P69",
+  "note": "Frozen P69 island migration comparison. Same islands, generations and starts for all arms; sealed finals excluded.",
+  "device": "cpu",
+  "seed": 0,
+  "require_clean_tree": true,
+  "max_coord": 1000000000,
+  "n_values": [
+    4,
+    6
+  ],
+  "starts": [
+    [
+      2,
+      3,
+      7
+    ],
+    [
+      5,
+      5,
+      5
+    ],
+    [
+      3,
+      4,
+      13
+    ],
+    [
+      4,
+      4,
+      12
+    ]
+  ],
+  "generations": 6,
+  "pop_per_island": 4
+}

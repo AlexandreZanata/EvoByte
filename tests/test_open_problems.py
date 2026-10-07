@@ -20,6 +20,8 @@ from benchmarks.open_problems import (
     P68_ATTACKERS,
     P68_COMBINED_PARAM_CAP,
     P68_TEMPLATE_FAMILIES,
+    P69_ISLAND_COUNT,
+    P69_MIGRATION_COMPARISON_ARMS,
     PROBLEM_REGISTRY,
     P62RepairScorer,
     P65BridgeScorer,
@@ -80,6 +82,8 @@ from benchmarks.open_problems import (
     p68_n_refutes,
     p68_propose_template,
     p68_train_attack_scorer,
+    p69_compare_migrations,
+    p69_island_search,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -1004,3 +1008,45 @@ def test_p68_compare_attackers_equal_budget() -> None:
     assert first["learned"]["queries_total"] <= first["random"]["queries_total"]
     assert first["learned"]["queries_total"] <= first["systematic"]["queries_total"]
     assert first["learned"]["refuted"] == 3
+
+
+def _p69_starts():
+    return [(2, 3, 7), (5, 5, 5), (3, 4, 13), (4, 4, 12)]
+
+
+def _p69_strip(rep):
+    return {k: v for k, v in rep.items() if not k.endswith("_sec")}
+
+
+def test_p69_island_search_deterministic_and_constant() -> None:
+    first = p69_island_search(4, _p69_starts(), policy="residue", generations=6, seed=0)
+    second = p69_island_search(4, _p69_starts(), policy="residue", generations=6, seed=0)
+    assert _p69_strip(first) == _p69_strip(second)
+    assert first["population_total"] == P69_ISLAND_COUNT * 4 == 16
+    assert first["generations"] == 6
+    assert 0.0 < first["diversity"] <= 1.0
+    assert first["distinct"] == round(first["diversity"] * first["population_total"])
+    for triple in first["certificates"]:
+        assert check_erdos_straus(4, *triple)[0] is True
+    assert first["recombinations"] > 0
+    for move in first["moves"]:
+        if move["recombined"]:
+            assert len(move["parents"]) == 2
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError, match="non-empty starts"):
+        p69_island_search(4, [], policy="residue")
+
+
+def test_p69_compare_migrations_equal_resources() -> None:
+    rep = p69_compare_migrations([4, 6], _p69_starts(), generations=6, seed=0)
+    assert set(rep) == set(P69_MIGRATION_COMPARISON_ARMS)
+    assert set(rep) == {"residue", "elite", "random", "none"}
+    for rec in rep.values():
+        assert rec["problems"] == 2
+        assert 0 <= rec["certified_problems"] <= 2
+        assert 0.0 < rec["diversity_mean"] <= 1.0
+        assert rec["sync_sec"] >= 0.0
+        assert rec["total_sec"] >= rec["sync_sec"]
+    assert rep["residue"]["recombinations"] > 0
+    assert rep["none"]["recombinations"] == 0

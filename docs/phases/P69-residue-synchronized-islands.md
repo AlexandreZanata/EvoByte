@@ -1,6 +1,12 @@
 # P69 — H09 — Sincronizar ilhas por erros complementares
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: migração, busca + comparação, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=eccb658dc0739c18` com outcome NULL íntegro; registro em
+`docs/research/p69-island-record.md`). H09 encerrada sem promoção; P70
+liberada.
+**Dependência:** P68 Done porém não integrado (PR #96 aberto); branch a
+partir de `codex/p68-adversarial-conjectures`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P68 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p69-residue-synchronized-islands`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P69**:
+Interface de aceitação **implementada na entrega 3** (`run_p69_island_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P69 --config experiments/p69-config.json --output /tmp/evobyte-p69-acceptance.json
