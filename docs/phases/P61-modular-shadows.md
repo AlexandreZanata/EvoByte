@@ -1,7 +1,9 @@
 # P61 — H02 — Buscar usando sombras aritméticas
 
-**Status:** Building (entregas 1–2: filtro + regressões e comparação
-pareada com custos; congelamento/medição pendentes).
+**Status:** Building (entregas 1–3: filtro + regressões, comparação
+pareada, interface + config congelada; entrega 4 pendente: medição em
+árvore limpa + registro. Diagnóstico: outcome NULL — filtro não mais
+barato que checker direto nos conjuntos development.)
 **Dependência:** P60 Done porém não integrado (PR #88 aberto); branch a
 partir de `codex/p60-hypothesis-workbench`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -47,7 +49,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P61**:
+Interface de aceitação **implementada na entrega 3** (`run_p61_shadow_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P61 --config experiments/p61-config.json --output /tmp/evobyte-p61-acceptance.json
