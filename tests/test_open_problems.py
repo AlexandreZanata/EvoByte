@@ -32,6 +32,7 @@ from benchmarks.open_problems import (
     run_certificate_audit,
     run_open_problem_campaign,
     run_p57_bounded_campaign,
+    run_p61_paired_filter_trial,
     verify_independent_reproduction,
 )
 
@@ -459,3 +460,43 @@ def test_p61_shadow_eliminates_false_and_reports_cost() -> None:
     kept = int(mask.sum().item())
     assert 0 < kept < len(xs)
     assert elapsed >= 0.0
+
+
+def test_p61_paired_trial_same_certificates_no_false_rejection() -> None:
+    import random
+
+    import torch
+
+    rng = random.Random(11)
+    triples = [(2, 3, 6)] + [
+        (rng.randint(1, 300), rng.randint(1, 300), rng.randint(1, 300)) for _ in range(200)
+    ]
+    rec = run_p61_paired_filter_trial(4, triples)
+    assert rec["certificates_equal"] is True
+    assert (2, 3, 6) in rec["certificates_filtered"]
+    assert rec["false_rejections"] == 0
+    assert rec["kept"] < rec["candidates"]
+    costs = rec["costs"]
+    assert set(costs) == {
+        "check_all_sec",
+        "total_without_sec",
+        "transfer_sec",
+        "filter_sec",
+        "check_kept_sec",
+        "total_with_sec",
+    }
+    assert costs["total_with_sec"] == (
+        costs["transfer_sec"] + costs["filter_sec"] + costs["check_kept_sec"]
+    )
+    assert "cpu" in rec["devices_compared"]
+    if torch.cuda.is_available():
+        assert "cuda" in rec["devices_compared"]
+    assert rec["device_agreement"] is True
+
+
+def test_p61_paired_trial_exhaustive_box_zero_false_rejection() -> None:
+    triples = [(x, y, z) for x in range(1, 21) for y in range(1, 21) for z in range(1, 21)]
+    rec = run_p61_paired_filter_trial(4, triples)
+    assert rec["certificates_equal"] is True
+    assert rec["false_rejections"] == 0
+    assert len(rec["certificates_filtered"]) > 0

@@ -1,7 +1,7 @@
 # P61 — H02 — Buscar usando sombras aritméticas
 
-**Status:** Building (entrega 1 neste ciclo: filtro + regressões; comparação
-pareada/congelamento/medição pendentes).
+**Status:** Building (entregas 1–2: filtro + regressões e comparação
+pareada com custos; congelamento/medição pendentes).
 **Dependência:** P60 Done porém não integrado (PR #88 aberto); branch a
 partir de `codex/p60-hypothesis-workbench`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
