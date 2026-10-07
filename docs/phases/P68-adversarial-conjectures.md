@@ -1,9 +1,10 @@
 # P68 — H07 — Fazer dois modelos pequenos atacar construções
 
-**Status:** Building (entregas 1–3: jogo, atacante aprendido, interface +
-config congelada; entrega 4 pendente: medição em árvore limpa + registro.
-Diagnóstico: outcome PROMISING por −20% queries sem queda — triagem, não
-teorema.)
+**Status:** Done (entregas 1–4: jogo, atacante aprendido, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=4731654ae35c923d` com outcome PROMISING por eficiência apenas;
+registro em `docs/research/p68-duel-record.md`). H07 sem promoção de
+novidade; P69 liberada.
 **Dependência:** P67 Done porém não integrado (PR #95 aberto); branch a
 partir de `codex/p67-verified-macros`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
