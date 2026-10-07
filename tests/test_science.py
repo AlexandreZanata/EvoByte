@@ -32,6 +32,7 @@ from benchmarks.science_matrix import (
     run_p66_jump_audit,
     run_p67_macro_audit,
     run_p68_duel_audit,
+    run_p69_island_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -174,6 +175,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P66",
         "P67",
         "P68",
+        "P69",
     )
     import subprocess as _sp
 
@@ -1222,6 +1224,52 @@ def test_p68_acceptance_blocks_final_reference(tmp_path):
     cfg["notes_path"] = "experiments/p56-final-tasks.json"
     cfg_p.write_text(_json.dumps(cfg))
     report = run_p68_duel_audit(cfg_p, tmp_path / "p68-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def _p69_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p69-config.json").read_text())
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p69-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p69_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p69-acceptance.json"
+    report = run_p69_island_audit(_p69_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P69"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["hypothesis_outcome"] in ("PROMISING", "NULL")
+    assert set(report["arms"]) == {"residue", "elite", "random", "none"}
+    assert report["counters"]["problems"] == 2
+
+
+def test_p69_acceptance_blocks_empty_problems(tmp_path):
+    import json as _json
+
+    cfg_p = _p69_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["n_values"] = []
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p69_island_audit(cfg_p, tmp_path / "p69-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("CONFIG_INVALID" in f for f in report["findings"])
+
+
+def test_p69_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p69_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["notes_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p69_island_audit(cfg_p, tmp_path / "p69-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("FINAL_ACCESS" in f for f in report["findings"])
 
