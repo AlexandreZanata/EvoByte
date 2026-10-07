@@ -1,9 +1,10 @@
 # P61 — H02 — Buscar usando sombras aritméticas
 
-**Status:** Building (entregas 1–3: filtro + regressões, comparação
-pareada, interface + config congelada; entrega 4 pendente: medição em
-árvore limpa + registro. Diagnóstico: outcome NULL — filtro não mais
-barato que checker direto nos conjuntos development.)
+**Status:** Done (entregas 1–4: filtro, comparação pareada, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=19f999d156db749d` com outcome NULL íntegro; registro em
+`docs/research/p61-shadow-record.md`). H02 encerrada sem promoção; P62
+liberada.
 **Dependência:** P60 Done porém não integrado (PR #88 aberto); branch a
 partir de `codex/p60-hypothesis-workbench`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
