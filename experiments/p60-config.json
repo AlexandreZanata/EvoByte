@@ -46,6 +46,9 @@
     "search_cert_per_attempt_sec": 10,
     "per_hypothesis_ceiling_min": 30,
     "ten_pilots_initial_ceiling_h": 5,
+    "p71_per_method_h": 2,
+    "p72_h": 1,
+    "raw_data_per_run_gib": 1,
     "model_reserve_params": 100000,
     "model_absolute_cap_params": 1000000
   },
@@ -59,5 +62,11 @@
     "scope": "workbench manifest v1 (908b089)"
   },
   "device": "cpu",
-  "require_clean_tree": true
+  "require_clean_tree": true,
+  "es_space": {
+    "max_coord": 1000000000,
+    "x_steps": 50,
+    "y_cap": 200000,
+    "warm_start": []
+  }
 }

@@ -1,7 +1,8 @@
 # P60 — Congelar a bancada e o pré-registro das dez hipóteses
 
-**Status:** Building (entregas 1–2: manifesto/procedimento e revisão +
-pré-registro congelado; aceitação técnica e registro pendentes).
+**Status:** Building (entregas 1–3: manifesto/procedimento, revisão +
+pré-registro congelado, interface de aceitação + comando congelado;
+entrega 4 pendente: medição em árvore limpa + registro).
 **Dependência:** P59 Done porém não integrado (PR #87 aberto); branch a
 partir de `codex/p59-equal-information-controls`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -66,7 +67,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P60**:
+Interface de aceitação **implementada na entrega 3** (`run_p60_workbench_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P60 --config experiments/p60-config.json --output /tmp/evobyte-p60-acceptance.json
