@@ -1,6 +1,12 @@
 # P68 — H07 — Fazer dois modelos pequenos atacar construções
 
-**Status:** Proposed.
+**Status:** Done (entregas 1–4: jogo, atacante aprendido, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=4731654ae35c923d` com outcome PROMISING por eficiência apenas;
+registro em `docs/research/p68-duel-record.md`). H07 sem promoção de
+novidade; P69 liberada.
+**Dependência:** P67 Done porém não integrado (PR #95 aberto); branch a
+partir de `codex/p67-verified-macros`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P67 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p68-adversarial-conjectures`.
@@ -44,7 +50,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P68**:
+Interface de aceitação **implementada na entrega 3** (`run_p68_duel_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P68 --config experiments/p68-config.json --output /tmp/evobyte-p68-acceptance.json

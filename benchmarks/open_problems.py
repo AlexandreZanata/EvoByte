@@ -3803,6 +3803,257 @@ def p66_compare_guided(
     return out
 
 
+# ==============================================================================
+# P68 entrega 1 — H07 jogo proponente-atacante com refutações certificadas
+# ==============================================================================
+#
+# Templates (família + domínio público) atacados por instâncias do domínio:
+# sistemática (ordem) e aleatória (seeded). Cada refutação carrega prova
+# exata (não-cobertura, tripla inexata ou fora do limite). Refutar um
+# template nunca equivale a refutar Erdős–Straus. Teto combinado de 1M de
+# parâmetros para os dois modelos; atacante vê só o público.
+
+P68_COMBINED_PARAM_CAP = 1000000
+
+P68_ATTACKERS = ("systematic", "random")
+
+P68_TEMPLATE_FAMILIES = ("even", "n=2-mod-3", "multiple-of-3")
+
+
+def p68_propose_template(family_id: str, lo: int, hi: int) -> dict[str, Any]:
+    """Propose a template claim: family covers every n in [lo, hi]."""
+    if family_id not in P68_TEMPLATE_FAMILIES:
+        raise ValueError(f"Unknown P68 template family: {family_id}")
+    if not 2 <= int(lo) <= int(hi):
+        raise ValueError("P68 domain needs 2 <= lo <= hi")
+    return {"family_id": str(family_id), "domain": [int(lo), int(hi)]}
+
+
+def p68_n_refutes(
+    entry: dict[str, Any], n: int, max_coord: int = 10**9
+) -> tuple[bool, dict[str, Any]]:
+    """Exact refutation check for one instance (shared by game and comparison)."""
+    triple = p65_instantiate(entry, int(n))
+    if triple is None:
+        return True, {
+            "n": int(n),
+            "triple": None,
+            "reason": "not-covered",
+            "residual": None,
+            "exact": False,
+        }
+    if max(triple) > int(max_coord):
+        return True, {
+            "n": int(n),
+            "triple": list(triple),
+            "reason": "out-of-bounds",
+            "residual": None,
+            "exact": False,
+        }
+    ok1, residual, _ = check_erdos_straus(int(n), *triple)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+    if not (ok1 and ok2):
+        return True, {
+            "n": int(n),
+            "triple": list(triple),
+            "reason": "inexact",
+            "residual": int(residual),
+            "exact": False,
+        }
+    return False, {}
+
+
+def p68_attack_template(
+    template: dict[str, Any],
+    attacker: str = "systematic",
+    budget: int = 50,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Attack a template inside its public domain (no private answers seen).
+
+    Returns refutations with exact evidence, or survival when the budget
+    finds nothing. Survival is not a theorem.
+    """
+    import random as _random
+
+    if attacker not in P68_ATTACKERS:
+        raise ValueError(f"Unknown P68 attacker: {attacker}")
+    lo, hi = (int(v) for v in template["domain"])
+    order = list(range(lo, hi + 1))
+    if attacker == "random":
+        _random.Random(int(seed)).shuffle(order)
+    entry = {"id": template["family_id"], "kind": "parametric"}
+    refutations = []
+    queries = 0
+    for n in order[: max(0, int(budget))]:
+        queries += 1
+        hit, record = p68_n_refutes(entry, n, max_coord=int(max_coord))
+        if hit:
+            refutations.append(record)
+    return {
+        "family_id": template["family_id"],
+        "attacker": attacker,
+        "queries": queries,
+        "refuted": len(refutations) > 0,
+        "refutations": refutations,
+        "survived": len(refutations) == 0,
+    }
+
+
+# ==============================================================================
+# P68 entrega 2 — H07 atacante aprendido e comparação com custo igual
+# ==============================================================================
+#
+# Um único atacante (MLP tiny sobre resíduos de n, posição no domínio e
+# família — tudo público) treinado em rótulos exatos refuta-ou-não em
+# templates development. Comparação learned × random × systematic sob o
+# MESMO orçamento de queries; refutações e custo total reportados por braço.
+
+P68_LEARNED_ATTACKERS = ("learned", "random", "systematic")
+
+
+def p68_instance_features(template: dict[str, Any], n: int) -> list[float]:
+    """Public instance descriptors: residues, domain position, family."""
+    lo, hi = (int(v) for v in template["domain"])
+    span = max(1, hi - lo)
+    fams = list(P68_TEMPLATE_FAMILIES)
+    return [
+        float(int(n) % 2),
+        float(int(n) % 3),
+        float(int(n) % 5),
+        (int(n) - lo) / span,
+        *[1.0 if template["family_id"] == f else 0.0 for f in fams],
+    ]
+
+
+class P68AttackScorer(torch.nn.Module):
+    """Tiny refutation scorer (~90 params, CPU)."""
+
+    def __init__(self, hidden: int = 8) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(7, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p68_collect_attack_samples(
+    templates: list[dict[str, Any]], max_coord: int = 10**9
+) -> tuple[list[dict[str, Any]], float]:
+    """Exact refutes-or-not labels over full template domains (development)."""
+    t0 = time.perf_counter()
+    samples: list[dict[str, Any]] = []
+    for template in templates:
+        lo, hi = (int(v) for v in template["domain"])
+        entry = {"id": template["family_id"], "kind": "parametric"}
+        for n in range(lo, hi + 1):
+            triple = p65_instantiate(entry, n)
+            if triple is None or max(triple) > int(max_coord):
+                label = 1.0
+            else:
+                ok1, _, _ = check_erdos_straus(n, *triple)
+                ok2, _, _ = check_erdos_straus_fractions(n, *triple)
+                label = 0.0 if (ok1 and ok2) else 1.0
+            samples.append({"template": template, "n": n, "label": label})
+    return samples, time.perf_counter() - t0
+
+
+def p68_train_attack_scorer(
+    samples: list[dict[str, Any]], seed: int = 0, epochs: int = 40, lr: float = 0.05
+) -> dict[str, Any]:
+    """Train the single attacker (BCE on exact refutation labels)."""
+    if not samples:
+        raise ValueError("P68 training needs non-empty samples")
+    torch.manual_seed(int(seed))
+    model = P68AttackScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+    feats = torch.stack(
+        [torch.tensor(p68_instance_features(s["template"], s["n"])) for s in samples]
+    ).float()
+    target = torch.tensor([float(s["label"]) for s in samples], dtype=torch.float32)
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        loss = loss_fn(model(feats), target)
+        loss.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        acc = float((((model(feats) > 0.0).float()) == target).float().mean().item())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_samples": len(samples),
+        "train_acc": acc,
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p68_compare_attackers(
+    weights: dict[str, torch.Tensor],
+    templates: list[dict[str, Any]],
+    budget: int = 50,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Learned vs random vs systematic attackers under the same query budget.
+
+    Each arm orders the domain its own way (model scores, seeded shuffle,
+    natural order) and spends at most `budget` exact evaluations per
+    template. Refutation counts and query totals are reported per arm.
+    """
+    import random as _random
+
+    model = P68AttackScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    out: dict[str, Any] = {}
+    for arm in P68_LEARNED_ATTACKERS:
+        t0 = time.perf_counter()
+        refuted = 0
+        queries_total = 0
+        for template in templates:
+            lo, hi = (int(v) for v in template["domain"])
+            domain = list(range(lo, hi + 1))
+            if arm == "learned":
+                feats = torch.stack(
+                    [torch.tensor(p68_instance_features(template, n)) for n in domain]
+                ).float()
+                with torch.no_grad():
+                    ranked = torch.argsort(model(feats), descending=True).tolist()
+                order = [domain[i] for i in ranked]
+            elif arm == "random":
+                order = domain[:]
+                _random.Random(int(seed)).shuffle(order)
+            elif arm == "systematic":
+                order = domain
+            else:
+                raise ValueError(f"Unknown P68 attacker: {arm}")
+            entry = {"id": template["family_id"], "kind": "parametric"}
+            found = False
+            for n in order[: max(0, int(budget))]:
+                queries_total += 1
+                hit, _ = p68_n_refutes(entry, n, max_coord=int(max_coord))
+                if hit:
+                    found = True
+                    break
+            refuted += 1 if found else 0
+        out[arm] = {
+            "templates": len(templates),
+            "budget": int(budget),
+            "refuted": refuted,
+            "queries_total": queries_total,
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"
