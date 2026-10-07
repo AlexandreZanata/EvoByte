@@ -909,8 +909,74 @@ def test_p58_blocks_on_pending_approval_and_missing_raw(tmp_path):
     assert report["verdict"] == "BLOCKED"
     assert report["certificates"]["rechecked_exact"] == 3
     assert any("MISSING_EVIDENCE" in f for f in report["findings"])
+    # R3 waiver: the valid restrictive decision excuses the pending approval
+    # for the technical-base scope, so raw absence alone blocks here.
+    assert "p58-scope-review" in report["approvals_excused"]
+    assert report["approvals_pending"] == []
+
+
+def test_p58_r3_pending_without_decision_still_blocks(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "pending"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        decisions="omit",
+    )
+    report = run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+    assert report["verdict"] == "BLOCKED"
     assert any("PENDING_APPROVAL" in f for f in report["findings"])
     assert "p58-scope-review" in report["approvals_pending"]
+    assert report["approvals_excused"] == []
+
+
+def test_p58_r3_broken_decision_never_excuses(tmp_path):
+    repo = Path(__file__).resolve().parents[1]
+    decisions, _ = _p58_valid_decisions(tmp_path)
+    decisions = [
+        dict(d, disposition="approved_for_current_use", scientific_approval="pending")
+        if d["id"] == "p58-scope-review"
+        else d
+        for d in decisions
+    ]
+    cfg_p = _p58_smoke_config(
+        tmp_path,
+        repo,
+        approvals=[{"id": "p58-scope-review", "status": "pending"}],
+        require_clean_tree=False,
+        durable_raw=["experiments/p52-certified-data-raw.json"],
+        decisions=decisions,
+    )
+    report = run_p58_acceptance_baseline_audit(cfg_p, tmp_path / "p58-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("PENDING_APPROVAL" in f for f in report["findings"])
+    assert any("approved_for_current_use" in f for f in report["findings"])
+    assert "p58-scope-review" in report["approvals_pending"]
+
+
+def test_p58_r3_frozen_config_decisions_are_valid():
+    import hashlib as _hashlib
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p58-config.json").read_text())
+    assert cfg["phase"] == "P58"
+    assert {d["id"] for d in cfg["decisions"]} == set(_P58_R1_IDS)
+    for dec in cfg["decisions"]:
+        blob = (repo / dec["evidence_path"]).read_bytes()
+        assert dec["evidence_sha256"] == _hashlib.sha256(blob).hexdigest()
+        assert dec["disposition"] in (
+            "reference_only",
+            "excluded_from_claims",
+            "approved_for_current_use",
+        )
+        assert dec["prohibited_uses"]
+        assert set(map(str, dec["allowed_uses"])).isdisjoint(dec["prohibited_uses"])
+    assert cfg["code_review"]["status"] == "accepted"
+    assert cfg["code_review"]["reviewer"]
+    assert cfg["code_review"]["review_id"]
 
 
 def test_p58_accepts_when_evidence_complete_and_approved(tmp_path):

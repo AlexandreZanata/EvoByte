@@ -1,7 +1,8 @@
 # P58 — Reconciliar evidências e liberar uma base de pesquisa
 
-**Status:** Building / BLOCKED para P59; correção documental D019 planejada,
-auditor e dossiê ainda precisam executar as microtarefas abaixo.
+**Status:** Building / BLOCKED para P59; R1–R2 entregues, R3 em entrega
+neste ciclo (seis pareceres + revisão de código + configuração congelada),
+R4 pendente (medição final em árvore limpa).
 **Resultado parcial:** auditor `run_p58_acceptance_baseline_audit` rejeita fonte
 suja, raw ausente e aprovação pendente e recheca os 932 certificados P57
 com o checker exato; 18 evidências de aceitação P40–P57 recuperadas de
@@ -63,7 +64,7 @@ Testar esses casos e a base restrita válida; manter regressões de fonte suja,
 raw ausente, selo quebrado e certificado inválido. Não alterar o checker.
 R1 entrega capacidade e diagnóstico, sem liberar P59.
 
-**R2 — Dossiê rastreável e recuperação. Próxima microtarefa.** Versionar pareceres atuais e manifesto
+**R2 — Dossiê rastreável e recuperação. Entregue em 46f6e6e.** Versionar pareceres atuais e manifesto
 de artefatos duráveis com tamanhos/hashes. Conferir destino de recuperação dos
 pesos ignorados pelo Git, para que outro checkout possa recuperá-los sem depender
 de `/tmp`; presença local não demonstra recuperação externa. Fonte externa
@@ -71,8 +72,9 @@ inacessível deve ter data/erro registrados e uso restrito ao snapshot disponív
 Não afirmar estado aberto atual sem fonte confirmada. Concluir revisão dos
 objetos matemáticos e controles efetivamente usados pela base.
 
-**R3 — Disposição dos seis itens e revisão de código.** Revisar o código R1 em
-ciclo próprio e aplicar o contrato D019: P46 como referência datada quando não
+**R3 — Disposição dos seis itens e revisão de código. Em entrega neste ciclo:**
+seis pareceres evidenciados, revisão do código R1 e configuração congelada;
+R4 mede em árvore limpa. Contrato D019 aplicado: P46 como referência datada quando não
 revalidada; P47 incompleta excluída como pré-registro vigente; P48 limitada aos
 dois desafios e evidência conferida; P54 DROP, modelo desligado e estatística
 exploratória; P56 provisória, final consumido; P58 com escopo técnico explícito.
