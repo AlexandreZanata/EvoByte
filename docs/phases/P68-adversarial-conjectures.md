@@ -1,7 +1,7 @@
 # P68 — H07 — Fazer dois modelos pequenos atacar construções
 
-**Status:** Building (entrega 1 neste ciclo: jogo atacante + refutações
-certificadas; atacante aprendido, congelamento e medição pendentes).
+**Status:** Building (entregas 1–2: jogo atacante + atacante aprendido
+com comparação igual-custo; congelamento/medição pendentes).
 **Dependência:** P67 Done porém não integrado (PR #95 aberto); branch a
 partir de `codex/p67-verified-macros`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.

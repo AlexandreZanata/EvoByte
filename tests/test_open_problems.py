@@ -24,6 +24,7 @@ from benchmarks.open_problems import (
     P62RepairScorer,
     P65BridgeScorer,
     P66PacketScorer,
+    P68AttackScorer,
     audit_historical_certificate,
     check_coordinate_bounds,
     check_diophantine_quintuple,
@@ -73,7 +74,12 @@ from benchmarks.open_problems import (
     p66_random_packet,
     p66_train_packet_scorer,
     p68_attack_template,
+    p68_collect_attack_samples,
+    p68_compare_attackers,
+    p68_instance_features,
+    p68_n_refutes,
     p68_propose_template,
+    p68_train_attack_scorer,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
@@ -955,3 +961,46 @@ def test_p68_out_of_bounds_survival_budget_and_leakage() -> None:
         p68_propose_template("even", 20, 4)
     with _pytest.raises(ValueError, match="Unknown P68 attacker"):
         p68_attack_template(p68_propose_template("even", 4, 4), attacker="oracle")
+
+
+def _p68_trained_attacker():
+    templates = [
+        p68_propose_template("even", 4, 40),
+        p68_propose_template("n=2-mod-3", 4, 40),
+        p68_propose_template("multiple-of-3", 3, 39),
+    ]
+    samples, _ = p68_collect_attack_samples(templates)
+    assert len(samples) == 111
+    return templates, p68_train_attack_scorer(samples, seed=0, epochs=40)
+
+
+def test_p68_attack_scorer_trains_small_and_deterministic() -> None:
+    templates, first = _p68_trained_attacker()
+    _, second = _p68_trained_attacker()
+    assert first["n_params"] == 73
+    assert first["n_params"] <= P68_COMBINED_PARAM_CAP
+    assert first["train_acc"] >= 0.9
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P68AttackScorer().parameters()) == 73
+    assert len(p68_instance_features(templates[0], 5)) == 7
+    hit, _ = p68_n_refutes({"id": "even", "kind": "parametric"}, 5)
+    assert hit is True
+    assert p68_n_refutes({"id": "even", "kind": "parametric"}, 4)[0] is False
+
+
+def test_p68_compare_attackers_equal_budget() -> None:
+    templates, weights = _p68_trained_attacker()
+    first = p68_compare_attackers(weights["state_dict"], templates, budget=20, seed=0)
+    second = p68_compare_attackers(weights["state_dict"], templates, budget=20, seed=0)
+    assert set(first) == {"learned", "random", "systematic"}
+    for arm in ("learned", "random", "systematic"):
+        rec = first[arm]
+        assert rec["templates"] == len(templates)
+        assert rec["queries_total"] <= 20 * len(templates)
+        assert {k: v for k, v in rec.items() if k != "loop_sec"} == {
+            k: v for k, v in second[arm].items() if k != "loop_sec"
+        }
+    assert first["learned"]["queries_total"] <= first["random"]["queries_total"]
+    assert first["learned"]["queries_total"] <= first["systematic"]["queries_total"]
+    assert first["learned"]["refuted"] == 3
