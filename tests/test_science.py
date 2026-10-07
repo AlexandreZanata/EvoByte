@@ -22,6 +22,7 @@ from benchmarks.science_matrix import (
     generate_scientific_splits,
     run_p40_evidence_audit,
     run_p58_acceptance_baseline_audit,
+    run_p59_equal_information_audit,
     run_science_matrix,
     verify_scientific_candidate_l2,
 )
@@ -711,6 +712,57 @@ def test_p59_comparison_scope_restricts_families():
         assert restricted["reason"]
     with _pytest.raises(ValueError, match="Unknown P59 ES arm"):
         run_p59_matched_es_trial("gpu_search", p59_es_public_inputs(4))
+
+
+def _p59_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = _json.loads((repo / "experiments" / "p59-config.json").read_text())
+    cfg["es_instances"] = [4]
+    cfg["require_clean_tree"] = False
+    cfg_p = tmp_path / "p59-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p59_acceptance_smoke(tmp_path):
+    out_p = tmp_path / "p59-acceptance.json"
+    report = run_p59_equal_information_audit(_p59_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P59"
+    assert report["verdict"] == "ACCEPTED"
+    assert {t["inputs_hash"] for t in report["es_trials"]} == {
+        report["es_trials"][0]["inputs_hash"]
+    }
+    assert report["counters"]["es_certified"] == 2
+    assert report["counters"]["sentinels_passed"] == report["counters"]["sentinels"] == 2
+    assert report["counters"]["compilations"] == 1
+    assert "no statistical gain claimed" in report["claim_scope"]
+
+
+def test_p59_acceptance_blocks_final_reference(tmp_path):
+    import json as _json
+
+    cfg_p = _p59_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["final_tasks_path"] = "experiments/p56-final-tasks.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p59_equal_information_audit(cfg_p, tmp_path / "p59-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def test_p59_acceptance_blocks_uncomparable_family(tmp_path):
+    import json as _json
+
+    cfg_p = _p59_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["families"] = ["taxicab"]
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p59_equal_information_audit(cfg_p, tmp_path / "p59-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("SCOPE_RESTRICTED" in f for f in report["findings"])
 
 
 def test_p51_replay_map_audit_smoke(tmp_path):

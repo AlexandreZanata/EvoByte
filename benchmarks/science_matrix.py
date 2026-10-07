@@ -697,6 +697,7 @@ ACCEPTANCE_PHASES = (
     "P56",
     "P57",
     "P58",
+    "P59",
 )
 
 
@@ -1267,6 +1268,224 @@ def run_p58_acceptance_baseline_audit(
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P58 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p59_equal_information_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P59 audit: equal-information controls for development instances.
+
+    Verifies identical public inputs across arms (inputs_hash), leakage
+    sentinels PASS on development symbolic tasks, compilation control kept
+    separate from discovery, classical baselines reproduce, every cost
+    ledger complete (total computed, nothing subtracted), comparison scope
+    respected, and no final-test reference (P38/P56/P71) anywhere in config.
+    Engineering input-equality only; no statistical gain is declared.
+    """
+    import torch as _torch
+    from math_specialist import (
+        _p50_eval_formula,
+        run_p59_compilation_control,
+        run_p59_leakage_sentinel,
+    )
+    from open_problems import (
+        p59_comparison_scope,
+        p59_cost_ledger,
+        p59_es_public_inputs,
+        run_p59_matched_es_trial,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P59":
+        raise ValueError(f"Config {cfg_p} is not a P59 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P59 EQUAL-INFORMATION CONTROLS AUDIT (development only; no gain claimed)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    required = (
+        "es_space",
+        "es_instances",
+        "symbolic_tasks",
+        "sentinel_arms",
+        "families",
+        "device",
+    )
+    for key in required:
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    scopes: dict[str, Any] = {}
+    for family in config.get("families", []):
+        scope = p59_comparison_scope(family)
+        scopes[str(family)] = scope
+        print(f"  family {family}: comparable={scope['comparable']}")
+        if not scope["comparable"]:
+            findings.append(f"SCOPE_RESTRICTED: {family} ({scope['reason']})")
+
+    es_records: list[dict[str, Any]] = []
+    try:
+        space = dict(config.get("es_space", {}))
+        for n in config.get("es_instances", []):
+            inputs = p59_es_public_inputs(int(n), **space)
+            recs = [
+                run_p59_matched_es_trial(arm, inputs)
+                for arm in ("cpu_enumeration", "classical_construction")
+            ]
+            hashes = {r["inputs_hash"] for r in recs}
+            print(
+                f"  es n={n}: hashes={len(hashes)} cpu={recs[0]['status']} classical={recs[1]['status']}"
+            )
+            if len(hashes) != 1:
+                findings.append(f"INPUT_MISMATCH: n={n} arms saw different public inputs")
+            for rec in recs:
+                expect = p59_cost_ledger(**rec["ledger"]["parts"])
+                if abs(expect["total_sec"] - rec["ledger"]["total_sec"]) > 1e-9:
+                    findings.append(f"COST_SUBTRACTED: n={n} arm={rec['arm']}")
+                if rec["status"] != "certified":
+                    findings.append(f"CONTROL_FAILED: n={n} arm={rec['arm']} ({rec['status']})")
+            es_records.extend(recs)
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    sentinels: list[dict[str, Any]] = []
+    try:
+        stream_kwargs = {
+            "n_batches": int(config.get("sentinel_batches", {}).get("n_batches", 2)),
+            "batch_size": int(config.get("sentinel_batches", {}).get("batch_size", 8)),
+            "pop_size": int(config.get("sentinel_batches", {}).get("pop_size", 8)),
+            "max_generations": int(config.get("sentinel_batches", {}).get("max_generations", 2)),
+        }
+        for task in config.get("symbolic_tasks", []):
+            lo, hi = (float(v) for v in task["domain"])
+            xs = np.linspace(lo, hi, int(task["n_points"]), dtype=np.float32)
+            ys = np.asarray(_p50_eval_formula(str(task["private_a"]), xs), dtype=np.float32)
+            for arm in config.get("sentinel_arms", []):
+                rep = run_p59_leakage_sentinel(
+                    arm,
+                    xs,
+                    ys,
+                    str(task["private_a"]),
+                    str(task["private_b"]),
+                    int(task["seed"]),
+                    **stream_kwargs,
+                )
+                print(f"  sentinel {arm}: {'PASS' if rep['passed'] else 'LEAK'}")
+                if not rep["passed"]:
+                    findings.append(f"LEAK: arm={arm} proposals depend on private formula")
+                sentinels.append(rep)
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    compilations: list[dict[str, Any]] = []
+    try:
+        for task in config.get("symbolic_tasks", [])[:1]:
+            lo, hi = (float(v) for v in task["domain"])
+            xs = np.linspace(lo, hi, int(task["n_points"]), dtype=np.float32)
+            ys = np.asarray(_p50_eval_formula(str(task["private_a"]), xs), dtype=np.float32)
+            ctl = run_p59_compilation_control(str(task["private_a"]), xs, ys)
+            print(f"  compilation {ctl['method']}: program={ctl['program_sha256'] is not None}")
+            if ctl["program_sha256"] is None:
+                findings.append("CONTROL_FAILED: compilation control built no program")
+            compilations.append(ctl)
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seeds", [7])[0]),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p59_config": config_sha[:16]},
+        config={"acceptance_phase": "P59"},
+    )
+    report = {
+        "phase": "P59",
+        "verdict": verdict,
+        "claim_scope": (
+            "equal public inputs across arms on development instances; "
+            "compilation kept separate from discovery; no statistical gain claimed"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "scopes": scopes,
+        "es_trials": [
+            {
+                "arm": r["arm"],
+                "n": r["n"],
+                "inputs_hash": r["inputs_hash"],
+                "status": r["status"],
+                "origin": r["origin"],
+                "ledger_total_sec": r["ledger"]["total_sec"],
+            }
+            for r in es_records
+        ],
+        "sentinels": [
+            {"arm": s["arm"], "seed": s["seed"], "passed": s["passed"]} for s in sentinels
+        ],
+        "compilations": [
+            {"method": c["method"], "construction_sec": c["construction_sec"]} for c in compilations
+        ],
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P59",
+        },
+        "seeds_rng": f"fixed seeds {config.get('seeds', [7])}; deterministic trials",
+        "counters": {
+            "es_instances": len(config.get("es_instances", [])),
+            "es_certified": sum(1 for r in es_records if r["status"] == "certified"),
+            "sentinels": len(sentinels),
+            "sentinels_passed": sum(1 for s in sentinels if s["passed"]),
+            "compilations": len(compilations),
+        },
+        "limitations": [
+            "Matched trial covers CPU enumeration plus classical construction on Erdős–Straus.",
+            "GPU search comparability reuses the accepted campaign with identical inputs at measurement.",
+            "Restricted families stay excluded from comparison; narrow-family equality proves no generality.",
+            "BLOCKED on final access, leak, or cost subtraction is the honest gate, not a negative result.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P59 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -5238,6 +5457,8 @@ def main() -> int:
             run_p57_campaign_audit(args.config, args.output)
         elif args.acceptance_phase == "P58":
             run_p58_acceptance_baseline_audit(args.config, args.output)
+        elif args.acceptance_phase == "P59":
+            run_p59_equal_information_audit(args.config, args.output)
         return 0
 
     seeds = (

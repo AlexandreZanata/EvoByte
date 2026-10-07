@@ -1,7 +1,8 @@
 # P59 — Estabelecer comparações com a mesma informação
 
-**Status:** Building (entregas 1–2 entregues: fronteira/sentinelas e trial
-pareado ES + ledger + escopo; entregas 3–4 pendentes).
+**Status:** Building (entregas 1–3 entregues: fronteira/sentinelas, trial
+pareado + ledger + escopo, interface de aceitação + config congelada;
+entrega 4 pendente: medição dos controles em árvore limpa).
 **Dependência:** predecessor P58 aceito porém não integrado (PR #86 aberto);
 branch a partir de `codex/p58-accepted-research-baseline`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
@@ -66,7 +67,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P59**:
+Interface de aceitação **implementada na entrega 3** (`run_p59_equal_information_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P59 --config experiments/p59-config.json --output /tmp/evobyte-p59-acceptance.json
