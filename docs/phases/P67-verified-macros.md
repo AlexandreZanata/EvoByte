@@ -1,9 +1,10 @@
 # P67 — H06 — Criar novas instruções matemáticas verificadas
 
-**Status:** Building (entregas 1–3: mineração, comparação, interface +
-config congelada; entrega 4 pendente: medição em árvore limpa + registro.
-Diagnóstico: outcome PROMISING em compactação — ganho de certificado segue
-medida separada e não alegada.)
+**Status:** Done (entregas 1–4: mineração, comparação, interface +
+comando congelado, medição ACCEPTED em árvore limpa
+`run_id=96e55cd85f07d98c` com outcome PROMISING em compactação apenas;
+registro em `docs/research/p67-macro-record.md`). H06 sem promoção de
+certificado/novidade; P68 liberada.
 **Dependência:** P66 Done porém não integrado (PR #94 aberto); branch a
 partir de `codex/p66-composite-search-jumps`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
