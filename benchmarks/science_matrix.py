@@ -706,6 +706,7 @@ ACCEPTANCE_PHASES = (
     "P65",
     "P66",
     "P67",
+    "P68",
 )
 
 
@@ -2897,6 +2898,187 @@ def run_p67_macro_audit(config_path: str | Path, output_path: str | Path) -> dic
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P67 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p68_duel_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P68 audit: learned vs random vs systematic attackers (H07).
+
+    Trains the single attack scorer on train templates, compares the three
+    arms on disjoint dev templates under the same per-template query
+    budget, and bills training to the learned arm only. PROMISING only when
+    learned refutes strictly more dev templates (or equally many with >=20%
+    fewer queries); otherwise honest NULL. Refuting a template never
+    refutes Erdős–Straus; survival is not a theorem.
+    """
+    import torch as _torch
+    from open_problems import (
+        P68_LEARNED_ATTACKERS,
+        p68_collect_attack_samples,
+        p68_compare_attackers,
+        p68_propose_template,
+        p68_train_attack_scorer,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P68":
+        raise ValueError(f"Config {cfg_p} is not a P68 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P68 ADVERSARIAL CONJECTURES AUDIT (equal budgets; outcome reported)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    for key in ("train_templates", "dev_templates", "training", "budget", "device"):
+        if key not in config:
+            findings.append(f"CONFIG_INCOMPLETE: missing key: {key}")
+    if not config.get("dev_templates"):
+        findings.append("CONFIG_INVALID: empty dev template set")
+
+    blob = json.dumps(config, sort_keys=True, default=str).lower()
+    for token in ("p38", "p56-final", "final-test", "p71", "final_tasks", "p60-final"):
+        if token in blob:
+            findings.append(f"FINAL_ACCESS: config references forbidden final: {token}")
+
+    def _key(spec: dict[str, Any]) -> tuple[str, int, int]:
+        return (str(spec["family_id"]), int(spec["lo"]), int(spec["hi"]))
+
+    train_specs = [_key(s) for s in config.get("train_templates", [])]
+    dev_specs = [_key(s) for s in config.get("dev_templates", [])]
+    if set(train_specs) & set(dev_specs):
+        findings.append("SPLIT_LEAK: templates on both train and dev sides")
+    print(f"  train templates={len(train_specs)} dev templates={len(dev_specs)}")
+
+    training: dict[str, Any] = {}
+    comparison: dict[str, Any] = {}
+    try:
+        t_cfg = config.get("training", {})
+        train = [p68_propose_template(f, lo, hi) for f, lo, hi in train_specs]
+        samples, collect_sec = p68_collect_attack_samples(train)
+        print(f"  attack samples={len(samples)} collection={collect_sec:.3f}s")
+        if not samples:
+            findings.append("DATA_EMPTY: no attack samples from train templates")
+        else:
+            trained = p68_train_attack_scorer(
+                samples,
+                seed=int(t_cfg.get("seed", 0)),
+                epochs=int(t_cfg.get("epochs", 40)),
+            )
+            weights = trained.pop("state_dict")
+            training = {k: v for k, v in trained.items()}
+            print(f"  scorer params={training['n_params']} train_acc={training['train_acc']:.3f}")
+            if training["n_params"] > int(config.get("param_cap", 1000000)):
+                findings.append("BUDGET_EXCEEDED: scorer above combined param cap")
+            dev = [p68_propose_template(f, lo, hi) for f, lo, hi in dev_specs]
+            comparison = p68_compare_attackers(
+                weights,
+                dev,
+                budget=int(config.get("budget", 20)),
+                seed=int(config.get("seed", 0)),
+            )
+    except (ValueError, TypeError, KeyError) as exc:
+        findings.append(f"CONFIG_INVALID: {exc}")
+
+    arms = {a: comparison.get(a, {}) for a in P68_LEARNED_ATTACKERS}
+    if comparison:
+        print(
+            f"  learned={arms['learned']['refuted']} "
+            f"random={arms['random']['refuted']} "
+            f"systematic={arms['systematic']['refuted']}"
+        )
+        best_other = max(arms["random"]["refuted"], arms["systematic"]["refuted"])
+        if arms["learned"]["refuted"] > best_other:
+            outcome, reason = "PROMISING", "learned refutes more dev templates"
+        elif (
+            arms["learned"]["refuted"] >= best_other
+            and arms["learned"]["refuted"] > 0
+            and arms["learned"]["queries_total"]
+            <= 0.8 * min(arms["random"]["queries_total"], arms["systematic"]["queries_total"])
+        ):
+            outcome, reason = "PROMISING", ">=20% fewer queries, no refutation drop"
+        else:
+            outcome, reason = "NULL", "learned adds no refutation or query saving"
+    else:
+        outcome, reason = "NULL", "comparison did not run"
+    print(f"  outcome: {outcome} ({reason})")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=_torch.device(config.get("device", "cpu")),
+        dataset_hashes={"p68_config": config_sha[:16]},
+        config={"acceptance_phase": "P68"},
+    )
+    report = {
+        "phase": "P68",
+        "verdict": verdict,
+        "hypothesis_outcome": outcome,
+        "outcome_reason": reason,
+        "claim_scope": (
+            "attacker duel on frozen dev templates with equal query budgets; "
+            "outcome reported, nothing promoted"
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "training": training,
+        "comparison": {
+            arm: {
+                "templates": rec["templates"],
+                "refuted": rec["refuted"],
+                "queries_total": rec["queries_total"],
+            }
+            for arm, rec in comparison.items()
+        },
+        "hardware": prov["hardware"],
+        "driver": (prov["hardware"].get("nvidia_smi", "not-probed")),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P68",
+        },
+        "seeds_rng": "frozen seeds; deterministic collection, training and duels",
+        "counters": {
+            "dev_templates": len(dev_specs),
+            "arms": len(comparison),
+        },
+        "limitations": [
+            "Refuting a template never refutes Erdős–Straus; survival is not a theorem.",
+            "Shared blind spots across models stay possible; the fixed checker rules.",
+            "The reserved fresh final stays closed; confirmation belongs to P71.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P68 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -6886,6 +7068,8 @@ def main() -> int:
             run_p66_jump_audit(args.config, args.output)
         elif args.acceptance_phase == "P67":
             run_p67_macro_audit(args.config, args.output)
+        elif args.acceptance_phase == "P68":
+            run_p68_duel_audit(args.config, args.output)
         return 0
 
     seeds = (
