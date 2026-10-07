@@ -1,6 +1,10 @@
 # P69 — H09 — Sincronizar ilhas por erros complementares
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: assinaturas + migração +
+recombinação + regressões; loop de busca e comparação de 4 braços,
+congelamento e medição pendentes).
+**Dependência:** P68 Done porém não integrado (PR #96 aberto); branch a
+partir de `codex/p68-adversarial-conjectures`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P68 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p69-residue-synchronized-islands`.
