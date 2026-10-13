@@ -711,6 +711,7 @@ ACCEPTANCE_PHASES = (
     "P70",
     "P71",
     "P72",
+    "P73",
 )
 
 
@@ -3890,6 +3891,94 @@ def run_p72_novelty_audit(config_path: str | Path, output_path: str | Path) -> d
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P72 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p73_lean_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P73 audit: hermetic Lean 4 formal verification baseline and harness check.
+
+    Verifies pinned toolchain (leanprover/lean4:v4.34.0), Lake project structure,
+    compilation of frozen challenge theorems in P48Proofs.lean without network,
+    soundness rejection of bogus theorems, and provenance recording in clean tree.
+    """
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.verifier import verify_lean_harness
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P73":
+        raise ValueError(f"Config {cfg_p} is not a P73 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P73 LEAN 4 FORMAL VERIFICATION BASELINE AUDIT (hermetic harness; soundness checks)")
+    print("=" * 115)
+
+    project_dir = config.get("project_dir", "lean_proofs")
+    timeout_sec = float(config.get("timeout_sec", 60.0))
+
+    harness = verify_lean_harness(project_dir=project_dir, timeout_sec=timeout_sec)
+    findings: list[str] = list(harness.get("reasons", []))
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if dirty and not config.get("allow_dirty", False):
+        findings.append("TREE_DIRTY: git status is not clean")
+
+    verdict = "ACCEPTED" if not findings and harness.get("passed", False) else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p73_config": config_sha[:16]},
+        config={"acceptance_phase": "P73"},
+    )
+
+    report = {
+        "phase": "P73",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Hermetic Lean 4 formal verification harness operational; "
+            "P48 challenge theorems verified; soundness rejection confirmed; "
+            "no unproven mathematical theorem or discovery claimed."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "harness": harness,
+        "hardware": prov["hardware"],
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P73",
+            "project_dir": project_dir,
+            "timeout_sec": timeout_sec,
+        },
+        "limitations": [
+            "Harness validation proves software and formal kernel readiness, not novelty.",
+            "Lean Mathlib version is pinned to v4.34.0.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P73 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -7889,6 +7978,8 @@ def main() -> int:
             run_p71_confirmation_audit(args.config, args.output)
         elif args.acceptance_phase == "P72":
             run_p72_novelty_audit(args.config, args.output)
+        elif args.acceptance_phase == "P73":
+            run_p73_lean_audit(args.config, args.output)
         return 0
 
     seeds = (

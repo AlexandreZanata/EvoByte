@@ -1,0 +1,9 @@
+{
+  "phase": "P73",
+  "note": "P73 Lean 4 formal verification baseline and hermetic harness configuration.",
+  "project_dir": "lean_proofs",
+  "toolchain_pinned": "leanprover/lean4:v4.34.0",
+  "timeout_sec": 60.0,
+  "seed": 42,
+  "require_clean_tree": true
+}

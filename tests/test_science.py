@@ -181,6 +181,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P70",
         "P71",
         "P72",
+        "P73",
     )
     import subprocess as _sp
 
@@ -1537,6 +1538,90 @@ def test_p72_acceptance_blocks_disallowed_modules(tmp_path):
     report = run_p72_novelty_audit(cfg_p, tmp_path / "p72-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("DISALLOWED_MODULES" in f for f in report["findings"])
+
+
+def _p73_smoke_config(tmp_path):
+    import json as _json
+
+    cfg = {
+        "phase": "P73",
+        "project_dir": "lean_proofs",
+        "toolchain_pinned": "leanprover/lean4:v4.34.0",
+        "timeout_sec": 30.0,
+        "seed": 42,
+        "allow_dirty": True,
+    }
+    cfg_p = tmp_path / "p73-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p73_lean_harness_verification():
+    from evobyte.verifier import verify_lean_harness
+
+    st = verify_lean_harness("lean_proofs", timeout_sec=60.0)
+    assert st["toolchain_file_exists"] is True
+    assert st["lakefile_exists"] is True
+    assert st["passed"] is True
+    assert st["reasons"] == []
+    assert st["checks"]["p48_es_identity"]["accepted"] is True
+    assert st["checks"]["soundness_rejection"]["rejected_properly"] is True
+
+
+def test_p73_lean_checker_direct_proofs():
+    from evobyte.verifier import run_lean_checker
+
+    res1 = run_lean_checker(
+        "lean_proofs/P48Proofs.lean",
+        project_dir="lean_proofs",
+        expected_theorem="es_identity",
+        timeout_sec=30.0,
+    )
+    assert res1["accepted"] is True
+    assert res1["theorem_name"] == "es_identity"
+
+    res2 = run_lean_checker(
+        "lean_proofs/P48Proofs.lean",
+        project_dir="lean_proofs",
+        expected_theorem="erdos_straus_1009",
+        timeout_sec=30.0,
+    )
+    assert res2["accepted"] is True
+    assert res2["theorem_name"] == "erdos_straus_1009"
+
+
+def test_p73_lean_checker_rejects_false_proof(tmp_path):
+    from evobyte.verifier import run_lean_checker
+
+    bad_p = tmp_path / "bad.lean"
+    bad_p.write_text("theorem false_thm : (1 : Nat) = 2 := by rfl\n")
+    res = run_lean_checker(bad_p, project_dir="lean_proofs", timeout_sec=15.0)
+    assert res["accepted"] is False
+    assert any("compile_rejected" in r or "theorem_mismatch" in r for r in res["reasons"])
+
+
+def test_p73_acceptance_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p73_lean_audit
+
+    out_p = tmp_path / "p73-acceptance.json"
+    report = run_p73_lean_audit(_p73_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P73"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["harness"]["passed"] is True
+
+
+def test_p73_acceptance_rejects_wrong_phase(tmp_path):
+    import json as _json
+
+    import pytest as _pytest
+
+    from benchmarks.science_matrix import run_p73_lean_audit
+
+    cfg_p = tmp_path / "bad-phase.json"
+    cfg_p.write_text(_json.dumps({"phase": "INVALID"}))
+    with _pytest.raises(ValueError, match="not a P73 configuration"):
+        run_p73_lean_audit(cfg_p, tmp_path / "out.json")
 
 
 def _p59_smoke_config(tmp_path):
