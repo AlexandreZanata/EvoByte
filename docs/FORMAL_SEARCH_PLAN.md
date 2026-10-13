@@ -429,3 +429,42 @@ P73 harness Lean 4 -> P74 síntese algébrica -> P75 matriz de resíduos
 3. **Identidades polinomiais exatas:** identidades descobertas $(X(k), Y(k), Z(k))$ são identidades racionais exatas sobre $\mathbb{Q}[k]$, verificáveis por álgebra computacional e provadas por táticas de anel (`ring`, `norm_num`, `linarith`) em Lean 4.
 4. **Sem alegações espúrias:** a cobertura de classes de resíduos modulares especifica exatamente a porcentagem de classes provadas; resíduos sem identidade permanecem explicitamente marcados como não cobertos.
 5. **Divisão de conjuntos cega (P79):** classes de congruência de teste foram seladas antes do congelamento dos modelos de busca para evitar sobreajuste algébrico.
+
+## Programa de prova indutiva, síntese de lemas e automação de táticas em Lean 4 (P81–P88)
+
+**Programa proposto em 2026-10-13 (D023).** Sucede a conclusão de P73–P80 sob D022.
+O programa P73–P80 demonstrou com sucesso que identidades polinomiais em $\mathbb{Q}[k]$
+e crivos de divisores racionais resolvem formalmente classes modulares e instâncias
+difíceis no kernel do Lean 4 (149 teoremas provados com zero `sorry`). Contudo, o
+dossiê de pesquisa P80 identificou limitações estruturais:
+1. Identidades em $\mathbb{Q}[k]$ garantem relações racionais, mas a garantia de que as
+   coordenadas $x, y, z$ pertencem a $\mathbb{Z}^+$ para certas progressões aritméticas
+   exige lemas de divisibilidade inteira formulados e provados em $\mathbb{N}$ ou $\mathbb{Z}$.
+2. As classes residuais resistentes módulo 840 para $4/n$ ($n \equiv 1, 121, 169, 289, 361, 529 \pmod{840}$)
+   e as 24 classes restantes para Sierpiński mod 120 não admitem parametrizações polinomiais
+   lineares universais de 1 parâmetro ($n = mk + r$). Exigem parametrizações quadráticas
+   ou multiparamétricas ($n = mk^2 + rk + s$ ou seleção orientada por fatores primos).
+3. O provador formal utilizou predominantemente táticas de anel (`ring`, `norm_num`).
+   Avançar para lemas indutivos e limites diofantinos requer táticas de aritmética de
+   Presburger (`omega`), busca guiada por regras (`aesop`) e desigualdades lineares (`linarith`).
+
+O programa P81–P88 estende o motor de descoberta e verificação do EvoByte para a
+geração de lemas diofantinos estruturados em $\mathbb{N}$, seleção algorítmica de divisores
+ótimos, prova automatizada via táticas avançadas do Lean 4 e compilação de meta-teoremas.
+
+### Ordem e dependências de P81–P88
+
+```text
+P81 baseline indutivo -> P82 lemas de divisibilidade -> P83 divisores ótimos
+ -> P84 identidades multiparâmetro -> P85 automação de táticas (omega/aesop)
+ -> P86 generalização multitermo -> P87 confirmação cega em grande escala
+ -> P88 meta-teoremas e campanha formal certificada
+```
+
+### Regras do programa P81–P88
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais em $\mathbb{N}$ e $\mathbb{Z}$:** lemas matemáticos devem certificar positividade e divisibilidade exata no kernel do Lean 4.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P87):** partição selada de instâncias diofantinas de grande escala ($n > 10^5$) sem vazamento para o crivo.

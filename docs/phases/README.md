@@ -1,4 +1,4 @@
-# Phases P00–P72 (executable plan)
+# Phases P00–P88 (executable plan)
 
 One file per phase. Each phase states objective, scope (in/out),
 tasks, exit gate (artifact runs + measured), risks, and a **Commit & Push**
@@ -149,6 +149,26 @@ P73–P80 are completed (Done, D022) with all measured gates passing, clean-tree
 verification, 149 Lean 4 kernel theorems with zero sorry, and PRs #102–#109.
 No worldwide novelty, quantum advantage, or unproven universal conjecture
 resolution is claimed.
+
+## Inductive proof, lemma synthesis & tactic automation program (P81–P88)
+
+[The inductive formal search contract](../FORMAL_SEARCH_PLAN.md#programa-de-prova-indutiva-síntese-de-lemas-e-automação-de-táticas-em-lean-4-p81p88)
+defines the formal extension adopted under D023 following the conclusion of
+P73–P80. It targets integer divisibility lemmas in $\mathbb{N}$, optimal divisor selection,
+multiparameter quadratic identities, and automated Lean 4 tactic dispatch (`omega`, `aesop`).
+
+- [P81 — Harness de prova indutiva e verificação estrutural Lean 4](P81-inductive-proof-baseline.md).
+- [P82 — Síntese automática de lemas de divisibilidade diofantina](P82-divisibility-lemma-synthesis.md).
+- [P83 — Crivo de fatoração estruturada e seleção de divisores ótimos](P83-optimal-divisor-selection.md).
+- [P84 — Síntese de identidades quadráticas multiparâmetro](P84-multiparameter-quadratic-identities.md).
+- [P85 — Compilação de provas com automação de táticas (omega/aesop)](P85-tactic-dispatch-omega-aesop.md).
+- [P86 — Generalização multitermo e frações egípcias coprimas](P86-multiterm-diophantine-generalization.md).
+- [P87 — Confirmação cega em grande escala com controle estatístico](P87-large-instance-blind-confirmation.md).
+- [P88 — Campanha formal de meta-teoremas e dossiê certificado](P88-meta-theorem-formal-campaign.md).
+
+Execute one micro-task at a time. All phases remain Proposed until their explicit
+gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
+conjecture resolution is claimed.
 
 ## Historical execution and acceptance contract
 
