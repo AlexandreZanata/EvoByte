@@ -127,6 +127,27 @@ new experiments. A valid NULL/INCONCLUSIVE pilot allows the next isolated
 hypothesis; rejected modules stay disabled. No presumed worldwide novelty,
 quantum advantage, promised throughput or automatically solved conjecture.
 
+## Algebraic discovery & Lean 4 formal verification program (P73–P80)
+
+[The algebraic search contract](../FORMAL_SEARCH_PLAN.md#programa-de-busca-algébrica-e-verificação-formal-lean-4-p73p80)
+defines the formal extension adopted under D021 following the conclusion of
+P58–P72. It addresses the fundamental bottleneck of finite numerical point-search
+by targeting parameterized polynomial identities that cover infinite residue classes,
+coupled directly to interactive theorem proving in Lean 4.
+
+- [P73 — Infraestrutura de verificação formal e harness Lean 4](P73-lean-formal-baseline.md).
+- [P74 — Síntese de identidades polinomiais algébricas](P74-algebraic-identity-synthesis.md).
+- [P75 — Matriz de cobertura de classes de congruência modulares](P75-residue-class-coverage.md).
+- [P76 — Crivo de fatoração racional e decomposição de divisores](P76-rational-divisor-sieve.md).
+- [P77 — Compilador bytecode para teoremas certificados em Lean 4](P77-bytecode-lean-proof-bridge.md).
+- [P78 — Generalização para famílias de Sierpiński e Schinzel](P78-sierpinski-schinzel-generalization.md).
+- [P79 — Confirmação cega e controle estatístico de seleção](P79-blind-residue-confirmation.md).
+- [P80 — Campanha formal bounded e dossiê de teoremas Lean 4](P80-certified-formal-campaign.md).
+
+Execute one micro-task at a time. All phases remain Proposed until their explicit
+gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
+conjecture resolution is claimed.
+
 ## Historical execution and acceptance contract
 
 ```text

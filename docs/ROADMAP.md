@@ -53,6 +53,7 @@ P58–P60 accepted base, equal-information controls and frozen workbench
 P61–P70 ten isolated speculative hypotheses
 P71 fresh independent confirmation with selection control
 P72 one precise novelty nomination and certified campaign
+P73–P80 algebraic discovery & Lean 4 formal verification program (D021)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -165,6 +166,27 @@ novelty and reproduction. No universal claim follows from finite testing.
 Adding these files executes no new experiment and establishes no worldwide
 novelty, quantum advantage or solved open problem. Existing results remain
 unchanged; integrity failures block advancement, not honest negative findings.
+
+## Algebraic discovery & Lean 4 formal verification (D021)
+
+[P73–P80](phases/README.md#algebraic-discovery--lean-4-formal-verification-program-p73p80)
+define the formal extension following the conclusion of P58–P72.
+Empirical search in $\mathbb{Z}^3$ showed that numerical point-hunting hits
+finite resource bounds on hard primes ($n \equiv 1 \pmod{24}$) without
+proving theorems. P73–P80 pivot from instance-level search to
+polynomial identity synthesis and automated theorem extraction in Lean 4.
+
+P73 audits and freezes the hermetic Lean 4 / Lake verification harness.
+P74 synthesizes algebraic polynomial identities $(X(k), Y(k), Z(k))$ covering
+linear arithmetic progressions $n = mk + r$. P75 constructs an exact residue
+class coverage matrix for moduli $M \in \{24, 120, 840\}$, isolating resistant
+residues. P76 implements an exact rational divisor sieve on
+$(4xy - n(x+y)) \mid n^2$. P77 compiles discovered algebraic bytecode into
+certified Lean 4 Mathlib theorems with automated tactic proofs (`ring`,
+`norm_num`, `linarith`). P78 tests generalization to Sierpiński ($5/n$)
+and Schinzel ($a/n$) families. P79 enforces blinded residue confirmation.
+P80 conducts a bounded campaign and produces a formal proof dossier.
+All phases remain Proposed until measured and accepted.
 
 ## Quantum track (experimental, deferred expansion)
 
