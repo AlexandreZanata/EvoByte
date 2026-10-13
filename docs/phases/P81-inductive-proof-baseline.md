@@ -1,6 +1,6 @@
 # P81 — Harness de prova indutiva e verificação estrutural Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P80 concluída (PR #109 aberto) e P81-P88 formalizados; branch a partir de `codex/p81-p88-inductive-lean-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P80 concluída com dossiê formal de campanha e 149 teoremas provados no kernel Lean 4; ambiente local Lean 4 e Lake operacionais hermeticamente.
