@@ -712,6 +712,7 @@ ACCEPTANCE_PHASES = (
     "P71",
     "P72",
     "P73",
+    "P74",
 )
 
 
@@ -3979,6 +3980,123 @@ def run_p73_lean_audit(config_path: str | Path, output_path: str | Path) -> dict
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P73 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p74_algebraic_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P74 audit: algebraic polynomial identity synthesis and Mordell rediscovery.
+
+    Synthesizes exact polynomial identities in Q[k] for linear progressions n = m*k + r,
+    verifies exact algebraic equivalence 4XYZ == n(YZ + XZ + XY) and positivity,
+    confirms rediscovery of classical Mordell identities (4k+3, 3k+2, 8k+5),
+    and records structured coverage metrics under clean tree.
+    """
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        audit_algebraic_coverage,
+        synthesize_mordell_identity,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P74":
+        raise ValueError(f"Config {cfg_p} is not a P74 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P74 ALGEBRAIC IDENTITY SYNTHESIS AUDIT (Mordell forms; exact Q[k] verification)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    mordell_targets = [
+        (4, 3, "4k+3"),
+        (3, 2, "3k+2"),
+        (8, 5, "8k+5"),
+    ]
+    classical_identities: dict[str, Any] = {}
+    for m, r, name in mordell_targets:
+        ident = synthesize_mordell_identity(m, r)
+        if ident is None:
+            findings.append(f"CLASSICAL_TARGET_FAILED: could not synthesize identity for {name}")
+        elif not ident.verify_exact():
+            findings.append(
+                f"CLASSICAL_VERIFY_FAILED: identity for {name} failed exact algebraic check"
+            )
+        else:
+            classical_identities[name] = ident.to_dict()
+
+    audit_modulus = int(config.get("modulus", 24))
+    coverage = audit_algebraic_coverage(audit_modulus)
+    if coverage["covered_count"] == 0:
+        findings.append(f"ZERO_COVERAGE: no identities discovered for modulus {audit_modulus}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if dirty and not config.get("allow_dirty", False):
+        findings.append("TREE_DIRTY: git status is not clean")
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p74_config": config_sha[:16]},
+        config={"acceptance_phase": "P74"},
+    )
+
+    report = {
+        "phase": "P74",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Exact algebraic polynomial identities synthesized in Q[k]; "
+            "classical Mordell forms (4k+3, 3k+2, 8k+5) rediscovered and verified; "
+            "congruence class coverage evaluated; no universal conjecture proof claimed."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "classical_identities": classical_identities,
+        "coverage": {
+            "modulus": coverage["modulus"],
+            "covered_count": coverage["covered_count"],
+            "total_residues": coverage["total_residues"],
+            "coverage_ratio": coverage["coverage_ratio"],
+            "covered_residues": coverage["covered_residues"],
+            "uncovered_residues": coverage["uncovered_residues"],
+        },
+        "hardware": prov["hardware"],
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P74",
+            "modulus": audit_modulus,
+        },
+        "limitations": [
+            "Identities cover infinite linear progression families, not unproven individual residues.",
+            "Residues like n = 1 mod 24 require higher moduli or nonlinear forms.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P74 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -7980,6 +8098,8 @@ def main() -> int:
             run_p72_novelty_audit(args.config, args.output)
         elif args.acceptance_phase == "P73":
             run_p73_lean_audit(args.config, args.output)
+        elif args.acceptance_phase == "P74":
+            run_p74_algebraic_audit(args.config, args.output)
         return 0
 
     seeds = (

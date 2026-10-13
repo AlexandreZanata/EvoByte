@@ -1,0 +1,7 @@
+{
+  "phase": "P74",
+  "note": "P74 algebraic polynomial identity synthesis frozen configuration. Mordell targets: 4k+3, 3k+2, 8k+5; exact Q[k] verification; modulus 24 coverage audit.",
+  "modulus": 24,
+  "seed": 42,
+  "require_clean_tree": true
+}
