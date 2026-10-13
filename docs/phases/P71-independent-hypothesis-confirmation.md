@@ -1,9 +1,11 @@
 # P71 — Confirmar as hipóteses selecionadas sem reabrir testes antigos
 
-**Status:** Building (entrega 1 neste ciclo: final congelado + procedimento
-+ interface de aceitação; medição em árvore limpa + pacote de reprodução
-pendentes. Diagnóstico: H06/H08 INCONCLUSIVE, só DIRTY_SOURCE bloqueia.
-Operador independente confirmado: IA independente em outra máquina.).
+**Status:** Done (entregas 1–2: final congelado + procedimento + interface,
+medição ACCEPTED em árvore limpa `run_id=f793fbdc79f05de2` com outcomes
+H06/H08 INCONCLUSIVE íntegros; registro em
+`docs/research/p71-confirmation-record.md`). Confirmação concluída sem
+promoção de método a P72; reprodução externa segue pendente para confirmação
+independente. Próxima: P72.
 **Dependência:** P70 Done porém não integrado; branch a partir de
 `codex/p70-parametric-proof-search`.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
