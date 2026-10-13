@@ -1,7 +1,7 @@
 # P74 — Síntese de identidades polinomiais algébricas
 
-**Status:** Proposed.
-**Dependência:** P73 Proposed; branch a partir de `codex/p73-lean-formal-baseline`.
+**Status:** Done (entregas 1–2: motor de síntese Poly1D/AlgebraicIdentity implementado, redescobertas clássicas de Mordell 4k+3, 3k+2, 8k+5 verificadas com 100% de exatidão algébrica, medição ACCEPTED em árvore limpa run_id=4826b530947eac1c; registro em docs/research/p74-identity-record.md).
+**Dependência:** P73 Done (PR #102 aberto); branch a partir de `codex/p73-lean-formal-baseline`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P73 com harness Lean 4 hermético aceito.
 **Branch:** `codex/p74-algebraic-identity-synthesis`.
