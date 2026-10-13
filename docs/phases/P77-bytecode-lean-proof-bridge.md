@@ -1,6 +1,6 @@
 # P77 — Compilador bytecode para teoremas certificados em Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P76 Proposed; branch a partir de `codex/p76-rational-divisor-sieve`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P76 aceita; harness Lean 4 operacional.
