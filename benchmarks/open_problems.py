@@ -93,6 +93,60 @@ def check_erdos_straus(n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[
     return is_valid, residual, details
 
 
+def check_erdos_straus_algebraic_congruence(
+    n: int, modulus: int = 840
+) -> tuple[bool, dict[str, Any]]:
+    """Solve and verify Erdős-Straus instance n algebraically using modular congruence classes.
+
+    Returns (is_valid, details) where details includes residue, identity evaluation,
+    and exact integer Diophantine verification.
+    """
+    from evobyte.algebraic import classify_congruence_residue, get_algebraic_identity_for_residue
+
+    if n < 2:
+        return False, {"error": "n must be >= 2", "n": n}
+
+    r = n % modulus
+    k = n // modulus
+    classification = classify_congruence_residue(modulus, r)
+
+    if classification["is_resistant"]:
+        return False, {
+            "n": n,
+            "modulus": modulus,
+            "residue": r,
+            "classification": classification,
+            "status": "resistant_quadratic_residue_unsolved_by_linear_identity",
+        }
+
+    ident = get_algebraic_identity_for_residue(modulus, r)
+    if ident is None:
+        return False, {
+            "n": n,
+            "modulus": modulus,
+            "residue": r,
+            "error": "No identity available",
+        }
+
+    k_eval = (k - 1) if (r == 0 and k > 0) else k
+    try:
+        x, y, z = ident.evaluate(k_eval)
+    except (ValueError, TypeError, ZeroDivisionError) as e:
+        return False, {"n": n, "error": f"Evaluation failed: {e}"}
+
+    is_valid, _residual, check_details = check_erdos_straus(n, x, y, z)
+    return is_valid, {
+        "n": n,
+        "modulus": modulus,
+        "residue": r,
+        "k_eval": k_eval,
+        "triple": (x, y, z),
+        "classification": classification,
+        "check_details": check_details,
+        "verified_exact": is_valid,
+    }
+
+
 def check_taxicab(sum_val: int, a: int, b: int, c: int, d: int) -> tuple[bool, int, dict[str, Any]]:
     """Exact checker for Taxicab identity: a^3 + b^3 == c^3 + d^3 == sum_val."""
     if min(a, b, c, d) <= 0:

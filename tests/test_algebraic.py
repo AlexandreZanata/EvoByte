@@ -144,3 +144,226 @@ def test_p74_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P74 configuration"):
         run_p74_algebraic_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_poly1d_substitute():
+    # p(k') = 2 + 3*k'
+    p = Poly1D.linear(3, 2)
+    # inner(k) = 1 + 5*k
+    inner = Poly1D.linear(5, 1)
+    # p(inner(k)) = 2 + 3*(1 + 5*k) = 5 + 15*k
+    res = p.substitute(inner)
+    assert res.coeffs == (Fraction(5), Fraction(15))
+    assert res.eval(2) == 35
+
+
+def test_coprime_quadratic_residues_isolation():
+    from evobyte.algebraic import (
+        get_resistant_residues,
+        is_coprime_quadratic_residue,
+    )
+
+    # Modulo 24: only 1^2 = 1
+    assert get_resistant_residues(24) == [1]
+    assert is_coprime_quadratic_residue(24, 1) is True
+    assert is_coprime_quadratic_residue(24, 5) is False
+
+    # Modulo 120: 1 and 49 (7^2)
+    assert get_resistant_residues(120) == [1, 49]
+
+    # Modulo 840: exactly the 6 classical Mordell resistant quadratic non-covered squares
+    # 1^2, 11^2, 13^2, 17^2, 19^2, 23^2
+    res_840 = get_resistant_residues(840)
+    expected_840 = [1, 121, 169, 289, 361, 529]
+    assert res_840 == expected_840
+
+    # Modulo 2520: exactly 18 squares
+    res_2520 = get_resistant_residues(2520)
+    assert len(res_2520) == 18
+    for r in expected_840:
+        assert r in res_2520
+
+
+def test_modular_coverage_matrix_mod24():
+    from evobyte.algebraic import (
+        build_congruence_coverage_matrix,
+        verify_coverage_matrix_soundness,
+    )
+
+    mat = build_congruence_coverage_matrix(24)
+    assert mat["modulus"] == 24
+    assert mat["total_classes"] == 24
+    assert mat["covered_count"] == 23
+    assert mat["resistant_count"] == 1
+    assert mat["resistant_classes"] == [1]
+    assert mat["coverage_ratio"] == 23 / 24
+    assert mat["verified"] is True
+    assert len(mat["checksum"]) == 64
+
+    sound, findings = verify_coverage_matrix_soundness(mat)
+    assert sound is True
+    assert findings == []
+
+
+def test_modular_coverage_matrix_mod120():
+    from evobyte.algebraic import (
+        build_congruence_coverage_matrix,
+        verify_coverage_matrix_soundness,
+    )
+
+    mat = build_congruence_coverage_matrix(120)
+    assert mat["modulus"] == 120
+    assert mat["covered_count"] == 118
+    assert mat["resistant_count"] == 2
+    assert mat["resistant_classes"] == [1, 49]
+    assert mat["coverage_ratio"] == 118 / 120
+    assert mat["verified"] is True
+
+    sound, findings = verify_coverage_matrix_soundness(mat)
+    assert sound is True
+    assert findings == []
+
+
+def test_modular_coverage_matrix_mod840():
+    from evobyte.algebraic import (
+        build_congruence_coverage_matrix,
+        verify_coverage_matrix_soundness,
+    )
+
+    mat = build_congruence_coverage_matrix(840)
+    assert mat["modulus"] == 840
+    assert mat["total_classes"] == 840
+    assert mat["covered_count"] == 834
+    assert mat["resistant_count"] == 6
+    assert mat["resistant_classes"] == [1, 121, 169, 289, 361, 529]
+    assert abs(mat["coverage_ratio"] - (834 / 840)) < 1e-9
+    assert mat["verified"] is True
+    # Canonical immutable checksum check
+    assert mat["checksum"] == "34ce9589bc7cd7684415a67ea86f1dd85ab765c8137d62c3b3d1818cdc287fa7"
+
+    sound, findings = verify_coverage_matrix_soundness(mat)
+    assert sound is True
+    assert findings == []
+
+
+def test_modular_coverage_matrix_mod2520():
+    from evobyte.algebraic import (
+        build_congruence_coverage_matrix,
+        verify_coverage_matrix_soundness,
+    )
+
+    mat = build_congruence_coverage_matrix(2520)
+    assert mat["modulus"] == 2520
+    assert mat["covered_count"] == 2502
+    assert mat["resistant_count"] == 18
+    assert mat["verified"] is True
+
+    sound, findings = verify_coverage_matrix_soundness(mat)
+    assert sound is True
+    assert findings == []
+
+
+def test_coverage_matrix_soundness_rejections():
+    from evobyte.algebraic import (
+        build_congruence_coverage_matrix,
+        verify_coverage_matrix_soundness,
+    )
+
+    mat = build_congruence_coverage_matrix(24)
+
+    # Tampered checksum
+    bad_mat1 = dict(mat)
+    bad_mat1["checksum"] = "0" * 64
+    ok1, f1 = verify_coverage_matrix_soundness(bad_mat1)
+    assert ok1 is False
+    assert any("CHECKSUM_MISMATCH" in x for x in f1)
+
+    # Tampered unverified
+    bad_mat2 = dict(mat)
+    bad_mat2["verified"] = False
+    ok2, f2 = verify_coverage_matrix_soundness(bad_mat2)
+    assert ok2 is False
+    assert any("UNVERIFIED_STATUS" in x for x in f2)
+
+    # Overlap between covered and resistant
+    bad_mat3 = dict(mat)
+    bad_mat3["covered_classes"] = sorted(mat["covered_classes"] + [1])
+    ok3, f3 = verify_coverage_matrix_soundness(bad_mat3)
+    assert ok3 is False
+    assert any("OVERLAP_FOUND" in x for x in f3)
+
+
+def test_classify_congruence_residue():
+    from evobyte.algebraic import classify_congruence_residue
+
+    # Resistant 1 mod 840
+    c1 = classify_congruence_residue(840, 1)
+    assert c1["is_resistant"] is True
+    assert c1["mechanism"] == "resistant_quadratic_residue"
+
+    # Even 0 mod 840
+    c0 = classify_congruence_residue(840, 0)
+    assert c0["is_resistant"] is False
+    assert c0["mechanism"] == "even_divisibility_2"
+
+    # 2 mod 3 (residue 2)
+    c2 = classify_congruence_residue(840, 2)
+    assert c2["mechanism"] == "even_divisibility_2"
+
+    # 2 mod 3 (residue 5: 5 % 3 == 2)
+    c5 = classify_congruence_residue(840, 5)
+    assert c5["mechanism"] == "mordell_2_mod_3"
+
+    # 5 mod 8 (residue 13: 13 % 3 == 1, 13 % 8 == 5)
+    c13 = classify_congruence_residue(840, 13)
+    assert c13["mechanism"] == "mordell_5_mod_8"
+
+
+def test_open_problems_algebraic_congruence_solver():
+    from benchmarks.open_problems import check_erdos_straus_algebraic_congruence
+
+    # Covered cases produce valid integer solutions
+    for n in [2, 3, 4, 5, 7, 24, 73, 120, 840, 1007, 1680]:
+        ok, det = check_erdos_straus_algebraic_congruence(n, 840)
+        assert ok is True
+        assert det["verified_exact"] is True
+        x, y, z = det["triple"]
+        assert x > 0 and y > 0 and z > 0
+
+    # Resistant case 1009 = 840 + 169 (169 mod 840 is resistant)
+    ok_res, det_res = check_erdos_straus_algebraic_congruence(1009, 840)
+    assert ok_res is False
+    assert det_res["classification"]["is_resistant"] is True
+
+
+def test_p75_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p75_coverage_audit
+
+    cfg = {
+        "phase": "P75",
+        "moduli": [24, 120, 840],
+        "target_modulus": 840,
+        "seed": 42,
+        "allow_dirty": True,
+    }
+    cfg_p = tmp_path / "p75-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p75-out.json"
+
+    report = run_p75_coverage_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P75"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["coverage_840"]["covered_count"] == 834
+    assert report["coverage_840"]["resistant_count"] == 6
+    assert report["coverage_840"]["checksum"] == "34ce9589bc7cd7684415a67ea86f1dd85ab765c8137d62c3b3d1818cdc287fa7"
+    assert len(report["multi_moduli_summary"]) == 3
+
+
+def test_p75_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p75_coverage_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P75 configuration"):
+        run_p75_coverage_audit(cfg_p, tmp_path / "out.json")

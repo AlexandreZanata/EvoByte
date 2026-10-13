@@ -7,6 +7,10 @@ n(k) = m*k + r, guaranteeing exact mathematical solutions for entire congruence 
 
 from __future__ import annotations
 
+import functools
+import hashlib
+import json
+import math
 from dataclasses import dataclass
 from fractions import Fraction
 from typing import Any
@@ -126,6 +130,15 @@ class Poly1D:
         if any(c != 0 for c in p):
             return None
         return Poly1D(res)
+
+    def substitute(self, inner: Poly1D) -> Poly1D:
+        """Compose polynomials: return self(inner(k))."""
+        res = Poly1D.constant(0)
+        power = Poly1D.constant(1)
+        for c in self.coeffs:
+            res = res + (power * c)
+            power = power * inner
+        return res
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Poly1D):
@@ -334,3 +347,295 @@ def audit_algebraic_coverage(modulus: int = 24) -> dict[str, Any]:
         "identities": identities_dict,
         "verified": True,
     }
+
+
+SUPPORTED_COVERAGE_MODULI: tuple[int, ...] = (24, 120, 840, 2520)
+
+
+@functools.lru_cache(maxsize=16)
+def get_resistant_residues(m: int) -> list[int]:
+    """Return all resistant congruence residue classes (coprime quadratic residues) modulo m."""
+    coprimes = [x for x in range(1, m) if math.gcd(x, m) == 1]
+    squares = {(x * x) % m for x in coprimes}
+    return sorted(squares)
+
+
+def is_coprime_quadratic_residue(m: int, r: int) -> bool:
+    """Check if residue r is coprime to m and is a quadratic residue modulo m."""
+    if r < 0 or r >= m:
+        return False
+    return r in get_resistant_residues(m)
+
+
+def classify_congruence_residue(m: int, r: int) -> dict[str, Any]:
+    """Classify residue r modulo m according to its algebraic coverage mechanism."""
+    if m not in SUPPORTED_COVERAGE_MODULI:
+        raise ValueError(f"Modulus {m} not in supported moduli: {SUPPORTED_COVERAGE_MODULI}")
+    if r < 0 or r >= m:
+        raise ValueError(f"Residue {r} out of bounds for modulus {m}")
+
+    resistant = get_resistant_residues(m)
+    if r in resistant:
+        return {
+            "modulus": m,
+            "residue": r,
+            "is_resistant": True,
+            "mechanism": "resistant_quadratic_residue",
+            "identity_available": False,
+        }
+
+    # Determine specific mechanism
+    if r % 2 == 0:
+        mech = "even_divisibility_2"
+    elif r % 3 == 0:
+        mech = "divisibility_3"
+    elif r % 3 == 2:
+        mech = "mordell_2_mod_3"
+    elif r % 4 == 3:
+        mech = "mordell_3_mod_4"
+    elif r % 8 == 5:
+        mech = "mordell_5_mod_8"
+    elif m % 5 == 0 and r % 5 == 0:
+        mech = "divisibility_5"
+    elif m % 7 == 0 and r % 7 == 0:
+        mech = "divisibility_7"
+    elif m == 2520:
+        mech = "lifted_from_mod840"
+    elif m == 120:
+        mech = f"ionascu_wilson_mod120_r{r}"
+    elif m == 840:
+        k_24 = (r - 1) // 24
+        if k_24 % 7 in (3, 4, 6):
+            mech = f"ionascu_wilson_mod168_branch_{k_24 % 7}"
+        elif k_24 % 5 in (3, 4):
+            mech = f"ionascu_wilson_mod120_branch_{k_24 % 5}"
+        else:
+            mech = "modular_subdivision"
+    else:
+        mech = "congruence_identity"
+
+    return {
+        "modulus": m,
+        "residue": r,
+        "is_resistant": False,
+        "mechanism": mech,
+        "identity_available": True,
+    }
+
+
+@functools.lru_cache(maxsize=4096)
+def get_algebraic_identity_for_residue(m: int, r: int) -> AlgebraicIdentity | None:
+    """Construct verified algebraic identity for n = m*k + r over supported moduli."""
+    if m not in SUPPORTED_COVERAGE_MODULI:
+        raise ValueError(f"Modulus {m} not in supported moduli: {SUPPORTED_COVERAGE_MODULI}")
+    if r < 0 or r >= m:
+        raise ValueError(f"Residue {r} out of bounds for modulus {m}")
+
+    resistant_classes = get_resistant_residues(m)
+    if r in resistant_classes:
+        return None
+
+    n = Poly1D.linear(m, r if r > 0 else m)
+
+    # 1. Even (applies to all moduli)
+    if r % 2 == 0:
+        W = Poly1D.linear(m // 2, r // 2 if r > 0 else m // 2)
+        return AlgebraicIdentity(m, r, n, W, W * 2, W * 2)
+
+    # For 2520 odd residues, lift from 840:
+    if m == 2520:
+        base_ident = get_algebraic_identity_for_residue(840, r % 840)
+        if base_ident is None:
+            return None
+        q = 3
+        j = r // 840
+        K = Poly1D.linear(q, j)
+        X = base_ident.X.substitute(K)
+        Y = base_ident.Y.substitute(K)
+        Z = base_ident.Z.substitute(K)
+        return AlgebraicIdentity(2520, r, n, X, Y, Z)
+
+    # 2. Divisible by 3
+    if r % 3 == 0:
+        W = Poly1D.linear(m // 3, r // 3)
+        return AlgebraicIdentity(m, r, n, W, W * 4, W * 12)
+
+    # 3. r % 3 == 2
+    if r % 3 == 2:
+        k_prime = Poly1D.linear(m // 3, r // 3)
+        X = k_prime + 1
+        return AlgebraicIdentity(m, r, n, X, n, n * X)
+
+    # 4. r % 4 == 3
+    if r % 4 == 3:
+        k_prime = Poly1D.linear(m // 4, r // 4)
+        X = k_prime + 1
+        return AlgebraicIdentity(m, r, n, X, n * X * 2, n * X * 2)
+
+    # 5. r % 8 == 5
+    if r % 8 == 5:
+        k_prime = Poly1D.linear(m // 8, r // 8)
+        X = (k_prime + 1) * 2
+        return AlgebraicIdentity(m, r, n, X, n * X, n * (k_prime + 1))
+
+    # 6. Divisible by 5 (when 5 | m)
+    if m % 5 == 0 and r % 5 == 0:
+        W = Poly1D.linear(m // 5, r // 5)
+        return AlgebraicIdentity(m, r, n, W * 2, W * 4, W * 20)
+
+    # 7. Divisible by 7 (when 7 | m)
+    if m % 7 == 0 and r % 7 == 0:
+        W = Poly1D.linear(m // 7, r // 7)
+        return AlgebraicIdentity(m, r, n, W * 2, W * 28, W * 28)
+
+    # Special mod 120 cases
+    if m == 120:
+        if r == 73:
+            a = Poly1D.linear(30, 20)
+            W = Poly1D.linear(3, 2)
+            return AlgebraicIdentity(120, 73, n, a, n * W * 5, n * W * 2)
+        if r == 97:
+            a = Poly1D.linear(30, 25)
+            W = Poly1D.linear(6, 5)
+            s = Poly1D.linear(40, 34)
+            return AlgebraicIdentity(120, 97, n, a, s * n * W, s * W * 5)
+
+    # Special mod 840 cases
+    if m == 840:
+        k_24 = (r - 1) // 24
+        if k_24 % 7 == 3:
+            l_poly = Poly1D.linear(5, r // 168)
+            a = l_poly * 42 + 20
+            s = l_poly * 6 + 3
+            return AlgebraicIdentity(840, r, n, a, s * n * a, s * n)
+        if k_24 % 7 == 4:
+            l_poly = Poly1D.linear(5, r // 168)
+            a = l_poly * 42 + 26
+            s = l_poly * 24 + 14
+            return AlgebraicIdentity(840, r, n, a, s * a, s * n * a)
+        if k_24 % 7 == 6:
+            l_poly = Poly1D.linear(5, r // 168)
+            a = l_poly * 42 + 38
+            s = l_poly * 24 + 21
+            Wa = l_poly * 21 + 19
+            return AlgebraicIdentity(840, r, n, a, s * n * Wa, s * a)
+        if k_24 % 5 == 3:
+            l_poly = Poly1D.linear(7, r // 120)
+            a = l_poly * 30 + 20
+            W = l_poly * 3 + 2
+            return AlgebraicIdentity(840, r, n, a, n * W * 5, n * W * 2)
+        if k_24 % 5 == 4:
+            l_poly = Poly1D.linear(7, r // 120)
+            a = l_poly * 30 + 25
+            W = l_poly * 6 + 5
+            s = l_poly * 40 + 34
+            return AlgebraicIdentity(840, r, n, a, s * n * W, s * W * 5)
+
+    return None
+
+
+def build_congruence_coverage_matrix(modulus: int = 840) -> dict[str, Any]:
+    """Build exhaustive modular coverage matrix with canonical immutable checksum."""
+    if modulus not in SUPPORTED_COVERAGE_MODULI:
+        raise ValueError(f"Modulus {modulus} not in supported moduli: {SUPPORTED_COVERAGE_MODULI}")
+
+    resistant_classes = get_resistant_residues(modulus)
+    covered_classes: list[int] = []
+    identities_summary: dict[str, Any] = {}
+    all_verified = True
+
+    for r in range(modulus):
+        if r in resistant_classes:
+            continue
+        ident = get_algebraic_identity_for_residue(modulus, r)
+        if ident is None or not ident.verify_exact():
+            all_verified = False
+            continue
+        covered_classes.append(r)
+        identities_summary[str(r)] = {
+            "n": ident.n_poly.to_string(),
+            "X": ident.X.to_string(),
+            "Y": ident.Y.to_string(),
+            "Z": ident.Z.to_string(),
+            "degrees": {
+                "n": ident.n_poly.degree,
+                "X": ident.X.degree,
+                "Y": ident.Y.degree,
+                "Z": ident.Z.degree,
+            },
+        }
+
+    total = modulus
+    coverage_ratio = len(covered_classes) / total if total > 0 else 0.0
+
+    canonical_data = {
+        "modulus": modulus,
+        "total_classes": total,
+        "covered_count": len(covered_classes),
+        "resistant_count": len(resistant_classes),
+        "coverage_ratio": coverage_ratio,
+        "covered_classes": sorted(covered_classes),
+        "resistant_classes": sorted(resistant_classes),
+        "identities": identities_summary,
+        "verified": all_verified,
+    }
+
+    canonical_bytes = json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    checksum = hashlib.sha256(canonical_bytes).hexdigest()
+
+    result = dict(canonical_data)
+    result["checksum"] = checksum
+    return result
+
+
+def verify_coverage_matrix_soundness(matrix: dict[str, Any]) -> tuple[bool, list[str]]:
+    """Verify soundness, completeness, and checksum integrity of a coverage matrix."""
+    findings: list[str] = []
+    modulus = matrix.get("modulus")
+    if modulus not in SUPPORTED_COVERAGE_MODULI:
+        findings.append(f"INVALID_MODULUS: {modulus}")
+        return False, findings
+
+    total = matrix.get("total_classes", 0)
+    covered = matrix.get("covered_classes", [])
+    resistant = matrix.get("resistant_classes", [])
+    expected_resistant = get_resistant_residues(modulus)
+
+    if sorted(resistant) != sorted(expected_resistant):
+        findings.append(
+            f"RESISTANT_MISMATCH: expected {expected_resistant}, got {sorted(resistant)}"
+        )
+
+    if len(covered) + len(resistant) != total or total != modulus:
+        findings.append(
+            f"PARTITION_MISMATCH: covered({len(covered)}) + resistant({len(resistant)}) != {total}"
+        )
+
+    overlap = set(covered).intersection(set(resistant))
+    if overlap:
+        findings.append(f"OVERLAP_FOUND: residues in both covered and resistant: {sorted(overlap)}")
+
+    if not matrix.get("verified", False):
+        findings.append("UNVERIFIED_STATUS: matrix has unverified identities")
+
+    # Recompute canonical checksum
+    canonical_data = {
+        "modulus": modulus,
+        "total_classes": total,
+        "covered_count": len(covered),
+        "resistant_count": len(resistant),
+        "coverage_ratio": matrix.get("coverage_ratio", 0.0),
+        "covered_classes": sorted(covered),
+        "resistant_classes": sorted(resistant),
+        "identities": matrix.get("identities", {}),
+        "verified": matrix.get("verified", False),
+    }
+    canonical_bytes = json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    expected_checksum = hashlib.sha256(canonical_bytes).hexdigest()
+
+    if matrix.get("checksum") != expected_checksum:
+        findings.append(
+            f"CHECKSUM_MISMATCH: expected {expected_checksum}, got {matrix.get('checksum')}"
+        )
+
+    return (len(findings) == 0), findings

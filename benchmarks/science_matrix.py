@@ -713,6 +713,7 @@ ACCEPTANCE_PHASES = (
     "P72",
     "P73",
     "P74",
+    "P75",
 )
 
 
@@ -4098,6 +4099,139 @@ def run_p74_algebraic_audit(config_path: str | Path, output_path: str | Path) ->
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P74 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
+
+
+def run_p75_coverage_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P75 audit: modular congruence class coverage matrix and resistant residue isolation.
+
+    Audits exhaustive modular coverage for moduli M in {24, 120, 840, 2520},
+    verifies exact algebraic identity solutions for covered classes,
+    confirms isolation of coprime quadratic residues (e.g. 1, 121, 169, 289, 361, 529 mod 840),
+    verifies immutable SHA-256 canonical matrix checksum, and enforces clean tree.
+    """
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        build_congruence_coverage_matrix,
+        verify_coverage_matrix_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P75":
+        raise ValueError(f"Config {cfg_p} is not a P75 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P75 RESIDUE CLASS COVERAGE AUDIT (Modular matrix M=840; quadratic residue isolation)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    target_modulus = int(config.get("target_modulus", 840))
+    matrix_840 = build_congruence_coverage_matrix(target_modulus)
+    sound, soundness_findings = verify_coverage_matrix_soundness(matrix_840)
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_resistant = [1, 121, 169, 289, 361, 529]
+    if matrix_840["resistant_classes"] != expected_resistant:
+        findings.append(
+            f"RESISTANT_CLASSES_MISMATCH: expected {expected_resistant}, got {matrix_840['resistant_classes']}"
+        )
+
+    if matrix_840["covered_count"] != 834:
+        findings.append(
+            f"COVERED_COUNT_MISMATCH: expected 834, got {matrix_840['covered_count']}"
+        )
+
+    multi_moduli_summary: dict[str, Any] = {}
+    for m in config.get("moduli", [24, 120, 840, 2520]):
+        mat_m = build_congruence_coverage_matrix(m)
+        ok_m, finds_m = verify_coverage_matrix_soundness(mat_m)
+        if not ok_m:
+            findings.extend([f"M{m}_{f}" for f in finds_m])
+        multi_moduli_summary[str(m)] = {
+            "modulus": m,
+            "total_classes": mat_m["total_classes"],
+            "covered_count": mat_m["covered_count"],
+            "resistant_count": mat_m["resistant_count"],
+            "coverage_ratio": mat_m["coverage_ratio"],
+            "resistant_classes": mat_m["resistant_classes"],
+            "checksum": mat_m["checksum"],
+            "sound": ok_m,
+        }
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if dirty and not config.get("allow_dirty", False):
+        findings.append("TREE_DIRTY: git status is not clean")
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p75_config": config_sha[:16]},
+        config={"acceptance_phase": "P75"},
+    )
+
+    report = {
+        "phase": "P75",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Exhaustive modular congruence coverage matrix evaluated across M in {24, 120, 840, 2520}; "
+            "100% of non-resistant classes covered by exact parameterized polynomial identities in Q[k]; "
+            "resistant classes isolated as coprime quadratic residues; canonical immutable checksum recorded; "
+            "no universal conjecture proof claimed."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "target_modulus": target_modulus,
+        "coverage_840": {
+            "modulus": 840,
+            "total_classes": matrix_840["total_classes"],
+            "covered_count": matrix_840["covered_count"],
+            "resistant_count": matrix_840["resistant_count"],
+            "coverage_ratio": matrix_840["coverage_ratio"],
+            "resistant_classes": matrix_840["resistant_classes"],
+            "checksum": matrix_840["checksum"],
+        },
+        "multi_moduli_summary": multi_moduli_summary,
+        "hardware": prov["hardware"],
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P75",
+            "target_modulus": target_modulus,
+        },
+        "limitations": [
+            "Resistant quadratic residue classes (1, 121, 169, 289, 361, 529 mod 840) are theoretically irreducible via simple polynomial identities (Mordell 1967).",
+            "Exhaustive proof for resistant classes requires non-linear sieves, prime power lifts, or individual Diophantine verification.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P75 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -8100,6 +8234,8 @@ def main() -> int:
             run_p73_lean_audit(args.config, args.output)
         elif args.acceptance_phase == "P74":
             run_p74_algebraic_audit(args.config, args.output)
+        elif args.acceptance_phase == "P75":
+            run_p75_coverage_audit(args.config, args.output)
         return 0
 
     seeds = (
