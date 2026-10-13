@@ -94,14 +94,19 @@ def check_erdos_straus(n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[
 
 
 def check_erdos_straus_algebraic_congruence(
-    n: int, modulus: int = 840
+    n: int, modulus: int = 840, fallback_sieve: bool = False
 ) -> tuple[bool, dict[str, Any]]:
     """Solve and verify Erdős-Straus instance n algebraically using modular congruence classes.
 
     Returns (is_valid, details) where details includes residue, identity evaluation,
-    and exact integer Diophantine verification.
+    and exact integer Diophantine verification. If fallback_sieve is True, applies
+    rational divisor sieve on resistant quadratic residues.
     """
-    from evobyte.algebraic import classify_congruence_residue, get_algebraic_identity_for_residue
+    from evobyte.algebraic import (
+        classify_congruence_residue,
+        get_algebraic_identity_for_residue,
+        solve_erdos_straus_sieve,
+    )
 
     if n < 2:
         return False, {"error": "n must be >= 2", "n": n}
@@ -111,6 +116,22 @@ def check_erdos_straus_algebraic_congruence(
     classification = classify_congruence_residue(modulus, r)
 
     if classification["is_resistant"]:
+        if fallback_sieve:
+            sol, sieve_details = solve_erdos_straus_sieve(n)
+            if sol is not None:
+                x, y, z = sol
+                is_valid, _residual, check_details = check_erdos_straus(n, x, y, z)
+                return is_valid, {
+                    "n": n,
+                    "modulus": modulus,
+                    "residue": r,
+                    "triple": (x, y, z),
+                    "classification": classification,
+                    "check_details": check_details,
+                    "sieve_details": sieve_details,
+                    "verified_exact": is_valid,
+                    "status": "solved_by_rational_divisor_sieve",
+                }
         return False, {
             "n": n,
             "modulus": modulus,
@@ -121,6 +142,22 @@ def check_erdos_straus_algebraic_congruence(
 
     ident = get_algebraic_identity_for_residue(modulus, r)
     if ident is None:
+        if fallback_sieve:
+            sol, sieve_details = solve_erdos_straus_sieve(n)
+            if sol is not None:
+                x, y, z = sol
+                is_valid, _residual, check_details = check_erdos_straus(n, x, y, z)
+                return is_valid, {
+                    "n": n,
+                    "modulus": modulus,
+                    "residue": r,
+                    "triple": (x, y, z),
+                    "classification": classification,
+                    "check_details": check_details,
+                    "sieve_details": sieve_details,
+                    "verified_exact": is_valid,
+                    "status": "solved_by_rational_divisor_sieve",
+                }
         return False, {
             "n": n,
             "modulus": modulus,
@@ -145,6 +182,16 @@ def check_erdos_straus_algebraic_congruence(
         "check_details": check_details,
         "verified_exact": is_valid,
     }
+
+
+def run_sieve_erdos_straus_campaign(
+    n_instances: list[int], max_coord: int = 10**9
+) -> dict[str, Any]:
+    """Execute Erdős–Straus campaign using rational divisor sieve and dual exact certification."""
+    from evobyte.algebraic import benchmark_sieve_vs_baseline
+
+    return benchmark_sieve_vs_baseline(n_instances, max_coord=max_coord)
+
 
 
 def check_taxicab(sum_val: int, a: int, b: int, c: int, d: int) -> tuple[bool, int, dict[str, Any]]:

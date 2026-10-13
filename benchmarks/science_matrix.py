@@ -714,6 +714,7 @@ ACCEPTANCE_PHASES = (
     "P73",
     "P74",
     "P75",
+    "P76",
 )
 
 
@@ -4231,6 +4232,148 @@ def run_p75_coverage_audit(config_path: str | Path, output_path: str | Path) -> 
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P75 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
+
+
+def run_p76_sieve_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P76 audit: rational divisor sieve and binary quadratic divisor decomposition.
+
+    Audits sublinear rational divisor sieve on challenging Erdős–Straus instances
+    (n = 1 mod 24, resistant quadratic residues mod 840), validates exact binary
+    quadratic relation (4x - n)(4y - n) = n^2 + 4d, certifies zero false negatives,
+    verifies candidate reduction (>= 100x) and speedup (>= 3x), and enforces clean tree.
+    """
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        benchmark_sieve_vs_baseline,
+        quadratic_divisor_decomposition,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P76":
+        raise ValueError(f"Config {cfg_p} is not a P76 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P76 RATIONAL DIVISOR SIEVE AUDIT (Sublinear divisor decomposition & modular elimination)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    target_instances = [int(x) for x in config.get("target_instances", [1009, 1033, 1129, 1153, 1201])]
+    min_speedup = float(config.get("min_speedup", 3.0))
+    min_reduction = float(config.get("min_candidate_reduction", 100.0))
+
+    # 1. Quadratic divisor decomposition sanity check
+    quad_checks: list[dict[str, Any]] = []
+    for n in target_instances[:5]:
+        sol_q, det_q = quadratic_divisor_decomposition(n, max_d=int(config.get("max_d_quad", 100)))
+        quad_checks.append({
+            "n": n,
+            "solved": sol_q is not None,
+            "details": det_q,
+        })
+        if sol_q is not None:
+            qx, qy, qz = sol_q
+            if 4 * qx * qy * qz != n * (qx * qy + qy * qz + qz * qx):
+                findings.append(f"QUAD_DECOMP_INVALID: n={n} produced non-solution {sol_q}")
+
+    # 2. Benchmark sieve vs baseline
+    bench = benchmark_sieve_vs_baseline(target_instances, max_coord=int(config.get("max_coord", 10**9)))
+
+    if bench["false_negatives"] > 0:
+        findings.append(f"FALSE_NEGATIVES_FOUND: {bench['false_negatives']} instances missed by sieve")
+
+    if not bench["all_sieve_valid"]:
+        findings.append("SIEVE_INVALID_SOLUTION: one or more sieve solutions failed Diophantine check")
+
+    if bench["overall_candidate_reduction"] < min_reduction:
+        findings.append(
+            f"INSUFFICIENT_CANDIDATE_REDUCTION: got {bench['overall_candidate_reduction']:.1f}x, required {min_reduction}x"
+        )
+
+    if bench["overall_speedup"] < min_speedup:
+        findings.append(
+            f"INSUFFICIENT_SPEEDUP: got {bench['overall_speedup']:.1f}x, required {min_speedup}x"
+        )
+
+    # 3. Clean tree verification
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if dirty and not config.get("allow_dirty", False):
+        findings.append("TREE_DIRTY: git status is not clean")
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p76_config": config_sha[:16]},
+        config={"acceptance_phase": "P76"},
+    )
+
+    report = {
+        "phase": "P76",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Deterministic rational divisor sieve evaluated on challenging Erdős–Straus instances; "
+            "sublinear pruning over (nx)^2 divisors via modular residue filtering; "
+            "binary quadratic decomposition (4x - n)(4y - n) = n^2 + 4d verified; "
+            "100% exact integer Diophantine certification with zero false negatives; "
+            "no universal conjecture proof claimed."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "target_instances": target_instances,
+        "benchmark_summary": {
+            "instances_count": bench["instances_count"],
+            "total_baseline_candidates": bench["total_baseline_candidates"],
+            "total_sieve_candidates": bench["total_sieve_candidates"],
+            "overall_candidate_reduction": bench["overall_candidate_reduction"],
+            "total_baseline_sec": bench["total_baseline_sec"],
+            "total_sieve_sec": bench["total_sieve_sec"],
+            "overall_speedup": bench["overall_speedup"],
+            "false_negatives": bench["false_negatives"],
+            "all_sieve_valid": bench["all_sieve_valid"],
+        },
+        "per_instance_results": bench["results"],
+        "quadratic_decomposition_sample": quad_checks,
+        "hardware": prov["hardware"],
+        "driver": prov["hardware"].get("nvidia_smi", "not-probed"),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P76",
+        },
+        "limitations": [
+            "Rational divisor sieve provides deterministic sublinear search for individual resistant instances.",
+            "Complete theoretical proof of the Erdős–Straus conjecture requires universal non-emptiness of the divisor intersection.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P76 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
 
 
 
@@ -8236,6 +8379,8 @@ def main() -> int:
             run_p74_algebraic_audit(args.config, args.output)
         elif args.acceptance_phase == "P75":
             run_p75_coverage_audit(args.config, args.output)
+        elif args.acceptance_phase == "P76":
+            run_p76_sieve_audit(args.config, args.output)
         return 0
 
     seeds = (

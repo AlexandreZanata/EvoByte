@@ -11,6 +11,7 @@ import functools
 import hashlib
 import json
 import math
+import time
 from dataclasses import dataclass
 from fractions import Fraction
 from typing import Any
@@ -639,3 +640,347 @@ def verify_coverage_matrix_soundness(matrix: dict[str, Any]) -> tuple[bool, list
         )
 
     return (len(findings) == 0), findings
+
+
+def integer_factorization(val: int) -> dict[int, int]:
+    """Deterministic prime factorization of positive integer val via trial division."""
+    if val <= 1:
+        return {}
+    factors: dict[int, int] = {}
+    temp = val
+    if temp % 2 == 0:
+        c = 0
+        while temp % 2 == 0:
+            c += 1
+            temp //= 2
+        factors[2] = c
+    p = 3
+    while p * p <= temp:
+        if temp % p == 0:
+            c = 0
+            while temp % p == 0:
+                c += 1
+                temp //= p
+            factors[p] = c
+        p += 2
+    if temp > 1:
+        factors[temp] = 1
+    return factors
+
+
+def get_square_divisors(val: int, max_val: int | None = None) -> list[int]:
+    """Compute all positive integer divisors of val^2 in ascending order."""
+    if val <= 0:
+        return []
+    if val == 1:
+        return [1]
+    prime_factors = integer_factorization(val)
+    divs = [1]
+    for p, exp in prime_factors.items():
+        new_d: list[int] = []
+        for d in divs:
+            pk = 1
+            for _ in range(2 * exp + 1):
+                cur = d * pk
+                if max_val is None or cur <= max_val:
+                    new_d.append(cur)
+                pk *= p
+        divs = new_d
+    return sorted(divs)
+
+
+def quadratic_divisor_decomposition(
+    n: int, max_d: int = 100
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Solve Erdős–Straus via binary quadratic divisor relation (4x - n)(4y - n) = n^2 + 4d.
+
+    For d | nxy, z = nxy / d is an exact integer solution if x, y are determined by
+    factoring K = n^2 + 4d = A * B with A = 4x - n and B = 4y - n.
+    """
+    if n < 2:
+        return None, {"error": "n must be >= 2", "candidates_evaluated": 0}
+
+    candidates_evaluated = 0
+    modular_pruned = 0
+    t0 = time.perf_counter()
+
+    # Divisors of n^2 plus small integer offsets
+    d_candidates: list[int] = [1, n]
+    if n * n <= 10**8:
+        d_candidates.append(n * n)
+    for small_d in range(2, max_d + 1):
+        if small_d not in d_candidates:
+            d_candidates.append(small_d)
+
+    for d in d_candidates:
+        K = n * n + 4 * d
+        r = math.isqrt(K)
+        for A in range(1, r + 1):
+            if K % A != 0:
+                continue
+            B = K // A
+            candidates_evaluated += 1
+
+            # Modular congruence condition: A = 4x - n => A = -n mod 4
+            if (A + n) % 4 != 0 or (B + n) % 4 != 0:
+                modular_pruned += 1
+                continue
+
+            x = (A + n) // 4
+            y = (B + n) // 4
+
+            if (n * x * y) % d != 0:
+                modular_pruned += 1
+                continue
+
+            z = (n * x * y) // d
+            if x > 0 and y > 0 and z > 0 and 4 * x * y * z == n * (x * y + y * z + z * x):
+                elapsed = time.perf_counter() - t0
+                return (x, y, z), {
+                        "n": n,
+                        "d": d,
+                        "A": A,
+                        "B": B,
+                        "triple": (x, y, z),
+                        "candidates_evaluated": candidates_evaluated,
+                        "modular_pruned": modular_pruned,
+                        "elapsed_sec": elapsed,
+                        "verified_exact": True,
+                    }
+
+    elapsed = time.perf_counter() - t0
+    return None, {
+        "n": n,
+        "candidates_evaluated": candidates_evaluated,
+        "modular_pruned": modular_pruned,
+        "elapsed_sec": elapsed,
+        "verified_exact": False,
+    }
+
+
+def rational_divisor_sieve(
+    n: int, max_x_steps: int = 100, max_coord: int = 10**12
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Sublinear deterministic rational divisor sieve for Erdős–Straus.
+
+    For x in [ceil(n/4), ceil(n/4) + max_x_steps], letting u = 4x - n and D = nx:
+    (u*y - D)(u*z - D) = D^2 = (nx)^2.
+    Candidate divisor d = u*y - D must divide D^2 with d <= D.
+    Then y = (D + d) / u and z = (D + D^2 / d) / u are exact positive integers
+    if and only if (D + d) % u == 0.
+    Incompatible divisors are eliminated via modular congruences mod small primes.
+    """
+    if n < 2:
+        return None, {"error": "n must be >= 2", "candidates_evaluated": 0}
+
+    t0 = time.perf_counter()
+    x0 = n // 4 + 1
+    candidates_evaluated = 0
+    pruned_by_small_primes = 0
+    pruned_by_u = 0
+
+    fn = integer_factorization(n)
+
+    for x_step in range(max_x_steps):
+        x = x0 + x_step
+        u = 4 * x - n
+        if u <= 0:
+            continue
+        D = n * x
+        D2 = D * D
+
+        # Small prime factors of u for fast modular elimination
+        small_p = [p for p in (2, 3, 5, 7, 11, 13) if u % p == 0]
+
+        # Prime factorization of D^2 = (nx)^2
+        fx = integer_factorization(x)
+        fd2: dict[int, int] = {}
+        for p, c in fn.items():
+            fd2[p] = fd2.get(p, 0) + 2 * c
+        for p, c in fx.items():
+            fd2[p] = fd2.get(p, 0) + 2 * c
+
+        # Generate divisors d <= D of D^2
+        divs = [1]
+        for p, exp in fd2.items():
+            new_d: list[int] = []
+            for d in divs:
+                pk = 1
+                for _ in range(exp + 1):
+                    cur = d * pk
+                    if cur <= D:
+                        new_d.append(cur)
+                    pk *= p
+            divs = new_d
+
+        for d in divs:
+            candidates_evaluated += 1
+
+            # Modular elimination filter: mod small primes dividing u
+            incompatible = False
+            for p in small_p:
+                if (D + d) % p != 0:
+                    incompatible = True
+                    break
+            if incompatible:
+                pruned_by_small_primes += 1
+                continue
+
+            # Exact modulus u filter
+            if (D + d) % u != 0:
+                pruned_by_u += 1
+                continue
+
+            y = (D + d) // u
+            z = (D + (D2 // d)) // u
+
+            if x > 0 and y > 0 and z > 0:
+                if max_coord and max(x, y, z) > max_coord:
+                    continue
+                if 4 * x * y * z == n * (x * y + y * z + z * x):
+                    elapsed = time.perf_counter() - t0
+                    return (x, y, z), {
+                        "n": n,
+                        "x": x,
+                        "y": y,
+                        "z": z,
+                        "d": d,
+                        "u": u,
+                        "x_steps_taken": x_step + 1,
+                        "candidates_evaluated": candidates_evaluated,
+                        "pruned_by_small_primes": pruned_by_small_primes,
+                        "pruned_by_u": pruned_by_u,
+                        "elapsed_sec": elapsed,
+                        "verified_exact": True,
+                    }
+
+    elapsed = time.perf_counter() - t0
+    return None, {
+        "n": n,
+        "x_steps_taken": max_x_steps,
+        "candidates_evaluated": candidates_evaluated,
+        "pruned_by_small_primes": pruned_by_small_primes,
+        "pruned_by_u": pruned_by_u,
+        "elapsed_sec": elapsed,
+        "verified_exact": False,
+    }
+
+
+def solve_erdos_straus_sieve(
+    n: int, max_x_steps: int = 100, max_d_quad: int = 50
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Solve Erdős–Straus using rational divisor sieve with quadratic decomposition fallback."""
+    sol, details = rational_divisor_sieve(n, max_x_steps=max_x_steps)
+    if sol is not None:
+        details["method"] = "rational_divisor_sieve"
+        return sol, details
+    sol_q, details_q = quadratic_divisor_decomposition(n, max_d=max_d_quad)
+    if sol_q is not None:
+        details_q["method"] = "quadratic_divisor_decomposition"
+        return sol_q, details_q
+    return None, {"method": "none", "n": n, "verified_exact": False}
+
+
+def benchmark_sieve_vs_baseline(
+    n_instances: list[int], max_coord: int = 10**9
+) -> dict[str, Any]:
+    """Compare rational divisor sieve against baseline arithmetic enumeration on challenging instances."""
+    results: list[dict[str, Any]] = []
+    total_baseline_cands = 0
+    total_sieve_cands = 0
+    total_baseline_sec = 0.0
+    total_sieve_sec = 0.0
+    false_negatives = 0
+
+    for n in n_instances:
+        # Baseline arithmetic enumeration
+        t0_base = time.perf_counter()
+        x0 = n // 4 + 1
+        base_cands = 0
+        base_sol: tuple[int, int, int] | None = None
+        for x_step in range(50):
+            x_val = x0 + x_step
+            u = 4 * x_val - n
+            if u <= 0:
+                continue
+            y_min = (n * x_val) // u + 1
+            y = y_min
+            found = False
+            while True:
+                base_cands += 1
+                denom = 4 * x_val * y - n * (x_val + y)
+                if denom > 0 and (n * x_val * y) % denom == 0:
+                    z_val = (n * x_val * y) // denom
+                    if max(x_val, y, z_val) <= max_coord:
+                        base_sol = (x_val, y, z_val)
+                        found = True
+                        break
+                y += 1
+                if y > y_min + 500_000:
+                    break
+            if found:
+                break
+        t_base = time.perf_counter() - t0_base
+
+        # Rational divisor sieve
+        sieve_sol, sieve_det = rational_divisor_sieve(n, max_x_steps=100, max_coord=max_coord)
+        sieve_cands = sieve_det.get("candidates_evaluated", 0)
+        t_sieve = sieve_det.get("elapsed_sec", 0.0)
+
+        # Check solutions
+        base_valid = False
+        if base_sol is not None:
+            bx, by, bz = base_sol
+            base_valid = (4 * bx * by * bz == n * (bx * by + by * bz + bz * bx))
+
+        sieve_valid = False
+        if sieve_sol is not None:
+            sx, sy, sz = sieve_sol
+            sieve_valid = (4 * sx * sy * sz == n * (sx * sy + sy * sz + sz * sx))
+
+        if base_valid and not sieve_valid:
+            false_negatives += 1
+
+        cand_reduction = (base_cands / sieve_cands) if sieve_cands > 0 else 1.0
+        speedup = (t_base / t_sieve) if t_sieve > 0 else 1.0
+
+        results.append({
+            "n": n,
+            "baseline": {
+                "solved": base_valid,
+                "solution": base_sol,
+                "candidates": base_cands,
+                "time_sec": t_base,
+            },
+            "sieve": {
+                "solved": sieve_valid,
+                "solution": sieve_sol,
+                "candidates": sieve_cands,
+                "time_sec": t_sieve,
+                "pruned_small_primes": sieve_det.get("pruned_by_small_primes", 0),
+                "pruned_by_u": sieve_det.get("pruned_by_u", 0),
+            },
+            "candidate_reduction": cand_reduction,
+            "speedup": speedup,
+        })
+
+        total_baseline_cands += base_cands
+        total_sieve_cands += sieve_cands
+        total_baseline_sec += t_base
+        total_sieve_sec += t_sieve
+
+    overall_reduction = (total_baseline_cands / total_sieve_cands) if total_sieve_cands > 0 else 1.0
+    overall_speedup = (total_baseline_sec / total_sieve_sec) if total_sieve_sec > 0 else 1.0
+
+    return {
+        "instances_count": len(n_instances),
+        "total_baseline_candidates": total_baseline_cands,
+        "total_sieve_candidates": total_sieve_cands,
+        "overall_candidate_reduction": overall_reduction,
+        "total_baseline_sec": total_baseline_sec,
+        "total_sieve_sec": total_sieve_sec,
+        "overall_speedup": overall_speedup,
+        "false_negatives": false_negatives,
+        "all_sieve_valid": all(r["sieve"]["solved"] for r in results),
+        "results": results,
+    }

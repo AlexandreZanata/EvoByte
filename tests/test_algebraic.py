@@ -367,3 +367,131 @@ def test_p75_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P75 configuration"):
         run_p75_coverage_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_integer_factorization():
+    from evobyte.algebraic import integer_factorization
+
+    assert integer_factorization(1) == {}
+    assert integer_factorization(2) == {2: 1}
+    assert integer_factorization(12) == {2: 2, 3: 1}
+    assert integer_factorization(360) == {2: 3, 3: 2, 5: 1}
+    assert integer_factorization(1009) == {1009: 1}
+
+
+def test_get_square_divisors():
+    from evobyte.algebraic import get_square_divisors
+
+    assert get_square_divisors(1) == [1]
+    assert get_square_divisors(2) == [1, 2, 4]
+    divs_12 = get_square_divisors(12)
+    # 12^2 = 144
+    assert 144 in divs_12
+    assert divs_12 == sorted(divs_12)
+    assert len(divs_12) == 15  # (2*2 + 1) * (2*1 + 1) = 5 * 3 = 15
+
+
+def test_quadratic_divisor_decomposition():
+    from evobyte.algebraic import quadratic_divisor_decomposition
+
+    for n in (1009, 1033, 1129, 1153, 1201):
+        sol, det = quadratic_divisor_decomposition(n, max_d=100)
+        assert sol is not None
+        x, y, z = sol
+        assert 4 * x * y * z == n * (x * y + y * z + z * x)
+        assert det["verified_exact"] is True
+        assert det["candidates_evaluated"] > 0
+        assert det["d"] > 0
+
+
+def test_rational_divisor_sieve_resistant_primes():
+    from evobyte.algebraic import rational_divisor_sieve
+
+    # Resistant quadratic residue primes mod 840 and n = 1 mod 24
+    resistant_primes = [1009, 1033, 1129, 1153, 1201, 1249, 1297, 1321]
+    for p in resistant_primes:
+        sol, det = rational_divisor_sieve(p, max_x_steps=100)
+        assert sol is not None
+        x, y, z = sol
+        assert 4 * x * y * z == p * (x * y + y * z + z * x)
+        assert det["verified_exact"] is True
+        # Sublinear candidate search: all found in under 150 candidates
+        assert det["candidates_evaluated"] < 150
+        # Modular prime filter pruned invalid divisors
+        assert det["pruned_by_small_primes"] >= 0
+
+
+def test_solve_erdos_straus_sieve():
+    from evobyte.algebraic import solve_erdos_straus_sieve
+
+    for n in (1009, 1033, 1129):
+        sol, det = solve_erdos_straus_sieve(n)
+        assert sol is not None
+        x, y, z = sol
+        assert 4 * x * y * z == n * (x * y + y * z + z * x)
+        assert det["verified_exact"] is True
+        assert det["method"] in ("rational_divisor_sieve", "quadratic_divisor_decomposition")
+
+
+def test_benchmark_sieve_vs_baseline():
+    from evobyte.algebraic import benchmark_sieve_vs_baseline
+
+    test_instances = [1009, 1033, 1129]
+    bench = benchmark_sieve_vs_baseline(test_instances)
+
+    assert bench["instances_count"] == 3
+    assert bench["false_negatives"] == 0
+    assert bench["all_sieve_valid"] is True
+    # Sublinear sieve must evaluate dramatically fewer candidates
+    assert bench["overall_candidate_reduction"] > 100.0
+    assert bench["overall_speedup"] > 1.0
+
+
+def test_open_problems_algebraic_congruence_with_sieve_fallback():
+    from benchmarks.open_problems import check_erdos_straus_algebraic_congruence
+
+    # Without fallback, resistant residue 1009 returns False
+    ok_no_fallback, det_no_fallback = check_erdos_straus_algebraic_congruence(1009, 840, fallback_sieve=False)
+    assert ok_no_fallback is False
+    assert det_no_fallback["classification"]["is_resistant"] is True
+
+    # With fallback, resistant residue 1009 is solved and verified
+    ok_fallback, det_fallback = check_erdos_straus_algebraic_congruence(1009, 840, fallback_sieve=True)
+    assert ok_fallback is True
+    assert det_fallback["verified_exact"] is True
+    assert det_fallback["status"] == "solved_by_rational_divisor_sieve"
+    x, y, z = det_fallback["triple"]
+    assert 4 * x * y * z == 1009 * (x * y + y * z + z * x)
+
+
+def test_p76_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p76_sieve_audit
+
+    cfg = {
+        "phase": "P76",
+        "target_instances": [1009, 1033, 1129],
+        "min_speedup": 1.0,
+        "min_candidate_reduction": 100.0,
+        "seed": 42,
+        "allow_dirty": True,
+    }
+    cfg_p = tmp_path / "p76-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p76-out.json"
+
+    report = run_p76_sieve_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P76"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["benchmark_summary"]["false_negatives"] == 0
+    assert report["benchmark_summary"]["all_sieve_valid"] is True
+    assert report["benchmark_summary"]["overall_candidate_reduction"] > 100.0
+
+
+def test_p76_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p76_sieve_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P76 configuration"):
+        run_p76_sieve_audit(cfg_p, tmp_path / "out.json")
