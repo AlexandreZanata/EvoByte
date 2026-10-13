@@ -198,7 +198,7 @@ identifying the necessity of structured integer divisibility lemmas in $\mathbb{
 multiparameter quadratic identities, and automated proof search with advanced Lean 4 tactics.
 
 P81 audits and establishes the inductive proof and Presburger arithmetic baseline in Lean 4 (Done).
-P82 synthesizes and proves integer divisibility lemmas for Diophantine denominators in $\mathbb{N}$.
+P82 synthesizes and proves integer divisibility lemmas for Diophantine denominators in $\mathbb{N}$ and $\mathbb{Z}$ (Done).
 P83 implements optimal divisor selection algorithms minimizing coordinate bounds $\max(x, y, z)$.
 P84 synthesizes multiparameter quadratic polynomial forms for resistant residues.
 P85 automates tactic proof compilation using `omega`, `aesop`, and `linarith`.

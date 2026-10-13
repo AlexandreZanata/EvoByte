@@ -1,6 +1,6 @@
 # P82 — Síntese automática de lemas de divisibilidade diofantina
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P81 Proposed; branch a partir de `codex/p81-inductive-proof-baseline`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P81 concluída com baseline indutivo verificado no kernel Lean 4.
