@@ -710,3 +710,63 @@ def test_p79_confirmation_rejects_wrong_phase(tmp_path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P79 configuration"):
         run_p79_confirmation_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_optimal_schinzel_divisor_sieve():
+    from evobyte.algebraic import optimal_erdos_straus_sieve, optimal_sierpinski_sieve
+
+    sol_es, det_es = optimal_erdos_straus_sieve(73)
+    assert sol_es is not None
+    assert det_es["verified_exact"] is True
+    x, y, z = sol_es
+    assert 4 * x * y * z == 73 * (x * y + y * z + z * x)
+    assert max(sol_es) <= det_es["theoretical_bound"]
+
+    sol_sier, det_sier = optimal_sierpinski_sieve(73)
+    assert sol_sier is not None
+    assert det_sier["verified_exact"] is True
+    sx, sy, sz = sol_sier
+    assert 5 * sx * sy * sz == 73 * (sx * sy + sy * sz + sz * sx)
+
+
+def test_optimal_divisor_benchmark_reduction():
+    from evobyte.algebraic import benchmark_optimal_vs_naive_sieve
+
+    primes = [73, 97, 193, 241, 1009, 1153]
+    res = benchmark_optimal_vs_naive_sieve(primes)
+    assert res["instances_tested"] == len(primes)
+    assert res["average_reduction_factor"] >= 10.0
+    assert res["max_reduction_factor"] >= 100.0
+
+
+def test_p83_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p83_optimal_divisor_audit
+
+    cfg = {
+        "phase": "P83",
+        "output_dir": "lean_proofs/Generated",
+        "project_dir": "lean_proofs",
+        "min_avg_reduction_factor": 5.0,
+        "seed": 42,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p83-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p83-out.json"
+
+    report = run_p83_optimal_divisor_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P83"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_certificates"] >= 4
+    assert report["has_sorry"] is False
+    assert report["file"] is not None
+
+
+def test_p83_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p83_optimal_divisor_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P83 configuration"):
+        run_p83_optimal_divisor_audit(cfg_p, tmp_path / "out.json")

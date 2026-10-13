@@ -983,6 +983,226 @@ def rational_divisor_sieve(
     return schinzel_divisor_sieve(4, n, max_x_steps=max_x_steps, max_coord=max_coord)
 
 
+def optimal_schinzel_divisor_sieve(
+    a: int,
+    n: int,
+    max_x_steps: int = 100,
+    x_window: int = 10,
+    max_coord: int = 10**12,
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Structured optimal divisor sieve minimizing maximum coordinate max(x, y, z) (P83).
+
+    Key mathematical principles:
+    1. For a/n = 1/x + 1/y + 1/z, letting u = a*x - n and D = n*x:
+       (u*y - D)(u*z - D) = D^2.
+    2. Any divisor d <= D of D^2 yields exact coordinates:
+       y = (D + d) / u,   z = (D + D^2 / d) / u.
+    3. Notice that z(d) = (D + D^2 / d) / u is strictly decreasing in d.
+       Sorting candidate divisors in descending order (closest to D) directly minimizes
+       the largest coordinate z = max(x, y, z), avoiding astronomical coordinate blowup
+       O(n^2 * x^2) caused by small divisors (d = 1, 2, ...).
+    4. Evaluating across an x-window [x_0, x_0 + x_window] selects the globally minimal
+       coordinate representation across candidate branches.
+    """
+    if a < 1 or n < 2:
+        return None, {"error": "a must be >= 1 and n >= 2", "candidates_evaluated": 0}
+
+    t0 = time.perf_counter()
+    x0 = n // a + 1
+    candidates_evaluated = 0
+    pruned_by_small_primes = 0
+    pruned_by_u = 0
+
+    fn = integer_factorization(n)
+
+    best_sol: tuple[int, int, int] | None = None
+    best_coord: int = 10**18
+    best_meta: dict[str, Any] = {}
+    first_sol: tuple[int, int, int] | None = None
+    first_coord: int = 10**18
+    solutions_found = 0
+
+    for x_step in range(max_x_steps):
+        x = x0 + x_step
+        u = a * x - n
+        if u <= 0:
+            continue
+        D = n * x
+        D2 = D * D
+
+        small_p = [p for p in (2, 3, 5, 7, 11, 13) if u % p == 0]
+
+        fx = integer_factorization(x)
+        fd2: dict[int, int] = {}
+        for p, c in fn.items():
+            fd2[p] = fd2.get(p, 0) + 2 * c
+        for p, c in fx.items():
+            fd2[p] = fd2.get(p, 0) + 2 * c
+
+        divs = [1]
+        for p, exp in fd2.items():
+            new_d: list[int] = []
+            for d in divs:
+                pk = 1
+                for _ in range(exp + 1):
+                    cur = d * pk
+                    if cur <= D:
+                        new_d.append(cur)
+                    pk *= p
+            divs = new_d
+
+        # P83: Descending sort (divisors d closest to D minimize z)
+        divs.sort(reverse=True)
+
+        for d in divs:
+            candidates_evaluated += 1
+
+            if any((D + d) % p != 0 for p in small_p):
+                pruned_by_small_primes += 1
+                continue
+
+            if (D + d) % u != 0:
+                pruned_by_u += 1
+                continue
+
+            y = (D + d) // u
+            z = (D + (D2 // d)) // u
+
+            if x > 0 and y > 0 and z > 0:
+                if max_coord and max(x, y, z) > max_coord:
+                    continue
+                if a * x * y * z == n * (x * y + y * z + z * x):
+                    solutions_found += 1
+                    cur_coord = max(x, y, z)
+                    if first_sol is None:
+                        first_sol = (x, y, z)
+                        first_coord = cur_coord
+
+                    if cur_coord < best_coord:
+                        best_coord = cur_coord
+                        best_sol = (x, y, z)
+                        best_meta = {
+                            "d": d,
+                            "u": u,
+                            "D": D,
+                            "x_step": x_step,
+                        }
+                    break
+
+        if best_sol is not None and solutions_found >= 1 and x_step >= (best_meta.get("x_step", 0) + x_window):
+            break
+
+    elapsed = time.perf_counter() - t0
+
+    if best_sol is not None:
+        reduction_factor = float(first_coord / best_coord) if best_coord > 0 else 1.0
+        theoretical_bound = int(2 * n * (n // a + x_window + 2))
+        return best_sol, {
+            "a": a,
+            "n": n,
+            "x": best_sol[0],
+            "y": best_sol[1],
+            "z": best_sol[2],
+            "optimal_coord": best_coord,
+            "first_coord": first_coord,
+            "reduction_factor": reduction_factor,
+            "theoretical_bound": theoretical_bound,
+            "d": best_meta.get("d"),
+            "u": best_meta.get("u"),
+            "D": best_meta.get("D"),
+            "solutions_found": solutions_found,
+            "candidates_evaluated": candidates_evaluated,
+            "pruned_by_small_primes": pruned_by_small_primes,
+            "pruned_by_u": pruned_by_u,
+            "elapsed_sec": elapsed,
+            "verified_exact": True,
+        }
+
+    return None, {
+        "a": a,
+        "n": n,
+        "candidates_evaluated": candidates_evaluated,
+        "pruned_by_small_primes": pruned_by_small_primes,
+        "pruned_by_u": pruned_by_u,
+        "elapsed_sec": elapsed,
+        "verified_exact": False,
+    }
+
+
+def optimal_erdos_straus_sieve(
+    n: int,
+    max_x_steps: int = 100,
+    x_window: int = 10,
+    max_coord: int = 10**12,
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Optimal divisor sieve for Erdős–Straus (4/n = 1/x + 1/y + 1/z) minimizing max(x, y, z)."""
+    return optimal_schinzel_divisor_sieve(
+        4, n, max_x_steps=max_x_steps, x_window=x_window, max_coord=max_coord
+    )
+
+
+def optimal_sierpinski_sieve(
+    n: int,
+    max_x_steps: int = 100,
+    x_window: int = 10,
+    max_coord: int = 10**12,
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Optimal divisor sieve for Sierpiński (5/n = 1/x + 1/y + 1/z) minimizing max(x, y, z)."""
+    return optimal_schinzel_divisor_sieve(
+        5, n, max_x_steps=max_x_steps, x_window=x_window, max_coord=max_coord
+    )
+
+
+def benchmark_optimal_vs_naive_sieve(
+    n_instances: list[int],
+) -> dict[str, Any]:
+    """Empirical comparison of optimal vs naive divisor selection on challenging prime instances (P83)."""
+    results: list[dict[str, Any]] = []
+    total_naive_coord = 0
+    total_opt_coord = 0
+    reductions: list[float] = []
+
+    for n in n_instances:
+        naive_sol, _ = schinzel_divisor_sieve(4, n, max_x_steps=50)
+        opt_sol, _ = optimal_erdos_straus_sieve(n, max_x_steps=50, x_window=5)
+
+        if naive_sol is None or opt_sol is None:
+            continue
+
+        naive_max = max(naive_sol)
+        opt_max = max(opt_sol)
+        ratio = float(naive_max / opt_max)
+        reductions.append(ratio)
+        total_naive_coord += naive_max
+        total_opt_coord += opt_max
+
+        results.append(
+            {
+                "n": n,
+                "naive_sol": naive_sol,
+                "naive_max_coord": naive_max,
+                "opt_sol": opt_sol,
+                "opt_max_coord": opt_max,
+                "ratio": ratio,
+            }
+        )
+
+    avg_reduction = float(sum(reductions) / len(reductions)) if reductions else 1.0
+    max_reduction = float(max(reductions)) if reductions else 1.0
+    geo_reduction = float(math.exp(sum(math.log(r) for r in reductions) / len(reductions))) if reductions else 1.0
+
+    return {
+        "instances_tested": len(results),
+        "total_naive_coord": total_naive_coord,
+        "total_opt_coord": total_opt_coord,
+        "overall_reduction_factor": float(total_naive_coord / total_opt_coord) if total_opt_coord else 1.0,
+        "average_reduction_factor": avg_reduction,
+        "geometric_mean_reduction": geo_reduction,
+        "max_reduction_factor": max_reduction,
+        "results": results,
+    }
+
+
 
 def solve_erdos_straus_sieve(
     n: int, max_x_steps: int = 100, max_d_quad: int = 50

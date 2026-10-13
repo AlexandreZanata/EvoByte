@@ -721,6 +721,7 @@ ACCEPTANCE_PHASES = (
     "P80",
     "P81",
     "P82",
+    "P83",
 )
 
 
@@ -5296,6 +5297,143 @@ def run_p82_divisibility_synthesis_audit(
     return report
 
 
+def run_p83_optimal_divisor_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P83 audit: structured divisor sieve and optimal divisor selection in Lean 4.
+
+    Verifies:
+    1. Logarithmic / descending divisor ordering minimizing maximum coordinate max(x, y, z).
+    2. Measurable reduction in coordinate size (> 10x average reduction) on challenging primes n = 1 mod 24.
+    3. Export and Lean 4 verification of optimal certificates (`OptimalCertificates.lean`) with zero sorry.
+    4. Exactness of all certificates: a*x*y*z == n*(x*y + y*z + z*x).
+    5. Clean tree enforcement and SHA-256 artifact verification.
+    """
+    import torch as _torch
+
+    from evobyte.algebraic import benchmark_optimal_vs_naive_sieve
+    from evobyte.formal_bridge import (
+        export_optimal_certificates_catalog,
+        verify_optimal_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P83":
+        raise ValueError(f"Config {cfg_p} is not a P83 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P83 OPTIMAL DIVISOR SELECTION AUDIT (Logarithmic Ordering & Coordinate Minimization)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    test_primes = config.get(
+        "test_primes",
+        [73, 97, 193, 241, 313, 337, 1009, 1033, 1129, 1153, 1201, 1249, 1297, 1321, 1489, 1609],
+    )
+    min_reduction = float(config.get("min_avg_reduction_factor", 10.0))
+
+    bench_results = benchmark_optimal_vs_naive_sieve(test_primes)
+    avg_reduction = bench_results.get("average_reduction_factor", 1.0)
+    geo_reduction = bench_results.get("geometric_mean_reduction", 1.0)
+    max_reduction = bench_results.get("max_reduction_factor", 1.0)
+
+    if avg_reduction < min_reduction:
+        findings.append(f"INSUFFICIENT_REDUCTION: expected >= {min_reduction}x, got {avg_reduction:.2f}x")
+
+    output_dir = config.get("output_dir", "lean_proofs/Generated")
+    project_dir = config.get("project_dir", "lean_proofs")
+
+    catalog = export_optimal_certificates_catalog(
+        target_primes=test_primes, output_dir=output_dir, project_dir=project_dir
+    )
+    min_certs = int(config.get("min_certificates", 8))
+    sound, soundness_findings = verify_optimal_catalog_soundness(
+        catalog, min_certificates=min_certs
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    if catalog.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: optimal certificates catalog contains incomplete proofs")
+
+    if not catalog.get("accepted", False):
+        findings.append(f"OPTIMAL_CERT_REJECTED: {catalog.get('reasons')}")
+
+    elapsed = time.perf_counter() - t0
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; optimal divisor claims from dirty code rejected")
+
+    claim_scope = (
+        "Structured divisor sieve and optimal divisor selection minimizing coordinate "
+        "bounds max(x, y, z) on Diophantine equations a/n = 1/x + 1/y + 1/z; certified in "
+        "Lean 4 kernel using norm_num with zero sorry tokens."
+    )
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p83_config": config_sha[:16]},
+        config={"acceptance_phase": "P83"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    report = {
+        "phase": "P83",
+        "verdict": verdict,
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "claim_scope": claim_scope,
+        "total_certificates": catalog.get("total_certificates", 0),
+        "instances_tested": len(test_primes),
+        "average_reduction_factor": avg_reduction,
+        "geometric_mean_reduction": geo_reduction,
+        "max_reduction_factor": max_reduction,
+        "file": catalog.get("file"),
+        "sha256": catalog.get("sha256"),
+        "has_sorry": catalog.get("has_sorry", False),
+        "findings": findings,
+        "elapsed_sec": elapsed,
+        "resolved_config": {
+            "acceptance_phase": "P83",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "hardware": prov["hardware"],
+        "limitations": [
+            (
+                "Optimal divisor selection proves coordinate bounds on evaluated parameterized instances; "
+                "universal polynomial coordinate bounds for all integers remain conditional on divisor density."
+            )
+        ],
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P83 audit {verdict}; avg_reduction={avg_reduction:.1f}x; findings={len(findings)}; report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -9312,6 +9450,8 @@ def main() -> int:
             run_p81_inductive_baseline_audit(args.config, args.output)
         elif args.acceptance_phase == "P82":
             run_p82_divisibility_synthesis_audit(args.config, args.output)
+        elif args.acceptance_phase == "P83":
+            run_p83_optimal_divisor_audit(args.config, args.output)
         return 0
 
     seeds = (
