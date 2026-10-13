@@ -1,6 +1,6 @@
 # P76 — Crivo de fatoração racional e decomposição de divisores
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P75 Proposed; branch a partir de `codex/p75-residue-class-coverage`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P75 aceita com matriz de resíduos mapeada.
