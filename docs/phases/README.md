@@ -134,6 +134,7 @@ defines the formal extension adopted under D021 following the conclusion of
 P58–P72. It addresses the fundamental bottleneck of finite numerical point-search
 by targeting parameterized polynomial identities that cover infinite residue classes,
 coupled directly to interactive theorem proving in Lean 4.
+The program is completed (Done, D022).
 
 - [P73 — Infraestrutura de verificação formal e harness Lean 4](P73-lean-formal-baseline.md).
 - [P74 — Síntese de identidades polinomiais algébricas](P74-algebraic-identity-synthesis.md).
@@ -144,9 +145,10 @@ coupled directly to interactive theorem proving in Lean 4.
 - [P79 — Confirmação cega e controle estatístico de seleção](P79-blind-residue-confirmation.md).
 - [P80 — Campanha formal bounded e dossiê de teoremas Lean 4](P80-certified-formal-campaign.md).
 
-Execute one micro-task at a time. All phases remain Proposed until their explicit
-gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
-conjecture resolution is claimed.
+P73–P80 are completed (Done, D022) with all measured gates passing, clean-tree
+verification, 149 Lean 4 kernel theorems with zero sorry, and PRs #102–#109.
+No worldwide novelty, quantum advantage, or unproven universal conjecture
+resolution is claimed.
 
 ## Historical execution and acceptance contract
 

@@ -397,7 +397,7 @@ make verify; um gate vermelho bloqueia commit/push daquela microtarefa.
 
 ## Programa de busca algébrica e verificação formal Lean 4 (P73–P80)
 
-**Programa proposto em 2026-10-13 (D021).** Sucede a conclusão de P58–P72 sob D020.
+**Programa concluído em 2026-10-13 (D022).** Sucedeu a conclusão de P58–P72 sob D020.
 A constatação de P71 e P72 foi que a busca puramente numérica de instâncias isoladas
 em $\mathbb{Z}^3$ (mesmo com módulos heurísticos ou neurais) esgota a capacidade de
 cálculo em números primos grandes ($n > 10^5$, classe dura $n \equiv 1 \pmod{24}$)
@@ -406,9 +406,13 @@ A literatura resolve instâncias da conjectura de Erdős–Straus e afins por me
 **identidades polinomiais** que cobrem classes inteiras de congruência (ex.: identidades
 de Mordell para resíduos módulo 840).
 
-O programa P73–P80 redireciona o motor de busca do EvoByte para a descoberta algébrica
+O programa P73–P80 redirecionou o motor de busca do EvoByte para a descoberta algébrica
 de fórmulas parametrizadas sobre progressões aritméticas $n = mk + r$ e sua
 compilação automática em teoremas provados formalmente no kernel Lean 4 (Mathlib).
+Todas as fases P73–P80 foram concluídas com êxito (`Done`), atingindo 149 teoremas
+formalmente certificados no kernel do Lean 4 com zero tokens `sorry`, cobertura modular
+comprovada de $80{,}0\%$ mod 120 em Sierpiński $5/n$, confirmação cega com controle de
+Holm ($p = 3{,}81 \times 10^{-6} < 0{,}05$) e dossiê de novidade reproduzível em árvore limpa.
 
 ### Ordem e dependências de P73–P80
 
@@ -420,8 +424,8 @@ P73 harness Lean 4 -> P74 síntese algébrica -> P75 matriz de resíduos
 
 ### Regras do programa P73–P80
 
-1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
-2. **Lean 4 hermético:** compilação via `lake env lean` ou `lake build` hermética em CI local, sem downloads ou dependência de rede em tempo de teste.
-3. **Identidades polinomiais exatas:** identidades descobertas $(X(k), Y(k), Z(k))$ devem ser identidades racionais exatas sobre $\mathbb{Q}[k]$, verificáveis por álgebra computacional e provadas por táticas de anel (`ring`, `norm_num`, `linarith`) em Lean 4.
+1. **Uma microtarefa por ciclo:** cada fase definiu seu escopo e produziu exatamente commits atômicos e PRs dedicados.
+2. **Lean 4 hermético:** compilação via `lake env lean` ou `lake -d lean_proofs build` hermética em CI local, sem downloads ou dependência de rede em tempo de teste.
+3. **Identidades polinomiais exatas:** identidades descobertas $(X(k), Y(k), Z(k))$ são identidades racionais exatas sobre $\mathbb{Q}[k]$, verificáveis por álgebra computacional e provadas por táticas de anel (`ring`, `norm_num`, `linarith`) em Lean 4.
 4. **Sem alegações espúrias:** a cobertura de classes de resíduos modulares especifica exatamente a porcentagem de classes provadas; resíduos sem identidade permanecem explicitamente marcados como não cobertos.
-5. **Divisão de conjuntos cega (P79):** classes de congruência de teste são seladas antes do congelamento dos modelos de busca para evitar sobreajuste algébrico.
+5. **Divisão de conjuntos cega (P79):** classes de congruência de teste foram seladas antes do congelamento dos modelos de busca para evitar sobreajuste algébrico.

@@ -167,26 +167,27 @@ Adding these files executes no new experiment and establishes no worldwide
 novelty, quantum advantage or solved open problem. Existing results remain
 unchanged; integrity failures block advancement, not honest negative findings.
 
-## Algebraic discovery & Lean 4 formal verification (D021)
+## Algebraic discovery & Lean 4 formal verification (D021, completed under D022)
 
 [P73–P80](phases/README.md#algebraic-discovery--lean-4-formal-verification-program-p73p80)
-define the formal extension following the conclusion of P58–P72.
+define the formal extension following the conclusion of P58–P72, now completed (Done, D022).
 Empirical search in $\mathbb{Z}^3$ showed that numerical point-hunting hits
 finite resource bounds on hard primes ($n \equiv 1 \pmod{24}$) without
-proving theorems. P73–P80 pivot from instance-level search to
+proving theorems. P73–P80 pivoted from instance-level search to
 polynomial identity synthesis and automated theorem extraction in Lean 4.
 
-P73 audits and freezes the hermetic Lean 4 / Lake verification harness.
-P74 synthesizes algebraic polynomial identities $(X(k), Y(k), Z(k))$ covering
-linear arithmetic progressions $n = mk + r$. P75 constructs an exact residue
+P73 audited and froze the hermetic Lean 4 / Lake verification harness.
+P74 synthesized algebraic polynomial identities $(X(k), Y(k), Z(k))$ covering
+linear arithmetic progressions $n = mk + r$. P75 constructed an exact residue
 class coverage matrix for moduli $M \in \{24, 120, 840\}$, isolating resistant
-residues. P76 implements an exact rational divisor sieve on
-$(4xy - n(x+y)) \mid n^2$. P77 compiles discovered algebraic bytecode into
+residues. P76 implemented an exact rational divisor sieve on
+$(4xy - n(x+y)) \mid n^2$. P77 compiled discovered algebraic bytecode into
 certified Lean 4 Mathlib theorems with automated tactic proofs (`ring`,
-`norm_num`, `linarith`). P78 tests generalization to Sierpiński ($5/n$)
-and Schinzel ($a/n$) families. P79 enforces blinded residue confirmation.
-P80 conducts a bounded campaign and produces a formal proof dossier.
-All phases remain Proposed until measured and accepted.
+`norm_num`, `linarith`). P78 generalized to Sierpiński ($5/n$)
+and Schinzel ($a/n$) families with 80% coverage mod 120. P79 confirmed blinded
+residue partitions under Holm FWER control ($p = 3.81 \times 10^{-6}$).
+P80 executed a bounded campaign, verifying 149 Lean 4 theorems with zero sorry
+and compiling the formal research dossier. All phases P73–P80 are Done.
 
 ## Quantum track (experimental, deferred expansion)
 
