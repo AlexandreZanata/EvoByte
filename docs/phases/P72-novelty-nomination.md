@@ -1,8 +1,10 @@
 # P72 — Nominar um resultado matemático e verificar novidade
 
-**Status:** Building (entrega 1 neste ciclo: alvo nominado + interface de aceitação
-e runner congelado; medição em árvore limpa + revisão de novidade pendentes na
-entrega 2).
+**Status:** Done (entregas 1–2: alvo nominado erdos-242, interface + runner congelado,
+medição ACCEPTED em árvore limpa `run_id=54e4999caf6a6bbf`, campanha de instâncias
+concluída com classificações honestas [rediscovery, candidate, budget-exhausted];
+dossiê em `docs/research/novelty-review.md`). Novidade não sustentada como teorema;
+campanha encerrada sem descoberta; programa P58–P72 concluído com integridade.
 **Dependência:** P71 Done porém não integrado (PR #99 aberto); branch a
 partir de `codex/p71-independent-hypothesis-confirmation`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
