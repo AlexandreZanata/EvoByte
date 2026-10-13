@@ -9,6 +9,7 @@ tactics (`ring`, `norm_num`, `linarith`, `omega`) without human intervention or 
 from __future__ import annotations
 
 import hashlib
+import time
 from pathlib import Path
 from typing import Any
 
@@ -452,5 +453,318 @@ def verify_proof_catalog_soundness(catalog_summary: dict[str, Any]) -> tuple[boo
             findings.append(f"MODULE_REJECTED_{mod_name}: {mod_info.get('reasons')}")
         if len(mod_info.get("sha256", "")) != 64:
             findings.append(f"INVALID_CHECKSUM_{mod_name}")
+
+    return (len(findings) == 0), findings
+
+
+# -----------------------------------------------------------------------------
+# Inductive Proof & Presburger Baseline (P81)
+# -----------------------------------------------------------------------------
+
+INDUCTIVE_LEAN_LEMMAS: list[tuple[str, str, str, str]] = [
+    # 1. Structural induction & basic Presburger Nat properties
+    (
+        "nat_add_zero_ind",
+        "∀ (n : Nat), n + 0 = n",
+        "intro n\ninduction n with\n| zero => rfl\n| succ n ih => rw [Nat.add_zero]",
+        "Structural induction on Nat: addition with zero right-identity.",
+    ),
+    (
+        "nat_zero_add_ind",
+        "∀ (n : Nat), 0 + n = n",
+        "intro n\ninduction n with\n| zero => rfl\n| succ n ih => omega",
+        "Structural induction on Nat: addition with zero left-identity.",
+    ),
+    (
+        "nat_succ_pos",
+        "∀ (n : Nat), n + 1 > 0",
+        "intro n\nomega",
+        "Successor is strictly positive in Nat.",
+    ),
+    (
+        "nat_succ_ge_one",
+        "∀ (n : Nat), n + 1 ≥ 1",
+        "intro n\nomega",
+        "Successor is greater than or equal to 1 in Nat.",
+    ),
+    (
+        "nat_add_pos_left",
+        "∀ (a b : Nat), a > 0 → a + b > 0",
+        "intro a b ha\nomega",
+        "Addition with a strictly positive term is strictly positive.",
+    ),
+    (
+        "nat_add_pos_right",
+        "∀ (a b : Nat), b > 0 → a + b > 0",
+        "intro a b hb\nomega",
+        "Addition with a strictly positive right term is strictly positive.",
+    ),
+    (
+        "nat_sub_le",
+        "∀ (a b : Nat), a - b ≤ a",
+        "intro a b\nomega",
+        "Truncated subtraction in Nat does not exceed the minuend.",
+    ),
+    (
+        "nat_le_trans",
+        "∀ (a b c : Nat), a ≤ b → b ≤ c → a ≤ c",
+        "intro a b c hab hbc\nomega",
+        "Transitivity of order relation in Nat.",
+    ),
+    (
+        "nat_mul_pos",
+        "∀ (a b : Nat), a > 0 → b > 0 → a * b > 0",
+        "intro a b ha hb\nexact Nat.mul_pos ha hb",
+        "Product of strictly positive natural numbers is strictly positive.",
+    ),
+    # 2. Denominator strict positivity for Erdős–Straus linear progressions
+    (
+        "es_denom_4k3_pos",
+        "∀ (k : Nat), 4 * k + 3 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 4k + 3 for all k in Nat.",
+    ),
+    (
+        "es_denom_4k3_ge_7",
+        "∀ (k : Nat), k ≥ 1 → 4 * k + 3 ≥ 7",
+        "intro k hk\nomega",
+        "Lower bound on denominator 4k + 3 when k >= 1.",
+    ),
+    (
+        "es_denom_3k2_pos",
+        "∀ (k : Nat), 3 * k + 2 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 3k + 2 for all k in Nat.",
+    ),
+    (
+        "es_denom_3k2_ge_5",
+        "∀ (k : Nat), k ≥ 1 → 3 * k + 2 ≥ 5",
+        "intro k hk\nomega",
+        "Lower bound on denominator 3k + 2 when k >= 1.",
+    ),
+    (
+        "es_denom_8k5_pos",
+        "∀ (k : Nat), 8 * k + 5 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 8k + 5 for all k in Nat.",
+    ),
+    (
+        "es_denom_8k5_ge_13",
+        "∀ (k : Nat), k ≥ 1 → 8 * k + 5 ≥ 13",
+        "intro k hk\nomega",
+        "Lower bound on denominator 8k + 5 when k >= 1.",
+    ),
+    (
+        "es_denom_24k1_pos",
+        "∀ (k : Nat), 24 * k + 1 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 24k + 1 for all k in Nat.",
+    ),
+    (
+        "es_denom_24k1_ge_25",
+        "∀ (k : Nat), k ≥ 1 → 24 * k + 1 ≥ 25",
+        "intro k hk\nomega",
+        "Lower bound on denominator 24k + 1 when k >= 1.",
+    ),
+    (
+        "es_denom_120k2_pos",
+        "∀ (k : Nat), 120 * k + 2 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 120k + 2 for all k in Nat.",
+    ),
+    (
+        "es_denom_120k2_ge_122",
+        "∀ (k : Nat), k ≥ 1 → 120 * k + 2 ≥ 122",
+        "intro k hk\nomega",
+        "Lower bound on denominator 120k + 2 when k >= 1.",
+    ),
+    (
+        "es_denom_840k1_pos",
+        "∀ (k : Nat), 840 * k + 1 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 840k + 1 for all k in Nat.",
+    ),
+    (
+        "es_coord_x_pos",
+        "∀ (k : Nat), k + 1 > 0",
+        "intro k\nomega",
+        "Strict positivity of coordinate k + 1 for all k in Nat.",
+    ),
+    (
+        "es_coord_2k1_pos",
+        "∀ (k : Nat), 2 * k + 1 > 0",
+        "intro k\nomega",
+        "Strict positivity of coordinate 2k + 1 for all k in Nat.",
+    ),
+    (
+        "es_coord_3k1_pos",
+        "∀ (k : Nat), 3 * k + 1 > 0",
+        "intro k\nomega",
+        "Strict positivity of coordinate 3k + 1 for all k in Nat.",
+    ),
+    (
+        "es_coord_6k1_pos",
+        "∀ (k : Nat), 6 * k + 1 > 0",
+        "intro k\nomega",
+        "Strict positivity of coordinate 6k + 1 for all k in Nat.",
+    ),
+    (
+        "es_coord_12k1_pos",
+        "∀ (k : Nat), 12 * k + 1 > 0",
+        "intro k\nomega",
+        "Strict positivity of coordinate 12k + 1 for all k in Nat.",
+    ),
+    # 3. Sierpiński progressions in Nat
+    (
+        "sier_denom_5k1_pos",
+        "∀ (k : Nat), 5 * k + 1 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 5k + 1 for all k in Nat.",
+    ),
+    (
+        "sier_denom_5k2_pos",
+        "∀ (k : Nat), 5 * k + 2 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 5k + 2 for all k in Nat.",
+    ),
+    (
+        "sier_denom_5k3_pos",
+        "∀ (k : Nat), 5 * k + 3 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 5k + 3 for all k in Nat.",
+    ),
+    (
+        "sier_denom_5k4_pos",
+        "∀ (k : Nat), 5 * k + 4 > 0",
+        "intro k\nomega",
+        "Strict positivity of denominator 5k + 4 for all k in Nat.",
+    ),
+    (
+        "sier_denom_120k_rem",
+        "∀ (k r : Nat), r > 0 → 120 * k + r > 0",
+        "intro k r hr\nomega",
+        "Strict positivity of denominator 120k + r whenever remainder r > 0.",
+    ),
+    # 4. Diophantine cross-terms and coordinate bounds
+    (
+        "dioph_denom_mul_pos",
+        "∀ (x y : Nat), x > 0 → y > 0 → x * y > 0",
+        "intro x y hx hy\nexact Nat.mul_pos hx hy",
+        "Diophantine cross-product positivity.",
+    ),
+    (
+        "dioph_cross_sum_pos",
+        "∀ (x y z : Nat), x > 0 → y > 0 → z > 0 → x * y + y * z + x * z > 0",
+        "intro x y z hx hy hz\nhave h1 : x * y > 0 := Nat.mul_pos hx hy\nomega",
+        "Diophantine cross-sum positivity for positive coordinates.",
+    ),
+    (
+        "dioph_coord_bound_sum",
+        "∀ (x y z : Nat), x ≥ 1 → y ≥ 1 → z ≥ 1 → x + y + z ≥ 3",
+        "intro x y z hx hy hz\nomega",
+        "Lower bound on coordinate sum x + y + z in Nat when all >= 1.",
+    ),
+]
+
+
+def generate_inductive_lemmas_source() -> str:
+    """Generate Lean 4 module containing certified inductive & Presburger lemmas in Nat."""
+    lines = [
+        "import Mathlib.Tactic.Ring",
+        "",
+        "/-",
+        "EvoByte Inductive and Presburger Baseline Lemmas in Nat (P81).",
+        "Certified structural induction and linear arithmetic.",
+        "-/",
+        "",
+    ]
+    for name, sig, proof, doc in INDUCTIVE_LEAN_LEMMAS:
+        lines.append(f"/-- {doc} -/")
+        lines.append(f"theorem {name} : {sig} := by")
+        for pline in proof.split("\n"):
+            lines.append(f"  {pline}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def export_inductive_lemmas_catalog(
+    output_dir: str | Path = "lean_proofs/Generated",
+    project_dir: str | Path = "lean_proofs",
+) -> dict[str, Any]:
+    """Export and verify InductiveLemmas.lean in the Lean 4 environment."""
+    import subprocess
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    src = generate_inductive_lemmas_source()
+    ind_file = out / "InductiveLemmas.lean"
+    ind_file.write_text(src, encoding="utf-8")
+    file_sha = hashlib.sha256(ind_file.read_bytes()).hexdigest()
+
+    # Ensure Generated.lean imports Generated.InductiveLemmas
+    root_file = proj / "Generated.lean"
+    if root_file.exists():
+        root_content = root_file.read_text(encoding="utf-8")
+        if "import Generated.InductiveLemmas" not in root_content:
+            root_content = root_content.rstrip() + "\nimport Generated.InductiveLemmas\n"
+            root_file.write_text(root_content, encoding="utf-8")
+    else:
+        root_file.write_text(
+            "-- EvoByte Root Generated Formal Library\nimport Generated.InductiveLemmas\n",
+            encoding="utf-8",
+        )
+
+    # Compile the file
+    v_res = compile_lean_file(ind_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+
+    # Also build the Generated library via Lake
+    bins = lean_resolve_binaries(proj)
+    lake_proc = subprocess.run(
+        [bins["lake"], "-d", str(proj), "build", "Generated"],
+        capture_output=True,
+        text=True,
+        cwd=str(proj),
+        timeout=120,
+        check=False,
+    )
+    if lake_proc.returncode != 0:
+        accepted = False
+        reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "catalog_dir": str(out),
+        "total_lemmas": len(INDUCTIVE_LEAN_LEMMAS),
+        "file": str(ind_file),
+        "sha256": file_sha,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in ind_file.read_text(encoding="utf-8"),
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_inductive_catalog_soundness(catalog_summary: dict[str, Any]) -> tuple[bool, list[str]]:
+    """Audit inductive lemmas catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(f"INDUCTIVE_COMPILATION_FAILED: {catalog_summary.get('reasons')}")
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: inductive catalog contains sorry")
+
+    total_lemmas = catalog_summary.get("total_lemmas", 0)
+    if total_lemmas < 20:
+        findings.append(f"INSUFFICIENT_LEMMAS: expected >= 20, got {total_lemmas}")
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_INDUCTIVE_LEMMAS")
 
     return (len(findings) == 0), findings

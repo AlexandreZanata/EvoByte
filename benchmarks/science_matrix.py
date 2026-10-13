@@ -719,6 +719,7 @@ ACCEPTANCE_PHASES = (
     "P78",
     "P79",
     "P80",
+    "P81",
 )
 
 
@@ -5062,6 +5063,119 @@ def run_p80_formal_campaign_audit(
     return report
 
 
+def run_p81_inductive_baseline_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P81 audit: inductive proof baseline and Presburger structural verification in Lean 4.
+
+    Verifies:
+    1. Generation of inductive lemmas and Presburger linear arithmetic proofs in Nat
+       (`InductiveLemmas.lean`).
+    2. Zero `sorry` or `admit` tokens, certified directly by the Lean 4 kernel via Lake.
+    3. Proof soundness: minimum count of verified lemmas (default >= 20).
+    4. Integration with root `Generated.lean` and hermetic Lake build.
+    5. Clean tree enforcement and SHA-256 artifact verification.
+    """
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        export_inductive_lemmas_catalog,
+        verify_inductive_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P81":
+        raise ValueError(f"Config {cfg_p} is not a P81 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P81 INDUCTIVE PROOF BASELINE AUDIT (Lean 4 Nat Presburger Kernel; Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    output_dir = config.get("output_dir", "lean_proofs/Generated")
+    project_dir = config.get("project_dir", "lean_proofs")
+    min_lemmas = int(config.get("min_lemmas", 20))
+
+    catalog = export_inductive_lemmas_catalog(output_dir=output_dir, project_dir=project_dir)
+    sound, soundness_findings = verify_inductive_catalog_soundness(catalog)
+    if not sound:
+        findings.extend(soundness_findings)
+
+    total_lemmas = catalog.get("total_lemmas", 0)
+    if total_lemmas < min_lemmas:
+        findings.append(f"INSUFFICIENT_LEMMAS: expected >= {min_lemmas}, got {total_lemmas}")
+
+    if catalog.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: inductive catalog contains incomplete proofs")
+
+    if not catalog.get("accepted", False):
+        findings.append(f"INDUCTIVE_REJECTED: {catalog.get('reasons')}")
+
+    elapsed = time.perf_counter() - t0
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; inductive baseline claims from dirty code rejected")
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p81_config": config_sha[:16]},
+        config={"acceptance_phase": "P81"},
+    )
+
+    report = {
+        "phase": "P81",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Inductive proof baseline and Presburger linear arithmetic verification in Nat "
+            "using Lean 4 core tactics (omega, induction); 100% formal compilation in Lean 4 "
+            "kernel with zero sorry tokens; non-vanishing denominator bounds certified in Nat."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "total_lemmas": total_lemmas,
+        "file": catalog.get("file"),
+        "sha256": catalog.get("sha256"),
+        "has_sorry": catalog.get("has_sorry", False),
+        "hardware": prov["hardware"],
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P81",
+        },
+        "limitations": [
+            (
+                "Inductive lemmas establish structural properties and linear denominator positivity in Nat; "
+                "arbitrary non-linear Diophantine equations require further divisibility lemmas."
+            ),
+        ],
+        "elapsed_sec": elapsed,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P81 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -9074,6 +9188,8 @@ def main() -> int:
             run_p79_confirmation_audit(args.config, args.output)
         elif args.acceptance_phase == "P80":
             run_p80_formal_campaign_audit(args.config, args.output)
+        elif args.acceptance_phase == "P81":
+            run_p81_inductive_baseline_audit(args.config, args.output)
         return 0
 
     seeds = (

@@ -213,3 +213,53 @@ def test_p80_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P80 configuration"):
         run_p80_formal_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_inductive_lemmas_catalog_generation():
+    from evobyte.formal_bridge import (
+        export_inductive_lemmas_catalog,
+        verify_inductive_catalog_soundness,
+    )
+
+    cat = export_inductive_lemmas_catalog()
+    assert cat["accepted"] is True
+    assert cat["has_sorry"] is False
+    assert cat["total_lemmas"] >= 20
+    assert len(cat["sha256"]) == 64
+
+    sound, findings = verify_inductive_catalog_soundness(cat)
+    assert sound is True
+    assert findings == []
+
+
+def test_p81_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p81_inductive_baseline_audit
+
+    cfg = {
+        "phase": "P81",
+        "output_dir": "lean_proofs/Generated",
+        "project_dir": "lean_proofs",
+        "min_lemmas": 20,
+        "seed": 42,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p81-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p81-out.json"
+
+    report = run_p81_inductive_baseline_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P81"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_lemmas"] >= 20
+    assert report["has_sorry"] is False
+    assert report["file"] is not None
+
+
+def test_p81_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p81_inductive_baseline_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P81 configuration"):
+        run_p81_inductive_baseline_audit(cfg_p, tmp_path / "out.json")
