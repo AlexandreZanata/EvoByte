@@ -180,6 +180,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P69",
         "P70",
         "P71",
+        "P72",
     )
     import subprocess as _sp
 
@@ -1435,6 +1436,107 @@ def test_p71_acceptance_blocks_final_reference(tmp_path):
     report = run_p71_confirmation_audit(cfg_p, tmp_path / "p71-out.json")
     assert report["verdict"] == "BLOCKED"
     assert any("FINAL_ACCESS" in f for f in report["findings"])
+
+
+def _p72_smoke_config(tmp_path):
+    import json as _json
+
+    repo = Path(__file__).resolve().parents[1]
+    cfg = {
+        "phase": "P72",
+        "note": "smoke test for P72",
+        "target_id": "erdos-242",
+        "device": "cpu",
+        "seed": 0,
+        "max_coord": 1000000,
+        "time_cap_sec": 30.0,
+        "smoke": True,
+        "require_clean_tree": False,
+        "nomination_path": str(repo / "docs" / "research" / "open-problems.json"),
+        "nomination_sha256": "bd976f3b315bab263cbb956e5b016467b326994c984cfa74baa41efbd75b37c2",
+    }
+    cfg_p = tmp_path / "p72-smoke-config.json"
+    cfg_p.write_text(_json.dumps(cfg))
+    return cfg_p
+
+
+def test_p72_nomination_spec() -> None:
+    from open_problems import p72_nominate_target
+
+    target = p72_nominate_target()
+    assert target["problem_id"] == "erdos-242"
+    assert target["hard_class"] == "primes n = 1 mod 24"
+    assert target["accepted_components_only"] is True
+    assert "H01-repair" in target["disallowed_components"]
+    assert "H06-macros" in target["disallowed_components"]
+    assert target["ceiling_sec"] == 3600.0
+
+
+def test_p72_triple_verification_and_classification() -> None:
+    from open_problems import p72_classify_solution, p72_verify_triple
+
+    # Control anchor n=1009
+    res_1009 = p72_verify_triple(1009, (253, 85100, 944524900))
+    assert res_1009["verified"] is True
+    assert res_1009["integer_exact"] is True
+    assert res_1009["rational_exact"] is True
+    cl_1009 = p72_classify_solution(1009, (253, 85100, 944524900))
+    assert cl_1009["status"] == "rediscovery"
+
+    # Classical even n=4 -> (2, 3, 6)
+    res_4 = p72_verify_triple(4, (2, 3, 6))
+    assert res_4["verified"] is True
+    cl_4 = p72_classify_solution(4, (2, 3, 6))
+    assert cl_4["status"] == "rediscovery"
+
+    # Invalid triple
+    res_bad = p72_verify_triple(1009, (1, 2, 3))
+    assert res_bad["verified"] is False
+
+    # Out of bounds
+    res_oob = p72_verify_triple(1009, (253, 85100, 944524900), max_coord=1000)
+    assert res_oob["verified"] is False
+
+
+def test_p72_acceptance_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p72_novelty_audit
+
+    out_p = tmp_path / "p72-acceptance.json"
+    report = run_p72_novelty_audit(_p72_smoke_config(tmp_path), out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P72"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["target"]["problem_id"] == "erdos-242"
+    assert report["nomination"]["status"] == "NOMINATED_FROZEN"
+    assert "campaign" in report
+
+
+def test_p72_acceptance_blocks_invalid_target(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p72_novelty_audit
+
+    cfg_p = _p72_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["target_id"] = "non-existent-problem"
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p72_novelty_audit(cfg_p, tmp_path / "p72-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("TARGET_MISMATCH" in f for f in report["findings"])
+
+
+def test_p72_acceptance_blocks_disallowed_modules(tmp_path):
+    import json as _json
+
+    from benchmarks.science_matrix import run_p72_novelty_audit
+
+    cfg_p = _p72_smoke_config(tmp_path)
+    cfg = _json.loads(cfg_p.read_text())
+    cfg["enabled_modules"] = ["H06-macros"]
+    cfg_p.write_text(_json.dumps(cfg))
+    report = run_p72_novelty_audit(cfg_p, tmp_path / "p72-out.json")
+    assert report["verdict"] == "BLOCKED"
+    assert any("DISALLOWED_MODULES" in f for f in report["findings"])
 
 
 def _p59_smoke_config(tmp_path):

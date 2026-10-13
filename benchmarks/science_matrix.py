@@ -710,6 +710,7 @@ ACCEPTANCE_PHASES = (
     "P69",
     "P70",
     "P71",
+    "P72",
 )
 
 
@@ -3757,6 +3758,138 @@ def run_p71_confirmation_audit(config_path: str | Path, output_path: str | Path)
     with open(out_p, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P71 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
+def run_p72_novelty_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P72 audit: nomination of a single mathematical target and novelty verification.
+
+    Nomination target must come from the reviewed catalogue (erdos-242);
+    uses accepted components only; speculative unpromoted modules (H01-H10)
+    remain disabled; bounds strictly enforced; dual exact checkers run;
+    novelty evaluated according to literature without automatic discovery claim.
+    """
+    import torch as _torch
+    from open_problems import (
+        P72_DISALLOWED_MODULES,
+        p72_nominate_target,
+        run_p72_bounded_campaign,
+    )
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P72":
+        raise ValueError(f"Config {cfg_p} is not a P72 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P72 MATHEMATICAL NOVELTY NOMINATION AUDIT (single target; accepted methods only)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    target = p72_nominate_target()
+    cfg_target_id = config.get("target_id")
+    if cfg_target_id != target["problem_id"]:
+        findings.append(f"TARGET_MISMATCH: expected {target['problem_id']}, got {cfg_target_id}")
+
+    active_speculative = [
+        m for m in config.get("enabled_modules", []) if m in P72_DISALLOWED_MODULES
+    ]
+    if active_speculative:
+        findings.append(
+            f"DISALLOWED_MODULES: unpromoted speculative modules enabled: {active_speculative}"
+        )
+
+    time_cap = float(config.get("time_cap_sec", target["ceiling_sec"]))
+    if time_cap > 3600.0:
+        findings.append(f"BUDGET_EXCEEDED: declared time cap {time_cap} > 3600s ceiling")
+
+    cat_path = config.get("nomination_path")
+    if cat_path:
+        cp = Path(cat_path)
+        if not cp.exists():
+            findings.append(f"CATALOG_MISSING: {cat_path} does not exist")
+        elif config.get("nomination_sha256"):
+            c_sha = hashlib.sha256(cp.read_bytes()).hexdigest()
+            if c_sha != config["nomination_sha256"]:
+                findings.append("CATALOG_DRIFT: catalog sha256 mismatch")
+
+    max_coord = int(config.get("max_coord", target["max_coord"]))
+    device_name = config.get("device", "cpu")
+    device = _torch.device(device_name)
+
+    campaign_res = {}
+    if not findings:
+        smoke_or_fast = config.get("smoke", False) or time_cap < 60.0
+        campaign_res = run_p72_bounded_campaign(
+            target,
+            device=device,
+            time_cap_sec=min(time_cap, 30.0 if smoke_or_fast else time_cap),
+            max_coord=max_coord,
+        )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; final claims from dirty code rejected")
+        print("  tree: DIRTY_SOURCE (final claims rejected)")
+    else:
+        print(f"  tree: {'dirty (diagnostic only)' if dirty else 'clean'}")
+
+    verdict = "BLOCKED" if findings else "ACCEPTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 0)),
+        device=device,
+        dataset_hashes={"p72_config": config_sha[:16]},
+        config={"acceptance_phase": "P72"},
+    )
+
+    report = {
+        "phase": "P72",
+        "verdict": verdict,
+        "target": {
+            "problem_id": target["problem_id"],
+            "title": target["title"],
+            "catalog_ref": target["catalog_path"],
+            "statement": target["statement"],
+            "hard_class": target["hard_class"],
+        },
+        "nomination": {
+            "status": "NOMINATED_FROZEN",
+            "accepted_components_only": True,
+            "literature_reviewed": target["literature_citations"],
+        },
+        "campaign": campaign_res,
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings[:12],
+        "hardware": prov["hardware"],
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P72",
+        },
+        "limitations": [
+            "Finite instance solutions do not prove a universal conjecture.",
+            "Novelty is evaluated against literature; no automatic discovery claimed.",
+            "Speculative modules H01-H10 remain disabled.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P72 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
 
 
@@ -7754,6 +7887,8 @@ def main() -> int:
             run_p70_template_audit(args.config, args.output)
         elif args.acceptance_phase == "P71":
             run_p71_confirmation_audit(args.config, args.output)
+        elif args.acceptance_phase == "P72":
+            run_p72_novelty_audit(args.config, args.output)
         return 0
 
     seeds = (

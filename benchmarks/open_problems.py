@@ -4493,6 +4493,174 @@ def p70_compare_proposers(
     return out
 
 
+# ==============================================================================
+# P72 — Mathematical Result Nomination and Novelty Verification
+# ==============================================================================
+
+P72_PROBLEM_ID = "erdos-242"
+P72_MAX_COORD = 1_000_000_000
+P72_CEILING_SEC = 3600.0
+P72_DISALLOWED_MODULES = [
+    "H01-repair",
+    "H02-shadows",
+    "H03-obstructions",
+    "H04-bridges",
+    "H05-jumps",
+    "H06-macros",
+    "H07-adversaries",
+    "H08-feedback",
+    "H09-islands",
+    "H10-templates",
+]
+
+
+def p72_nominate_target() -> dict[str, Any]:
+    """Frozen P72 nomination of a single target from the reviewed catalogue."""
+    return {
+        "problem_id": P72_PROBLEM_ID,
+        "title": "Erdos Problem #242",
+        "domain": "number theory / unit fractions",
+        "statement": "For every n > 2 there exist distinct integers 1 <= x < y < z such that 4/n = 1/x + 1/y + 1/z.",
+        "catalog_path": "docs/research/open-problems.json",
+        "catalog_sha256": "bd976f3b315bab263cbb956e5b016467b326994c984cfa74baa41efbd75b37c2",
+        "primary_source": {
+            "citation": "Thomas Bloom, Erdos Problems database, Problem 242",
+            "url": "https://www.erdosproblems.com/242",
+            "dataset": "Teorth/erdosproblems data/problems.yaml (Apache-2.0)",
+        },
+        "literature_citations": [
+            "Erdos 1948",
+            "Mordell 1967",
+            "Elsholtz-Tao 2013",
+            "Bloom 2026",
+        ],
+        "state_in_catalog": "finitely-settleable-unsolved",
+        "certificate_type": "exact_integer_triple_and_rational_identity",
+        "hard_class": "primes n = 1 mod 24",
+        "calibration_anchor": {
+            "n": 1009,
+            "triple": (253, 85100, 944524900),
+            "classification": "rediscovery",
+        },
+        "campaign_instances": [1009, 10007, 100003],
+        "max_coord": P72_MAX_COORD,
+        "ceiling_sec": P72_CEILING_SEC,
+        "accepted_components_only": True,
+        "disallowed_components": P72_DISALLOWED_MODULES,
+    }
+
+
+def p72_verify_triple(
+    n: int, triple: tuple[int, int, int], max_coord: int = P72_MAX_COORD
+) -> dict[str, Any]:
+    """Exact dual verification of an Erdős-Straus solution candidate."""
+    x, y, z = int(triple[0]), int(triple[1]), int(triple[2])
+    ok_int, res_int, _ = check_erdos_straus(n, x, y, z)
+    ok_rat = False
+    with contextlib.suppress(ZeroDivisionError, ValueError, OverflowError):
+        ok_rat = Fraction(4, int(n)) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
+    in_bounds = 1 <= x < y < z <= max_coord
+    verified = bool(ok_int and ok_rat and in_bounds)
+    return {
+        "n": int(n),
+        "triple": (x, y, z),
+        "verified": verified,
+        "integer_exact": bool(ok_int),
+        "rational_exact": bool(ok_rat),
+        "in_bounds": in_bounds,
+        "residual": int(res_int),
+    }
+
+
+def p72_classify_solution(n: int, triple: tuple[int, int, int]) -> dict[str, Any]:
+    """Novelty classification under the formal search contract."""
+    n_int = int(n)
+    t_int = (int(triple[0]), int(triple[1]), int(triple[2]))
+    fams = p57_classical_constructions(n_int)
+    for fam in fams:
+        if tuple(fam["triple"]) == t_int:
+            return {
+                "status": "rediscovery",
+                "reason": f"matches classical parametric family {fam['family']}",
+                "novelty_sustained": False,
+                "theorem": False,
+            }
+    if n_int == 1009 and t_int == (253, 85100, 944524900):
+        return {
+            "status": "rediscovery",
+            "reason": "matches known k3 anchor from literature",
+            "novelty_sustained": False,
+            "theorem": False,
+        }
+    return {
+        "status": "candidate",
+        "reason": (
+            "computationally verified instance; novelty not sustained "
+            "without peer-reviewed independent proof of a novel theorem"
+        ),
+        "novelty_sustained": False,
+        "theorem": False,
+    }
+
+
+def run_p72_bounded_campaign(
+    target: dict[str, Any],
+    *,
+    device: torch.device,
+    time_cap_sec: float = 3600.0,
+    max_coord: int = P72_MAX_COORD,
+) -> dict[str, Any]:
+    """Execute P72 bounded campaign on the nominated target using accepted components only."""
+    t0 = time.perf_counter()
+    instances = [int(n) for n in target.get("campaign_instances", [1009])]
+    solved = []
+    total_evals = 0
+    for n in instances:
+        if time.perf_counter() - t0 > time_cap_sec:
+            solved.append({"n": n, "status": "budget-exhausted", "triple": None, "verified": False})
+            continue
+        part = run_erdos_straus_campaign(
+            [n],
+            device=device,
+            bounds_strict=True,
+            max_coord=max_coord,
+        )
+        total_evals += part["total_evaluated"]
+        if part["instances"] and part["instances"][0]["found"]:
+            inst_data = part["instances"][0]
+            d = inst_data["details"] or {}
+            triple = (int(d["x"]), int(d["y"]), int(d["z"]))
+            v = p72_verify_triple(n, triple, max_coord=max_coord)
+            cl = p72_classify_solution(n, triple)
+            solved.append(
+                {
+                    "n": n,
+                    "found": True,
+                    "triple": triple,
+                    "verified": v["verified"],
+                    "status": cl["status"] if v["verified"] else "invalid",
+                    "classification": cl,
+                }
+            )
+        else:
+            solved.append(
+                {
+                    "n": n,
+                    "found": False,
+                    "triple": None,
+                    "verified": False,
+                    "status": "budget-exhausted",
+                }
+            )
+    elapsed = time.perf_counter() - t0
+    return {
+        "target_id": target.get("problem_id", P72_PROBLEM_ID),
+        "instances": solved,
+        "total_evaluated": total_evals,
+        "elapsed_sec": elapsed,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P29/P31 Open Problems with Verifiable Certificates (Diophantine / Identities / Combinatorial)"

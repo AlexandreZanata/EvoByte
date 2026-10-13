@@ -1,6 +1,10 @@
 # P72 — Nominar um resultado matemático e verificar novidade
 
-**Status:** Proposed.
+**Status:** Building (entrega 1 neste ciclo: alvo nominado + interface de aceitação
+e runner congelado; medição em árvore limpa + revisão de novidade pendentes na
+entrega 2).
+**Dependência:** P71 Done porém não integrado (PR #99 aberto); branch a
+partir de `codex/p71-independent-hypothesis-confirmation`, PR contra ela.
 **Owner:** agente executor; revisor matemático/estatístico nos gates indicados.
 **Pré-requisito:** P71 com entrega técnica aceita; módulos experimentais anteriores sem ganho permanecem desligados. Para P61–P70 exige também a bancada P60 aceita.
 **Branch:** `codex/p72-novelty-nomination`.
@@ -44,7 +48,7 @@ python3 -m pytest tests -q
 make verify
 ```
 
-Interface de aceitação **planejada, ainda não implementada para P72**:
+Interface de aceitação **implementada na entrega 1** (`run_p72_novelty_audit`):
 
 ```text
 python3 benchmarks/science_matrix.py --acceptance-phase P72 --config experiments/p72-config.json --output /tmp/evobyte-p72-acceptance.json
