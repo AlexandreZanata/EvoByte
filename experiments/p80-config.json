@@ -6,7 +6,7 @@
   "output_dir": "lean_proofs/Generated",
   "project_dir": "lean_proofs",
   "dossier_path": "docs/research/p80-formal-dossier.md",
-  "allow_missing_dossier": true,
+  "allow_missing_dossier": false,
   "seed": 42,
   "require_clean_tree": true
 }

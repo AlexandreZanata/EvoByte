@@ -1,6 +1,6 @@
 # P80 — Campanha formal bounded e dossiê de teoremas Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P79 Proposed; branch a partir de `codex/p79-blind-residue-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P79 concluída com confirmação formal registrada.
