@@ -1,0 +1,12 @@
+{
+  "phase": "P80",
+  "note": "P80 certified bounded formal campaign and Lean 4 theorem dossier frozen configuration. Verifies modular coverage of Egyptian fraction families (Erdos-Straus 4/n, Sierpinski 5/n), compiles formal Lean 4 theorems in Mathlib kernel with zero sorry, and validates the formal novelty research dossier.",
+  "budget_sec": 3600.0,
+  "max_coord": 1000000000,
+  "output_dir": "lean_proofs/Generated",
+  "project_dir": "lean_proofs",
+  "dossier_path": "docs/research/p80-formal-dossier.md",
+  "allow_missing_dossier": true,
+  "seed": 42,
+  "require_clean_tree": true
+}

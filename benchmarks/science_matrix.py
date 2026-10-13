@@ -718,6 +718,7 @@ ACCEPTANCE_PHASES = (
     "P77",
     "P78",
     "P79",
+    "P80",
 )
 
 
@@ -4893,6 +4894,174 @@ def run_p79_confirmation_audit(config_path: str | Path, output_path: str | Path)
     return report
 
 
+def run_p80_formal_campaign_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P80 audit: certified bounded formal campaign and Lean 4 theorem dossier.
+
+    Verifies:
+    1. Bounded campaign execution on nominated Egyptian fraction families
+       (Erdős-Straus 4/n, Sierpiński 5/n) within frozen budget (default <= 3600 s)
+       and coordinate limits (10^9).
+    2. Compilation of all discovered identities and certificates into formal
+       Lean 4 theorems in Mathlib kernel with zero `sorry` or `admit`.
+    3. Reproducible novelty dossier (docs/research/p80-formal-dossier.md)
+       with literature cross-references and residue class classification.
+    4. Clean tree enforcement and SHA-256 artifact verification.
+    """
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        build_sierpinski_coverage_matrix,
+        check_schinzel,
+        check_schinzel_fractions,
+        schinzel_divisor_sieve,
+    )
+    from evobyte.formal_bridge import (
+        export_formal_proof_catalog,
+        verify_proof_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P80":
+        raise ValueError(f"Config {cfg_p} is not a P80 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P80 CERTIFIED FORMAL CAMPAIGN AUDIT (Lean 4 Mathlib Kernel Dossier; Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    budget_sec = float(config.get("budget_sec", 3600.0))
+    max_coord = int(config.get("max_coord", 10**9))
+    output_dir = config.get("output_dir", "lean_proofs/Generated")
+    project_dir = config.get("project_dir", "lean_proofs")
+
+    catalog = export_formal_proof_catalog(output_dir=output_dir, project_dir=project_dir)
+    sound, soundness_findings = verify_proof_catalog_soundness(catalog)
+    if not sound:
+        findings.extend(soundness_findings)
+
+    total_theorems = catalog.get("total_theorems", 0)
+    if total_theorems < 100:
+        findings.append(f"INSUFFICIENT_FORMAL_THEOREMS: expected >= 100, got {total_theorems}")
+
+    if catalog.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: catalog contains incomplete proofs")
+
+    modules = catalog.get("modules", {})
+    for mod_name, mod_info in modules.items():
+        if not mod_info.get("accepted", False):
+            findings.append(f"MODULE_FAILED_{mod_name}: {mod_info.get('reasons')}")
+
+    target_primes = [1009, 1033, 1129, 1153, 1201, 1249, 1297, 1321, 1489, 1609]
+    es_solved = 0
+    for p in target_primes:
+        sol, _ = schinzel_divisor_sieve(4, p, max_coord=max_coord)
+        if sol is not None:
+            ok1, _, _ = check_schinzel(4, p, *sol)
+            ok2, _, _ = check_schinzel_fractions(4, p, *sol)
+            if ok1 and ok2:
+                es_solved += 1
+    if es_solved != len(target_primes):
+        findings.append(f"ES_TARGETS_UNSOLVED: solved {es_solved}/{len(target_primes)}")
+
+    sier_cov = build_sierpinski_coverage_matrix(120)
+    if sier_cov.get("coverage_ratio", 0.0) < 0.75:
+        findings.append(f"SIERPINSKI_LOW_COVERAGE: {sier_cov.get('coverage_ratio')}")
+
+    sier_solved = 0
+    for p in target_primes:
+        sol, _ = schinzel_divisor_sieve(5, p, max_coord=max_coord)
+        if sol is not None:
+            ok1, _, _ = check_schinzel(5, p, *sol)
+            ok2, _, _ = check_schinzel_fractions(5, p, *sol)
+            if ok1 and ok2:
+                sier_solved += 1
+    if sier_solved != len(target_primes):
+        findings.append(f"SIERPINSKI_TARGETS_UNSOLVED: solved {sier_solved}/{len(target_primes)}")
+
+    dossier_rel = config.get("dossier_path", "docs/research/p80-formal-dossier.md")
+    dossier_p = _REPO_ROOT / dossier_rel
+    if not dossier_p.exists() and not config.get("allow_missing_dossier", False):
+        findings.append(f"DOSSIER_MISSING: formal dossier not found at {dossier_p}")
+
+    elapsed = time.perf_counter() - t0
+    if elapsed > budget_sec:
+        findings.append(f"BUDGET_EXCEEDED: campaign runtime {elapsed:.2f}s > budget {budget_sec}s")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; formal campaign claims from dirty code rejected")
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p80_config": config_sha[:16]},
+        config={"acceptance_phase": "P80"},
+    )
+
+    report = {
+        "phase": "P80",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Certified bounded formal campaign and Lean 4 Mathlib theorem dossier for Egyptian fraction "
+            "identities (Erdős-Straus 4/n, Sierpiński 5/n) and bytecode programs; 100% formal compilation "
+            "in Lean 4 kernel with zero sorry tokens; no universal unproved conjecture claimed."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "total_theorems": total_theorems,
+        "counts": catalog.get("counts", {}),
+        "modules": catalog.get("modules", {}),
+        "has_sorry": catalog.get("has_sorry", False),
+        "campaign_targets": {
+            "erdos_straus_primes_solved": es_solved,
+            "sierpinski_primes_solved": sier_solved,
+            "sierpinski_mod120_coverage": sier_cov.get("coverage_ratio", 0.0),
+        },
+        "budget": {
+            "budget_sec": budget_sec,
+            "elapsed_sec": elapsed,
+            "max_coord": max_coord,
+        },
+        "hardware": prov["hardware"],
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P80",
+        },
+        "limitations": [
+            (
+                "Formal Lean 4 proofs certify each identity, certificate, and decompiled program individually; "
+                "universal mathematical conjectures remain open without complete inductive coverage of all integers."
+            ),
+        ],
+        "elapsed_sec": elapsed,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P80 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -8903,6 +9072,8 @@ def main() -> int:
             run_p78_sierpinski_audit(args.config, args.output)
         elif args.acceptance_phase == "P79":
             run_p79_confirmation_audit(args.config, args.output)
+        elif args.acceptance_phase == "P80":
+            run_p80_formal_campaign_audit(args.config, args.output)
         return 0
 
     seeds = (

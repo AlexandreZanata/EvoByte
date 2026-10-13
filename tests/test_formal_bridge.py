@@ -179,3 +179,37 @@ def test_p77_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P77 configuration"):
         run_p77_formal_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p80_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p80_formal_campaign_audit
+
+    cfg = {
+        "phase": "P80",
+        "budget_sec": 3600.0,
+        "max_coord": 10**9,
+        "seed": 42,
+        "require_clean_tree": False,
+        "allow_missing_dossier": True,
+    }
+    cfg_p = tmp_path / "p80-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p80-out.json"
+
+    report = run_p80_formal_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P80"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 100
+    assert report["has_sorry"] is False
+    assert report["campaign_targets"]["erdos_straus_primes_solved"] == 10
+    assert report["campaign_targets"]["sierpinski_primes_solved"] == 10
+
+
+def test_p80_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p80_formal_campaign_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P80 configuration"):
+        run_p80_formal_campaign_audit(cfg_p, tmp_path / "out.json")

@@ -26,9 +26,9 @@ Dossiê de campanha formal com 100% dos teoremas compilando no kernel Lean 4 sem
 ```bash
 git diff --check
 git status --short
-lake --directory lean_proofs build
+lake -d lean_proofs build
 python3 -m pytest tests -q
-python3 benchmarks/science_matrix.py --acceptance-phase P80
+python3 benchmarks/science_matrix.py --acceptance-phase P80 --config experiments/p80-config.json --output /tmp/evobyte-p80-acceptance.json
 ```
 
 ## Commit & Push (obrigatório)
