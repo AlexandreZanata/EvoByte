@@ -1,6 +1,6 @@
 # P78 — Generalização para famílias de Sierpiński e Schinzel
 
-**Status:** Proposed.
+**Status:** Done (identidades 5/n mod 120 com 80% de cobertura, sieve a=4..7 resolvendo 35/35 primos, 96 identidades e 10 certificados Sierpiński provados em Lean 4; medição ACCEPTED em árvore limpa run_id=9ac211e38e852d14; registro em docs/research/p78-sierpinski-record.md).
 **Dependência:** P77 Proposed; branch a partir de `codex/p77-bytecode-lean-proof-bridge`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P77 aceita com ponte bytecode-Lean funcional.
