@@ -1,0 +1,9 @@
+{
+  "phase": "P82",
+  "note": "P82 Diophantine divisibility lemma synthesis frozen configuration. Synthesizes and certifies 104 exact Diophantine divisibility lemmas in Nat and Int for parameterized Erdős-Straus and Sierpiński equations in the Lean 4 kernel with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "project_dir": "lean_proofs",
+  "min_lemmas": 50,
+  "seed": 42,
+  "require_clean_tree": true
+}

@@ -263,3 +263,53 @@ def test_p81_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P81 configuration"):
         run_p81_inductive_baseline_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_divisibility_lemmas_catalog_generation():
+    from evobyte.formal_bridge import (
+        DIVISIBILITY_NAT_LEMMAS,
+        generate_divisibility_lemmas_source,
+    )
+
+    assert len(DIVISIBILITY_NAT_LEMMAS) >= 15
+    src = generate_divisibility_lemmas_source()
+    assert "import Mathlib.Tactic.Ring" in src
+    assert "theorem erdos_div_cross_m24_r0" in src
+    assert "theorem erdos_div_z_m24_r0" in src
+    assert "theorem sierpinski_div_cross_m24_r0" in src
+    assert "theorem sierpinski_div_z_m24_r0" in src
+    assert "sorry" not in src
+    assert src.count("theorem ") >= 50
+
+
+def test_p82_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p82_divisibility_synthesis_audit
+
+    cfg = {
+        "phase": "P82",
+        "output_dir": "lean_proofs/Generated",
+        "project_dir": "lean_proofs",
+        "min_lemmas": 50,
+        "seed": 42,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p82-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p82-out.json"
+
+    report = run_p82_divisibility_synthesis_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P82"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_lemmas"] >= 50
+    assert report["has_sorry"] is False
+    assert report["file"] is not None
+
+
+def test_p82_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p82_divisibility_synthesis_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P82 configuration"):
+        run_p82_divisibility_synthesis_audit(cfg_p, tmp_path / "out.json")

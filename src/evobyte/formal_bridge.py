@@ -56,6 +56,24 @@ def poly1d_to_lean(poly: Poly1D, var_name: str = "k") -> str:
     return " + ".join(terms) if terms else "(0 : ℚ)"
 
 
+def poly1d_to_lean_int(poly: Poly1D, var_name: str = "k") -> str:
+    """Format a Poly1D object into a valid Lean 4 integer expression over var_name."""
+    terms: list[str] = []
+    for deg, c in enumerate(poly.coeffs):
+        if c == 0 and len(poly.coeffs) > 1:
+            continue
+        c_val = int(c)
+        c_str = f"({c_val} : ℤ)"
+        if deg == 0:
+            terms.append(c_str)
+        elif deg == 1:
+            terms.append(f"{c_str} * {var_name}")
+        else:
+            terms.append(f"{c_str} * {var_name} ^ {deg}")
+
+    return " + ".join(terms) if terms else "(0 : ℤ)"
+
+
 def algebraic_identity_to_lean_theorem(
     ident: AlgebraicIdentity, theorem_name: str | None = None
 ) -> str:
@@ -766,5 +784,185 @@ def verify_inductive_catalog_soundness(catalog_summary: dict[str, Any]) -> tuple
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_INDUCTIVE_LEMMAS")
+
+    return (len(findings) == 0), findings
+
+
+DIVISIBILITY_NAT_LEMMAS: list[tuple[str, str, str]] = [
+    ("div_nat_2_mul", "∀ (k : Nat), 2 ∣ 2 * k", "⟨k, rfl⟩"),
+    ("div_nat_3_lin", "∀ (k : Nat), 3 ∣ 6 * k + 9", "⟨2 * k + 3, by omega⟩"),
+    ("div_nat_4_lin", "∀ (k : Nat), 4 ∣ 4 * k + 4", "⟨k + 1, by omega⟩"),
+    ("div_nat_5_lin", "∀ (k : Nat), 5 ∣ 10 * k + 15", "⟨2 * k + 3, by omega⟩"),
+    ("div_nat_6_lin", "∀ (k : Nat), 6 ∣ 12 * k + 18", "⟨2 * k + 3, by omega⟩"),
+    ("div_nat_8_lin", "∀ (k : Nat), 8 ∣ 16 * k + 24", "⟨2 * k + 3, by omega⟩"),
+    ("div_nat_12_lin", "∀ (k : Nat), 12 ∣ 24 * k + 36", "⟨2 * k + 3, by omega⟩"),
+    ("div_nat_24_lin", "∀ (k : Nat), 24 ∣ 24 * k + 48", "⟨k + 2, by omega⟩"),
+    ("div_nat_k1_prod", "∀ (k : Nat), (k + 1) ∣ (k + 1) * (4 * k + 1)", "⟨4 * k + 1, rfl⟩"),
+    ("div_nat_2k1_prod", "∀ (k : Nat), (2 * k + 1) ∣ (2 * k + 1) * (k + 2)", "⟨k + 2, rfl⟩"),
+    ("div_nat_4k1_sq", "∀ (k : Nat), (4 * k + 1) ∣ 16 * k ^ 2 + 8 * k + 1", "⟨4 * k + 1, by ring⟩"),
+    ("div_nat_4k3_sq", "∀ (k : Nat), (4 * k + 3) ∣ 16 * k ^ 2 + 24 * k + 9", "⟨4 * k + 3, by ring⟩"),
+    ("div_nat_k1_sq", "∀ (k : Nat), (k + 1) ∣ k ^ 2 + 2 * k + 1", "⟨k + 1, by ring⟩"),
+    ("div_nat_k1_cube", "∀ (k : Nat), (k + 1) ∣ k ^ 3 + 3 * k ^ 2 + 3 * k + 1", "⟨k ^ 2 + 2 * k + 1, by ring⟩"),
+    ("div_nat_2k1_sq", "∀ (k : Nat), (2 * k + 1) ∣ 4 * k ^ 2 + 4 * k + 1", "⟨2 * k + 1, by ring⟩"),
+    ("div_nat_3k2_sq", "∀ (k : Nat), (3 * k + 2) ∣ 9 * k ^ 2 + 12 * k + 4", "⟨3 * k + 2, by ring⟩"),
+    ("div_nat_k1_quad", "∀ (k : Nat), (k + 1) ∣ 4 * k ^ 2 + 5 * k + 1", "⟨4 * k + 1, by ring⟩"),
+    ("div_nat_2k1_quad", "∀ (k : Nat), (2 * k + 1) ∣ 8 * k ^ 2 + 6 * k + 1", "⟨4 * k + 1, by ring⟩"),
+    ("div_nat_3k1_quad", "∀ (k : Nat), (3 * k + 1) ∣ 9 * k ^ 2 + 6 * k + 1", "⟨3 * k + 1, by ring⟩"),
+    ("div_nat_4k1_quad", "∀ (k : Nat), (4 * k + 1) ∣ 24 * k ^ 2 + 10 * k + 1", "⟨6 * k + 1, by ring⟩"),
+]
+
+
+def generate_divisibility_lemmas_source() -> str:
+    """Generate Lean 4 source for certified Diophantine divisibility lemmas in Nat and Int."""
+    lines: list[str] = [
+        "/-",
+        "EvoByte Formal Proof Catalog: Certified Diophantine Divisibility Lemmas in Nat and Int.",
+        "-/",
+        "",
+        "import Mathlib.Tactic.Ring",
+        "",
+    ]
+
+    for name, stmt, proof in DIVISIBILITY_NAT_LEMMAS:
+        lines.append(f"theorem {name} : {stmt} := by")
+        lines.append("  intro k")
+        lines.append(f"  exact {proof}")
+        lines.append("")
+
+    for r in range(24):
+        ident = get_algebraic_identity_for_residue(24, r)
+        if ident is not None:
+            n_str = poly1d_to_lean_int(ident.n_poly)
+            x_str = poly1d_to_lean_int(ident.X)
+            y_str = poly1d_to_lean_int(ident.Y)
+            z_str = poly1d_to_lean_int(ident.Z)
+            d = Poly1D.constant(ident.a) * ident.X * ident.Y - ident.n_poly * (ident.X + ident.Y)
+            target = ident.n_poly * (ident.X + ident.Y)
+            q = target.exact_divide(d)
+            if q is not None:
+                q_str = poly1d_to_lean_int(q)
+                lines.append(
+                    f"theorem erdos_div_cross_m24_r{r} : ∀ (k : ℤ),\n"
+                    f"    ({ident.a} * ({x_str}) * ({y_str}) - ({n_str}) * (({x_str}) + ({y_str}))) ∣\n"
+                    f"    ({n_str}) * (({x_str}) + ({y_str})) := by\n"
+                    f"  intro k\n"
+                    f"  exact ⟨{q_str}, by ring⟩\n"
+                )
+            lines.append(
+                f"theorem erdos_div_z_m24_r{r} : ∀ (k : ℤ),\n"
+                f"    ({ident.a} * ({x_str}) * ({y_str}) - ({n_str}) * (({x_str}) + ({y_str}))) ∣\n"
+                f"    ({n_str}) * ({x_str}) * ({y_str}) := by\n"
+                f"  intro k\n"
+                f"  exact ⟨{z_str}, by ring⟩\n"
+            )
+
+    for r in range(24):
+        ident = synthesize_sierpinski_identity(24, r)
+        if ident is not None:
+            n_str = poly1d_to_lean_int(ident.n_poly)
+            x_str = poly1d_to_lean_int(ident.X)
+            y_str = poly1d_to_lean_int(ident.Y)
+            z_str = poly1d_to_lean_int(ident.Z)
+            d = Poly1D.constant(ident.a) * ident.X * ident.Y - ident.n_poly * (ident.X + ident.Y)
+            target = ident.n_poly * (ident.X + ident.Y)
+            q = target.exact_divide(d)
+            if q is not None:
+                q_str = poly1d_to_lean_int(q)
+                lines.append(
+                    f"theorem sierpinski_div_cross_m24_r{r} : ∀ (k : ℤ),\n"
+                    f"    ({ident.a} * ({x_str}) * ({y_str}) - ({n_str}) * (({x_str}) + ({y_str}))) ∣\n"
+                    f"    ({n_str}) * (({x_str}) + ({y_str})) := by\n"
+                    f"  intro k\n"
+                    f"  exact ⟨{q_str}, by ring⟩\n"
+                )
+            lines.append(
+                f"theorem sierpinski_div_z_m24_r{r} : ∀ (k : ℤ),\n"
+                f"    ({ident.a} * ({x_str}) * ({y_str}) - ({n_str}) * (({x_str}) + ({y_str}))) ∣\n"
+                f"    ({n_str}) * ({x_str}) * ({y_str}) := by\n"
+                f"  intro k\n"
+                f"  exact ⟨{z_str}, by ring⟩\n"
+            )
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def export_divisibility_lemmas_catalog(
+    output_dir: str | Path = "lean_proofs/Generated",
+    project_dir: str | Path = "lean_proofs",
+) -> dict[str, Any]:
+    """Generate and compile certified Diophantine divisibility lemmas in Nat and Int (P82)."""
+    import subprocess
+
+    t0 = time.perf_counter()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    proj = Path(project_dir).resolve()
+
+    src = generate_divisibility_lemmas_source()
+    div_file = out / "DivisibilityLemmas.lean"
+    div_file.write_text(src, encoding="utf-8")
+    file_sha = hashlib.sha256(div_file.read_bytes()).hexdigest()
+
+    # Ensure Generated.lean imports DivisibilityLemmas
+    root_file = proj / "Generated.lean"
+    if root_file.exists():
+        root_content = root_file.read_text(encoding="utf-8")
+        if "import Generated.DivisibilityLemmas" not in root_content:
+            root_content = root_content.rstrip() + "\nimport Generated.DivisibilityLemmas\n"
+            root_file.write_text(root_content, encoding="utf-8")
+    else:
+        root_file.write_text(
+            "-- EvoByte Root Generated Formal Library\nimport Generated.DivisibilityLemmas\n",
+            encoding="utf-8",
+        )
+
+    v_res = compile_lean_file(div_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+
+    bins = lean_resolve_binaries(proj)
+    lake_proc = subprocess.run(
+        [bins["lake"], "-d", str(proj), "build", "Generated"],
+        capture_output=True,
+        text=True,
+        cwd=str(proj),
+        timeout=180,
+        check=False,
+    )
+    if lake_proc.returncode != 0:
+        accepted = False
+        reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+    total_lemmas = src.count("theorem ")
+
+    return {
+        "catalog_dir": str(out),
+        "total_lemmas": total_lemmas,
+        "file": str(div_file),
+        "sha256": file_sha,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in div_file.read_text(encoding="utf-8"),
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_divisibility_catalog_soundness(catalog_summary: dict[str, Any]) -> tuple[bool, list[str]]:
+    """Audit divisibility lemmas catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(f"DIVISIBILITY_COMPILATION_FAILED: {catalog_summary.get('reasons')}")
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: divisibility catalog contains sorry")
+
+    total_lemmas = catalog_summary.get("total_lemmas", 0)
+    if total_lemmas < 50:
+        findings.append(f"INSUFFICIENT_LEMMAS: expected >= 50, got {total_lemmas}")
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_DIVISIBILITY_LEMMAS")
 
     return (len(findings) == 0), findings
