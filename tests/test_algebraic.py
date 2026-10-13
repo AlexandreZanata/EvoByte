@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from fractions import Fraction
 from pathlib import Path
@@ -621,3 +622,91 @@ def test_p78_acceptance_smoke(tmp_path):
     bad.write_text(json.dumps({"phase": "X"}))
     with pytest.raises(ValueError, match="not a P78 configuration"):
         run_p78_sierpinski_audit(bad, tmp_path / "o.json")
+
+
+# ----------------------------------------------------------------------------
+# P79 — Blind residue confirmation and statistical selection control
+# ----------------------------------------------------------------------------
+
+
+def test_p79_blind_split_integrity():
+    split_p = Path("experiments/p79-blind-split.json")
+    assert split_p.exists()
+    data = json.loads(split_p.read_text(encoding="utf-8"))
+    assert data["split_id"] == "p79-blind-residue-split-v1"
+    assert "H_ES" in data["tracks"] and "H_SIER" in data["tracks"]
+
+    es_insts = data["tracks"]["H_ES"]["instances"]
+    sier_insts = data["tracks"]["H_SIER"]["instances"]
+    assert len(es_insts) == 20
+    assert len(sier_insts) == 20
+
+    for item in es_insts:
+        assert item["a"] == 4
+        assert item["modulus"] == 840
+        assert item["n"] == 840 * item["k"] + item["residue"]
+        assert item["n"] >= 2
+
+    for item in sier_insts:
+        assert item["a"] == 5
+        assert item["modulus"] == 120
+        assert item["n"] == 120 * item["k"] + item["residue"]
+        assert item["n"] >= 2
+
+
+def test_p79_confirmation_smoke(tmp_path):
+    from benchmarks.science_matrix import run_p79_confirmation_audit
+
+    split_p = Path("experiments/p79-blind-split.json")
+    split_sha = hashlib.sha256(split_p.read_bytes()).hexdigest()
+
+    cfg = {
+        "phase": "P79",
+        "split_path": str(split_p),
+        "split_sha256": split_sha,
+        "alpha": 0.05,
+        "min_decisive_instances": 5,
+        "max_baseline_y_steps": 5000,
+        "max_coord": 10**9,
+        "allow_dirty": True,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p79-smoke.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p79-out.json"
+
+    report = run_p79_confirmation_audit(cfg_p, out_p)
+    assert report["phase"] == "P79"
+    assert report["verdict"] == "ACCEPTED", report["findings"]
+    assert report["tracks"]["H_ES"]["outcome"] == "CONFIRMED"
+    assert report["tracks"]["H_SIER"]["outcome"] == "CONFIRMED"
+    assert report["tracks"]["H_ES"]["holm_adjusted_p_value"] < 0.05
+    assert report["tracks"]["H_SIER"]["holm_adjusted_p_value"] < 0.05
+
+
+def test_p79_confirmation_rejects_corrupted_split(tmp_path):
+    from benchmarks.science_matrix import run_p79_confirmation_audit
+
+    split_p = Path("experiments/p79-blind-split.json")
+    cfg = {
+        "phase": "P79",
+        "split_path": str(split_p),
+        "split_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "allow_dirty": True,
+    }
+    cfg_p = tmp_path / "p79-bad-sha.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p79-out.json"
+
+    report = run_p79_confirmation_audit(cfg_p, out_p)
+    assert report["verdict"] == "REJECTED"
+    assert any("SPLIT_DRIFT" in f for f in report["findings"])
+
+
+def test_p79_confirmation_rejects_wrong_phase(tmp_path):
+    from benchmarks.science_matrix import run_p79_confirmation_audit
+
+    cfg_p = tmp_path / "bad-phase.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P79 configuration"):
+        run_p79_confirmation_audit(cfg_p, tmp_path / "out.json")
