@@ -1,7 +1,7 @@
 # P75 — Matriz de cobertura de classes de congruência modulares
 
-**Status:** Proposed.
-**Dependência:** P74 Proposed; branch a partir de `codex/p74-algebraic-identity-synthesis`.
+**Status:** Done.
+**Dependência:** P74 Done; branch a partir de `codex/p74-algebraic-identity-synthesis`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P74 aceita com motor de síntese de identidades operando.
 **Branch:** `codex/p75-residue-class-coverage`.
