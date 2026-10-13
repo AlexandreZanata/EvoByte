@@ -1,6 +1,6 @@
 # P79 — Confirmação cega e controle estatístico de seleção
 
-**Status:** Proposed.
+**Status:** Done (partição cega selada H_ES e H_SIER confirmadas com W=20/L=0 em ambas, controle de Holm FWER p=3.81e-6 < 0.05, reduções de 2535x e 184x contra baseline, veredito ACCEPTED em árvore limpa run_id=1dacdf80fdb1c90a; registro em docs/research/p79-confirmation-record.md).
 **Dependência:** P78 Proposed; branch a partir de `codex/p78-sierpinski-schinzel-generalization`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P78 aceita com motor generalizado.
