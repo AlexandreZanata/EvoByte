@@ -1,6 +1,6 @@
 # P83 — Crivo de fatoração estruturada e seleção de divisores ótimos
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P82 Proposed; branch a partir de `codex/p82-divisibility-lemma-synthesis`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P82 concluída com lemas de divisibilidade certificados.
