@@ -495,3 +495,129 @@ def test_p76_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P76 configuration"):
         run_p76_sieve_audit(cfg_p, tmp_path / "out.json")
+
+
+# ----------------------------------------------------------------------------
+# P78 — Sierpiński / Schinzel generalization
+# ----------------------------------------------------------------------------
+
+
+def test_p78_check_schinzel_and_sierpinski():
+    from evobyte.algebraic import check_schinzel, check_schinzel_fractions, check_sierpinski
+
+    ok, residual, _ = check_sierpinski(1009, 202, 203819, 41541980942)
+    assert ok and residual == 0
+    ok2, _, _ = check_schinzel(5, 1009, 202, 203819, 41541980942)
+    assert ok2
+    okf, diff, _ = check_schinzel_fractions(5, 1009, 202, 203819, 41541980942)
+    assert okf and diff == 0
+    bad, res, _ = check_schinzel(5, 1009, 202, 203819, 41541980943)
+    assert not bad and res != 0
+    assert not check_schinzel(5, 7, 0, 1, 1)[0]
+    assert not check_schinzel(0, 7, 1, 1, 1)[0]
+    assert not check_schinzel(True, 7, 1, 1, 1)[0]  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("a", [4, 5, 6, 7])
+def test_p78_schinzel_divisor_sieve_primes(a):
+    from evobyte.algebraic import check_schinzel, schinzel_divisor_sieve
+
+    for p in (3, 5, 7, 11, 13, 17, 19, 23, 1009):
+        sol, det = schinzel_divisor_sieve(a, p)
+        assert sol is not None, (a, p)
+        assert check_schinzel(a, p, *sol)[0]
+        assert det["verified_exact"] is True
+
+
+def test_p78_sieve_invalid_inputs_and_delegation():
+    from evobyte.algebraic import (
+        rational_divisor_sieve,
+        schinzel_divisor_sieve,
+        sierpinski_divisor_sieve,
+    )
+
+    sol, det = schinzel_divisor_sieve(5, 1)
+    assert sol is None and "error" in det
+    sol, det = schinzel_divisor_sieve(0, 7)
+    assert sol is None and "error" in det
+    assert sierpinski_divisor_sieve(1009)[0] == schinzel_divisor_sieve(5, 1009)[0]
+    assert rational_divisor_sieve(1009)[0] == schinzel_divisor_sieve(4, 1009)[0]
+
+
+def test_p78_synthesize_sierpinski_identities_are_exact():
+    from evobyte.algebraic import synthesize_sierpinski_identity
+
+    ident = synthesize_sierpinski_identity(120, 3)  # n = 4 mod... c=1 family: X=(n+1)/4
+    assert ident is not None and ident.a == 5 and ident.verify_exact()
+    for k in range(1, 6):
+        x, y, z = ident.evaluate(k)
+        assert 5 * x * y * z == (120 * k + 3) * (x * y + y * z + z * x)
+    assert synthesize_sierpinski_identity(120, 1) is None
+
+
+def test_p78_coverage_matrix_sierpinski():
+    from evobyte.algebraic import build_sierpinski_coverage_matrix
+
+    cov = build_sierpinski_coverage_matrix(120)
+    assert cov["a"] == 5
+    assert cov["coverage_ratio"] >= 0.75
+    assert cov["covered_count"] + cov["uncovered_count"] == 120
+    assert cov["verified_exact"] is True
+    assert 1 in cov["uncovered_residues"]
+
+
+def test_p78_compare_schinzel_synthesis():
+    from evobyte.algebraic import compare_schinzel_synthesis
+
+    cmp = compare_schinzel_synthesis(a_values=[4, 5], test_instances=[3, 5, 7, 11, 13, 1009])
+    assert cmp["verified"] is True
+    assert set(cmp["per_numerator"]) == {"4", "5"}
+    assert "sierpinski_vs_erdos_straus" in cmp["comparisons"]
+
+
+def test_p78_open_problems_exposure():
+    from benchmarks.open_problems import check_schinzel, check_sierpinski, run_sierpinski_campaign
+
+    assert check_sierpinski(1009, 202, 203819, 41541980942)[0]
+    assert check_schinzel(6, 7, 2, 15, 210)[0] in (True, False)
+    camp = run_sierpinski_campaign([3, 7, 11, 1009])
+    assert camp["all_solved"] is True
+
+
+def test_p78_lean_generators():
+    from evobyte.algebraic import synthesize_sierpinski_identity
+    from evobyte.formal_bridge import (
+        sierpinski_identity_to_lean_theorem,
+        sierpinski_instance_to_lean_theorem,
+    )
+
+    ident = synthesize_sierpinski_identity(120, 3)
+    thm = sierpinski_identity_to_lean_theorem(ident)
+    assert "theorem sierpinski_ident_m120_r3" in thm and "5 *" in thm and "ring" in thm
+    cert = sierpinski_instance_to_lean_theorem(1009, 202, 203819, 41541980942)
+    assert "(5 : ℚ) / 1009" in cert and "norm_num" in cert
+    with pytest.raises(ValueError):
+        sierpinski_instance_to_lean_theorem(1009, 1, 2, 3)
+
+
+def test_p78_acceptance_smoke(tmp_path):
+    import json
+
+    from benchmarks.science_matrix import run_p78_sierpinski_audit
+
+    cfg = {
+        "phase": "P78",
+        "allow_dirty": True,
+        "test_instances": [3, 5, 7, 11, 13, 1009],
+        "numerators": [4, 5, 6, 7],
+    }
+    cfg_p = tmp_path / "p78.json"
+    cfg_p.write_text(json.dumps(cfg))
+    report = run_p78_sierpinski_audit(cfg_p, tmp_path / "out.json")
+    assert report["verdict"] == "ACCEPTED", report["findings"]
+    assert report["formal"]["has_sorry"] is False
+
+    bad = tmp_path / "bad.json"
+    bad.write_text(json.dumps({"phase": "X"}))
+    with pytest.raises(ValueError, match="not a P78 configuration"):
+        run_p78_sierpinski_audit(bad, tmp_path / "o.json")

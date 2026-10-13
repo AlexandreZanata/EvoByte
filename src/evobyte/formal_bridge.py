@@ -20,6 +20,8 @@ from evobyte.algebraic import (
     get_algebraic_identity_for_residue,
     get_resistant_residues,
     rational_divisor_sieve,
+    sierpinski_divisor_sieve,
+    synthesize_sierpinski_identity,
 )
 from evobyte.bytecode import CONST_BANK, decode_instr
 from evobyte.grammar import HornerPoly, compile_horner_to_bytecode
@@ -69,7 +71,7 @@ def algebraic_identity_to_lean_theorem(
     )
     stmt = (
         f"theorem {name} : ∀ k : ℚ,\n"
-        f"    4 * ({X_str}) * ({Y_str}) * ({Z_str}) =\n"
+        f"    {ident.a} * ({X_str}) * ({Y_str}) * ({Z_str}) =\n"
         f"    ({n_str}) * (({Y_str}) * ({Z_str}) + ({X_str}) * ({Z_str}) + ({X_str}) * ({Y_str})) := by\n"
         f"  intro k\n"
         f"  ring"
@@ -89,6 +91,37 @@ def erdos_straus_instance_to_lean_theorem(
     stmt = (
         f"theorem {name} :\n"
         f"    (4 : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n"
+        f"  norm_num"
+    )
+    return f"{doc}\n{stmt}\n"
+
+
+def sierpinski_identity_to_lean_theorem(
+    ident: AlgebraicIdentity, theorem_name: str | None = None
+) -> str:
+    """Translate a Sierpiński (5/n) polynomial identity into a Lean 4 theorem proven by `ring`."""
+    if ident.a != 5:
+        raise ValueError(f"Sierpiński identity requires numerator a=5, got a={ident.a}")
+    name = theorem_name or f"sierpinski_ident_m{ident.m}_r{ident.r}"
+    return algebraic_identity_to_lean_theorem(ident, name).replace(
+        "Erdős–Straus polynomial identity", "Sierpiński 5/n polynomial identity"
+    )
+
+
+def sierpinski_instance_to_lean_theorem(
+    n: int, x: int, y: int, z: int, theorem_name: str | None = None
+) -> str:
+    """Translate a verified Sierpiński certificate 5/n = 1/x + 1/y + 1/z into a `norm_num` theorem."""
+    if 5 * x * y * z != n * (x * y + y * z + z * x):
+        raise ValueError(f"({x}, {y}, {z}) is not a valid Sierpiński solution for n={n}")
+    name = theorem_name or f"sierpinski_cert_n{n}"
+    doc = (
+        f"/-- Certified Sierpiński Diophantine solution for n = {n}.\n"
+        f"    Verified exact: 5/{n} = 1/{x} + 1/{y} + 1/{z}. -/"
+    )
+    stmt = (
+        f"theorem {name} :\n"
+        f"    (5 : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n"
         f"  norm_num"
     )
     return f"{doc}\n{stmt}\n"
@@ -284,12 +317,34 @@ def export_formal_proof_catalog(
     bytecode_file = out / "BytecodeTheorems.lean"
     bytecode_file.write_text(bytecode_src, encoding="utf-8")
 
+    # 3b. Sierpiński 5/n theorems (P78)
+    sier_ident_theorems: list[str] = []
+    for r in range(120):
+        sident = synthesize_sierpinski_identity(120, r)
+        if sident is not None and sident.verify_exact():
+            sier_ident_theorems.append(sierpinski_identity_to_lean_theorem(sident))
+    sier_cert_theorems: list[str] = []
+    for p in (1009, 1033, 1129, 1153, 1201, 1249, 1297, 1321, 1489, 1609):
+        ssol, _ = sierpinski_divisor_sieve(p)
+        if ssol is not None:
+            sier_cert_theorems.append(sierpinski_instance_to_lean_theorem(p, *ssol))
+    sier_theorems = sier_ident_theorems + sier_cert_theorems
+    sier_doc = "EvoByte Formal Proof Catalog: Certified Sierpiński 5/n Identities and Certificates."
+    sier_src = generate_lean_proof_module(
+        sier_theorems,
+        sier_doc,
+        imports=["Mathlib.Tactic.Ring", "Mathlib.Tactic.NormNum", "Mathlib.Data.Rat.Defs"],
+    )
+    sier_file = out / "SierpinskiTheorems.lean"
+    sier_file.write_text(sier_src, encoding="utf-8")
+
     # 4. Root Generated.lean module
     root_src = (
         "-- EvoByte Root Generated Formal Library\n"
         "import Generated.ErdosStrausIdentities\n"
         "import Generated.ErdosStrausCertificates\n"
         "import Generated.BytecodeTheorems\n"
+        "import Generated.SierpinskiTheorems\n"
     )
     root_file = proj / "Generated.lean"
     root_file.write_text(root_src, encoding="utf-8")
@@ -305,9 +360,11 @@ def export_formal_proof_catalog(
     lakefile.write_text(lake_toml, encoding="utf-8")
 
     # 5. Compile and verify proof modules
-    proof_modules = [identities_file, cert_file, bytecode_file]
+    proof_modules = [identities_file, cert_file, bytecode_file, sier_file]
     verifications: dict[str, Any] = {}
-    total_theorems = len(ident_theorems) + len(cert_theorems) + len(bytecode_theorems)
+    total_theorems = (
+        len(ident_theorems) + len(cert_theorems) + len(bytecode_theorems) + len(sier_theorems)
+    )
     all_passed = True
 
     for fpath in proof_modules:
@@ -352,6 +409,8 @@ def export_formal_proof_catalog(
             "polynomial_identities": len(ident_theorems),
             "diophantine_certificates": len(cert_theorems),
             "bytecode_specifications": len(bytecode_theorems),
+            "sierpinski_identities": len(sier_ident_theorems),
+            "sierpinski_certificates": len(sier_cert_theorems),
         },
         "modules": verifications,
         "all_passed": all_passed,
@@ -382,6 +441,10 @@ def verify_proof_catalog_soundness(catalog_summary: dict[str, Any]) -> tuple[boo
         findings.append("MISSING_CERTIFICATES: less than 10 Diophantine certificates verified")
     if counts.get("bytecode_specifications", 0) < 3:
         findings.append("MISSING_BYTECODE_SPECS: less than 3 bytecode specifications verified")
+    if counts.get("sierpinski_identities", 0) < 20:
+        findings.append("MISSING_SIERPINSKI_IDENTITIES: less than 20 Sierpiński identities verified")
+    if counts.get("sierpinski_certificates", 0) < 10:
+        findings.append("MISSING_SIERPINSKI_CERTIFICATES: less than 10 Sierpiński certificates verified")
 
     modules = catalog_summary.get("modules", {})
     for mod_name, mod_info in modules.items():

@@ -193,6 +193,48 @@ def run_sieve_erdos_straus_campaign(
     return benchmark_sieve_vs_baseline(n_instances, max_coord=max_coord)
 
 
+def check_schinzel(a: int, n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[str, Any]]:
+    """Exact integer checker for a/n = 1/x + 1/y + 1/z (Schinzel family)."""
+    from evobyte.algebraic import check_schinzel as _check
+
+    return _check(a, n, x, y, z)
+
+
+def check_sierpinski(n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[str, Any]]:
+    """Exact integer checker for Sierpiński 5/n = 1/x + 1/y + 1/z."""
+    return check_schinzel(5, n, x, y, z)
+
+
+def run_sierpinski_campaign(
+    n_instances: list[int], a: int = 5, max_coord: int = 10**12
+) -> dict[str, Any]:
+    """Solve a/n with the generalized divisor sieve and certify with two independent checkers."""
+    from evobyte.algebraic import check_schinzel_fractions, schinzel_divisor_sieve
+
+    results: list[dict[str, Any]] = []
+    for n in n_instances:
+        sol, det = schinzel_divisor_sieve(a, n, max_coord=max_coord)
+        solved = False
+        if sol is not None:
+            ok1, _, _ = check_schinzel(a, n, *sol)
+            ok2, _, _ = check_schinzel_fractions(a, n, *sol)
+            solved = ok1 and ok2
+        results.append(
+            {
+                "n": n,
+                "solution": sol,
+                "solved": solved,
+                "candidates": det.get("candidates_evaluated", 0),
+            }
+        )
+    return {
+        "a": a,
+        "instances_count": len(n_instances),
+        "all_solved": all(r["solved"] for r in results),
+        "results": results,
+    }
+
+
 
 def check_taxicab(sum_val: int, a: int, b: int, c: int, d: int) -> tuple[bool, int, dict[str, Any]]:
     """Exact checker for Taxicab identity: a^3 + b^3 == c^3 + d^3 == sum_val."""

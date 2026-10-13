@@ -172,7 +172,7 @@ class Poly1D:
 
 @dataclass(frozen=True)
 class AlgebraicIdentity:
-    """Exact identity: 4/n(k) = 1/X(k) + 1/Y(k) + 1/Z(k) with n(k) = m*k + r."""
+    """Exact identity: a/n(k) = 1/X(k) + 1/Y(k) + 1/Z(k) with n(k) = m*k + r."""
 
     m: int
     r: int
@@ -180,14 +180,15 @@ class AlgebraicIdentity:
     X: Poly1D
     Y: Poly1D
     Z: Poly1D
+    a: int = 4
 
     def verify_exact(self) -> bool:
-        """Verify algebraic identity equality 4XYZ == n(YZ + XZ + XY) and positivity."""
+        """Verify algebraic identity equality a*XYZ == n(YZ + XZ + XY) and positivity."""
         YZ = self.Y * self.Z
         XZ = self.X * self.Z
         XY = self.X * self.Y
         sum_terms = YZ + XZ + XY
-        lhs = self.X * YZ * 4
+        lhs = self.X * YZ * self.a
         rhs = self.n_poly * sum_terms
         diff = lhs - rhs
         if not diff.is_zero():
@@ -210,6 +211,7 @@ class AlgebraicIdentity:
 
     def to_dict(self) -> dict[str, Any]:
         return {
+            "a": self.a,
             "modulus": self.m,
             "residue": self.r,
             "n_poly": self.n_poly.to_string(),
@@ -232,11 +234,15 @@ class AlgebraicIdentity:
         z_str = self.Z.to_string()
         return (
             f"theorem {theorem_name} : ∀ (k : ℚ),\n"
-            f"  4 * ({x_str}) * ({y_str}) * ({z_str}) =\n"
+            f"  {self.a} * ({x_str}) * ({y_str}) * ({z_str}) =\n"
             f"  ({n_str}) * (({y_str}) * ({z_str}) + ({x_str}) * ({z_str}) + ({x_str}) * ({y_str})) := by\n"
             f"  intro k\n"
             f"  ring\n"
         )
+
+
+SchinzelIdentity = AlgebraicIdentity
+
 
 
 def synthesize_mordell_identity(
@@ -758,23 +764,118 @@ def quadratic_divisor_decomposition(
     }
 
 
-def rational_divisor_sieve(
-    n: int, max_x_steps: int = 100, max_coord: int = 10**12
-) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
-    """Sublinear deterministic rational divisor sieve for Erdős–Straus.
+def check_schinzel(
+    a: int, n: int, x: int, y: int, z: int
+) -> tuple[bool, int, dict[str, Any]]:
+    """Exact decidable integer checker for Schinzel Egyptian fraction conjecture:
 
-    For x in [ceil(n/4), ceil(n/4) + max_x_steps], letting u = 4x - n and D = nx:
-    (u*y - D)(u*z - D) = D^2 = (nx)^2.
+    a/n = 1/x + 1/y + 1/z  <=>  a*x*y*z == n*(x*y + y*z + z*x) with x, y, z > 0.
+    """
+    if not (
+        isinstance(a, int)
+        and isinstance(n, int)
+        and isinstance(x, int)
+        and isinstance(y, int)
+        and isinstance(z, int)
+        and not isinstance(a, bool)
+        and not isinstance(n, bool)
+        and not isinstance(x, bool)
+        and not isinstance(y, bool)
+        and not isinstance(z, bool)
+    ):
+        return False, -1, {"error": "All arguments must be integers"}
+    if a < 1 or n < 2 or x <= 0 or y <= 0 or z <= 0:
+        return False, -1, {"error": "Domain requirement: a >= 1, n >= 2, x, y, z > 0"}
+
+    lhs = int(a) * int(x) * int(y) * int(z)
+    rhs = int(n) * (int(x) * int(y) + int(y) * int(z) + int(x) * int(z))
+    residual = lhs - rhs
+    is_valid = (residual == 0)
+
+    details = {
+        "a": int(a),
+        "n": int(n),
+        "x": int(x),
+        "y": int(y),
+        "z": int(z),
+        "lhs": str(lhs),
+        "rhs": str(rhs),
+        "residual": int(residual),
+        "verified_exact": is_valid,
+    }
+    return is_valid, residual, details
+
+
+def check_sierpinski(
+    n: int, x: int, y: int, z: int
+) -> tuple[bool, int, dict[str, Any]]:
+    """Exact decidable integer checker for Sierpiński conjecture (5/n = 1/x + 1/y + 1/z)."""
+    return check_schinzel(5, n, x, y, z)
+
+
+def check_schinzel_fractions(
+    a: int, n: int, x: int, y: int, z: int
+) -> tuple[bool, Fraction, dict[str, Any]]:
+    """Independent second checker using exact rational arithmetic (fractions.Fraction)."""
+    if not (
+        isinstance(a, int)
+        and isinstance(n, int)
+        and isinstance(x, int)
+        and isinstance(y, int)
+        and isinstance(z, int)
+        and not isinstance(a, bool)
+        and not isinstance(n, bool)
+        and not isinstance(x, bool)
+        and not isinstance(y, bool)
+        and not isinstance(z, bool)
+    ):
+        return False, Fraction(1), {"error": "All arguments must be integers"}
+    if a < 1 or n < 2 or x <= 0 or y <= 0 or z <= 0:
+        return False, Fraction(1), {"error": "Domain requirement: a >= 1, n >= 2, x, y, z > 0"}
+
+    lhs_frac = Fraction(a, n)
+    rhs_frac = Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
+    diff = lhs_frac - rhs_frac
+    is_valid = (diff == 0)
+
+    details = {
+        "a": int(a),
+        "n": int(n),
+        "x": int(x),
+        "y": int(y),
+        "z": int(z),
+        "lhs_fraction": str(lhs_frac),
+        "rhs_fraction": str(rhs_frac),
+        "difference": str(diff),
+        "verified_exact": is_valid,
+    }
+    return is_valid, diff, details
+
+
+def check_sierpinski_fractions(
+    n: int, x: int, y: int, z: int
+) -> tuple[bool, Fraction, dict[str, Any]]:
+    """Independent second checker for Sierpiński conjecture using exact rational arithmetic."""
+    return check_schinzel_fractions(5, n, x, y, z)
+
+
+def schinzel_divisor_sieve(
+    a: int, n: int, max_x_steps: int = 100, max_coord: int = 10**12
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Sublinear deterministic rational divisor sieve for Schinzel conjecture (a/n = 1/x + 1/y + 1/z).
+
+    For x in [ceil(n/a), ceil(n/a) + max_x_steps], letting u = a*x - n and D = n*x:
+    (u*y - D)(u*z - D) = D^2 = (n*x)^2.
     Candidate divisor d = u*y - D must divide D^2 with d <= D.
     Then y = (D + d) / u and z = (D + D^2 / d) / u are exact positive integers
     if and only if (D + d) % u == 0.
-    Incompatible divisors are eliminated via modular congruences mod small primes.
+    Incompatible divisors are eliminated via modular congruences mod small primes dividing u.
     """
-    if n < 2:
-        return None, {"error": "n must be >= 2", "candidates_evaluated": 0}
+    if a < 1 or n < 2:
+        return None, {"error": "a must be >= 1 and n >= 2", "candidates_evaluated": 0}
 
     t0 = time.perf_counter()
-    x0 = n // 4 + 1
+    x0 = n // a + 1
     candidates_evaluated = 0
     pruned_by_small_primes = 0
     pruned_by_u = 0
@@ -783,7 +884,7 @@ def rational_divisor_sieve(
 
     for x_step in range(max_x_steps):
         x = x0 + x_step
-        u = 4 * x - n
+        u = a * x - n
         if u <= 0:
             continue
         D = n * x
@@ -837,9 +938,10 @@ def rational_divisor_sieve(
             if x > 0 and y > 0 and z > 0:
                 if max_coord and max(x, y, z) > max_coord:
                     continue
-                if 4 * x * y * z == n * (x * y + y * z + z * x):
+                if a * x * y * z == n * (x * y + y * z + z * x):
                     elapsed = time.perf_counter() - t0
                     return (x, y, z), {
+                        "a": a,
                         "n": n,
                         "x": x,
                         "y": y,
@@ -856,6 +958,7 @@ def rational_divisor_sieve(
 
     elapsed = time.perf_counter() - t0
     return None, {
+        "a": a,
         "n": n,
         "x_steps_taken": max_x_steps,
         "candidates_evaluated": candidates_evaluated,
@@ -864,6 +967,21 @@ def rational_divisor_sieve(
         "elapsed_sec": elapsed,
         "verified_exact": False,
     }
+
+
+def sierpinski_divisor_sieve(
+    n: int, max_x_steps: int = 100, max_coord: int = 10**12
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Sublinear deterministic rational divisor sieve specialized for Sierpiński conjecture (5/n)."""
+    return schinzel_divisor_sieve(5, n, max_x_steps=max_x_steps, max_coord=max_coord)
+
+
+def rational_divisor_sieve(
+    n: int, max_x_steps: int = 100, max_coord: int = 10**12
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Sublinear deterministic rational divisor sieve for Erdős–Straus (4/n = 1/x + 1/y + 1/z)."""
+    return schinzel_divisor_sieve(4, n, max_x_steps=max_x_steps, max_coord=max_coord)
+
 
 
 def solve_erdos_straus_sieve(
@@ -983,4 +1101,253 @@ def benchmark_sieve_vs_baseline(
         "false_negatives": false_negatives,
         "all_sieve_valid": all(r["sieve"]["solved"] for r in results),
         "results": results,
+    }
+
+
+def synthesize_schinzel_identity(
+    a: int, m: int, r: int, max_c: int = 30
+) -> AlgebraicIdentity | None:
+    """Synthesize an exact polynomial identity for a / (m*k + r) using algebraic families.
+
+    Covers:
+    1. Multiples of a: n = a*W => 1/(2W) + 1/(3W) + 1/(6W) = 1/W = a/n.
+    2. Even residues for a=5 (Sierpiński):
+       - n = 4*V: X = V+1, Y = V(V+1), Z = 4*V.
+       - n = 2*W (W odd): X = (W+1)/2, Y = W(W+1)/2, Z = 2*W.
+    3. Parameterized c-family: (c*a - 1)*X = c*n + 1 => X = (c*n + 1)/(c*a - 1), Y = c*n, Z = c*n*X.
+    4. Mordell divisor splitting search.
+    """
+    if a < 1 or m <= 0 or r < 0:
+        raise ValueError(f"Invalid parameters: a={a}, m={m}, r={r}")
+
+    n = Poly1D.linear(m, r if r > 0 else m)
+
+    # 1. Multiples of a
+    if m % a == 0 and r % a == 0:
+        W = Poly1D.linear(m // a, r // a if r > 0 else m // a)
+        if W.is_strictly_positive(5):
+            ident = AlgebraicIdentity(m=m, r=r, n_poly=n, X=W * 2, Y=W * 3, Z=W * 6, a=a)
+            if ident.verify_exact():
+                return ident
+
+    # 2. Even residues for a=5 (Sierpiński)
+    if a == 5 and m % 2 == 0 and r % 2 == 0:
+        if m % 4 == 0 and r % 4 == 0:
+            V = Poly1D.linear(m // 4, r // 4 if r > 0 else m // 4)
+            if V.is_strictly_positive(5):
+                ident = AlgebraicIdentity(
+                    m=m, r=r, n_poly=n, X=V + 1, Y=V * (V + 1), Z=V * 4, a=5
+                )
+                if ident.verify_exact():
+                    return ident
+        if m % 4 == 0 and r % 4 == 2:
+            W = Poly1D.linear(m // 2, r // 2)
+            X = (W + 1) * Fraction(1, 2)
+            Y = W * (W + 1) * Fraction(1, 2)
+            Z = W * 2
+            if X.is_strictly_positive(5) and X.is_integer_valued(5):
+                ident = AlgebraicIdentity(
+                    m=m, r=r, n_poly=n, X=X, Y=Y, Z=Z, a=5
+                )
+                if ident.verify_exact():
+                    return ident
+
+    # 3. Parameterized c-family: (c*a - 1)*X = c*n + 1
+    for c in range(1, max_c + 1):
+        denom = c * a - 1
+        r_eff = r if r > 0 else m
+        if (c * m) % denom == 0 and (c * r_eff + 1) % denom == 0:
+            X = Poly1D.linear((c * m) // denom, (c * r_eff + 1) // denom)
+            Y = n * c
+            Z = n * X * c
+            if (
+                X.is_strictly_positive(5)
+                and Y.is_strictly_positive(5)
+                and Z.is_strictly_positive(5)
+                and X.is_integer_valued(5)
+                and Y.is_integer_valued(5)
+                and Z.is_integer_valued(5)
+            ):
+                ident = AlgebraicIdentity(m=m, r=r, n_poly=n, X=X, Y=Y, Z=Z, a=a)
+                if ident.verify_exact():
+                    return ident
+
+    # 4. Mordell search
+    for alpha in range(1, 6):
+        for beta in range(1, 6):
+            X = Poly1D.linear(alpha, beta)
+            R = (X * a) - n
+            if not R.is_strictly_positive(5):
+                continue
+            for S in (1, 2, 3, 4, 6):
+                SR = R * S
+                SnX = n * X * S
+                for d in range(1, 13):
+                    A = Poly1D.constant(d)
+                    B = SR - A
+                    if not B.is_strictly_positive(5):
+                        continue
+                    Y = SnX.exact_divide(A)
+                    Z = SnX.exact_divide(B)
+                    if (
+                        Y is not None
+                        and Z is not None
+                        and Y.is_strictly_positive(5)
+                        and Z.is_strictly_positive(5)
+                        and Y.is_integer_valued(5)
+                        and Z.is_integer_valued(5)
+                    ):
+                        ident = AlgebraicIdentity(m=m, r=r, n_poly=n, X=X, Y=Y, Z=Z, a=a)
+                        if ident.verify_exact():
+                            return ident
+
+    return None
+
+
+def synthesize_sierpinski_identity(
+    m: int, r: int, max_c: int = 30
+) -> AlgebraicIdentity | None:
+    """Synthesize an exact polynomial identity for Sierpiński conjecture (5/n)."""
+    return synthesize_schinzel_identity(5, m, r, max_c=max_c)
+
+
+def build_sierpinski_coverage_matrix(
+    modulus: int = 120, max_c: int = 30
+) -> dict[str, Any]:
+    """Evaluate modular residue coverage for Sierpiński conjecture (5/n) over modulus m."""
+    covered: list[int] = []
+    uncovered: list[int] = []
+    identities_dict: dict[str, Any] = {}
+
+    for r in range(modulus):
+        ident = synthesize_sierpinski_identity(modulus, r, max_c=max_c)
+        if ident is not None and ident.verify_exact():
+            covered.append(r)
+            identities_dict[str(r)] = ident.to_dict()
+        else:
+            uncovered.append(r)
+
+    total = modulus
+    coverage_ratio = len(covered) / total if total > 0 else 0.0
+
+    return {
+        "modulus": modulus,
+        "a": 5,
+        "conjecture": "sierpinski_5_over_n",
+        "total_residues": total,
+        "covered_count": len(covered),
+        "uncovered_count": len(uncovered),
+        "coverage_ratio": coverage_ratio,
+        "covered_residues": sorted(covered),
+        "uncovered_residues": sorted(uncovered),
+        "identities": identities_dict,
+        "verified_exact": all(
+            identities_dict[str(r)]["a"] == 5 for r in covered
+        ),
+    }
+
+
+def compare_schinzel_synthesis(
+    a_values: list[int] | None = None,
+    test_instances: list[int] | None = None,
+    modulus: int = 120,
+) -> dict[str, Any]:
+    """Compare synthesis time, coverage ratio, and rational divisor sieve performance
+
+    between numerators (default: a=4 Erdős-Straus vs a=5 Sierpiński) under identical budget.
+    """
+    if a_values is None:
+        a_values = [4, 5]
+    if test_instances is None:
+        test_instances = [
+            3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 1009,
+        ]
+
+    per_numerator: dict[str, Any] = {}
+
+    for a in a_values:
+        # 1. Modular synthesis
+        t0_synth = time.perf_counter()
+        covered_count = 0
+        synth_identities: list[dict[str, Any]] = []
+        for r in range(modulus):
+            if a == 4:
+                classif = classify_congruence_residue(modulus, r)
+                if not classif["is_resistant"]:
+                    ident_4 = get_algebraic_identity_for_residue(modulus, r)
+                    if ident_4 is not None and ident_4.verify_exact():
+                        covered_count += 1
+                        synth_identities.append(ident_4.to_dict())
+            else:
+                ident_a = synthesize_schinzel_identity(a, modulus, r)
+                if ident_a is not None and ident_a.verify_exact():
+                    covered_count += 1
+                    synth_identities.append(ident_a.to_dict())
+
+        elapsed_synth = time.perf_counter() - t0_synth
+        cov_ratio = covered_count / modulus if modulus > 0 else 0.0
+
+        # 2. Sieve evaluation on prime instances
+        t0_sieve = time.perf_counter()
+        sieve_results: list[dict[str, Any]] = []
+        total_cands = 0
+        all_solved = True
+        for p in test_instances:
+            if p < 2 or (a >= 7 and p < 3):
+                continue
+            sol, det = schinzel_divisor_sieve(a, p)
+            if sol is None:
+                all_solved = False
+                continue
+            x, y, z = sol
+            ok_int, _, _ = check_schinzel(a, p, x, y, z)
+            ok_frac, _, _ = check_schinzel_fractions(a, p, x, y, z)
+            if not (ok_int and ok_frac):
+                all_solved = False
+            cands = det.get("candidates_evaluated", 0)
+            total_cands += cands
+            sieve_results.append({
+                "n": p,
+                "triple": (x, y, z),
+                "candidates": cands,
+                "verified_exact": ok_int and ok_frac,
+            })
+
+        elapsed_sieve = time.perf_counter() - t0_sieve
+
+        per_numerator[str(a)] = {
+            "a": a,
+            "modulus": modulus,
+            "covered_classes": covered_count,
+            "coverage_ratio": cov_ratio,
+            "synthesis_sec": elapsed_synth,
+            "sieve_instances_count": len(sieve_results),
+            "sieve_total_candidates": total_cands,
+            "sieve_avg_candidates": total_cands / len(sieve_results) if sieve_results else 0.0,
+            "sieve_sec": elapsed_sieve,
+            "all_sieve_solved": all_solved,
+        }
+
+    comp: dict[str, Any] = {}
+    if "4" in per_numerator and "5" in per_numerator:
+        comp["sierpinski_vs_erdos_straus"] = {
+            "coverage_delta": (
+                per_numerator["5"]["coverage_ratio"] - per_numerator["4"]["coverage_ratio"]
+            ),
+            "synthesis_time_ratio": (
+                per_numerator["5"]["synthesis_sec"]
+                / max(per_numerator["4"]["synthesis_sec"], 1e-9)
+            ),
+            "sieve_candidates_ratio": (
+                per_numerator["5"]["sieve_total_candidates"]
+                / max(per_numerator["4"]["sieve_total_candidates"], 1)
+            ),
+        }
+
+    return {
+        "modulus": modulus,
+        "test_instances_count": len(test_instances),
+        "per_numerator": per_numerator,
+        "comparisons": comp,
+        "verified": all(info["all_sieve_solved"] for info in per_numerator.values()),
     }

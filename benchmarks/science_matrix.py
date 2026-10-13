@@ -716,6 +716,7 @@ ACCEPTANCE_PHASES = (
     "P75",
     "P76",
     "P77",
+    "P78",
 )
 
 
@@ -4480,6 +4481,144 @@ def run_p77_formal_audit(config_path: str | Path, output_path: str | Path) -> di
 
 
 
+
+
+def run_p78_sierpinski_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P78 audit: Sierpiński/Schinzel generalization of the algebraic engine.
+
+    Verifies (1) modular coverage of 5/n by exact polynomial identities, (2) the generalized
+    rational divisor sieve for a in {4,5,6,7} with two independent exact checkers,
+    (3) 4-vs-5 synthesis comparison under one budget, and (4) Lean 4 kernel proofs of the
+    Sierpiński identities and certificates (zero sorry).
+    """
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        build_sierpinski_coverage_matrix,
+        check_schinzel,
+        check_schinzel_fractions,
+        compare_schinzel_synthesis,
+        schinzel_divisor_sieve,
+    )
+    from evobyte.formal_bridge import (
+        export_formal_proof_catalog,
+        verify_proof_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P78":
+        raise ValueError(f"Config {cfg_p} is not a P78 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P78 SIERPINSKI / SCHINZEL GENERALIZATION AUDIT (a/n = 1/x + 1/y + 1/z)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    modulus = int(config.get("modulus", 120))
+    min_cov = float(config.get("min_coverage_ratio", 0.75))
+
+    coverage = build_sierpinski_coverage_matrix(modulus)
+    if coverage["coverage_ratio"] < min_cov:
+        findings.append(
+            f"LOW_COVERAGE: {coverage['coverage_ratio']:.3f} < {min_cov:.3f} for modulus {modulus}"
+        )
+    if not coverage["verified_exact"]:
+        findings.append("IDENTITY_NOT_VERIFIED: a Sierpiński identity failed exact verification")
+
+    test_instances = [int(v) for v in config.get("test_instances", [])]
+    sieve_summary: dict[str, Any] = {}
+    for a in config.get("numerators", [4, 5, 6, 7]):
+        solved = 0
+        for n in test_instances:
+            sol, _ = schinzel_divisor_sieve(a, n, max_x_steps=int(config.get("max_x_steps", 100)))
+            if sol is None:
+                findings.append(f"SIEVE_UNSOLVED: a={a} n={n}")
+                continue
+            ok1, _, _ = check_schinzel(a, n, *sol)
+            ok2, _, _ = check_schinzel_fractions(a, n, *sol)
+            if not (ok1 and ok2):
+                findings.append(f"CHECKER_DISAGREE: a={a} n={n} sol={sol}")
+                continue
+            solved += 1
+        sieve_summary[str(a)] = {"instances": len(test_instances), "solved": solved}
+
+    comparison = compare_schinzel_synthesis(
+        a_values=[4, 5], test_instances=test_instances or None, modulus=modulus
+    )
+    if not comparison["verified"]:
+        findings.append("COMPARISON_UNVERIFIED: 4-vs-5 sieve comparison did not solve all instances")
+
+    catalog = export_formal_proof_catalog(
+        output_dir=config.get("output_dir", "lean_proofs/Generated"),
+        project_dir=config.get("project_dir", "lean_proofs"),
+    )
+    sound, soundness_findings = verify_proof_catalog_soundness(catalog)
+    if not sound:
+        findings.extend(soundness_findings)
+    sier_mod = catalog.get("modules", {}).get("SierpinskiTheorems.lean", {})
+    if not sier_mod.get("accepted", False):
+        findings.append("SIERPINSKI_LEAN_REJECTED: SierpinskiTheorems.lean not accepted by Lean 4")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if dirty and not config.get("allow_dirty", False):
+        findings.append("TREE_DIRTY: git status is not clean")
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p78_config": config_sha[:16]},
+        config={"acceptance_phase": "P78"},
+    )
+    report = {
+        "phase": "P78",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Exact polynomial identities and per-instance certificates for 5/n (Sierpiński) and "
+            "a/n (Schinzel, a in 4..7) found by the generalized engine, certified by two exact "
+            "checkers and Lean 4 kernel proofs; no universal conjecture is claimed proven."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "coverage": {k: v for k, v in coverage.items() if k != "identities"},
+        "sieve": sieve_summary,
+        "comparison": comparison,
+        "formal": {
+            "total_theorems": catalog.get("total_theorems", 0),
+            "counts": catalog.get("counts", {}),
+            "has_sorry": catalog.get("has_sorry", False),
+            "all_passed": catalog.get("all_passed", False),
+        },
+        "hardware": prov["hardware"],
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P78",
+        },
+        "limitations": [
+            "Residue classes left uncovered by linear identities are solved only per instance by the sieve.",
+            "Lean proofs certify individual identities and instances, not the universal conjecture.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P78 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -8488,6 +8627,8 @@ def main() -> int:
             run_p76_sieve_audit(args.config, args.output)
         elif args.acceptance_phase == "P77":
             run_p77_formal_audit(args.config, args.output)
+        elif args.acceptance_phase == "P78":
+            run_p78_sierpinski_audit(args.config, args.output)
         return 0
 
     seeds = (
