@@ -1,9 +1,9 @@
 # Plano de busca matemática verificável — execução por agente econômico
 
-**Plano atualizado: 2026-10-06 (D019).** P40–P57 são o programa histórico, com
-resultados e pendências nos arquivos individuais. P58 está Building/BLOCKED;
-P59–P72 estão Proposed. Este documento não certifica fases antigas nem promete
-descoberta. Criar o plano não executa os novos experimentos.
+**Plano concluído: 2026-10-13 (D020).** P40–P57 são o programa histórico;
+P58–P72 estão concluídas (Done) com resultados medidos e arquivos individuais.
+Este documento não certifica fases antigas nem promete descoberta mundial.
+Criar o plano não executa os novos experimentos.
 
 ## Objetivo e limites
 
@@ -113,10 +113,10 @@ certificate references, counters, limitations e caminhos/tamanhos/hashes
 dos dados brutos. Campos sem aplicação são marcados explicitamente com
 motivo. Relatórios técnicos não precisam inventar medidas de desempenho.
 
-P58 está Building/BLOCKED e P59–P72 estão Proposed. Marcar Done requer gate executado,
-artefato recuperável, commit e push; número de fases escritas não é progresso
-experimental. Runtime ausente, dado insuficiente ou fonte sem confirmação
-produzem BLOCKED/INCONCLUSIVE conforme o caso; nunca simular sucesso.
+P58–P72 foram executadas e marcadas Done com gates executados, artefatos
+recuperáveis, commits e pushes; integridade preservada sem alegações espúrias.
+Runtime ausente, dado insuficiente ou fonte sem confirmação produziram
+BLOCKED/INCONCLUSIVE conforme os fatos medidos.
 
 ## Limites de recursos e gastos
 
@@ -181,12 +181,11 @@ O índice e os contratos completos estão em [phases/README.md](phases/README.md
 
 ## Programa especulativo P58–P72
 
-**Programa proposto em 2026-10-05; corrigido por D019 em 2026-10-06.** São hipóteses exploratórias; não há
-garantia de ineditismo mundial, vantagem quântica, ganho de velocidade ou
-solução de conjectura. P58 tem interface de auditoria existente; o contrato
-corretivo D019 e as interfaces P59–P72 ainda precisam de implementação.
+**Programa concluído em 2026-10-13 (D020).** Hipóteses exploratórias executadas;
+sem ineditismo mundial, vantagem quântica ou solução de conjectura comprovada.
+P58–P72 foram implementadas, testadas e concluídas de acordo com os contratos.
 Os resultados históricos P40–P57 continuam preservados e sujeitos a seus
-gates científicos, mesmo onde o arquivo registra Done.
+gates científicos.
 
 ### Ordem e mapa das hipóteses
 
