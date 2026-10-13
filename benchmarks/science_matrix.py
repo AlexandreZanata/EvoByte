@@ -715,6 +715,7 @@ ACCEPTANCE_PHASES = (
     "P74",
     "P75",
     "P76",
+    "P77",
 )
 
 
@@ -4373,6 +4374,110 @@ def run_p76_sieve_audit(config_path: str | Path, output_path: str | Path) -> dic
         json.dump(report, f, indent=2, sort_keys=True, default=str)
     print(f"P76 audit {verdict}; findings={len(findings)}; report -> {out_p}")
     return report
+
+
+def run_p77_formal_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P77 audit: bytecode compiler to certified Lean 4 theorems and formal proof bridge.
+
+    Audits automatic compilation of EvoByte mathematical artifacts into Lean 4:
+    1. Parameterized polynomial identities over Q[k] proved by `ring`.
+    2. Numerical Erdős–Straus Diophantine certificates proved by `norm_num`.
+    3. Bytecode arithmetic program specifications proved by `ring`.
+    Verifies 100% compilation success in hermetic Lean 4 kernel, zero `sorry` tokens,
+    and enforces clean tree.
+    """
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        export_formal_proof_catalog,
+        verify_proof_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P77":
+        raise ValueError(f"Config {cfg_p} is not a P77 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P77 LEAN 4 FORMAL PROOF BRIDGE AUDIT (Kernel certification; zero sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    output_dir = config.get("output_dir", "lean_proofs/Generated")
+    project_dir = config.get("project_dir", "lean_proofs")
+
+    catalog = export_formal_proof_catalog(output_dir=output_dir, project_dir=project_dir)
+    sound, soundness_findings = verify_proof_catalog_soundness(catalog)
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if dirty and not config.get("allow_dirty", False):
+        findings.append("TREE_DIRTY: git status is not clean")
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p77_config": config_sha[:16]},
+        config={"acceptance_phase": "P77"},
+    )
+
+    report = {
+        "phase": "P77",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Automatic compilation of EvoByte mathematical expressions to Lean 4 theorems; "
+            "100% formal verification by kernel tactics (ring, norm_num); "
+            "zero incomplete proof tokens (sorry/admit); hermetic Lake build certified; "
+            "no unproven universal conjecture claimed."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "total_theorems": catalog.get("total_theorems", 0),
+        "counts": catalog.get("counts", {}),
+        "modules": catalog.get("modules", {}),
+        "has_sorry": catalog.get("has_sorry", False),
+        "all_passed": catalog.get("all_passed", False),
+        "hardware": prov["hardware"],
+        "driver": prov["hardware"].get("nvidia_smi", "not-probed"),
+        "package_versions": {
+            "python": prov["hardware"].get("python"),
+            "numpy": prov["hardware"].get("numpy"),
+            "torch": prov["hardware"].get("torch"),
+            "cuda": prov["hardware"].get("cuda_version"),
+        },
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "acceptance_phase": "P77",
+        },
+        "limitations": [
+            "Formal proofs in Lean 4 certify individual identities, certificates, and compiled programs.",
+            "Complete Lean verification of a universal conjecture requires formal induction over all residue classes.",
+        ],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(f"P77 audit {verdict}; findings={len(findings)}; report -> {out_p}")
+    return report
+
 
 
 
@@ -8381,6 +8486,8 @@ def main() -> int:
             run_p75_coverage_audit(args.config, args.output)
         elif args.acceptance_phase == "P76":
             run_p76_sieve_audit(args.config, args.output)
+        elif args.acceptance_phase == "P77":
+            run_p77_formal_audit(args.config, args.output)
         return 0
 
     seeds = (
