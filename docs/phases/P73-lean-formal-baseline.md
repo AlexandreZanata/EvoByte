@@ -1,7 +1,7 @@
 # P73 — Infraestrutura de verificação formal e harness Lean 4
 
-**Status:** Proposed.
-**Dependência:** P72 concluída (PR #100 aberto); branch a partir de `codex/p72-novelty-nomination`.
+**Status:** Done (entregas 1–2: harness Lean 4 e Lake auditados, interface run_p73_lean_audit implementada, medição ACCEPTED em árvore limpa run_id=51386d676d66c90c; registro em docs/research/p73-baseline-record.md). Base formal hermética liberada para P74.
+**Dependência:** P72 concluída (PR #100 aberto) e P73-P80 formalizados (PR #101 aberto); branch a partir de `codex/p73-p80-formal-lean-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P72 concluída com medição de novidade aceita em árvore limpa; ambiente local com Lean 4 (`lean_proofs/`) e Lake operacionais hermeticamente.
 **Branch:** `codex/p73-lean-formal-baseline`.
