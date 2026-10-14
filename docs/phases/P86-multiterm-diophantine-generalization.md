@@ -1,7 +1,7 @@
 # P86 — Generalização multitermo e frações egípcias coprimas
 
-**Status:** Proposed.
-**Dependência:** P85 Proposed; branch a partir de `codex/p85-tactic-dispatch-omega-aesop`.
+**Status:** Done.
+**Dependência:** P85 Done; branch a partir de `codex/p85-tactic-dispatch-omega-aesop`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P85 concluída com automação de táticas operando.
 **Branch:** `codex/p86-multiterm-diophantine-generalization`.
@@ -30,6 +30,21 @@ lake -d lean_proofs build
 python3 -m pytest tests -q
 python3 benchmarks/science_matrix.py --acceptance-phase P86 --config experiments/p86-config.json --output /tmp/evobyte-p86-acceptance.json
 ```
+
+## Evidência de aceitação e auditoria formal
+
+Auditoria executada em árvore limpa com veredicto **ACCEPTED** registrado em `/tmp/evobyte-p86-acceptance.json`:
+
+- **Veredicto:** `ACCEPTED`
+- **Total de instâncias avaliadas:** 24 (100% verificadas por duplo verificador: diofantino inteiro exato e aritmética racional com `fractions.Fraction`).
+- **Decomposições coprimas de 4 termos:** 24/24 certificadas com $\gcd(x_1, x_2, x_3, x_4) = 1$ e ordenamento estrito $x_1 < x_2 < x_3 < x_4$.
+- **Decomposições coprimas de 3 termos:** 23/24 certificadas com $\gcd(x_1, x_2, x_3) = 1$.
+- **Resolução de obstruções diofantinas:** o caso obstinado $4/13$ (provadamente sem decomposição de 3 termos coprima) é completamente resolvido por 4 termos:
+  $$ \frac{4}{13} = \frac{1}{4} + \frac{1}{18} + \frac{1}{900} + \frac{1}{975}, \quad \gcd(4, 18, 900, 975) = 1. $$
+- **Módulo formal Lean 4 compilado:** `lean_proofs/Generated/MultitermTheorems.lean`
+  - 36 teoremas certificados kernel (`norm_num` e `decide`).
+  - Zero axiomas não provados ou buracos (`sorry`).
+  - SHA-256 do módulo formal: `73e4c53b20117c3738b13faa83d8144e20757a2ea27f16740bc57d27469cbaa6`.
 
 ## Commit & Push (obrigatório)
 
