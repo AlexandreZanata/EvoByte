@@ -1,7 +1,7 @@
 # P101 — Teoremas de momentos assintóticos e limites de densidade de soluções
 
-**Status:** Proposed.
-**Dependência:** P100 concluída; branch a partir de `codex/p97-p104-diophantine-geometry-program`.
+**Status:** Done.
+**Dependência:** P100 concluída; branch a partir de `codex/p100-dioph-surface-metatactic`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P100 concluída com meta-tática `dioph_surface` verificada; ambiente Lean 4 e Lake herméticos.
 **Branch:** `codex/p101-solution-moments-asymptotics`.
@@ -40,5 +40,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P101 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p101 solution moments asymptotics"
 git push -u origin HEAD
-gh pr create --base codex/p97-p104-diophantine-geometry-program --title "feat(formal): implement p101 solution moments asymptotics" --body-file /tmp/evobyte-p101-pr.md
+gh pr create --base codex/p100-dioph-surface-metatactic --title "feat(formal): implement p101 solution moments asymptotics" --body-file /tmp/evobyte-p101-pr.md
 ```
