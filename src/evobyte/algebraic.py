@@ -3804,3 +3804,145 @@ def verify_extreme_scale_confirmation_soundness(
             findings.append(f"UNVERIFIED_SOLUTIONS: {t_key} has unverified solutions")
 
     return len(findings) == 0, findings
+
+
+def evaluate_cubic_surface_conic_fibration(
+    a: int, n: int, x: int, y: int, z: int
+) -> dict[str, Any]:
+    """Evaluate a Diophantine point on the cubic surface a*x*y*z = n*(y*z + x*z + x*y)
+    and verify its conic fibration parameters over Q(x) (P97).
+    """
+    poly_lhs = a * x * y * z
+    poly_rhs = n * (y * z + x * z + x * y)
+    poly_residual = poly_lhs - poly_rhs
+    on_surface = (poly_residual == 0)
+
+    # Conic fiber equation at x: (a*x - n)*y*z - n*x*(y + z) = 0
+    conic_residual = (a * x - n) * y * z - n * x * (y + z)
+    conic_valid = (conic_residual == 0)
+
+    # Translated bilinear conic form: ((a*x - n)*y - n*x)*((a*x - n)*z - n*x) - (n*x)^2 = 0
+    u = (a * x - n) * y - n * x
+    v = (a * x - n) * z - n * x
+    discriminant = (n * x) ** 2
+    bilinear_residual = u * v - discriminant
+    bilinear_valid = (bilinear_residual == 0)
+
+    # Exact rational fractions check: a/n == 1/x + 1/y + 1/z
+    frac_exact = (Fraction(a, n) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z))
+
+    return {
+        "a": a,
+        "n": n,
+        "x": x,
+        "y": y,
+        "z": z,
+        "on_surface": on_surface,
+        "poly_residual": poly_residual,
+        "conic_valid": conic_valid,
+        "conic_residual": conic_residual,
+        "u": u,
+        "v": v,
+        "discriminant": discriminant,
+        "bilinear_valid": bilinear_valid,
+        "frac_exact": frac_exact,
+        "verified": on_surface and conic_valid and bilinear_valid and frac_exact,
+    }
+
+
+def generate_cubic_surface_parametric_sections() -> list[dict[str, Any]]:
+    """Synthesize certified algebraic sections in Q[k] for cubic surface conic fibrations (P97)."""
+    sections: list[dict[str, Any]] = []
+
+    # Systematically generate parametric families across a in {4, 5, 6, 7, 8}
+    specs = [
+        (4, 2, 0, "es_even"),
+        (4, 3, 2, "es_mod3_r2"),
+        (4, 4, 2, "es_mod4_r2"),
+        (4, 4, 3, "es_mod4_r3"),
+        (4, 6, 2, "es_mod6_r2"),
+        (4, 6, 3, "es_mod6_r3"),
+        (4, 6, 4, "es_mod6_r4"),
+        (4, 8, 4, "es_mod8_r4"),
+        (4, 12, 6, "es_mod12_r6"),
+        (4, 12, 8, "es_mod12_r8"),
+        (5, 2, 0, "sierpinski_even"),
+        (5, 3, 0, "sierpinski_mod3_r0"),
+        (5, 4, 2, "sierpinski_mod4_r2"),
+        (5, 5, 0, "sierpinski_mod5_r0"),
+        (5, 6, 2, "sierpinski_mod6_r2"),
+        (5, 6, 3, "sierpinski_mod6_r3"),
+        (5, 6, 4, "sierpinski_mod6_r4"),
+        (6, 2, 0, "schinzel_a6_even"),
+        (6, 3, 0, "schinzel_a6_mod3_r0"),
+        (6, 4, 2, "schinzel_a6_mod4_r2"),
+        (7, 2, 0, "schinzel_a7_even"),
+        (7, 3, 0, "schinzel_a7_mod3_r0"),
+        (7, 4, 2, "schinzel_a7_mod4_r2"),
+        (8, 2, 0, "schinzel_a8_even"),
+        (8, 3, 0, "schinzel_a8_mod3_r0"),
+        (8, 4, 2, "schinzel_a8_mod4_r2"),
+    ]
+
+    for a, m, r, name in specs:
+        ident = synthesize_schinzel_identity(a, m, r)
+        if ident and ident.verify_exact():
+            sections.append({
+                "name": name,
+                "a": a,
+                "modulus": m,
+                "residue": r,
+                "n_poly": ident.n_poly.to_string("k"),
+                "x_poly": ident.X.to_string("k"),
+                "y_poly": ident.Y.to_string("k"),
+                "z_poly": ident.Z.to_string("k"),
+                "identity": ident,
+            })
+
+    return sections
+
+
+def evaluate_cubic_surface_fibration_coverage(
+    instances: list[int] | None = None,
+    a_values: list[int] | None = None,
+) -> dict[str, Any]:
+    """Audit the Diophantine cubic surface conic fibration across nominated instances (P97)."""
+    t0 = time.perf_counter()
+    if a_values is None:
+        a_values = [4, 5, 6, 7, 8]
+    if instances is None:
+        instances = [
+            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
+            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+        ]
+
+    results: list[dict[str, Any]] = []
+    total_evaluated = 0
+    total_verified = 0
+
+    for a in a_values:
+        for n in instances:
+            total_evaluated += 1
+            sol, _meta = optimal_schinzel_divisor_sieve(a=a, n=n)
+            if sol:
+                x, y, z = sol
+                eval_res = evaluate_cubic_surface_conic_fibration(a=a, n=n, x=x, y=y, z=z)
+                results.append(eval_res)
+                if eval_res["verified"]:
+                    total_verified += 1
+
+    sections = generate_cubic_surface_parametric_sections()
+    success_rate = total_verified / max(1, total_evaluated)
+
+    return {
+        "instances": instances,
+        "a_values": a_values,
+        "total_evaluated": total_evaluated,
+        "total_verified": total_verified,
+        "success_rate": success_rate,
+        "parametric_sections_count": len(sections),
+        "parametric_sections": sections,
+        "results": results,
+        "all_verified": (total_verified == total_evaluated and total_evaluated > 0),
+        "elapsed_sec": time.perf_counter() - t0,
+    }

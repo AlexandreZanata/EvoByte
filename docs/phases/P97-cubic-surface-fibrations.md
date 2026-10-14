@@ -1,6 +1,6 @@
 # P97 — Formalização de fibrados cônicos e superfícies cúbicas em Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P96 concluída na `main` e P97-P104 formalizados; branch a partir de `codex/p97-p104-diophantine-geometry-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P96 concluída com 965 teoremas Lean 4 verificados e consolidação na branch main; ambiente Lean 4 e Lake herméticos.

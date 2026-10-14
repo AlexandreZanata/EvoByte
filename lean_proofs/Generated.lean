@@ -15,3 +15,4 @@ import Generated.QuadraticRingTheorems
 import Generated.ExtremalBoundsTheorems
 import Generated.AsymptoticDensityTheorems
 import Generated.UniversalMultitermTheorems
+import Generated.CubicSurfaceFibrations

@@ -830,3 +830,39 @@ def test_p96_grand_campaign_audit_smoke(tmp_path: Path):
         report["final_chain_hash"]
         == "5de47dc7b3987ef724e685d2bac5a944ee1cd4ade4a8178f2d74ae0c9471878c"
     )
+
+
+def test_p97_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p97_cubic_surface_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P97 configuration"):
+        run_p97_cubic_surface_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p97_cubic_surface_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p97_cubic_surface_audit
+
+    cfg = {
+        "phase": "P97",
+        "min_theorems": 40,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "output_dir": "lean_proofs/Generated",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p97-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p97-out.json"
+
+    report = run_p97_cubic_surface_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P97"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 40
+    assert report["has_sorry"] is False
+    assert report["module"] == "CubicSurfaceFibrations"

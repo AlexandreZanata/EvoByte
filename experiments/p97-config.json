@@ -1,0 +1,10 @@
+{
+  "budget_sec": 3600.0,
+  "min_theorems": 40,
+  "note": "P97 cubic surface conic fibrations formalization in Lean 4. Verifies cubic surface polynomial a*x*y*z = n*(y*z + x*z + x*y), conic fiber equivalence, translated bilinear factorization, central discriminant Delta(x) = (n*x)^2, S_3 symmetries, parametric rational sections in Q[k], and exact rational points on the cubic surface with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "phase": "P97",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42
+}
