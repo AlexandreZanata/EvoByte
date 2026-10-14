@@ -1,7 +1,7 @@
 # P99 — Crivo algébrico em ordens quaternônicas e álgebras de divisão
 
-**Status:** Proposed.
-**Dependência:** P98 concluída; branch a partir de `codex/p97-p104-diophantine-geometry-program`.
+**Status:** Done.
+**Dependência:** P98 concluída; branch a partir de `codex/p98-rational-conic-parametrizations`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P98 concluída com parametrizações de cônicas verificadas; ambiente Lean 4 e Lake herméticos.
 **Branch:** `codex/p99-quaternion-algebra-sieve`.
@@ -40,5 +40,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P99 --config experiments
 git diff --cached --check
 git commit -m "feat(formal): implement p99 quaternion algebra sieve"
 git push -u origin HEAD
-gh pr create --base codex/p97-p104-diophantine-geometry-program --title "feat(formal): implement p99 quaternion algebra sieve" --body-file /tmp/evobyte-p99-pr.md
+gh pr create --base codex/p98-rational-conic-parametrizations --title "feat(formal): implement p99 quaternion algebra sieve" --body-file /tmp/evobyte-p99-pr.md
 ```
