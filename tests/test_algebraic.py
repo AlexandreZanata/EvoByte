@@ -1000,3 +1000,38 @@ def test_p87_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P87 configuration"):
         run_p87_large_instance_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p88_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p88_meta_theorem_campaign_audit
+
+    cfg = {
+        "phase": "P88",
+        "budget_sec": 3600.0,
+        "min_theorems": 350,
+        "project_dir": "lean_proofs",
+        "dossier_path": "docs/research/p88-formal-dossier.md",
+        "allow_missing_dossier": True,
+        "seed": 42,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p88-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p88-out.json"
+
+    report = run_p88_meta_theorem_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P88"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 350
+    assert report["has_sorry"] is False
+    assert report["total_modules"] == 10
+
+
+def test_p88_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p88_meta_theorem_campaign_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P88 configuration"):
+        run_p88_meta_theorem_campaign_audit(cfg_p, tmp_path / "out.json")
