@@ -723,6 +723,7 @@ ACCEPTANCE_PHASES = (
     "P82",
     "P83",
     "P84",
+    "P85",
 )
 
 
@@ -5578,6 +5579,140 @@ def run_p84_quadratic_identities_audit(
     return report
 
 
+def run_p85_tactic_dispatch_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P85 audit: automated tactic compilation and hierarchical proof search in Lean 4.
+
+    Verifies:
+    1. Hierarchical tactic dispatch (`omega`, `linarith`, `aesop`, `ring`, `norm_num`).
+    2. 100% automated proof success rate across the 30-lemma Diophantine benchmark suite.
+    3. Export and Lean 4 verification of `AutomatedTheorems.lean` with zero sorry tokens.
+    4. Clean tree enforcement and SHA-256 artifact verification.
+    """
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        benchmark_tactic_dispatch,
+        export_automated_theorems_catalog,
+        verify_automated_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P85":
+        raise ValueError(f"Config {cfg_p} is not a P85 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P85 TACTIC DISPATCH & AUTOMATION AUDIT (omega / linarith / aesop / ring / norm_num)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    # 1. Run automated tactic benchmark
+    min_theorems = int(config.get("min_theorems", 30))
+    min_success_rate = float(config.get("min_success_rate", 1.0))
+
+    bench = benchmark_tactic_dispatch()
+    if bench["total_lemmas"] < min_theorems:
+        findings.append(f"INSUFFICIENT_LEMMAS: expected >= {min_theorems}, got {bench['total_lemmas']}")
+    if bench["success_rate"] < min_success_rate:
+        findings.append(
+            f"SUBOPTIMAL_SUCCESS_RATE: expected >= {min_success_rate}, got {bench['success_rate']:.2f}"
+        )
+
+    # 2. Export and verify automated theorems catalog
+    output_dir = config.get("output_dir", "lean_proofs/Generated")
+    project_dir = config.get("project_dir", "lean_proofs")
+
+    catalog = export_automated_theorems_catalog(
+        output_dir=output_dir, project_dir=project_dir
+    )
+    sound, soundness_findings = verify_automated_catalog_soundness(
+        catalog, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    if catalog.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: automated theorems catalog contains incomplete proofs")
+
+    if not catalog.get("accepted", False):
+        findings.append(f"AUTOMATED_CATALOG_REJECTED: {catalog.get('reasons')}")
+
+    elapsed = time.perf_counter() - t0
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; automated tactic claims from dirty code rejected")
+
+    claim_scope = (
+        "Automated tactic dispatch and proof compilation in Lean 4 using omega, linarith, "
+        "aesop, ring, and norm_num without human intervention or sorry tokens; certified over "
+        "a 30-lemma Diophantine benchmark suite with 100% success rate."
+    )
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p85_config": config_sha[:16]},
+        config={"acceptance_phase": "P85"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    report = {
+        "phase": "P85",
+        "verdict": verdict,
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "claim_scope": claim_scope,
+        "total_theorems": catalog.get("total_theorems", 0),
+        "solved_count": bench.get("solved_count", 0),
+        "success_rate": bench.get("success_rate", 0.0),
+        "tactic_distribution": bench.get("tactic_distribution", {}),
+        "file": catalog.get("file"),
+        "sha256": catalog.get("sha256"),
+        "has_sorry": catalog.get("has_sorry", False),
+        "findings": findings,
+        "elapsed_sec": elapsed,
+        "resolved_config": {
+            "acceptance_phase": "P85",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "hardware": prov["hardware"],
+        "limitations": [
+            (
+                "Automated tactic compilation solves decision-procedure and linear Diophantine goals; "
+                "arbitrary nonlinear Diophantine equations remain subject to undecidability limitations "
+                "(Matiyasevich theorem) and may require specialized algebraic decompositions."
+            )
+        ],
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(
+        f"P85 audit {verdict}: {catalog.get('total_theorems', 0)} theorems verified with success rate {bench.get('success_rate', 0.0):.2f}; "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -9598,6 +9733,8 @@ def main() -> int:
             run_p83_optimal_divisor_audit(args.config, args.output)
         elif args.acceptance_phase == "P84":
             run_p84_quadratic_identities_audit(args.config, args.output)
+        elif args.acceptance_phase == "P85":
+            run_p85_tactic_dispatch_audit(args.config, args.output)
         return 0
 
     seeds = (

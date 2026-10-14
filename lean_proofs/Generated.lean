@@ -7,3 +7,4 @@ import Generated.InductiveLemmas
 import Generated.DivisibilityLemmas
 import Generated.OptimalCertificates
 import Generated.QuadraticIdentities
+import Generated.AutomatedTheorems

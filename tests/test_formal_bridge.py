@@ -313,3 +313,92 @@ def test_p82_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P82 configuration"):
         run_p82_divisibility_synthesis_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_try_prove_lemma_with_tactics():
+    from evobyte.formal_bridge import try_prove_lemma_with_tactics
+
+    # 1. Omega test
+    res_omega = try_prove_lemma_with_tactics(
+        "test_omega_sub", "∀ (n : Nat), n ≥ 2 → n + 1 ≥ 3", ["n", "hn"]
+    )
+    assert res_omega["success"] is True
+    assert res_omega["winning_tactic"] == "omega"
+
+    # 2. Linarith test
+    res_lin = try_prove_lemma_with_tactics(
+        "test_lin_sub", "∀ (x y : ℚ), x ≤ y → y ≤ x + 2 → 2 * x ≤ 2 * y", ["x", "y", "h1", "h2"]
+    )
+    assert res_lin["success"] is True
+    assert res_lin["winning_tactic"] == "linarith"
+
+    # 3. Aesop test
+    res_aesop = try_prove_lemma_with_tactics(
+        "test_aesop_sub", "∀ (p q : Prop), p ∧ q → q ∧ p", []
+    )
+    assert res_aesop["success"] is True
+    assert res_aesop["winning_tactic"] == "aesop"
+
+
+def test_benchmark_tactic_dispatch_suite():
+    from evobyte.formal_bridge import benchmark_tactic_dispatch
+
+    bench = benchmark_tactic_dispatch()
+    assert bench["total_lemmas"] == 30
+    assert bench["solved_count"] == 30
+    assert bench["success_rate"] == 1.0
+    dist = bench["tactic_distribution"]
+    assert "omega" in dist
+    assert "linarith" in dist
+    assert "aesop" in dist
+
+
+def test_export_automated_theorems_catalog_soundness():
+    from evobyte.formal_bridge import (
+        export_automated_theorems_catalog,
+        verify_automated_catalog_soundness,
+    )
+
+    cat = export_automated_theorems_catalog()
+    assert cat["accepted"] is True
+    assert cat["has_sorry"] is False
+    assert cat["total_theorems"] == 30
+
+    sound, findings = verify_automated_catalog_soundness(cat, min_theorems=30)
+    assert sound is True
+    assert findings == []
+
+
+def test_p85_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p85_tactic_dispatch_audit
+
+    cfg = {
+        "phase": "P85",
+        "output_dir": "lean_proofs/Generated",
+        "project_dir": "lean_proofs",
+        "min_theorems": 30,
+        "min_success_rate": 1.0,
+        "seed": 42,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p85-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p85-out.json"
+
+    report = run_p85_tactic_dispatch_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P85"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] == 30
+    assert report["success_rate"] == 1.0
+    assert report["has_sorry"] is False
+    assert report["file"] is not None
+
+
+def test_p85_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p85_tactic_dispatch_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P85 configuration"):
+        run_p85_tactic_dispatch_audit(cfg_p, tmp_path / "out.json")
