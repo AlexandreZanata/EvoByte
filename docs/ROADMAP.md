@@ -203,7 +203,7 @@ P83 implements optimal divisor selection algorithms minimizing coordinate bounds
 P84 synthesizes multiparameter quadratic polynomial forms for resistant residues (Done).
 P85 automates tactic proof compilation using `omega`, `aesop`, and `linarith` (Done).
 P86 generalizes to multiterm and coprimality-constrained Diophantine equations (Done).
-P87 confirms performance on a sealed blind split of large instances ($n > 10^5$) under Holm FWER control.
+P87 confirms performance on a sealed blind split of large instances ($n > 10^5$) under Holm FWER control (Done).
 P88 executes a bounded meta-theorem campaign and exports the certified formal dossier.
 All phases remain Proposed until measured and accepted.
 

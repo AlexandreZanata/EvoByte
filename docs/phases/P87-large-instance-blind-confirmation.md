@@ -1,7 +1,7 @@
 # P87 — Confirmação cega em grande escala com controle estatístico
 
-**Status:** Proposed.
-**Dependência:** P86 Proposed; branch a partir de `codex/p86-multiterm-diophantine-generalization`.
+**Status:** Done.
+**Dependência:** P86 Done; branch a partir de `codex/p86-multiterm-diophantine-generalization`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P86 concluída com generalização diofantina certificada.
 **Branch:** `codex/p87-large-instance-blind-confirmation`.
@@ -30,6 +30,22 @@ lake -d lean_proofs build
 python3 -m pytest tests -q
 python3 benchmarks/science_matrix.py --acceptance-phase P87 --config experiments/p87-config.json --output /tmp/evobyte-p87-acceptance.json
 ```
+
+## Evidência de aceitação e auditoria formal
+
+Auditoria executada em árvore limpa com veredicto **ACCEPTED** registrado em `/tmp/evobyte-p87-acceptance.json`:
+
+- **Veredicto:** `ACCEPTED`
+- **Total de instâncias avaliadas:** 50 primos desafiadores de grande porte ($10^5 \le n \le 10^7$), selados criptograficamente (`sha256: 26fc33e282ec611855fd26c4e33442d9c34d19d9e47e50d1da3985a486c33219`).
+- **Resultados por trilha sob controle Holm FWER ($\alpha = 0{,}05$):**
+  - **Trilha `H_ES_LARGE` (Erdős–Straus, $a=4, p \equiv 1 \pmod{24}$):**
+    - 25 vitórias, 0 derrotas, 0 empates (25 instâncias decisivas).
+    - Redução média de candidatos: $27{,}4\times$.
+    - Estatística de Wilcoxon: 325,0 ($p = 2{,}9802 \times 10^{-8}$, Holm $p = 5{,}9605 \times 10^{-8} < 0{,}05$) $\implies$ **CONFIRMED**.
+  - **Trilha `H_SIER_LARGE` (Sierpiński, $a=5, p \equiv 1 \pmod{120}$):**
+    - 25 vitórias, 0 derrotas, 0 empates (25 instâncias decisivas).
+    - Estatística de Wilcoxon: 325,0 ($p = 2{,}9802 \times 10^{-8}$, Holm $p = 5{,}9605 \times 10^{-8} < 0{,}05$) $\implies$ **CONFIRMED**.
+- **Reverificação dual:** 100% das soluções descobertas verificadas independentemente pelos dois verificadores formais (`check_schinzel` e `check_schinzel_fractions`).
 
 ## Commit & Push (obrigatório)
 
