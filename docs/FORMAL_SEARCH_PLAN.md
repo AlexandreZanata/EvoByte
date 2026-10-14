@@ -539,3 +539,48 @@ P97 fibrados cônicos superfícies cúbicas -> P98 parametrizações locais-glob
 3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P103):** partição selada de instâncias diofantinas de hiper-escala ($10^9 \le n \le 10^{12}$) sem vazamento para o crivo.
+
+## Programa de descoberta formal em problemas abertos e teoria de modelos guiada por provas em Lean 4 (P105–P112)
+
+**Programa proposto em 2026-10-14 (D028).** Sucede a conclusão de P97–P104 sob D027.
+O programa P105–P112 tem por objetivo testar sistematicamente a metodologia do EvoByte
+(arquitetura de modelos compactos, orquestração hermética de dados, crivos algébricos e
+provas interativas no Lean 4) diretamente sobre problemas matemáticos abertos do catálogo
+curado (`docs/research/open-problems.json`), validando empiricamente se há progresso verificável,
+redução de classes de obstrução ou resolução formal de subconjecturas.
+
+### Pilares metodológicos e de arquitetura
+
+1. **Organização e Particionamento de Dados Herméticos (P105, P106):**
+   - Tipagem formal dependente em Lean 4 das assinaturas dos problemas abertos.
+   - Partição estrita entre instâncias públicas de desenvolvimento e conjuntos de teste selados.
+   - Grafos de obstrução diofantina para poda a priori de ramos matematicamente impossíveis.
+2. **Arquitetura de Modelos Guiada por Provas (P107, P108):**
+   - Modelo neural condicional leve ($\le 5\text{M}$ parâmetros) residente em VRAM, sem linguagem
+     natural livre, operando estritamente sobre gramáticas sintáticas de bytecode e caminhos de táticas.
+   - Busca em Árvore Monte Carlo (MCTS Formal) no espaço de táticas Mathlib, com sinal de recompensa
+     binário fornecido pelo compilador do kernel do Lean 4 (`lake build`).
+3. **Alvos Abertos Selecionados e Validação Rigorosa (P109, P110):**
+   - *Erdős-Graham:* Decomposição unitária $\sum_{d \in S} 1/d = 1$ em subconjuntos densos.
+   - *Pillai-Catalan:* Formas lineares em logaritmos (limites de Baker) e crivo de expoentes para $|x^p - y^q| = c$.
+4. **Controle de Falsos Positivos e Integridade Científica (P111, P112):**
+   - Confirmação cega multiproblema sob controle FWER com ajuste de Bonferroni-Holm ($\alpha = 0{,}01$).
+   - Hash chain criptográfica SHA-256 e expansão para mais de 1.500 teoremas formais certificados sem `sorry`.
+   - Distinção categórica entre instâncias verificadas, teoremas parciais e a continuidade do estado aberto das conjecturas.
+
+### Ordem e dependências de P105–P112
+
+```text
+P105 banco formal de problemas abertos -> P106 grafos de obstrução
+ -> P107 modelo condicional leve -> P108 MCTS formal em táticas Lean 4
+ -> P109 alvo Erdős-Graham -> P110 alvo Pillai-Catalan
+ -> P111 confirmação cega multiproblema -> P112 grande campanha e dossiê
+```
+
+### Regras do programa P105–P112
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P111):** partição selada de 100 instâncias extremas sem vazamento para o crivo.
