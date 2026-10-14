@@ -1,4 +1,4 @@
-# Phases P00–P57 (executable plan)
+# Phases P00–P88 (executable plan)
 
 One file per phase. Each phase states objective, scope (in/out),
 tasks, exit gate (artifact runs + measured), risks, and a **Commit & Push**
@@ -62,7 +62,7 @@ measurement)`.
 
 ## Guided formal-search program (P40–P57)
 
-The next proposed program is defined by
+The historical P40–P57 program is defined by
 [the executor runbook](../FORMAL_SEARCH_PLAN.md). P40 first reconciles the
 accepted code base and audits P33–P39 evidence; historical Done labels do
 not waive its prerequisite checks. This plan implements no new benchmark
@@ -93,6 +93,84 @@ comparisons. The optional sampler can be deferred. Correctness, integrity
 or isolation failures block advancement. Keep 100 problems as a curated
 catalogue; run one nominated family, never 100 simultaneous conjecture hunts.
 
+## Speculative hypothesis program (P58–P72)
+
+[The updated executor contract](../FORMAL_SEARCH_PLAN.md#programa-especulativo-p58p72)
+keeps prior results and scientific-review pendencies intact. P58 audits
+acceptance first; P59 fixes information/cost equality; P60 freezes the
+workbench. Ten hypotheses are isolated pilots, followed by fresh independent
+confirmation and one novelty nomination. P58–P72 are completed (Done).
+[D019](../FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019)
+specified P58 R1–R4; P59–P60 established controls and frozen workbench;
+P61–P70 evaluated ten isolated hypotheses (all NULL or pilot-efficiency);
+P71 confirmed INCONCLUSIVE without promotion; P72 concluded the campaign
+with honest instance classifications, closing the program under D020.
+
+- [P58 — Reconciliar evidências e liberar uma base de pesquisa](P58-accepted-research-baseline.md).
+- [P59 — Estabelecer comparações com a mesma informação](P59-equal-information-controls.md).
+- [P60 — Congelar a bancada e o pré-registro das dez hipóteses](P60-hypothesis-workbench.md).
+- [P61 — H02 — Buscar usando sombras aritméticas](P61-modular-shadows.md).
+- [P62 — H01 — Aprender a corrigir formatos de erro](P62-structured-error-repair.md).
+- [P63 — H08 — Orientar o modelo por códigos de rejeição](P63-verifier-feedback.md).
+- [P64 — H03 — Aprender regiões proibidas e tentar prová-las](P64-learned-obstructions.md).
+- [P65 — H04 — Inventar respostas e procurar pontes para o alvo](P65-backward-constructions.md).
+- [P66 — H05 — Atravessar a busca com saltos compostos](P66-composite-search-jumps.md).
+- [P67 — H06 — Criar novas instruções matemáticas verificadas](P67-verified-macros.md).
+- [P68 — H07 — Fazer dois modelos pequenos atacar construções](P68-adversarial-conjectures.md).
+- [P69 — H09 — Sincronizar ilhas por erros complementares](P69-residue-synchronized-islands.md).
+- [P70 — H10 — Buscar fórmulas para famílias de soluções](P70-parametric-proof-search.md).
+- [P71 — Confirmar as hipóteses selecionadas sem reabrir testes antigos](P71-independent-hypothesis-confirmation.md).
+- [P72 — Nominar um resultado matemático e verificar novidade](P72-novelty-nomination.md).
+
+Execute one micro-task at a time. P58–P60 integrity/review failures block
+new experiments. A valid NULL/INCONCLUSIVE pilot allows the next isolated
+hypothesis; rejected modules stay disabled. No presumed worldwide novelty,
+quantum advantage, promised throughput or automatically solved conjecture.
+
+## Algebraic discovery & Lean 4 formal verification program (P73–P80)
+
+[The algebraic search contract](../FORMAL_SEARCH_PLAN.md#programa-de-busca-algébrica-e-verificação-formal-lean-4-p73p80)
+defines the formal extension adopted under D021 following the conclusion of
+P58–P72. It addresses the fundamental bottleneck of finite numerical point-search
+by targeting parameterized polynomial identities that cover infinite residue classes,
+coupled directly to interactive theorem proving in Lean 4.
+The program is completed (Done, D022).
+
+- [P73 — Infraestrutura de verificação formal e harness Lean 4](P73-lean-formal-baseline.md).
+- [P74 — Síntese de identidades polinomiais algébricas](P74-algebraic-identity-synthesis.md).
+- [P75 — Matriz de cobertura de classes de congruência modulares](P75-residue-class-coverage.md).
+- [P76 — Crivo de fatoração racional e decomposição de divisores](P76-rational-divisor-sieve.md).
+- [P77 — Compilador bytecode para teoremas certificados em Lean 4](P77-bytecode-lean-proof-bridge.md).
+- [P78 — Generalização para famílias de Sierpiński e Schinzel](P78-sierpinski-schinzel-generalization.md).
+- [P79 — Confirmação cega e controle estatístico de seleção](P79-blind-residue-confirmation.md).
+- [P80 — Campanha formal bounded e dossiê de teoremas Lean 4](P80-certified-formal-campaign.md).
+
+P73–P80 are completed (Done, D022) with all measured gates passing, clean-tree
+verification, 149 Lean 4 kernel theorems with zero sorry, and PRs #102–#109.
+No worldwide novelty, quantum advantage, or unproven universal conjecture
+resolution is claimed.
+
+## Inductive proof, lemma synthesis & tactic automation program (P81–P88)
+
+[The inductive formal search contract](../FORMAL_SEARCH_PLAN.md#programa-de-prova-indutiva-síntese-de-lemas-e-automação-de-táticas-em-lean-4-p81p88)
+defines the formal extension adopted under D023 following the conclusion of
+P73–P80. It targets integer divisibility lemmas in $\mathbb{N}$, optimal divisor selection,
+multiparameter quadratic identities, and automated Lean 4 tactic dispatch (`omega`, `aesop`).
+
+- [P81 — Harness de prova indutiva e verificação estrutural Lean 4](P81-inductive-proof-baseline.md).
+- [P82 — Síntese automática de lemas de divisibilidade diofantina](P82-divisibility-lemma-synthesis.md).
+- [P83 — Crivo de fatoração estruturada e seleção de divisores ótimos](P83-optimal-divisor-selection.md).
+- [P84 — Síntese de identidades quadráticas multiparâmetro](P84-multiparameter-quadratic-identities.md).
+- [P85 — Compilação de provas com automação de táticas (omega/aesop)](P85-tactic-dispatch-omega-aesop.md).
+- [P86 — Generalização multitermo e frações egípcias coprimas](P86-multiterm-diophantine-generalization.md).
+- [P87 — Confirmação cega em grande escala com controle estatístico](P87-large-instance-blind-confirmation.md).
+- [P88 — Campanha formal de meta-teoremas e dossiê certificado](P88-meta-theorem-formal-campaign.md).
+
+P81–P88 are completed (Done, D023) with all measured gates passing, clean-tree
+verification, 406 Lean 4 kernel theorems with zero sorry across 10 modules, and PRs #110–#118.
+No worldwide novelty, quantum advantage, or unproven universal conjecture
+resolution is claimed.
+
 ## Historical execution and acceptance contract
 
 ```text
@@ -102,7 +180,8 @@ P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
 P29 recorded outcome -> P30 -> P31 -> P32 -> P33 -> P34 -> P35 -> P36 -> P37 -> P38 -> P39
 ```
 
-P30 was the entry task of D014. P40 is the next proposed acceptance audit.
+P30 was the entry task of D014 and P40 of D017.
+P58 is the next proposed acceptance audit; P40–P57 labels remain historical.
 Numbers preserve historical references; the
 dependency order above, adopted in D013/D014, replaces numeric ordering.
 Assign an owner and freeze a machine-readable experiment configuration

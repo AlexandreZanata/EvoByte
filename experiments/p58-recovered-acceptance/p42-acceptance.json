@@ -1,0 +1,114 @@
+{
+  "budgets": {
+    "smoke_teacher_budget_sec": 0.06
+  },
+  "claim_scope": "P35 positives revalidated by exact verification; original record untouched",
+  "controls": [
+    {
+      "control": "invalid_numeric_certificate",
+      "rejected": true
+    },
+    {
+      "control": "symbol_hypothesis_mismatch",
+      "rejected": true
+    }
+  ],
+  "corpus_integrity": {
+    "errors": [],
+    "ok": true
+  },
+  "counters": {
+    "exact_accepted": 4,
+    "exact_rejected": 0,
+    "identities": 4
+  },
+  "dirty": "M benchmarks/math_specialist.py\n M benchmarks/science_matrix.py\n M src/evobyte/verifier.py\n M tests/test_verifier_l2.py\n?? experiments/p42-config.json\n?? experiments/p42-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 0.8295672509993892,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 8,
+    "torch": "2.14.0+cu130"
+  },
+  "identities": [
+    {
+      "decision": "VERIFIED_DISCOVERY",
+      "ground_truth": "x**2 - 8*x + 16",
+      "item_id": "sym_poly_0009_find",
+      "passed": true,
+      "proof_type": "exact_certificate",
+      "resolution": "exact_accepted",
+      "symbolic_equivalent": true,
+      "symbolic_notes": "Proved exact identity (exact_identity_on_domain [-3.0, 3.0])",
+      "test_mse": 5.888723397958412e-30
+    },
+    {
+      "decision": "VERIFIED_DISCOVERY",
+      "ground_truth": "x**2 - 1",
+      "item_id": "sym_poly_0023_find",
+      "passed": true,
+      "proof_type": "exact_certificate",
+      "resolution": "exact_accepted",
+      "symbolic_equivalent": true,
+      "symbolic_notes": "Proved exact identity (exact_identity_on_domain [-3.0, 3.0])",
+      "test_mse": 0.0
+    },
+    {
+      "decision": "VERIFIED_DISCOVERY",
+      "ground_truth": "3*x**2 + x",
+      "item_id": "sym_poly_0025_find",
+      "passed": true,
+      "proof_type": "exact_certificate",
+      "resolution": "exact_accepted",
+      "symbolic_equivalent": true,
+      "symbolic_notes": "Proved exact identity (exact_identity_on_domain [-3.0, 3.0])",
+      "test_mse": 1.8982447014366693e-30
+    },
+    {
+      "decision": "VERIFIED_DISCOVERY",
+      "ground_truth": "3*x**2 - 10*x + 3",
+      "item_id": "sym_poly_0013_find",
+      "passed": true,
+      "proof_type": "exact_certificate",
+      "resolution": "exact_accepted",
+      "symbolic_equivalent": true,
+      "symbolic_notes": "Proved exact identity (exact_identity_on_domain [-3.0, 3.0])",
+      "test_mse": 7.796164414879531e-30
+    }
+  ],
+  "labeling_rule": {
+    "checked": true,
+    "n_positives": 1,
+    "rule_holds": true,
+    "tolerance_born": []
+  },
+  "limitations": [
+    "Revalidation reuses P35 scoring grids; it certifies identities, not the original training labels.",
+    "P35 record is read-only; its tolerance-born positives (if any) stay historical."
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P42",
+  "resolved_config": {
+    "acceptance_phase": "P42",
+    "config_path": "experiments/p42-config.json",
+    "config_sha256": "003d72e5a4f81c9104904b5020959c512251e10139f32bf0e6f9fddaa48f9945"
+  },
+  "revision": "965d75c7474cdd5380dd9eb8b3e3d55cee594c47",
+  "run_id": "7dae30e7f4a5e519",
+  "seeds_rng": "fixed seed 42 for smoke corpus; revalidation deterministic (reason: no search)",
+  "verdict": "ACCEPTED"
+}

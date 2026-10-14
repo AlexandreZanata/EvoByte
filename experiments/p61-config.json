@@ -1,0 +1,42 @@
+{
+  "phase": "P61",
+  "note": "Frozen P61 paired comparison. Development candidate sets only; sealed finals excluded.",
+  "device": "cpu",
+  "seed": 7,
+  "require_clean_tree": true,
+  "instances": [
+    {
+      "n": 4,
+      "seed": 11,
+      "must_include": [
+        [
+          2,
+          3,
+          6
+        ]
+      ],
+      "random_count": 200,
+      "random_bound": 300,
+      "boxes": [
+        [
+          1,
+          20
+        ]
+      ]
+    },
+    {
+      "n": 6,
+      "seed": 12,
+      "must_include": [
+        [
+          3,
+          4,
+          12
+        ]
+      ],
+      "random_count": 200,
+      "random_bound": 300,
+      "boxes": []
+    }
+  ]
+}

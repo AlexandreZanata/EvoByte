@@ -1,0 +1,115 @@
+{
+  "budgets": {
+    "experiment_sec": 0.7460612330032745,
+    "n_generations": 6,
+    "pop_size": 32
+  },
+  "certificate_references": [
+    {
+      "sha256": "6e23e2f386976bf09e8730a29b097da709a0bfa8520d38898e95dfab9435e25e"
+    },
+    {
+      "sha256": "ad7b74dd06e0d52cfe4494b78a501dce99d1232486b8e4eda54647861c9fcfb1"
+    }
+  ],
+  "checks": {
+    "counters_consistent": true,
+    "coverage_declared": true,
+    "io_queue_bounded": true,
+    "no_certificate_lost": true,
+    "nodes_bounded": true,
+    "parent_ordering_valid": true,
+    "raw_disk_bounded": true,
+    "replay_rebuilds_segments": true,
+    "tracing_cost_published": true
+  },
+  "claim_scope": "bounded sampled map with replayable segments; no universe claim",
+  "counters": {
+    "certificates": 2,
+    "dropped_samples": 0,
+    "nodes": 192,
+    "segments_declared": 6,
+    "segments_matched": 6,
+    "total_candidates": 192
+  },
+  "coverage": "full",
+  "dirty": "M benchmarks/evo_trace.py\n M benchmarks/science_matrix.py\n M src/evobyte/archive.py\n M tests/test_evo_trace.py\n M tests/test_science.py\n?? experiments/p51-config.json\n?? experiments/p51-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "dropped_samples": 0,
+  "elapsed_sec": 0.7774561370024458,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "The map stores samples plus all elites/certs; unstored generations need seed+checkpoint replay.",
+    "Partial coverage never proves a bounded search complete; misses are sampling losses.",
+    "Tracing cost is published; per-candidate CPU logging is not claimed free."
+  ],
+  "map": {
+    "certificates": 2,
+    "certificates_expected": 2,
+    "checkpoint_bytes": 31529,
+    "checkpoint_ref": "/tmp/evobyte-p51-l93n6v6h/p51_ckpt_s42_g3.pt",
+    "coverage": "full",
+    "dropped_samples": 0,
+    "io_bytes": 41728,
+    "io_cap_bytes": 67108864,
+    "max_nodes": 100000,
+    "nodes": 192,
+    "raw_bytes": 41728,
+    "raw_cap_bytes": 1073741824,
+    "sampling_rate": 1.0
+  },
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P51",
+  "replay": {
+    "certificates_compared": 2,
+    "mismatches": [],
+    "nodes_compared": 192,
+    "segments_declared": 6,
+    "segments_match": true
+  },
+  "resolved_config": {
+    "acceptance_phase": "P51",
+    "config_path": "experiments/p51-config.json",
+    "config_sha256": "b8123f32ce21f8642676e3a0912ad370931e7cafcb6cbc18cfb15c02247bff96"
+  },
+  "revision": "659fc0f60757c50c4d87ecc8e5a070c603693ab7",
+  "run_id": "95f62d7e1f4263af",
+  "sampling_rate": 1.0,
+  "seeds_rng": "fixed seed 42; replay rebuilds from seed+config",
+  "tracing_overhead": {
+    "aggregate_overhead_pct": 64.09976462664177,
+    "aggregate_sec": 0.08452417200169293,
+    "audit_overhead_pct": 59.16644831055826,
+    "audit_sec": 0.08198312949753017,
+    "baseline_sec": 0.05150779600080568
+  },
+  "validation": {
+    "certificates": 2,
+    "coverage": "full",
+    "dropped": 0,
+    "errors": [],
+    "io_bytes": 41728,
+    "nodes": 192,
+    "ok": true,
+    "raw_bytes": 41728
+  },
+  "verdict": "ACCEPTED"
+}

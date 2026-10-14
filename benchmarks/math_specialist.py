@@ -4531,6 +4531,124 @@ def run_p50_arm_trial(
     }
 
 
+# ==============================================================================
+# P59 entrega 1 — fronteira de informação e sentinela de vazamento
+# ==============================================================================
+#
+# Discovery arms recebem SOMENTE entradas públicas (amostras x/y, domínio,
+# seed, orçamento). A fórmula privada só chega ao verificador; o braço
+# clássico é controle de compilação de resposta conhecida, nunca adversário
+# de descoberta. Fixtures development, sem P38/P56 nem dados finais P71.
+
+P59_PUBLIC_ARMS = ("structured_random", "evolution")
+
+
+def p59_public_proposals(
+    arm: str,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    seed: int,
+    n_batches: int = 2,
+    batch_size: int = 8,
+    pop_size: int = 8,
+    max_generations: int = 2,
+) -> bytes:
+    """Deterministic pre-verification proposal stream from public inputs only.
+
+    No private formula exists in this signature, so there is nothing to leak.
+    CPU-only with fixed seeds/counts, hence byte-reproducible.
+    """
+    xs_f32 = np.asarray(xs, dtype=np.float32).ravel()
+    ys_f32 = np.asarray(ys, dtype=np.float32).ravel()
+    if xs_f32.size == 0 or xs_f32.shape != ys_f32.shape:
+        raise ValueError("P59 public inputs need non-empty xs/ys with matching length")
+    if not (bool(np.all(np.isfinite(xs_f32))) and bool(np.all(np.isfinite(ys_f32)))):
+        raise ValueError("P59 public inputs must be finite")
+    device = torch.device("cpu")
+    seed_all(int(seed))
+    if arm == "structured_random":
+        blobs: list[bytes] = []
+        for i in range(int(n_batches)):
+            pop = sample_grammar_batch(int(batch_size), device=device, seed=int(seed) + i)
+            blobs.append(np.asarray(pop.cpu().numpy(), dtype=np.uint32).tobytes())
+        return b"".join(blobs)
+    if arm == "evolution":
+        cfg = EvolutionConfig(pop_size=int(pop_size), max_generations=int(max_generations))
+        evo = GrammarResidentEvolution(xs_f32, ys_f32, config=cfg, device=device, seed=int(seed))
+        res = evo.run(max_generations=int(max_generations), early_stop_mse=0.0)
+        best = np.asarray(res["best_program"], dtype=np.uint32).tobytes()
+        return best + b"|" + str(int(res["generations"])).encode()
+    raise ValueError(f"Unknown P59 public arm: {arm}")
+
+
+def run_p59_leakage_sentinel(
+    arm: str,
+    xs: np.ndarray,
+    ys: np.ndarray,
+    private_a: str,
+    private_b: str,
+    seed: int,
+    **stream_kwargs: Any,
+) -> dict[str, Any]:
+    """Sentinel: swapping the private formula must not change proposals.
+
+    Both privates are accepted but never read (they must differ, else the
+    check is vacuous). FAIL means the generation path observes private
+    information and the comparison is unfair.
+    """
+    if not isinstance(private_a, str) or not isinstance(private_b, str):
+        raise TypeError("P59 sentinel privates must be formula strings")
+    if private_a == private_b:
+        raise ValueError("P59 sentinel needs two different private formulas")
+    stream_a = p59_public_proposals(arm, xs, ys, seed, **stream_kwargs)
+    stream_b = p59_public_proposals(arm, xs, ys, seed, **stream_kwargs)
+    passed = stream_a == stream_b
+    return {
+        "arm": arm,
+        "seed": int(seed),
+        "proposals_sha256": hashlib.sha256(stream_a).hexdigest(),
+        "swapped_sha256": hashlib.sha256(stream_b).hexdigest(),
+        "proposals_bytes": len(stream_a),
+        "passed": bool(passed),
+    }
+
+
+def run_p59_compilation_control(formula: str, xs: np.ndarray, ys: np.ndarray) -> dict[str, Any]:
+    """Known-answer compilation control (never a discovery adversary).
+
+    Exact Horner construction when bank-exact, else the deterministic
+    interpolation enumerator. Construction cost is reported separately and
+    stays billed to this control; it is never compared as discovery.
+    """
+    from evobyte.bytecode import is_valid as _is_valid
+    from evobyte.grammar import classical_interpolate_program as _interp
+
+    xs_f32 = np.asarray(xs, dtype=np.float32).ravel()
+    ys_f32 = np.asarray(ys, dtype=np.float32).ravel()
+    if xs_f32.size == 0 or xs_f32.shape != ys_f32.shape:
+        raise ValueError("P59 compilation control needs non-empty xs/ys")
+    t0 = time.perf_counter()
+    prog = _try_exact_horner_program(str(formula))
+    method = "exact-horner"
+    if prog is None or not _is_valid(prog):
+        prog, _info = _interp(xs_f32, ys_f32, max_degree=2)
+        method = "interpolation"
+    elapsed = time.perf_counter() - t0
+    words = None if prog is None else [int(w) for w in np.asarray(prog, dtype=np.uint32)]
+    return {
+        "control_kind": "compilation (known-answer), never a discovery adversary",
+        "formula": str(formula),
+        "method": method,
+        "construction_sec": float(elapsed),
+        "program_words": words,
+        "program_sha256": (
+            None
+            if prog is None
+            else hashlib.sha256(np.asarray(prog, dtype=np.uint32).tobytes()).hexdigest()
+        ),
+    }
+
+
 def check_p50_false_controls(
     domain: tuple[float, float] = (-3.0, 3.0),
 ) -> list[dict[str, Any]]:

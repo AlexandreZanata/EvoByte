@@ -1,0 +1,86 @@
+{
+  "budgets": {
+    "compute_sec": 5.496237336992635,
+    "time_cap_sec": 3600.0
+  },
+  "by_status": {
+    "budget-exhausted": 249,
+    "candidate": 931,
+    "rediscovery": 1
+  },
+  "certificate_references": [
+    {
+      "n": 73,
+      "sha256": "b5ae8dcd865c44cf179f0d60516bc2c98d4e1f011c9c9dc351cb11666bc49e8e"
+    },
+    {
+      "n": 97,
+      "sha256": "88275b1e8aa1e10d0fe25da70ce1adb6727410971592c90a1e1c754ca0ed8408"
+    },
+    {
+      "n": 193,
+      "sha256": "247bf74134ba1f854b7e56078387a1aab51210b0e842395b7d62971291ad6fe9"
+    },
+    {
+      "n": 241,
+      "sha256": "3716a5829366e0be0ec332c7c8a3dbf0dabdb6cd92346c2e48b4fbbb8b2eda0d"
+    },
+    {
+      "n": 313,
+      "sha256": "5f8bb6aac4091da6c4408ccabd344b031d414982555ac77605351cd2f8c50d63"
+    }
+  ],
+  "certificates": 932,
+  "certificates_sha256": "54901d47ab2c85fd7a46f9ef87b10acc83d68f905199a59307b54f5a2f8c56da",
+  "claim_scope": "bounded instances only; no conjecture claim; no discovery claimed",
+  "counters": {
+    "budget_exhausted": 249,
+    "certified": 932,
+    "nominated": 1181
+  },
+  "dirty": "M benchmarks/open_problems.py\n M benchmarks/science_matrix.py\n M tests/test_open_problems.py\n M tests/test_science.py\n?? experiments/p57-certificates.json\n?? experiments/p57-config.json\n?? experiments/p57-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 5.686301444002311,
+  "errors": [],
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "Windowed search: unsolved means budget-exhausted, never exhaustive-null.",
+    "A new instance solution is useful without settling the open conjecture."
+  ],
+  "nomination": {
+    "count": 1181,
+    "frozen_match": true
+  },
+  "novelty": "rediscovery where classical/k3-anchored, else candidate; verified-construction needs reviewer-sustained novelty, discovery needs independent reproduction plus the proper certificate or proof; none claimed.",
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P57",
+  "resolved_config": {
+    "acceptance_phase": "P57",
+    "config_path": "experiments/p57-config.json",
+    "config_sha256": "7ddeaf6764680175bf9f34153123d175eabbb850808b7879bc6f04ad5b423fbd"
+  },
+  "revision": "8a35d2db614f5670bdd1dab6dc364c33ead49085",
+  "run_id": "0d212a7202925110",
+  "seeds_rng": "deterministic grid enumeration; no sampling RNG",
+  "time_capped": false,
+  "total_evaluated": 13171481445,
+  "verdict": "COMPLETE"
+}

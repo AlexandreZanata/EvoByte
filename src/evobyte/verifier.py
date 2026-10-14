@@ -752,7 +752,7 @@ def verify_l2(
 
 
 LEAN_PINNED_TOOLCHAIN = "leanprover/lean4:v4.34.0"
-LEAN_ALLOWED_IMPORT_PREFIXES = ("Mathlib",)
+LEAN_ALLOWED_IMPORT_PREFIXES = ("Mathlib", "Generated")
 LEAN_SORRY_TOKENS = ("sorry", "admit", "sorryAx")
 
 
@@ -826,6 +826,15 @@ def lean_resolve_binaries(project_dir: str | Path | None = None) -> dict[str, st
             )
         found[name] = hit
     return found
+
+
+def is_lean_available(project_dir: str | Path | None = None) -> bool:
+    """Return True if lean, lake, and elan binaries are available."""
+    try:
+        lean_resolve_binaries(project_dir)
+        return True
+    except LeanToolchainUnavailable:
+        return False
 
 
 def run_lean_checker(
@@ -969,3 +978,86 @@ def run_lean_checker(
     result["accepted"] = not result["reasons"]
     result["elapsed_sec"] = time.perf_counter() - t_start
     return result
+
+
+def verify_lean_harness(
+    project_dir: str | Path = "lean_proofs",
+    *,
+    timeout_sec: float = 60.0,
+) -> dict[str, Any]:
+    """Verify that the Lean 4 formal harness is operational, hermetic, and sound."""
+    import tempfile
+
+    proj = Path(project_dir).resolve()
+    bins = lean_resolve_binaries(proj)
+    toolchain_file = proj / "lean-toolchain"
+    lakefile = proj / "lakefile.toml"
+
+    status: dict[str, Any] = {
+        "project_dir": str(proj),
+        "toolchain_pinned": LEAN_PINNED_TOOLCHAIN,
+        "toolchain_file_exists": toolchain_file.is_file(),
+        "lakefile_exists": lakefile.is_file(),
+        "binaries": bins,
+        "passed": False,
+        "checks": {},
+        "reasons": [],
+    }
+
+    if not toolchain_file.is_file():
+        status["reasons"].append(f"missing_toolchain_file: {toolchain_file}")
+    else:
+        tc_text = toolchain_file.read_text(encoding="utf-8").strip()
+        status["toolchain_file_content"] = tc_text
+        if tc_text != LEAN_PINNED_TOOLCHAIN:
+            status["reasons"].append(
+                f"toolchain_content_mismatch: expected {LEAN_PINNED_TOOLCHAIN}, got {tc_text}"
+            )
+
+    if not lakefile.is_file():
+        status["reasons"].append(f"missing_lakefile: {lakefile}")
+
+    challenge_proof = proj / "P48Proofs.lean"
+    if challenge_proof.is_file():
+        res1 = run_lean_checker(
+            challenge_proof,
+            project_dir=proj,
+            expected_theorem="es_identity",
+            timeout_sec=timeout_sec,
+        )
+        status["checks"]["p48_es_identity"] = {
+            "accepted": res1["accepted"],
+            "reasons": res1["reasons"],
+        }
+        if not res1["accepted"]:
+            status["reasons"].append(f"p48_es_identity_rejected: {res1['reasons']}")
+    else:
+        status["reasons"].append(f"missing_challenge_proof: {challenge_proof}")
+
+    with tempfile.NamedTemporaryFile("w", suffix=".lean", dir=str(proj), delete=False) as f:
+        tmp_name = Path(f.name).name
+        f.write(
+            "import Mathlib.Tactic.NormNum\n"
+            "theorem bogus_identity : (4 : ℚ) / 5 = 1 / 2 := by norm_num\n"
+        )
+    try:
+        res_bad = run_lean_checker(
+            proj / tmp_name,
+            project_dir=proj,
+            expected_theorem="bogus_identity",
+            timeout_sec=timeout_sec,
+        )
+        status["checks"]["soundness_rejection"] = {
+            "rejected_properly": not res_bad["accepted"],
+            "rejection_reasons": res_bad["reasons"],
+        }
+        if res_bad["accepted"]:
+            status["reasons"].append("unsound_harness: false theorem was accepted")
+    finally:
+        try:
+            (proj / tmp_name).unlink(missing_ok=True)
+        except OSError:
+            pass
+
+    status["passed"] = not status["reasons"]
+    return status

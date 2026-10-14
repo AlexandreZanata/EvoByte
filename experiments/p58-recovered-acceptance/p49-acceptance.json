@@ -1,0 +1,95 @@
+{
+  "budgets": "fixed sample counts; wall-clock recorded, never a claim",
+  "claim_scope": "compact representation conformance; coverage is the defined grammar only",
+  "counters": {
+    "checks": 9,
+    "checks_ok": 9,
+    "reconstructed": 4,
+    "reconstructed_total": 4
+  },
+  "coverage": "grammar-defined only: Horner degree<=3 / expression trees depth<=3 over bank rationals",
+  "dirty": "M benchmarks/science_matrix.py\n M docs/BYTECODE.md\n M src/evobyte/bytecode.py\n M tests/test_bytecode.py\n?? experiments/p49-config.json\n?? experiments/p49-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 0.45378741099557374,
+  "findings": [
+    {
+      "check": "profile_name",
+      "detail": "p49-compact-polynomial",
+      "ok": true
+    },
+    {
+      "check": "profile_revision",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "opcode_version_unbumped",
+      "detail": "v0 frozen, no ADR needed",
+      "ok": true
+    },
+    {
+      "check": "profile_dimensions",
+      "detail": "",
+      "ok": true
+    },
+    {
+      "check": "const_table_hash",
+      "detail": "28eb132ede7832fe",
+      "ok": true
+    },
+    {
+      "check": "valid_by_construction",
+      "detail": "64/64 S0-valid and profile-conformant",
+      "ok": true
+    },
+    {
+      "check": "roundtrip_bytes",
+      "detail": "64 programs, 64B each",
+      "ok": true
+    },
+    {
+      "check": "invalid_refs_rejected",
+      "detail": "bad reg, unknown op, unknown version, short blob",
+      "ok": true
+    },
+    {
+      "check": "certificate_reconstruction",
+      "detail": "4/4 compact words rebuild exact certificates",
+      "ok": true
+    }
+  ],
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "Compactness claims nothing about universality and reduces no search complexity.",
+    "Off-profile v0 opcodes stay globally valid; the profile only scopes the family."
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P49",
+  "resolved_config": {
+    "acceptance_phase": "P49",
+    "config_path": "experiments/p49-config.json",
+    "config_sha256": "47183b6a79c5c7abc2f8a0c8025464608c7a2e8de7212da4e6b71d5f5f349170"
+  },
+  "revision": "02ca3db99d8b98ee58c1c93e28aef4c63735c750",
+  "run_id": "7a1e37d6759b631b",
+  "seeds_rng": "fixed seed 7; deterministic sampling, no search",
+  "verdict": "ACCEPTED"
+}

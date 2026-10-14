@@ -218,3 +218,290 @@ def decode_human(program: np.ndarray) -> str:
             continue
         parts.append(f"{name} r{dst}, r{a}, {b:#04x}")
     return " ; ".join(parts) if parts else "NOP"
+
+
+# ==============================================================================
+# P67 entrega 1 — H06 macros como referências a blocos existentes
+# ==============================================================================
+#
+# Sem mudança de opcode/codec/semântica (sem ADR, sem bump de versão):
+# macros são referências a sequências existentes, expandidas antes da
+# execução. Mineração conta subsequências não-NOP canônicas (registradores
+# renomeados por primeira aparição) em programas development, top ≤ 32.
+# Equivalência macro≡expansão vale por construção (mesmo stream sob o
+# intérprete congelado) e é demonstrada por round-trip + execução igual.
+
+P67_MAX_MACROS = 32
+
+P67_MACRO_MIN_LEN = 2
+
+P67_MACRO_MAX_LEN = 4
+
+
+def p67_canonical_seq(words: list[int]) -> tuple[tuple[int, int, int, int], ...]:
+    """Canonical form: opcodes and b-bytes kept, registers remapped by order
+    of first appearance (same shape, different registers → same macro)."""
+    remap: dict[int, int] = {}
+    out = []
+    for word in words:
+        op, dst, a, b = decode_instr(np.uint32(word))
+        for reg in (dst, a):
+            if reg not in remap:
+                remap[reg] = len(remap)
+        out.append((op, remap[dst], remap[a], b))
+    return tuple(out)
+
+
+def p67_mine_macros(
+    programs: list[np.ndarray],
+    min_len: int = P67_MACRO_MIN_LEN,
+    max_len: int = P67_MACRO_MAX_LEN,
+    top_k: int = P67_MAX_MACROS,
+) -> list[dict[str, object]]:
+    """Mine recurrent non-NOP subsequences (deterministic, exact counts)."""
+    from collections import Counter as _Counter
+
+    counts: _Counter[tuple[tuple[int, int, int, int], ...]] = _Counter()
+    first_seen: dict[tuple[tuple[int, int, int, int], ...], list[int]] = {}
+    for prog in programs:
+        words = [int(w) for w in np.asarray(prog, dtype=np.uint32).tolist()]
+        body = [w for w in words if decode_instr(np.uint32(w))[0] != 0x00]
+        for size in range(int(min_len), int(max_len) + 1):
+            for i in range(len(body) - size + 1):
+                window = body[i : i + size]
+                key = p67_canonical_seq(window)
+                counts[key] += 1
+                if key not in first_seen:
+                    first_seen[key] = window
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], len(kv[0]), kv[0]))
+    macros = []
+    for idx, (key, count) in enumerate(ranked[: int(top_k)]):
+        expansion = first_seen[key]
+        regs = sorted(
+            {decode_instr(np.uint32(w))[1] for w in expansion}
+            | {decode_instr(np.uint32(w))[2] for w in expansion}
+        )
+        macros.append(
+            {
+                "id": f"M{idx:02d}",
+                "length": len(expansion),
+                "count": int(count),
+                "canonical": [list(t) for t in key],
+                "expansion": [int(w) for w in expansion],
+                "domain": {
+                    "registers": regs,
+                    "n_regs": N_REGS,
+                    "opcode_version": OPCODE_VERSION,
+                },
+            }
+        )
+    return macros
+
+
+def p67_expand_tokens(
+    tokens: list[tuple[str, object]], macros: list[dict[str, object]]
+) -> np.ndarray | None:
+    """Expand (\"instr\", word) / (\"macro\", id) tokens into a 16-slot program.
+
+    Returns None when the expansion overflows the program or references an
+    unknown macro or invalid word (never silently truncates).
+    """
+    by_id = {str(m["id"]): m for m in macros}
+    words: list[int] = []
+    for kind, payload in tokens:
+        if kind == "instr":
+            words.append(int(payload))  # type: ignore[arg-type]
+        elif kind == "macro":
+            macro = by_id.get(str(payload))
+            if macro is None:
+                return None
+            words.extend(int(w) for w in macro["expansion"])  # type: ignore[union-attr]
+        else:
+            return None
+    if len(words) > N_INSTR:
+        return None
+    for word in words:
+        op, dst, a, _b = decode_instr(np.uint32(word))
+        if op not in OPCODES or dst >= N_REGS or a >= N_REGS:
+            return None
+    prog = nop_program()
+    prog[: len(words)] = np.asarray(words, dtype=np.uint32)
+    return prog
+
+
+def p67_compress_program(
+    program: np.ndarray, macros: list[dict[str, object]]
+) -> list[tuple[str, object]]:
+    """Greedy longest-match compression of non-NOP runs (deterministic)."""
+    words = [int(w) for w in np.asarray(program, dtype=np.uint32).tolist()]
+    table = sorted(
+        ((m["id"], [int(w) for w in m["expansion"]]) for m in macros),  # type: ignore[union-attr]
+        key=lambda kv: (-len(kv[1]), str(kv[0])),
+    )
+    tokens: list[tuple[str, object]] = []
+    i = 0
+    while i < len(words):
+        op, _, _, _ = decode_instr(np.uint32(words[i]))
+        if op == 0x00:
+            i += 1
+            continue
+        hit = None
+        for mid, expansion in table:
+            if words[i : i + len(expansion)] == expansion:
+                hit = (mid, len(expansion))
+                break
+        if hit is None:
+            tokens.append(("instr", words[i]))
+            i += 1
+        else:
+            tokens.append(("macro", hit[0]))
+            i += hit[1]
+    return tokens
+
+
+# ==============================================================================
+# P67 entrega 2 — H06 comparação de bibliotecas com custos
+# ==============================================================================
+#
+# Aprendida (minerada) × clássica de mesmo tamanho × aleatória. Clássica =
+# idiomas fixos documentados (quadrado, dobro, negação, deslocamento…);
+# aleatória = bigramas seedados. Custos de mineração, verificação
+# (equivalência de cada macro) e expansão faturados por biblioteca; sem
+# mineração no final. Compactação e certificado são medidas separadas:
+# aqui só compactação + round-trip.
+
+P67_CLASSICAL_SHAPES = (
+    ((0x03, 0, 0), (0x01, 0, 0)),
+    ((0x03, 0, 0), (0x02, 0, 0)),
+    ((0x01, 0, 1), (0x01, 0, 0)),
+    ((0x0C, 0, 0), (0x01, 0, 0)),
+    ((0x0A, 0, 0), (0x03, 0, 0)),
+    ((0x02, 0, 1), (0x02, 0, 0)),
+    ((0x03, 0, 1), (0x0C, 0, 0)),
+    ((0x01, 0, 2), (0x03, 0, 0)),
+)
+
+
+def p67_classical_library(size: int) -> list[dict[str, object]]:
+    """Frozen classical idioms over r0–r2, truncated to the requested size."""
+    macros = []
+    for idx, shape in enumerate(P67_CLASSICAL_SHAPES[: int(size)]):
+        expansion = [int(encode_instr(op, dst=2, a=reg, b=1)) for op, reg, _ in shape]
+        macros.append(
+            {
+                "id": f"C{idx:02d}",
+                "length": len(expansion),
+                "count": 0,
+                "canonical": [list(t) for t in p67_canonical_seq(expansion)],
+                "expansion": expansion,
+                "domain": {"registers": [0, 2], "n_regs": N_REGS, "opcode_version": OPCODE_VERSION},
+            }
+        )
+    return macros
+
+
+def p67_random_library(size: int, seed: int = 0) -> list[dict[str, object]]:
+    """Seeded random bigrams over safe arithmetic ops (honest weak baseline)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    ops = [0x01, 0x02, 0x03, 0x0C]
+    macros = []
+    for idx in range(int(size)):
+        expansion = [
+            int(encode_instr(rng.choice(ops), dst=rng.randint(0, 7), a=rng.randint(0, 7), b=1)),
+            int(encode_instr(rng.choice(ops), dst=rng.randint(0, 7), a=rng.randint(0, 7), b=1)),
+        ]
+        macros.append(
+            {
+                "id": f"R{idx:02d}",
+                "length": len(expansion),
+                "count": 0,
+                "canonical": [list(t) for t in p67_canonical_seq(expansion)],
+                "expansion": expansion,
+                "domain": {"registers": [0, 7], "n_regs": N_REGS, "opcode_version": OPCODE_VERSION},
+            }
+        )
+    return macros
+
+
+def p67_compare_libraries(
+    programs: list[np.ndarray], library_size: int = 8, seed: int = 0
+) -> dict[str, object]:
+    """Learned vs same-size classical vs random: compression plus billed costs."""
+    import time as _time
+
+    libs: dict[str, list[dict[str, object]]] = {}
+    costs: dict[str, dict[str, float]] = {}
+    t0 = _time.perf_counter()
+    libs["learned"] = p67_mine_macros(programs, top_k=int(library_size))
+    costs["learned"] = {"mine_sec": _time.perf_counter() - t0}
+    t0 = _time.perf_counter()
+    libs["classical"] = p67_classical_library(len(libs["learned"]))
+    costs["classical"] = {"mine_sec": _time.perf_counter() - t0}
+    t0 = _time.perf_counter()
+    libs["random"] = p67_random_library(len(libs["learned"]), seed=int(seed))
+    costs["random"] = {"mine_sec": _time.perf_counter() - t0}
+    out: dict[str, object] = {}
+    for name, lib in libs.items():
+        t1 = _time.perf_counter()
+        verified = 0
+        for macro in lib:
+            rebuilt = p67_expand_tokens([("macro", macro["id"])], lib)
+            if rebuilt is not None and [int(w) for w in rebuilt if decode_instr(w)[0] != 0x00] == [
+                int(w)
+                for w in macro["expansion"]  # type: ignore[union-attr]
+            ]:
+                verified += 1
+        verify_sec = _time.perf_counter() - t1
+        t1 = _time.perf_counter()
+        ratios = []
+        roundtrip = 0
+        for prog in programs:
+            tokens = p67_compress_program(prog, lib)
+            rebuilt = p67_expand_tokens(tokens, lib)
+            body = [
+                int(w) for w in np.asarray(prog).tolist() if decode_instr(np.uint32(w))[0] != 0x00
+            ]
+            if (
+                rebuilt is not None
+                and [
+                    int(w)
+                    for w in np.asarray(rebuilt).tolist()
+                    if decode_instr(np.uint32(w))[0] != 0x00
+                ]
+                == body
+            ):
+                roundtrip += 1
+                ratios.append(1.0 - len(tokens) / max(1, len(body)))
+        expand_sec = _time.perf_counter() - t1
+        out[name] = {
+            "size": len(lib),
+            "mine_sec": costs[name]["mine_sec"],
+            "verified": verified,
+            "verify_sec": verify_sec,
+            "roundtrip_ok": roundtrip,
+            "compression_mean": (sum(ratios) / len(ratios)) if ratios else 0.0,
+            "expand_sec": expand_sec,
+        }
+    return out
+
+
+def p67_dev_programs(n_programs: int = 8, seed: int = 0) -> list[np.ndarray]:
+    """Seeded dense valid development programs (no final data involved)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    safe_ops = [0x01, 0x02, 0x03, 0x0C, 0x0A, 0x0D, 0x0E]
+    progs = []
+    for _ in range(int(n_programs)):
+        prog = nop_program()
+        length = rng.randint(2, 6)
+        for i in range(length - 1):
+            prog[i] = encode_instr(
+                rng.choice(safe_ops), dst=rng.randint(0, 6), a=rng.randint(0, 6), b=1
+            )
+        prog[length - 1] = encode_instr(rng.choice(safe_ops), dst=7, a=rng.randint(0, 6), b=1)
+        assert is_valid(prog)
+        progs.append(prog)
+    return progs

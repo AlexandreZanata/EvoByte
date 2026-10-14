@@ -1,0 +1,42 @@
+{
+  "phase": "P68",
+  "note": "Frozen P68 attacker duel. Disjoint train and dev templates; sealed finals excluded.",
+  "device": "cpu",
+  "seed": 0,
+  "require_clean_tree": true,
+  "train_templates": [
+    {
+      "family_id": "even",
+      "lo": 4,
+      "hi": 40
+    },
+    {
+      "family_id": "n=2-mod-3",
+      "lo": 4,
+      "hi": 40
+    },
+    {
+      "family_id": "multiple-of-3",
+      "lo": 3,
+      "hi": 39
+    }
+  ],
+  "dev_templates": [
+    {
+      "family_id": "even",
+      "lo": 41,
+      "hi": 60
+    },
+    {
+      "family_id": "n=2-mod-3",
+      "lo": 41,
+      "hi": 59
+    }
+  ],
+  "training": {
+    "seed": 0,
+    "epochs": 40
+  },
+  "budget": 20,
+  "param_cap": 1000000
+}

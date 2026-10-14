@@ -1,0 +1,11 @@
+-- EvoByte Root Generated Formal Library
+import Generated.ErdosStrausIdentities
+import Generated.ErdosStrausCertificates
+import Generated.BytecodeTheorems
+import Generated.SierpinskiTheorems
+import Generated.InductiveLemmas
+import Generated.DivisibilityLemmas
+import Generated.OptimalCertificates
+import Generated.QuadraticIdentities
+import Generated.AutomatedTheorems
+import Generated.MultitermTheorems

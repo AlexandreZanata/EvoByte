@@ -9,6 +9,8 @@ mais lento que evolução (IC95 pareado [1.01, 1.87] no log-razão, 25 pares);
 triagem íntegra, negativos rejeitados, custos com/sem amortização
 publicados. Método aceito mantido; sem ADR (só KEEP exigiria).
 
+**Continuidade atual:** DROP preservado e modelo desligado; D019/P58 admite somente uso histórico restrito, com análise exploratória.
+
 ## Objetivo e escopo
 
 Decidir se o micromodelo compensa. Alterações permitidas: benchmarks/math_specialist.py e relatório novo de comparação.
@@ -43,6 +45,19 @@ python3 benchmarks/science_matrix.py --acceptance-phase P54 --config experiments
 Guardar configuração completa, comando real e artefato recuperável. Uma
 fase técnica mede sua condição técnica; não fabrica números de velocidade.
 Revisão científica, quando exigida acima, antecede a promoção do resultado.
+
+## Uso histórico na continuidade D019
+
+Preservar DROP e dados originais; modelo desligado. Registrar a revisão prévia
+ausente, o intervalo t de log-tempos apenas em pares sem censura e a diferença
+em relação ao bootstrap de sucesso da nominação. Tratar o intervalo como
+exploratório condicionado aos sucessos; seeds não são grupos independentes.
+O braço Horner recebe fórmula privada e não sustenta ganho de descoberta justo.
+A disposição P58 pode aprovar a não adoção e excluir claims confirmatórios,
+sem renomear uma revisão posterior como prévia. P59 corrige informação/custos;
+P60 fixa procedimento prospectivo, agrupamento, censura e critérios completos.
+KEEP futuro exige novo experimento íntegro e ADR; não reabrir finais antigos.
+Aplicar [D019](../FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019).
 
 ## Risco principal
 

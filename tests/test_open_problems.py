@@ -11,7 +11,26 @@ sys.path.insert(0, str(_REPO_ROOT / "src"))
 sys.path.insert(0, str(_REPO_ROOT / "benchmarks"))
 
 from benchmarks.open_problems import (
+    P57_KNOWN_TRIPLE_1009,
+    P61_SHADOW_PRIMES,
+    P65_MAX_LIBRARY,
+    P66_PACKET_ARMS,
+    P66_PACKET_MAX_LEN,
+    P66_PACKET_MIN_LEN,
+    P68_ATTACKERS,
+    P68_COMBINED_PARAM_CAP,
+    P68_TEMPLATE_FAMILIES,
+    P69_ISLAND_COUNT,
+    P69_MIGRATION_COMPARISON_ARMS,
+    P70_MAX_COEFF_ABS,
+    P70_MAX_DEGREE,
+    P70_PROPOSER_ARMS,
     PROBLEM_REGISTRY,
+    P62RepairScorer,
+    P65BridgeScorer,
+    P66PacketScorer,
+    P68AttackScorer,
+    P70Proposer,
     audit_historical_certificate,
     check_coordinate_bounds,
     check_diophantine_quintuple,
@@ -23,11 +42,66 @@ from benchmarks.open_problems import (
     p57_classical_constructions,
     p57_classify_solved,
     p57_nominate_instances,
+    p61_modular_shadow,
+    p61_modular_shadow_batch_torch,
+    p62_classical_repair_step,
+    p62_collect_cloning_samples,
+    p62_compare_repair_policies,
+    p62_exact_features,
+    p62_exact_residual,
+    p62_learned_repair_step,
+    p62_neighbors,
+    p62_random_repair_step,
+    p62_repair_cycles,
+    p62_split_by_origin,
+    p62_train_repairer,
+    p64_apply_rules,
+    p64_prioritized_scan,
+    p64_proof_vs_saved,
+    p64_prove_rule,
+    p64_rule_matches,
+    p64_rule_report,
+    p64_suggest_rules,
+    p65_build_library,
+    p65_compare_libraries,
+    p65_entry_features,
+    p65_entry_verifies,
+    p65_find_bridge,
+    p65_instantiate,
+    p65_model_pick,
+    p65_random_library,
+    p65_train_bridge_scorer,
+    p66_apply_packet,
+    p66_collect_packet_samples,
+    p66_compare_guided,
+    p66_compare_packets,
+    p66_guided_packets,
+    p66_packet_features,
+    p66_random_packet,
+    p66_train_packet_scorer,
+    p68_attack_template,
+    p68_collect_attack_samples,
+    p68_compare_attackers,
+    p68_instance_features,
+    p68_n_refutes,
+    p68_propose_template,
+    p68_train_attack_scorer,
+    p69_compare_migrations,
+    p69_island_search,
+    p70_class_values,
+    p70_compare_proposers,
+    p70_eval_poly,
+    p70_nominate_templates,
+    p70_proposer_grid,
+    p70_template_features,
+    p70_train_proposer,
+    p70_verify_template,
     replay_and_verify_bounded_null,
     run_adversarial_rejection_suite,
     run_certificate_audit,
     run_open_problem_campaign,
     run_p57_bounded_campaign,
+    run_p61_paired_filter_trial,
     verify_independent_reproduction,
 )
 
@@ -378,3 +452,684 @@ def test_p57_windowed_search_never_claims_exhaustive_null() -> None:
     assert res["instances"][0]["status"] == "budget-exhausted"
     assert res["time_capped"] is True
     assert "exhaustive-null" not in res["by_status"]
+
+
+def _p61_known_solutions() -> list[tuple[int, int, int, int]]:
+    sols = [(1009, *P57_KNOWN_TRIPLE_1009)]
+    for n in range(2, 31):
+        for fam in p57_classical_constructions(n):
+            if fam["verified"]:
+                sols.append((n, *fam["triple"]))
+    return sols
+
+
+def test_p61_shadow_keeps_every_exact_solution() -> None:
+    for n, x, y, z in _p61_known_solutions():
+        rep = p61_modular_shadow(n, x, y, z)
+        assert rep["keep"] is True, (n, x, y, z, rep["rejected_by"])
+        assert rep["rejected_by"] == []
+    assert set(P61_SHADOW_PRIMES) == {3, 5, 7, 11, 13}
+    for n in (2, 3, 4, 5, 6):
+        for x in range(1, 31):
+            for y in range(1, 31):
+                for z in range(1, 31):
+                    ok, _, _ = check_erdos_straus(n, x, y, z)
+                    if ok:
+                        assert p61_modular_shadow(n, x, y, z)["keep"] is True
+
+
+def test_p61_shadow_batch_agrees_with_reference() -> None:
+    import torch
+
+    triples = _p61_known_solutions()[:12]
+    triples += [(4, 1, 1, 1), (4, 2, 3, 7), (1009, 253, 85100, 1974822873)]
+    n = 4
+    xs = torch.tensor([t[1] for t in triples], dtype=torch.int64)
+    ys = torch.tensor([t[2] for t in triples], dtype=torch.int64)
+    zs = torch.tensor([t[3] for t in triples], dtype=torch.int64)
+    mask = p61_modular_shadow_batch_torch(n, xs, ys, zs)
+    for (nn, x, y, z), kept in zip(triples, mask.tolist()):
+        assert bool(kept) == p61_modular_shadow(n, x, y, z)["keep"], (nn, x, y, z)
+
+
+def test_p61_compatible_residues_are_not_certificate() -> None:
+    found = None
+    for n in (4, 5, 6):
+        for x in range(1, 51):
+            for y in range(1, 51):
+                for z in range(1, 51):
+                    ok, _, _ = check_erdos_straus(n, x, y, z)
+                    if not ok and p61_modular_shadow(n, x, y, z)["keep"]:
+                        found = (n, x, y, z)
+                        break
+                if found:
+                    break
+            if found:
+                break
+        if found:
+            break
+    assert found is not None
+    n, x, y, z = found
+    assert check_erdos_straus(n, x, y, z)[0] is False
+
+
+def test_p61_shadow_eliminates_false_and_reports_cost() -> None:
+    import random
+    import time
+
+    import torch
+
+    rng = random.Random(7)
+    xs = [rng.randint(1, 500) for _ in range(300)] + [2]
+    ys = [rng.randint(1, 500) for _ in range(300)] + [3]
+    zs = [rng.randint(1, 500) for _ in range(300)] + [6]
+    t0 = time.perf_counter()
+    mask = p61_modular_shadow_batch_torch(4, torch.tensor(xs), torch.tensor(ys), torch.tensor(zs))
+    elapsed = time.perf_counter() - t0
+    kept = int(mask.sum().item())
+    assert 0 < kept < len(xs)
+    assert elapsed >= 0.0
+
+
+def test_p61_paired_trial_same_certificates_no_false_rejection() -> None:
+    import random
+
+    import torch
+
+    rng = random.Random(11)
+    triples = [(2, 3, 6)] + [
+        (rng.randint(1, 300), rng.randint(1, 300), rng.randint(1, 300)) for _ in range(200)
+    ]
+    rec = run_p61_paired_filter_trial(4, triples)
+    assert rec["certificates_equal"] is True
+    assert (2, 3, 6) in rec["certificates_filtered"]
+    assert rec["false_rejections"] == 0
+    assert rec["kept"] < rec["candidates"]
+    costs = rec["costs"]
+    assert set(costs) == {
+        "check_all_sec",
+        "total_without_sec",
+        "transfer_sec",
+        "filter_sec",
+        "check_kept_sec",
+        "total_with_sec",
+    }
+    assert costs["total_with_sec"] == (
+        costs["transfer_sec"] + costs["filter_sec"] + costs["check_kept_sec"]
+    )
+    assert "cpu" in rec["devices_compared"]
+    if torch.cuda.is_available():
+        assert "cuda" in rec["devices_compared"]
+    assert rec["device_agreement"] is True
+
+
+def test_p61_paired_trial_exhaustive_box_zero_false_rejection() -> None:
+    triples = [(x, y, z) for x in range(1, 21) for y in range(1, 21) for z in range(1, 21)]
+    rec = run_p61_paired_filter_trial(4, triples)
+    assert rec["certificates_equal"] is True
+    assert rec["false_rejections"] == 0
+    assert len(rec["certificates_filtered"]) > 0
+
+
+def test_p62_exact_features() -> None:
+    assert p62_exact_residual(4, 2, 3, 6) == 0
+    feat = p62_exact_features(4, 2, 3, 6)
+    assert feat == {"residual": 0, "sign": 0, "divisible_by": [2, 3, 5, 7, 11, 13]}
+    assert p62_exact_residual(4, 2, 3, 7) == 4 * 2 * 3 * 7 - 4 * (6 + 14 + 21)
+    assert p62_exact_features(4, 2, 3, 7)["sign"] in (-1, 1)
+
+
+def test_p62_classical_repair_certifies_perturbed() -> None:
+    for start in [(2, 3, 7), (2, 4, 6), (3, 3, 6), (5, 5, 5)]:
+        rep = p62_repair_cycles(4, start, policy="classical", max_cycles=12)
+        assert rep["certified"] is True, (start, rep)
+        assert rep["status"] == "certified"
+        assert rep["cycles_used"] <= 12
+        assert check_erdos_straus(4, *rep["triple"])[0] is True
+        mags = [abs(r) for r in rep["residuals"]]
+        assert all(b <= a for a, b in zip([abs(p62_exact_residual(4, *start))] + mags, mags))
+        assert all(v >= 1 for t in [start, rep["triple"]] for v in t)
+
+
+def test_p62_random_repair_is_seeded_deterministic() -> None:
+    first = p62_repair_cycles(4, (5, 5, 5), policy="random", max_cycles=12, seed=3)
+    second = p62_repair_cycles(4, (5, 5, 5), policy="random", max_cycles=12, seed=3)
+    assert first == second
+    assert p62_random_repair_step(4, 2, 3, 7, seed=9) == p62_random_repair_step(4, 2, 3, 7, seed=9)
+    assert p62_classical_repair_step(4, 2, 3, 7) == (2, 3, 6)
+
+
+def test_p62_repair_statuses_and_domain() -> None:
+    rep = p62_repair_cycles(4, (5, 5, 5), policy="classical", max_cycles=0)
+    assert rep["status"] == "exhausted"
+    assert rep["certified"] is False
+    assert rep["cycles_used"] == 0
+    try:
+        p62_repair_cycles(4, (2, 3, 7), policy="learned")
+    except ValueError as exc:
+        assert "Unknown P62 repair policy" in str(exc)
+    else:
+        raise AssertionError("unknown policy must raise")
+    assert len(p62_neighbors(1, 1, 1)) == 9
+    assert all(min(t) >= 1 for t in p62_neighbors(1, 1, 1))
+
+
+def test_p62_split_by_origin_is_disjoint() -> None:
+    records = [{"n": n, "case": i} for n in (4, 5, 6, 7) for i in range(3)]
+    first = p62_split_by_origin(records)
+    second = p62_split_by_origin(records)
+    assert first == second
+    assert {r["n"] for r in first["train"]}.isdisjoint({r["n"] for r in first["dev"]})
+    assert len(first["train"]) + len(first["dev"]) == len(records)
+
+
+def _p62_trained_weights() -> dict:
+    samples, _ = p62_collect_cloning_samples([4, 8], starts_per_solution=6, seed=0)
+    assert len(samples) > 0
+    return p62_train_repairer(samples, seed=0, epochs=60)
+
+
+def test_p62_repairer_trains_small_and_deterministic() -> None:
+    first = _p62_trained_weights()
+    second = _p62_trained_weights()
+    assert first["n_params"] == 129
+    assert first["n_params"] <= 1000
+    assert first["train_acc"] > 0.5
+    assert first["train_sec"] >= 0.0
+    assert first["state_dict"].keys() == second["state_dict"].keys()
+    scorer = P62RepairScorer()
+    assert sum(p.numel() for p in scorer.parameters()) == 129
+
+
+def test_p62_learned_step_is_deterministic_and_solution_free() -> None:
+    weights = _p62_trained_weights()["state_dict"]
+    assert p62_learned_repair_step(weights, 4, 2, 3, 7) == p62_learned_repair_step(
+        weights, 4, 2, 3, 7
+    )
+    assert p62_learned_repair_step(weights, 4, 2, 3, 7) in p62_neighbors(2, 3, 7)
+
+
+def test_p62_compare_policies_equal_inputs_with_costs() -> None:
+    weights = _p62_trained_weights()
+    dev_starts = [(6, (3, 5, 12)), (6, (4, 4, 12)), (9, (3, 19, 18)), (9, (4, 18, 18))]
+    rep = p62_compare_repair_policies(
+        weights["state_dict"], weights["train_sec"], dev_starts, max_cycles=12, seed=0
+    )
+    assert set(rep) == {"classical", "random", "learned"}
+    for rec in rep.values():
+        assert rec["starts"] == len(dev_starts)
+        assert 0 <= rec["certified"] <= len(dev_starts)
+        assert rec["total_sec"] >= 0.0
+    assert rep["learned"]["train_sec_billed"] == weights["train_sec"] > 0.0
+    assert rep["learned"]["total_sec"] >= rep["learned"]["train_sec_billed"]
+    assert rep["classical"]["train_sec_billed"] == 0.0
+    assert rep["classical"]["certified"] >= rep["learned"]["certified"] - len(dev_starts)
+
+
+def test_p64_prove_refute_timeout_paths() -> None:
+    proven = p64_prove_rule({"kind": "interval", "bound": "sum_le", "value": 4}, 4, 6)
+    assert proven["status"] == "PROVEN"
+    assert proven["checks"] == 4
+    refuted = p64_prove_rule({"kind": "parity", "coord": 0, "residue": 1}, 4, 6)
+    assert refuted["status"] == "REFUTED"
+    assert check_erdos_straus(4, *refuted["counterexample"])[0] is True
+    assert p64_rule_matches(
+        {"kind": "parity", "coord": 0, "residue": 1}, tuple(refuted["counterexample"])
+    )
+    slow = p64_prove_rule({"kind": "parity", "coord": 0, "residue": 1}, 4, 100, max_checks=1000)
+    assert slow["status"] == "UNPROVEN"
+    assert slow["checks"] == 0
+
+
+def test_p64_only_proven_rules_eliminate() -> None:
+    proven_rule = {"kind": "interval", "bound": "sum_le", "value": 4}
+    proof = p64_prove_rule(proven_rule, 4, 6)
+    assert proof["status"] == "PROVEN"
+    triples = [(1, 1, 1), (1, 1, 2), (2, 3, 6), (2, 3, 7)]
+    res = p64_apply_rules(triples, [proven_rule], [{"kind": "parity", "coord": 0, "residue": 1}])
+    assert res["kept"] == [2, 3]
+    assert [e["triple"] for e in res["eliminated"]] == [[1, 1, 1], [1, 1, 2]]
+    assert all(e["rule"] == proven_rule for e in res["eliminated"])
+    assert res["priority"] == [1, 1, 0, 0]
+    empty = p64_apply_rules(triples, [], [{"kind": "parity", "coord": 0, "residue": 1}])
+    assert empty["kept"] == [0, 1, 2, 3]
+    assert empty["eliminated"] == []
+
+
+def test_p64_suggest_and_report() -> None:
+    errors = [(2, 3, 7), (5, 5, 5), (1, 2, 3)]
+    first = p64_suggest_rules(errors)
+    assert first == p64_suggest_rules(errors)
+    assert len(first) > 0
+    assert all(sum(1 for t in errors if p64_rule_matches(rule, t)) >= 1 for rule in first)
+    rule = {"kind": "interval", "bound": "sum_le", "value": 4}
+    rep = p64_rule_report(rule, p64_prove_rule(rule, 4, 6), errors)
+    assert rep["status"] == "PROVEN"
+    assert rep["coverage_fraction"] == 0.0
+    assert "only inside the proven box" in rep["limits"]
+
+
+def test_p64_proof_vs_saved_measured() -> None:
+    rule = {"kind": "interval", "bound": "sum_le", "value": 4}
+    rep = p64_proof_vs_saved(rule, 4, proof_box=6, search_box=12)
+    assert rep["status"] == "PROVEN"
+    assert rep["eliminated"] == 4
+    assert rep["saved_sec"] > 0.0
+    assert rep["proof_sec"] >= 0.0
+    assert rep["net_sec"] == rep["saved_sec"] - rep["proof_sec"]
+    cold = p64_proof_vs_saved(
+        {"kind": "parity", "coord": 0, "residue": 1}, 4, proof_box=100, max_checks=1000
+    )
+    assert cold["status"] == "UNPROVEN"
+    assert cold["eliminated"] == 0
+    assert cold["saved_sec"] == 0.0
+    dead = p64_proof_vs_saved({"kind": "parity", "coord": 0, "residue": 1}, 4, proof_box=6)
+    assert dead["status"] == "REFUTED"
+    assert dead["eliminated"] == 0
+
+
+def test_p64_prioritized_scan_guarantees_exploration() -> None:
+    triples = [(x, y, z) for x in range(1, 7) for y in range(1, 7) for z in range(1, 3)]
+    rules = [{"kind": "parity", "coord": 0, "residue": 1}]
+    first = p64_prioritized_scan(triples, rules, explore_frac=0.1, seed=3)
+    assert first == p64_prioritized_scan(triples, rules, explore_frac=0.1, seed=3)
+    assert sorted(first["order"]) == list(range(len(triples)))
+    assert first["unfiltered_fraction"] >= 0.1
+    narrow = p64_prioritized_scan(triples, rules, explore_frac=0.5, seed=3)
+    assert narrow["unfiltered_fraction"] >= 0.5
+    assert p64_prioritized_scan([], rules)["order"] == []
+    try:
+        p64_prioritized_scan(triples, rules, explore_frac=0.0)
+    except ValueError as exc:
+        assert "explore_frac" in str(exc)
+    else:
+        raise AssertionError("explore_frac=0 must raise")
+
+
+def test_p64_proven_rules_discard_no_known_valid() -> None:
+    rule = {"kind": "interval", "bound": "sum_le", "value": 4}
+    assert p64_prove_rule(rule, 4, 6)["status"] == "PROVEN"
+    known = [(2, 3, 6), (2, 4, 4), (3, 3, 3), (3, 4, 12), (2, 3, 6)]
+    res = p64_apply_rules(known, [rule], [])
+    assert res["eliminated"] == []
+    assert res["kept"] == [0, 1, 2, 3, 4]
+
+
+def test_p65_library_is_frozen_and_covering() -> None:
+    lib = p65_build_library()
+    assert len(lib) <= P65_MAX_LIBRARY == 8
+    assert [e["id"] for e in lib] == ["even", "n=2-mod-3", "multiple-of-3", "anchor-1009"]
+    assert p65_instantiate(lib[0], 6) == (3, 4, 12)
+    assert p65_instantiate(lib[0], 5) is None
+    assert p65_instantiate(lib[3], 1009) == tuple(P57_KNOWN_TRIPLE_1009)
+    assert p65_instantiate(lib[3], 6) is None
+
+
+def test_p65_bridges_prove_the_fixed_target() -> None:
+    import pytest
+
+    lib = p65_build_library()
+    for n in (4, 5, 6, 9, 10):
+        bridge = p65_find_bridge(lib, n)
+        assert bridge is not None
+        assert bridge["verified_for_n"] == n
+        assert check_erdos_straus(n, *bridge["triple"])[0] is True
+        assert check_erdos_straus_fractions(n, *bridge["triple"])[0] is True
+    assert p65_find_bridge(lib, 73) is None
+    anchor = p65_find_bridge(lib, 1009)
+    assert anchor is not None and anchor["label"] == "rediscovery"
+    other = p65_find_bridge(lib, 6)
+    assert other is not None
+    assert check_erdos_straus(7, *other["triple"])[0] is False
+    with pytest.raises(ValueError, match="exceeds frozen max"):
+        p65_find_bridge(lib + lib + lib[:1], 6)
+
+
+def test_p65_random_library_is_seeded_public() -> None:
+    first = p65_random_library(6, 50, seed=0)
+    assert first == p65_random_library(6, 50, seed=0)
+    assert len(first) == 6
+    assert all(e["kind"] == "random" for e in first)
+    fa = p65_entry_features(6, first[0])
+    fb = p65_entry_features(6, first[1])
+    assert len(fa) == 11
+    assert fa == fb
+
+
+def test_p65_bridge_scorer_trains_and_picks() -> None:
+    lib = p65_build_library() + p65_random_library(6, 50, seed=0)
+    first = p65_train_bridge_scorer(lib, list(range(2, 21)), seed=0, epochs=30)
+    second = p65_train_bridge_scorer(lib, list(range(2, 21)), seed=0, epochs=30)
+    assert first["n_params"] <= 100000
+    assert first["train_acc"] > 0.5
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P65BridgeScorer().parameters()) == first["n_params"]
+    assert p65_entry_verifies({"kind": "random", "triple": [2, 3, 6]}, 4) is True
+    assert p65_entry_verifies({"kind": "random", "triple": [2, 3, 7]}, 4) is False
+    pick = p65_model_pick(lib, first["state_dict"], 6)
+    assert pick is not None
+    assert check_erdos_straus(6, *pick["triple"])[0] is True
+    miss = p65_model_pick(lib, first["state_dict"], 73)
+    if miss is not None:
+        assert check_erdos_straus(73, *miss["triple"])[0] is True
+
+
+def test_p65_compare_libraries_bills_costs() -> None:
+    rep = p65_compare_libraries(
+        [4, 5, 6, 9, 10, 73],
+        n_random=6,
+        coord_bound=50,
+        seed=0,
+        train_n=list(range(2, 21)),
+        epochs=30,
+    )
+    assert rep["library_size"] == 10
+    assert rep["train"]["n_params"] <= 100000
+    for arm in ("random-pick", "structured-first", "model-pick", "direct-search"):
+        rec = rep[arm]
+        assert rec["targets"] == 6
+        assert set(rec["ledger"]) == {"parts", "total_sec"}
+        parts = rec["ledger"]["parts"]
+        assert set(parts) == {"train", "generation", "inference", "filters", "checkers", "tracking"}
+        assert rec["ledger"]["total_sec"] == sum(parts.values())
+    assert rep["model-pick"]["ledger"]["parts"]["train"] == rep["train"]["train_sec"] > 0.0
+    assert rep["structured-first"]["ledger"]["parts"]["train"] == 0.0
+    assert rep["structured-first"]["certified"] == 5
+    assert rep["model-pick"]["certified"] >= 1
+
+
+def test_p66_packets_are_valid_and_bounded() -> None:
+    assert P66_PACKET_MIN_LEN == 2 and P66_PACKET_MAX_LEN == 4
+    for seed in range(20):
+        packet = p66_random_packet(seed)
+        assert P66_PACKET_MIN_LEN <= len(packet) <= P66_PACKET_MAX_LEN
+        for coord, step in packet:
+            assert coord in (0, 1, 2)
+            assert step in (-3, -2, -1, 1, 2, 3)
+    assert p66_random_packet(0) == p66_random_packet(0)
+    assert p66_apply_packet((2, 3, 8), ((2, -1), (2, -1))) == {
+        "valid": True,
+        "final": (2, 3, 6),
+        "intermediates": [(2, 3, 7), (2, 3, 6)],
+        "ops": 2,
+    }
+    bad = p66_apply_packet((1, 1, 1), ((0, -3), (1, 1)))
+    assert bad["valid"] is False
+    assert bad["final"] is None
+    assert bad["ops"] == 2
+    try:
+        p66_random_packet(0, length=5)
+    except ValueError as exc:
+        assert "2..4" in str(exc)
+    else:
+        raise AssertionError("length 5 must raise")
+
+
+def test_p66_compare_packets_equal_ops() -> None:
+    first = p66_compare_packets(4, [(2, 3, 7), (5, 5, 5)], n_packets=8, seed=0)
+    second = p66_compare_packets(4, [(2, 3, 7), (5, 5, 5)], n_packets=8, seed=0)
+    assert set(first) == set(P66_PACKET_ARMS) == {"packet", "isolated"}
+    assert first["packet"]["ops_total"] == first["isolated"]["ops_total"] > 0
+    for arm in P66_PACKET_ARMS:
+        rec = first[arm]
+        assert rec["reach"] + rec["duplicates"] == rec["evaluated"]
+        for triple in rec["certificates"]:
+            assert check_erdos_straus(4, *triple)[0] is True
+            assert check_erdos_straus_fractions(4, *triple)[0] is True
+    assert {k: v for k, v in first["packet"].items() if k != "loop_sec"} == {
+        k: v for k, v in second["packet"].items() if k != "loop_sec"
+    }
+
+
+def _p66_guided_weights():
+    samples, _ = p66_collect_packet_samples(4, [(2, 3, 7), (5, 5, 5)], n_packets=16, seed=0)
+    assert len(samples) == 32
+    assert {s["label"] for s in samples} <= {0.0, 1.0}
+    return p66_train_packet_scorer(samples, seed=0, epochs=40)
+
+
+def test_p66_guided_scorer_trains_deterministic() -> None:
+    first = _p66_guided_weights()
+    second = _p66_guided_weights()
+    assert first["n_params"] == 65
+    assert first["train_acc"] > 0.5
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P66PacketScorer().parameters()) == 65
+    assert len(p66_packet_features(4, (2, 3, 7), ((0, 1), (2, -1)))) == 6
+    top = p66_guided_packets(first["state_dict"], 4, (2, 3, 7), n_packets=8, seed=0)
+    assert top == p66_guided_packets(first["state_dict"], 4, (2, 3, 7), n_packets=8, seed=0)
+    assert len(top) == 8
+    assert all(2 <= len(p) <= 4 for p in top)
+
+
+def test_p66_compare_guided_equal_ops() -> None:
+    weights = _p66_guided_weights()["state_dict"]
+    first = p66_compare_guided(4, [(2, 3, 7), (5, 5, 5)], weights, n_packets=8, seed=0)
+    second = p66_compare_guided(4, [(2, 3, 7), (5, 5, 5)], weights, n_packets=8, seed=0)
+    assert set(first) == {"guided", "random", "isolated"}
+    assert first["guided"]["ops_total"] == first["isolated"]["ops_total"] > 0
+    for arm in ("guided", "random", "isolated"):
+        rec = first[arm]
+        assert rec["reach"] + rec["duplicates"] == rec["evaluated"]
+        for triple in rec["certificates"]:
+            assert check_erdos_straus(4, *triple)[0] is True
+            assert check_erdos_straus_fractions(4, *triple)[0] is True
+        assert {k: v for k, v in rec.items() if k != "loop_sec"} == {
+            k: v for k, v in second[arm].items() if k != "loop_sec"
+        }
+
+
+def test_p68_attack_documents_exact_refutations() -> None:
+    assert P68_COMBINED_PARAM_CAP == 1000000
+    assert set(P68_ATTACKERS) == {"systematic", "random"}
+    assert set(P68_TEMPLATE_FAMILIES) == {"even", "n=2-mod-3", "multiple-of-3"}
+    rep = p68_attack_template(p68_propose_template("even", 4, 20), attacker="systematic")
+    assert rep["refuted"] is True
+    assert rep["refutations"][0] == {
+        "n": 5,
+        "triple": None,
+        "reason": "not-covered",
+        "residual": None,
+        "exact": False,
+    }
+    for ref in rep["refutations"]:
+        if ref["reason"] == "inexact":
+            assert ref["residual"] != 0
+            assert check_erdos_straus(ref["n"], *ref["triple"])[0] is False
+        elif ref["reason"] == "out-of-bounds":
+            assert max(ref["triple"]) > 10**9
+    assert check_erdos_straus(4, 2, 3, 6)[0] is True
+
+
+def test_p68_out_of_bounds_survival_budget_and_leakage() -> None:
+    rep = p68_attack_template(
+        p68_propose_template("even", 100, 100), attacker="systematic", max_coord=1000
+    )
+    assert rep["refuted"] is True
+    assert rep["refutations"][0]["reason"] == "out-of-bounds"
+    calm = p68_attack_template(p68_propose_template("multiple-of-3", 3, 3))
+    assert calm == {
+        "family_id": "multiple-of-3",
+        "attacker": "systematic",
+        "queries": 1,
+        "refuted": False,
+        "refutations": [],
+        "survived": True,
+    }
+    first = p68_attack_template(p68_propose_template("even", 4, 20), attacker="random", seed=1)
+    assert first == p68_attack_template(
+        p68_propose_template("even", 4, 20), attacker="random", seed=1
+    )
+    assert first["queries"] <= 50
+    empty = p68_attack_template(p68_propose_template("even", 4, 20), budget=0)
+    assert empty["queries"] == 0 and empty["survived"] is True
+    import inspect as _inspect
+
+    params = set(_inspect.signature(p68_attack_template).parameters)
+    assert params <= {"template", "attacker", "budget", "seed", "max_coord"}
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError, match="Unknown P68 template family"):
+        p68_propose_template("odd", 4, 20)
+    with _pytest.raises(ValueError, match="domain needs"):
+        p68_propose_template("even", 20, 4)
+    with _pytest.raises(ValueError, match="Unknown P68 attacker"):
+        p68_attack_template(p68_propose_template("even", 4, 4), attacker="oracle")
+
+
+def _p68_trained_attacker():
+    templates = [
+        p68_propose_template("even", 4, 40),
+        p68_propose_template("n=2-mod-3", 4, 40),
+        p68_propose_template("multiple-of-3", 3, 39),
+    ]
+    samples, _ = p68_collect_attack_samples(templates)
+    assert len(samples) == 111
+    return templates, p68_train_attack_scorer(samples, seed=0, epochs=40)
+
+
+def test_p68_attack_scorer_trains_small_and_deterministic() -> None:
+    templates, first = _p68_trained_attacker()
+    _, second = _p68_trained_attacker()
+    assert first["n_params"] == 73
+    assert first["n_params"] <= P68_COMBINED_PARAM_CAP
+    assert first["train_acc"] >= 0.9
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P68AttackScorer().parameters()) == 73
+    assert len(p68_instance_features(templates[0], 5)) == 7
+    hit, _ = p68_n_refutes({"id": "even", "kind": "parametric"}, 5)
+    assert hit is True
+    assert p68_n_refutes({"id": "even", "kind": "parametric"}, 4)[0] is False
+
+
+def test_p68_compare_attackers_equal_budget() -> None:
+    templates, weights = _p68_trained_attacker()
+    first = p68_compare_attackers(weights["state_dict"], templates, budget=20, seed=0)
+    second = p68_compare_attackers(weights["state_dict"], templates, budget=20, seed=0)
+    assert set(first) == {"learned", "random", "systematic"}
+    for arm in ("learned", "random", "systematic"):
+        rec = first[arm]
+        assert rec["templates"] == len(templates)
+        assert rec["queries_total"] <= 20 * len(templates)
+        assert {k: v for k, v in rec.items() if k != "loop_sec"} == {
+            k: v for k, v in second[arm].items() if k != "loop_sec"
+        }
+    assert first["learned"]["queries_total"] <= first["random"]["queries_total"]
+    assert first["learned"]["queries_total"] <= first["systematic"]["queries_total"]
+    assert first["learned"]["refuted"] == 3
+
+
+def _p69_starts():
+    return [(2, 3, 7), (5, 5, 5), (3, 4, 13), (4, 4, 12)]
+
+
+def _p69_strip(rep):
+    return {k: v for k, v in rep.items() if not k.endswith("_sec")}
+
+
+def test_p69_island_search_deterministic_and_constant() -> None:
+    first = p69_island_search(4, _p69_starts(), policy="residue", generations=6, seed=0)
+    second = p69_island_search(4, _p69_starts(), policy="residue", generations=6, seed=0)
+    assert _p69_strip(first) == _p69_strip(second)
+    assert first["population_total"] == P69_ISLAND_COUNT * 4 == 16
+    assert first["generations"] == 6
+    assert 0.0 < first["diversity"] <= 1.0
+    assert first["distinct"] == round(first["diversity"] * first["population_total"])
+    for triple in first["certificates"]:
+        assert check_erdos_straus(4, *triple)[0] is True
+    assert first["recombinations"] > 0
+    for move in first["moves"]:
+        if move["recombined"]:
+            assert len(move["parents"]) == 2
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError, match="non-empty starts"):
+        p69_island_search(4, [], policy="residue")
+
+
+def test_p69_compare_migrations_equal_resources() -> None:
+    rep = p69_compare_migrations([4, 6], _p69_starts(), generations=6, seed=0)
+    assert set(rep) == set(P69_MIGRATION_COMPARISON_ARMS)
+    assert set(rep) == {"residue", "elite", "random", "none"}
+    for rec in rep.values():
+        assert rec["problems"] == 2
+        assert 0 <= rec["certified_problems"] <= 2
+        assert 0.0 < rec["diversity_mean"] <= 1.0
+        assert rec["sync_sec"] >= 0.0
+        assert rec["total_sec"] >= rec["sync_sec"]
+    assert rep["residue"]["recombinations"] > 0
+    assert rep["none"]["recombinations"] == 0
+
+
+def test_p70_poly_and_class_values() -> None:
+    assert P70_MAX_DEGREE == 2 and P70_MAX_COEFF_ABS == 10
+    assert p70_eval_poly([4, 2, 1], 2) == 12
+    assert p70_class_values({"k": 2, "r": 0}, 2, 7) == [2, 4, 6]
+    assert p70_class_values({"k": 3, "r": 2}, 2, 8) == [2, 5, 8]
+    import pytest as _pytest
+
+    with _pytest.raises(ValueError, match="degree exceeds"):
+        p70_eval_poly([0, 0, 0, 1], 2)
+
+
+def test_p70_controls_proven_variants_failed() -> None:
+    templates = {t["id"]: t for t in p70_nominate_templates()}
+    assert len(templates) == 5
+    for tid in ("control-even", "control-2mod3", "control-mult3"):
+        rep = p70_verify_template(templates[tid])
+        assert rep["status"] == "PROVEN", (tid, rep)
+        assert rep["checks"] == {
+            "identity": True,
+            "denominators": True,
+            "positivity": True,
+            "integers": True,
+            "spot_exact": True,
+        }
+    for tid in ("variant-broken-identity", "variant-broken-integers"):
+        rep = p70_verify_template(templates[tid])
+        assert rep["status"] == "FAILED"
+    assert p70_verify_template(templates["control-even"])["members"] == 100
+
+
+def _p70_trained_proposer():
+    grid = p70_proposer_grid(seed=0)
+    assert grid == p70_proposer_grid(seed=0)
+    for t in grid:
+        assert all(abs(c) <= P70_MAX_COEFF_ABS for num, _ in t["triple"] for c in num)
+    assert {t["id"] for t in grid} >= {"control-even", "control-2mod3", "control-mult3"}
+    return grid, p70_train_proposer(grid, seed=0, epochs=30)
+
+
+def test_p70_proposer_trains_small_and_deterministic() -> None:
+    grid, first = _p70_trained_proposer()
+    _, second = _p70_trained_proposer()
+    assert first["n_params"] == 65
+    assert first["n_templates"] == len(grid) > 0
+    assert first["positives"] >= 3
+    assert first["train_acc"] > 0.9
+    assert first["label_sec"] >= 0.0
+    for key in first["state_dict"]:
+        assert bool((first["state_dict"][key] == second["state_dict"][key]).all())
+    assert sum(p.numel() for p in P70Proposer().parameters()) == 65
+    assert len(p70_template_features(grid[0])) == 6
+
+
+def test_p70_compare_proposers_same_budget() -> None:
+    grid, weights = _p70_trained_proposer()
+    first = p70_compare_proposers(grid, weights["state_dict"], budget=20, seed=0)
+    second = p70_compare_proposers(grid, weights["state_dict"], budget=20, seed=0)
+    assert set(first) == set(P70_PROPOSER_ARMS) == {"proposer", "structured", "classical"}
+    for arm in P70_PROPOSER_ARMS:
+        rec = first[arm]
+        assert rec["templates"] == len(grid)
+        assert rec["verifications"] <= 20
+        assert {k: v for k, v in rec.items() if k != "loop_sec"} == {
+            k: v for k, v in second[arm].items() if k != "loop_sec"
+        }
+        if rec["found"] is not None:
+            tmpl = next(t for t in grid if t["id"] == rec["found"])
+            assert p70_verify_template(tmpl)["status"] == "PROVEN"
+    assert first["classical"]["found"] in {"control-even", "control-2mod3", "control-mult3"}

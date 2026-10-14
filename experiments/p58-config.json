@@ -1,0 +1,304 @@
+{
+  "approvals": [
+    {
+      "id": "p46-catalogue-review",
+      "note": "Human review of the 100-problem catalogue with pinned sources stays pending per P46 file.",
+      "status": "pending"
+    },
+    {
+      "id": "p47-nomination-review",
+      "note": "Human approval of the frozen family statement and hypothesis stays pending per P47 file.",
+      "status": "pending"
+    },
+    {
+      "id": "p48-translation-review",
+      "note": "Human approval of formal-challenge statement translation stays pending per P48 audit.",
+      "status": "pending"
+    },
+    {
+      "id": "p54-statistical-review",
+      "note": "Recorded statistical approval required for any KEEP stays pending per P54 pilot.",
+      "status": "pending"
+    },
+    {
+      "id": "p56-independent-review",
+      "note": "P56 confirmation is provisional self-repeat; independent review stays pending.",
+      "status": "pending"
+    },
+    {
+      "id": "p58-scope-review",
+      "note": "Delegated technical-scope approval 2026-10-07 (D019); execution by agent; not an independent scientific certification.",
+      "status": "approved"
+    }
+  ],
+  "certificates_expected": 932,
+  "certificates_path": "experiments/p57-certificates.json",
+  "device": "cpu",
+  "durable_raw": [
+    "experiments/p52-certified-data-raw.json",
+    "experiments/p53-proposer.pt",
+    "experiments/p53-proposer-raw.json"
+  ],
+  "note": "Complete frozen configuration. Reconciliation only: sealed-manifest check, exact recheck of all P57 certificates, durable raw inventory, recovery of transient P40-P57 acceptance evidence to a durable hashed destination (copy-if-absent; unsealed copies stay provisional), dirty-source gate and approval gate. No search budgets, no discovery claim. No TBD values.",
+  "phase": "P58",
+  "recoveries": [
+    {
+      "dest": "experiments/p58-recovered-acceptance/p40-acceptance.json",
+      "phase": "P40",
+      "src": "/tmp/evobyte-p40-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p41-acceptance.json",
+      "phase": "P41",
+      "src": "/tmp/evobyte-p41-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p42-acceptance.json",
+      "phase": "P42",
+      "src": "/tmp/evobyte-p42-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p43-acceptance.json",
+      "phase": "P43",
+      "src": "/tmp/evobyte-p43-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p44-acceptance.json",
+      "phase": "P44",
+      "src": "/tmp/evobyte-p44-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p45-acceptance.json",
+      "phase": "P45",
+      "src": "/tmp/evobyte-p45-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p46-acceptance.json",
+      "phase": "P46",
+      "src": "/tmp/evobyte-p46-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p47-acceptance.json",
+      "phase": "P47",
+      "src": "/tmp/evobyte-p47-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p48-acceptance.json",
+      "phase": "P48",
+      "src": "/tmp/evobyte-p48-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p49-acceptance.json",
+      "phase": "P49",
+      "src": "/tmp/evobyte-p49-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p50-acceptance.json",
+      "phase": "P50",
+      "src": "/tmp/evobyte-p50-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p51-acceptance.json",
+      "phase": "P51",
+      "src": "/tmp/evobyte-p51-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p52-acceptance.json",
+      "phase": "P52",
+      "src": "/tmp/evobyte-p52-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p53-acceptance.json",
+      "phase": "P53",
+      "src": "/tmp/evobyte-p53-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p54-acceptance.json",
+      "phase": "P54",
+      "src": "/tmp/evobyte-p54-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p55-acceptance.json",
+      "phase": "P55",
+      "src": "/tmp/evobyte-p55-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p56-acceptance.json",
+      "phase": "P56",
+      "src": "/tmp/evobyte-p56-acceptance.json"
+    },
+    {
+      "dest": "experiments/p58-recovered-acceptance/p57-acceptance.json",
+      "phase": "P57",
+      "src": "/tmp/evobyte-p57-acceptance.json"
+    }
+  ],
+  "require_clean_tree": true,
+  "sealed_manifests": [
+    "experiments/p52-certified-data.json",
+    "experiments/p53-proposer-manifest.json",
+    "experiments/p56-final-tasks.json"
+  ],
+  "decisions": [
+    {
+      "id": "p46-catalogue-review",
+      "owner": "Alexandre",
+      "executor": "agente executor",
+      "date": "2026-10-07",
+      "scope": "Uso do catálogo P46 na base técnica P58",
+      "justification": "Curadoria humana pendente e páginas vivas não reconsultadas neste ciclo; snapshot datado 2026-10-02 utilizável como referência histórica, sem afirmar estado aberto atual.",
+      "authorization_origin": "D019 — revisão por delegação expressa de Alexandre (2026-10-06)",
+      "reviewed_review": "docs/phases/P46-open-problem-catalogue.md + docs/research/open-problems.json (consulted_at 2026-10-02)",
+      "evidence_path": "docs/research/p58-decisions/p46-catalogue.md",
+      "evidence_sha256": "6af388968e763e2d95ce96865b1e646a01907064d27d2d2880adfe0973b8990d",
+      "disposition": "reference_only",
+      "allowed_uses": [
+        "reconciliation-audit",
+        "dated-snapshot-reference"
+      ],
+      "prohibited_uses": [
+        "novelty-claim",
+        "current-open-state-claim",
+        "final-test",
+        "superiority-claim"
+      ],
+      "scientific_approval": "pending"
+    },
+    {
+      "id": "p47-nomination-review",
+      "owner": "Alexandre",
+      "executor": "agente executor",
+      "date": "2026-10-07",
+      "scope": "Uso da nominação P47 na base técnica P58",
+      "justification": "Nominação histórica incompleta (limiares ausentes) e final consumido pela P56; JSON, selo e log preservados sem edição; não serve como pré-registro vigente (nova nominação em P60).",
+      "authorization_origin": "D019 — revisão por delegação expressa de Alexandre (2026-10-06)",
+      "reviewed_review": "docs/phases/P47-freeze-one-family.md + experiments/p47-nomination.json (frozen-pending-human-review)",
+      "evidence_path": "docs/research/p58-decisions/p47-nomination.md",
+      "evidence_sha256": "e08d5a7a566a976af86ff97ecd71d83a9a28b2cdc109cba4fccba9a3d88edd08",
+      "disposition": "excluded_from_claims",
+      "allowed_uses": [
+        "reconciliation-audit"
+      ],
+      "prohibited_uses": [
+        "current-preregistration",
+        "threshold-inheritance",
+        "novelty-claim",
+        "final-test",
+        "superiority-claim"
+      ],
+      "scientific_approval": "pending"
+    },
+    {
+      "id": "p48-translation-review",
+      "owner": "Alexandre",
+      "executor": "agente executor",
+      "date": "2026-10-07",
+      "scope": "Uso da fronteira formal P48 na base técnica P58",
+      "justification": "Sem runtime Lean verificável neste ciclo (lean/lake/elan ausentes); conclusão restrita aos dois desafios arquivados (identidade sobre Q, n=1009); n=1009 não é teorema universal; uso formal novo excluído.",
+      "authorization_origin": "D019 — revisão por delegação expressa de Alexandre (2026-10-06)",
+      "reviewed_review": "docs/phases/P48-formal-checker-boundary.md + lean_proofs/P48Proofs.lean (arquivo presente, tradução pendente)",
+      "evidence_path": "docs/research/p58-decisions/p48-translation.md",
+      "evidence_sha256": "7472c6ec22e1e91151f600bf6421b16f8afe0b155ea95e2c9d9d38adb9519366",
+      "disposition": "reference_only",
+      "allowed_uses": [
+        "reconciliation-audit",
+        "archived-challenges-reference"
+      ],
+      "prohibited_uses": [
+        "formal-claim",
+        "universal-theorem-claim",
+        "novelty-claim",
+        "final-test",
+        "superiority-claim"
+      ],
+      "scientific_approval": "pending"
+    },
+    {
+      "id": "p54-statistical-review",
+      "owner": "Alexandre",
+      "executor": "agente executor",
+      "date": "2026-10-07",
+      "scope": "Uso do resultado P54 na base técnica P58",
+      "justification": "DROP mantido e modelo desligado (auditor P58 não carrega nem executa p53-proposer.pt); revisão estatística prévia ausente e intervalo exploratório; sem KEEP, ganho ou claim confirmatório.",
+      "authorization_origin": "D019 — revisão por delegação expressa de Alexandre (2026-10-06)",
+      "reviewed_review": "docs/phases/P54-matched-budget-pilot.md (DROP) + experiments/p54-pilot-report.json",
+      "evidence_path": "docs/research/p58-decisions/p54-statistical.md",
+      "evidence_sha256": "0d663086b6b7184c1a99aa255fea8a40b407d281400c277cf1aa37bf938bd6d8",
+      "disposition": "reference_only",
+      "allowed_uses": [
+        "reconciliation-audit",
+        "drop-reference",
+        "exploratory-stats-reference"
+      ],
+      "prohibited_uses": [
+        "keep-claim",
+        "gain-claim",
+        "confirmatory-claim",
+        "novelty-claim",
+        "final-test",
+        "superiority-claim"
+      ],
+      "scientific_approval": "pending"
+    },
+    {
+      "id": "p56-independent-review",
+      "owner": "Alexandre",
+      "executor": "agente executor",
+      "date": "2026-10-07",
+      "scope": "Uso do resultado P56 na base técnica P58",
+      "justification": "Confirmação provisória por auto-repetição, sem revisão independente; final consumido e inreabrível; arquivo aceito como referência provisória de development.",
+      "authorization_origin": "D019 — revisão por delegação expressa de Alexandre (2026-10-06)",
+      "reviewed_review": "docs/phases/P56-fresh-frozen-confirmation.md (provisional) + experiments/p56-final-tasks.json (selado)",
+      "evidence_path": "docs/research/p58-decisions/p56-independent.md",
+      "evidence_sha256": "58806eaea2aad29ff0cf0f83b3e331ff4937d867d398fa71120e49e6905d8f4e",
+      "disposition": "reference_only",
+      "allowed_uses": [
+        "reconciliation-audit",
+        "provisional-development-reference"
+      ],
+      "prohibited_uses": [
+        "independent-confirmation-claim",
+        "fresh-test-claim",
+        "discovery-claim",
+        "final-test",
+        "superiority-claim"
+      ],
+      "scientific_approval": "pending"
+    },
+    {
+      "id": "p58-scope-review",
+      "owner": "Alexandre",
+      "executor": "agente executor",
+      "date": "2026-10-07",
+      "scope": "Enunciado e escopo técnico da base aceita P58 (somente reconciliação auditável)",
+      "justification": "Auditor valida seis decisões evidenciadas e revisão de código aceita; certificados rechecados com checker exato; raw e recuperação por hash; fonte suja rejeitada. Aprovação por delegação restrita ao escopo técnico.",
+      "authorization_origin": "D019 — revisão por delegação expressa de Alexandre (2026-10-06)",
+      "reviewed_review": "docs/phases/P58-accepted-research-baseline.md + docs/research/p58-code-review-r1.md + docs/research/p58-dossier.md",
+      "evidence_path": "docs/research/p58-decisions/p58-scope.md",
+      "evidence_sha256": "6b8ec67549f7b71c3fde59de09b695ccb7603e49114f9d8b264f7e23e4afd93c",
+      "disposition": "approved_for_current_use",
+      "allowed_uses": [
+        "reconciliation-audit",
+        "technical-base-p59-entry"
+      ],
+      "prohibited_uses": [
+        "novelty-claim",
+        "discovery-claim",
+        "historical-conclusion-certification",
+        "independence-claim",
+        "final-test",
+        "superiority-claim"
+      ],
+      "scientific_approval": "approved"
+    }
+  ],
+  "code_review": {
+    "status": "accepted",
+    "reviewer": "Alexandre (delegação D019)",
+    "executor": "agente executor",
+    "review_id": "p58-r1-code-review-001",
+    "record": "docs/research/p58-code-review-r1.md",
+    "date": "2026-10-07",
+    "scope": "R1 decision contract (57c6c88)"
+  }
+}

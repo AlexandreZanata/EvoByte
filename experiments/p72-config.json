@@ -1,0 +1,12 @@
+{
+  "phase": "P72",
+  "note": "P72 novelty nomination frozen configuration. Target erdos-242 from reviewed catalogue; accepted arithmetic search only; all speculative modules disabled.",
+  "target_id": "erdos-242",
+  "device": "cpu",
+  "seed": 0,
+  "max_coord": 1000000000,
+  "time_cap_sec": 3600.0,
+  "require_clean_tree": true,
+  "nomination_path": "docs/research/open-problems.json",
+  "nomination_sha256": "bd976f3b315bab263cbb956e5b016467b326994c984cfa74baa41efbd75b37c2"
+}

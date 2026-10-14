@@ -1,0 +1,13 @@
+{
+  "phase": "P84",
+  "conjectures": [
+    "erdos_straus",
+    "sierpinski"
+  ],
+  "min_parametric_identities": 10,
+  "min_instance_certificates": 8,
+  "output_dir": "lean_proofs/Generated",
+  "project_dir": "lean_proofs",
+  "seed": 42,
+  "require_clean_tree": true
+}

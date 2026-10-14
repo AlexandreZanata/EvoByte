@@ -1,0 +1,9 @@
+{
+  "phase": "P67",
+  "note": "Frozen P67 macro compression audit. Seeded development programs only; sealed finals excluded.",
+  "device": "cpu",
+  "seed": 0,
+  "require_clean_tree": true,
+  "n_programs": 8,
+  "library_size": 8
+}

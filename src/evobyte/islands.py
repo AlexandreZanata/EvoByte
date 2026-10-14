@@ -350,3 +350,146 @@ def run_evolution_islands(
         "converged": converged,
         "model": model,
     }
+
+
+# ==============================================================================
+# P69 entrega 1 — H09 migração por assinaturas de resíduos (triplas ES)
+# ==============================================================================
+#
+# Quatro ilhas lógicas de triplas candidatas com população total constante.
+# Assinatura = resíduos das coordenadas em módulos congelados; migração por
+# resíduos emparelha os mais complementares (maior distância de Hamming) e
+# recombina por troca de uma coordenada. Toda recombinação registra os dois
+# pais; filho fora do domínio é rejeitado (nunca silencioso). Elite migra o
+# menor |R|, aleatória é seeded, nenhuma é identidade.
+
+P69_SIGNATURE_MODULI = (2, 3, 5)
+
+P69_MIGRATION_POLICIES = ("residue", "elite", "random", "none")
+
+
+def p69_signature(triple: tuple[int, int, int]) -> tuple[int, ...]:
+    """Frozen residue signature of one triple (deterministic)."""
+    return tuple(int(v) % m for v in triple for m in P69_SIGNATURE_MODULI)
+
+
+def p69_signature_distance(a: tuple[int, ...], b: tuple[int, ...]) -> int:
+    """Hamming distance between two signatures (complement measure)."""
+    return sum(1 for x, y in zip(a, b) if x != y)
+
+
+def p69_residual(n: int, triple: tuple[int, int, int]) -> int:
+    """Exact integer residual 4xyz - n(xy+xz+yz) (local math, no imports)."""
+    x, y, z = (int(v) for v in triple)
+    return 4 * x * y * z - int(n) * (x * y + x * z + y * z)
+
+
+def p69_recombine(
+    a: tuple[int, int, int],
+    b: tuple[int, int, int],
+    seed: int,
+    max_coord: int = 10**9,
+) -> dict[str, object]:
+    """Single-coordinate swap child with both parents recorded (or rejection)."""
+    import random as _random
+
+    coord = _random.Random(int(seed)).randint(0, 2)
+    child = [int(v) for v in a]
+    child[coord] = int(b[coord])
+    if min(child) < 1 or max(child) > int(max_coord):
+        return {
+            "child": None,
+            "parents": [tuple(int(v) for v in a), tuple(int(v) for v in b)],
+            "rejected": True,
+        }
+    return {
+        "child": (child[0], child[1], child[2]),
+        "parents": [tuple(int(v) for v in a), tuple(int(v) for v in b)],
+        "rejected": False,
+    }
+
+
+def p69_migrate(
+    islands: list[list[tuple[int, int, int]]],
+    n: int,
+    policy: str = "residue",
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, object]:
+    """One ring-migration round with constant population (sizes preserved).
+
+    Each island sends one emigrant to the next ring neighbor, replacing a
+    seeded-random member there. Residue policy recombines the emigrant with
+    the most complementary receiver member; elite/random copy the emigrant.
+    Every insertion records its parents; out-of-domain children are refused
+    and the receiver slot keeps its old member.
+    """
+    import random as _random
+
+    if policy not in P69_MIGRATION_POLICIES:
+        raise ValueError(f"Unknown P69 migration policy: {policy}")
+    if policy == "none":
+        return {"islands": [list(isl) for isl in islands], "moves": []}
+    rng = _random.Random(int(seed))
+    new_islands = [list(isl) for isl in islands]
+    moves = []
+    for src in range(len(islands)):
+        dst = (src + 1) % len(islands)
+        if not islands[src] or not new_islands[dst]:
+            continue
+        if policy == "elite":
+            emigrant = min(islands[src], key=lambda t: abs(p69_residual(int(n), t)))
+        elif policy == "random":
+            emigrant = rng.choice(islands[src])
+        else:
+            dst_best = min(new_islands[dst], key=lambda t: abs(p69_residual(int(n), t)))
+            sig_best = p69_signature(dst_best)
+            emigrant = max(
+                islands[src],
+                key=lambda t: (p69_signature_distance(sig_best, p69_signature(t)), t),
+            )
+        slot = rng.randrange(len(new_islands[dst]))
+        receiver = new_islands[dst][slot]
+        if policy == "residue":
+            best, best_d = receiver, -1
+            for cand in new_islands[dst]:
+                d = p69_signature_distance(p69_signature(emigrant), p69_signature(cand))
+                if (d, cand) > (best_d, best):
+                    best, best_d = cand, d
+            child = p69_recombine(emigrant, best, seed=int(seed) + src, max_coord=int(max_coord))
+            if child["rejected"]:
+                moves.append(
+                    {
+                        "src": src,
+                        "dst": dst,
+                        "emigrant": emigrant,
+                        "inserted": receiver,
+                        "parents": child["parents"],
+                        "recombined": False,
+                    }
+                )
+                continue
+            new_islands[dst][slot] = child["child"]
+            moves.append(
+                {
+                    "src": src,
+                    "dst": dst,
+                    "emigrant": emigrant,
+                    "inserted": child["child"],
+                    "parents": child["parents"],
+                    "recombined": True,
+                }
+            )
+        else:
+            new_islands[dst][slot] = emigrant
+            moves.append(
+                {
+                    "src": src,
+                    "dst": dst,
+                    "emigrant": emigrant,
+                    "inserted": emigrant,
+                    "parents": [emigrant],
+                    "recombined": False,
+                }
+            )
+    return {"islands": new_islands, "moves": moves}

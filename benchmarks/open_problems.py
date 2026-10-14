@@ -93,6 +93,148 @@ def check_erdos_straus(n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[
     return is_valid, residual, details
 
 
+def check_erdos_straus_algebraic_congruence(
+    n: int, modulus: int = 840, fallback_sieve: bool = False
+) -> tuple[bool, dict[str, Any]]:
+    """Solve and verify Erdős-Straus instance n algebraically using modular congruence classes.
+
+    Returns (is_valid, details) where details includes residue, identity evaluation,
+    and exact integer Diophantine verification. If fallback_sieve is True, applies
+    rational divisor sieve on resistant quadratic residues.
+    """
+    from evobyte.algebraic import (
+        classify_congruence_residue,
+        get_algebraic_identity_for_residue,
+        solve_erdos_straus_sieve,
+    )
+
+    if n < 2:
+        return False, {"error": "n must be >= 2", "n": n}
+
+    r = n % modulus
+    k = n // modulus
+    classification = classify_congruence_residue(modulus, r)
+
+    if classification["is_resistant"]:
+        if fallback_sieve:
+            sol, sieve_details = solve_erdos_straus_sieve(n)
+            if sol is not None:
+                x, y, z = sol
+                is_valid, _residual, check_details = check_erdos_straus(n, x, y, z)
+                return is_valid, {
+                    "n": n,
+                    "modulus": modulus,
+                    "residue": r,
+                    "triple": (x, y, z),
+                    "classification": classification,
+                    "check_details": check_details,
+                    "sieve_details": sieve_details,
+                    "verified_exact": is_valid,
+                    "status": "solved_by_rational_divisor_sieve",
+                }
+        return False, {
+            "n": n,
+            "modulus": modulus,
+            "residue": r,
+            "classification": classification,
+            "status": "resistant_quadratic_residue_unsolved_by_linear_identity",
+        }
+
+    ident = get_algebraic_identity_for_residue(modulus, r)
+    if ident is None:
+        if fallback_sieve:
+            sol, sieve_details = solve_erdos_straus_sieve(n)
+            if sol is not None:
+                x, y, z = sol
+                is_valid, _residual, check_details = check_erdos_straus(n, x, y, z)
+                return is_valid, {
+                    "n": n,
+                    "modulus": modulus,
+                    "residue": r,
+                    "triple": (x, y, z),
+                    "classification": classification,
+                    "check_details": check_details,
+                    "sieve_details": sieve_details,
+                    "verified_exact": is_valid,
+                    "status": "solved_by_rational_divisor_sieve",
+                }
+        return False, {
+            "n": n,
+            "modulus": modulus,
+            "residue": r,
+            "error": "No identity available",
+        }
+
+    k_eval = (k - 1) if (r == 0 and k > 0) else k
+    try:
+        x, y, z = ident.evaluate(k_eval)
+    except (ValueError, TypeError, ZeroDivisionError) as e:
+        return False, {"n": n, "error": f"Evaluation failed: {e}"}
+
+    is_valid, _residual, check_details = check_erdos_straus(n, x, y, z)
+    return is_valid, {
+        "n": n,
+        "modulus": modulus,
+        "residue": r,
+        "k_eval": k_eval,
+        "triple": (x, y, z),
+        "classification": classification,
+        "check_details": check_details,
+        "verified_exact": is_valid,
+    }
+
+
+def run_sieve_erdos_straus_campaign(
+    n_instances: list[int], max_coord: int = 10**9
+) -> dict[str, Any]:
+    """Execute Erdős–Straus campaign using rational divisor sieve and dual exact certification."""
+    from evobyte.algebraic import benchmark_sieve_vs_baseline
+
+    return benchmark_sieve_vs_baseline(n_instances, max_coord=max_coord)
+
+
+def check_schinzel(a: int, n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[str, Any]]:
+    """Exact integer checker for a/n = 1/x + 1/y + 1/z (Schinzel family)."""
+    from evobyte.algebraic import check_schinzel as _check
+
+    return _check(a, n, x, y, z)
+
+
+def check_sierpinski(n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[str, Any]]:
+    """Exact integer checker for Sierpiński 5/n = 1/x + 1/y + 1/z."""
+    return check_schinzel(5, n, x, y, z)
+
+
+def run_sierpinski_campaign(
+    n_instances: list[int], a: int = 5, max_coord: int = 10**12
+) -> dict[str, Any]:
+    """Solve a/n with the generalized divisor sieve and certify with two independent checkers."""
+    from evobyte.algebraic import check_schinzel_fractions, schinzel_divisor_sieve
+
+    results: list[dict[str, Any]] = []
+    for n in n_instances:
+        sol, det = schinzel_divisor_sieve(a, n, max_coord=max_coord)
+        solved = False
+        if sol is not None:
+            ok1, _, _ = check_schinzel(a, n, *sol)
+            ok2, _, _ = check_schinzel_fractions(a, n, *sol)
+            solved = ok1 and ok2
+        results.append(
+            {
+                "n": n,
+                "solution": sol,
+                "solved": solved,
+                "candidates": det.get("candidates_evaluated", 0),
+            }
+        )
+    return {
+        "a": a,
+        "instances_count": len(n_instances),
+        "all_solved": all(r["solved"] for r in results),
+        "results": results,
+    }
+
+
 def check_taxicab(sum_val: int, a: int, b: int, c: int, d: int) -> tuple[bool, int, dict[str, Any]]:
     """Exact checker for Taxicab identity: a^3 + b^3 == c^3 + d^3 == sum_val."""
     if min(a, b, c, d) <= 0:
@@ -1870,6 +2012,2794 @@ def run_p57_bounded_campaign(
         "time_capped": capped,
         "total_evaluated": total_evaluated,
         "elapsed_total_sec": elapsed,
+    }
+
+
+# ==============================================================================
+# P59 entrega 2 — baselines comparáveis e contabilização integral (Erdős–Straus)
+# ==============================================================================
+#
+# Todos os braços recebem as mesmas entradas públicas (n, limites, espaço de
+# candidatos, warm-start). Custos de treino, geração, inferência, filtros,
+# verificadores e tracking são todos contabilizados; o total é calculado,
+# nunca declarado pelo braço. Famílias sem baseline pareado têm comparação
+# explicitamente restrita. Fixtures development, sem finais P38/P56/P71.
+
+P59_ES_ARMS = ("cpu_enumeration", "classical_construction")
+
+P59_COST_PARTS = ("train", "generation", "inference", "filters", "checkers", "tracking")
+
+P59_COMPARISON_SCOPE: dict[str, dict[str, Any]] = {
+    "erdos-straus": {
+        "comparable": True,
+        "arms": list(P59_ES_ARMS),
+        "note": "matched trial with identical public inputs and full cost ledger",
+    },
+    "taxicab": {"comparable": False, "reason": "no matched baseline implemented"},
+    "diophantine-quintuple": {
+        "comparable": False,
+        "reason": "no matched baseline implemented",
+    },
+}
+
+
+def p59_comparison_scope(family: str) -> dict[str, Any]:
+    """Allowed comparison scope for a family; unknown families stay restricted."""
+    scope = P59_COMPARISON_SCOPE.get(str(family))
+    if scope is None:
+        return {"comparable": False, "reason": f"unknown family: {family}"}
+    return {"family": str(family), **scope}
+
+
+def p59_cost_ledger(**parts: float) -> dict[str, Any]:
+    """Full cost ledger: every part billed, total computed, nothing subtracted."""
+    keys = set(parts)
+    if keys != set(P59_COST_PARTS):
+        raise ValueError(f"P59 ledger needs exactly {list(P59_COST_PARTS)}, got {sorted(keys)}")
+    for key, val in parts.items():
+        if not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+            raise ValueError(f"P59 ledger part {key} must be a finite number")
+        if float(val) < 0.0:
+            raise ValueError(f"P59 ledger part {key} must not be negative")
+    total = sum(float(parts[k]) for k in P59_COST_PARTS)
+    return {"parts": {k: float(parts[k]) for k in P59_COST_PARTS}, "total_sec": total}
+
+
+def p59_es_public_inputs(
+    n: int,
+    max_coord: int = 10**9,
+    x_steps: int = 50,
+    y_cap: int = 200_000,
+    warm_start: tuple[tuple[int, int, int], ...] = (),
+) -> dict[str, Any]:
+    """Frozen public input bundle for one Erdős–Straus instance (all arms alike)."""
+    if int(n) < 2 or int(max_coord) <= 0 or int(x_steps) <= 0 or int(y_cap) <= 0:
+        raise ValueError("P59 ES inputs need n>=2 with positive bounds")
+    warm = [tuple(int(v) for v in t) for t in warm_start]
+    if any(len(t) != 3 for t in warm):
+        raise ValueError("P59 warm-start entries must be (x, y, z) triples")
+    return {
+        "n": int(n),
+        "max_coord": int(max_coord),
+        "x_steps": int(x_steps),
+        "y_cap": int(y_cap),
+        "warm_start": warm,
+    }
+
+
+def _p59_inputs_hash(inputs: dict[str, Any]) -> str:
+    canon = {
+        "n": inputs["n"],
+        "max_coord": inputs["max_coord"],
+        "x_steps": inputs["x_steps"],
+        "y_cap": inputs["y_cap"],
+        "warm_start": [list(t) for t in inputs["warm_start"]],
+    }
+    return hashlib.sha256(json.dumps(canon, sort_keys=True).encode()).hexdigest()
+
+
+def run_p59_matched_es_trial(arm: str, inputs: dict[str, Any]) -> dict[str, Any]:
+    """One deterministic Erdős–Straus arm trial under identical public inputs.
+
+    Arms: ``cpu_enumeration`` (bounded (x, y) scan, dual exact checkers) and
+    ``classical_construction`` (verified parametric families only). A triple
+    already in warm-start reports origin ``warm-start``: reusing a handed
+    answer is never discovery. No wall-clock dependence: fixed step caps.
+    """
+    if arm not in P59_ES_ARMS:
+        raise ValueError(f"Unknown P59 ES arm: {arm}")
+    n = int(inputs["n"])
+    max_coord = int(inputs["max_coord"])
+    warm = {tuple(t) for t in inputs["warm_start"]}
+    t_gen0 = time.perf_counter()
+    evaluated = 0
+    found: tuple[int, int, int] | None = None
+    origin = "none"
+    if arm == "classical_construction":
+        for fam in p57_classical_constructions(n):
+            if not fam["verified"]:
+                continue
+            triple = tuple(int(v) for v in fam["triple"])
+            if max(triple) > max_coord:
+                continue
+            found = triple
+            origin = "warm-start" if triple in warm else f"classical-{fam['family']}"
+            evaluated = 1
+            break
+    else:
+        x0 = n // 4 + 1
+        for x_val in range(x0, x0 + int(inputs["x_steps"])):
+            r = 4 * x_val - n
+            if r <= 0:
+                continue
+            y_min = (n * x_val) // r + 1
+            for y_val in range(y_min, y_min + int(inputs["y_cap"])):
+                denom = 4 * x_val * y_val - n * (x_val + y_val)
+                if denom > 0 and (n * x_val * y_val) % denom == 0:
+                    z_val = (n * x_val * y_val) // denom
+                    evaluated += 1
+                    ok1, _, _ = check_erdos_straus(n, x_val, y_val, z_val)
+                    ok2, _, _ = check_erdos_straus_fractions(n, x_val, y_val, z_val)
+                    if ok1 and ok2 and max(x_val, y_val, z_val) <= max_coord:
+                        found = (x_val, y_val, z_val)
+                        origin = "warm-start" if found in warm else "enumerated"
+                        break
+                else:
+                    evaluated += 1
+            if found is not None:
+                break
+    t_gen1 = time.perf_counter()
+    t_chk0 = time.perf_counter()
+    checkers_ok = False
+    if found is not None:
+        c1, _, _ = check_erdos_straus(n, *found)
+        c2, _, _ = check_erdos_straus_fractions(n, *found)
+        checkers_ok = bool(c1 and c2)
+    t_chk1 = time.perf_counter()
+    ledger = p59_cost_ledger(
+        train=0.0,
+        generation=t_gen1 - t_gen0,
+        inference=0.0,
+        filters=0.0,
+        checkers=t_chk1 - t_chk0,
+        tracking=0.0,
+    )
+    return {
+        "arm": arm,
+        "n": n,
+        "inputs_hash": _p59_inputs_hash(inputs),
+        "found": found is not None and checkers_ok,
+        "triple": list(found) if found is not None else None,
+        "origin": origin if found is not None else "none",
+        "status": "certified" if (found is not None and checkers_ok) else "budget-exhausted",
+        "evaluated": evaluated,
+        "ledger": ledger,
+    }
+
+
+# ==============================================================================
+# P61 entrega 1 — H02 sombras aritméticas (filtros modulares baratos)
+# ==============================================================================
+#
+# Condição necessária 4xyz = n(xy+xz+yz) módulo p em primos pequenos
+# congelados, reduzindo após cada multiplicação (sem overflow). Sem divisão
+# módulo p, sem reconstrução CRT: resíduo incompatível rejeita; resto segue
+# ao checker exato. Resíduos compatíveis nunca são certificado.
+
+P61_SHADOW_PRIMES = (3, 5, 7, 11, 13)
+
+
+def p61_modular_shadow(
+    n: int, x: int, y: int, z: int, primes: tuple[int, ...] = P61_SHADOW_PRIMES
+) -> dict[str, Any]:
+    """NumPy-free reference: necessary residue condition per frozen prime."""
+    per_prime: dict[int, bool] = {}
+    for p in primes:
+        lhs = (4 % p) * (int(x) % p) % p * (int(y) % p) % p * (int(z) % p) % p
+        xy = (int(x) % p) * (int(y) % p) % p
+        xz = (int(x) % p) * (int(z) % p) % p
+        yz = (int(y) % p) * (int(z) % p) % p
+        rhs = (int(n) % p) * ((xy + xz + yz) % p) % p
+        per_prime[int(p)] = bool(lhs == rhs)
+    rejected = [p for p, ok in per_prime.items() if not ok]
+    return {"keep": not rejected, "per_prime": per_prime, "rejected_by": rejected}
+
+
+def p61_modular_shadow_batch_torch(
+    n: int,
+    xs: torch.Tensor,
+    ys: torch.Tensor,
+    zs: torch.Tensor,
+    primes: tuple[int, ...] = P61_SHADOW_PRIMES,
+    device: torch.device | None = None,
+) -> torch.Tensor:
+    """Batched shadow filter reusing the campaign torch pattern (int64).
+
+    Inputs are reduced modulo p first (identical residues, overflow-safe:
+    every intermediate stays below max(p)^3), then the same necessary
+    condition as the reference. Returns a boolean keep mask; False entries
+    are impossible solutions, True entries stay inconclusive for the checker.
+    """
+    dev = device if device is not None else torch.device("cpu")
+    xv = xs.to(dtype=torch.int64, device=dev).ravel()
+    yv = ys.to(dtype=torch.int64, device=dev).ravel()
+    zv = zs.to(dtype=torch.int64, device=dev).ravel()
+    keep = torch.ones(xv.numel(), dtype=torch.bool, device=dev)
+    for p in primes:
+        pp = int(p)
+        lhs = (4 % pp) * (xv % pp) % pp * (yv % pp) % pp * (zv % pp) % pp
+        rhs = (
+            (int(n) % pp)
+            * (((xv % pp) * (yv % pp) + (xv % pp) * (zv % pp) + (yv % pp) * (zv % pp)) % pp)
+            % pp
+        )
+        keep &= lhs == rhs
+    return keep
+
+
+def run_p61_paired_filter_trial(
+    n: int,
+    triples: list[tuple[int, int, int]],
+    device: torch.device | None = None,
+) -> dict[str, Any]:
+    """Paired with/without-filter comparison on exactly the same candidates.
+
+    Unfiltered arm runs the dual exact checkers on every candidate; filtered
+    arm runs the shadow mask first (with CPU/GPU transfers billed) and the
+    checkers only on kept entries. Certificates must be identical in both
+    arms and no exact solution may be rejected (else ``false_rejections`` > 0
+    and the trial is unusable). Reports paired total costs; cheaper-or-not is
+    a measurement outcome, never assumed here.
+    """
+    dev = device if device is not None else torch.device("cpu")
+    xs = torch.tensor([t[0] for t in triples], dtype=torch.int64)
+    ys = torch.tensor([t[1] for t in triples], dtype=torch.int64)
+    zs = torch.tensor([t[2] for t in triples], dtype=torch.int64)
+
+    def _check_all(idxs: list[int]) -> tuple[set[tuple[int, int, int]], float]:
+        t0 = time.perf_counter()
+        certs: set[tuple[int, int, int]] = set()
+        for i in idxs:
+            x, y, z = triples[i]
+            ok1, _, _ = check_erdos_straus(n, x, y, z)
+            ok2, _, _ = check_erdos_straus_fractions(n, x, y, z)
+            if ok1 and ok2:
+                certs.add((x, y, z))
+        return certs, time.perf_counter() - t0
+
+    t_all0 = time.perf_counter()
+    certs_all, check_all_sec = _check_all(list(range(len(triples))))
+    total_without_sec = time.perf_counter() - t_all0
+
+    t_tx0 = time.perf_counter()
+    mask_cpu = p61_modular_shadow_batch_torch(int(n), xs, ys, zs, device=torch.device("cpu"))
+    devices_compared = ["cpu"]
+    agreement = True
+    mask_main = mask_cpu
+    if torch.cuda.is_available():
+        try:
+            mask_cuda = p61_modular_shadow_batch_torch(
+                int(n), xs, ys, zs, device=torch.device("cuda")
+            ).cpu()
+            devices_compared.append("cuda")
+            agreement = bool((mask_cuda == mask_cpu).all().item())
+            if dev.type == "cuda":
+                mask_main = mask_cuda
+        except RuntimeError:
+            pass
+    transfer_sec = time.perf_counter() - t_tx0
+    kept = [i for i, k in enumerate(mask_main.tolist()) if k]
+    t_f0 = time.perf_counter()
+    mask_ref = [p61_modular_shadow(int(n), *triples[i])["keep"] for i in range(len(triples))]
+    filter_sec = time.perf_counter() - t_f0
+    if [bool(v) for v in mask_ref] != [bool(v) for v in mask_main.tolist()]:
+        agreement = False
+    certs_kept, check_kept_sec = _check_all(kept)
+    total_with_sec = transfer_sec + filter_sec + check_kept_sec
+    false_rejections = len(certs_all - certs_kept)
+    return {
+        "n": int(n),
+        "candidates": len(triples),
+        "kept": len(kept),
+        "eliminated": len(triples) - len(kept),
+        "certificates_unfiltered": sorted(certs_all),
+        "certificates_filtered": sorted(certs_kept),
+        "certificates_equal": certs_all == certs_kept,
+        "false_rejections": false_rejections,
+        "devices_compared": devices_compared,
+        "device_agreement": bool(agreement),
+        "costs": {
+            "check_all_sec": check_all_sec,
+            "total_without_sec": total_without_sec,
+            "transfer_sec": transfer_sec,
+            "filter_sec": filter_sec,
+            "check_kept_sec": check_kept_sec,
+            "total_with_sec": total_with_sec,
+        },
+    }
+
+
+# ==============================================================================
+# P62 entrega 1 — H01 primitivas de reparo estruturado de erros
+# ==============================================================================
+#
+# Perturbações limitadas de certificados development com resíduo inteiro
+# exato, sinais e divisibilidade. Vizinhança congelada de edições inteiras
+# (uma coordenada, passos ±1..±3, domínio >= 1). Baselines clássico
+# (menor |resíduo|) e aleatório sob a mesma vizinhança; políticas recebem
+# só (n, x, y, z) — nunca a solução privada. Aceitação só pelos checkers.
+
+P62_NEIGHBORHOOD_STEPS = (-3, -2, -1, 1, 2, 3)
+
+P62_DIVISIBILITY_PRIMES = (2, 3, 5, 7, 11, 13)
+
+
+def p62_exact_residual(n: int, x: int, y: int, z: int) -> int:
+    """Exact integer residual 4xyz - n(xy+xz+yz); zero iff exact identity."""
+    return 4 * int(x) * int(y) * int(z) - int(n) * (
+        int(x) * int(y) + int(x) * int(z) + int(y) * int(z)
+    )
+
+
+def p62_exact_features(n: int, x: int, y: int, z: int) -> dict[str, Any]:
+    """Exact perturbation features: residual, sign, small-prime divisibility."""
+    r = p62_exact_residual(n, x, y, z)
+    return {
+        "residual": r,
+        "sign": (1 if r > 0 else (-1 if r < 0 else 0)),
+        "divisible_by": [p for p in P62_DIVISIBILITY_PRIMES if r % p == 0],
+    }
+
+
+def p62_neighbors(x: int, y: int, z: int) -> list[tuple[int, int, int]]:
+    """Frozen bounded neighborhood: one coordinate, steps ±1..±3, domain >= 1."""
+    out = []
+    for coord in range(3):
+        for step in P62_NEIGHBORHOOD_STEPS:
+            t = [int(x), int(y), int(z)]
+            t[coord] += step
+            if min(t) >= 1:
+                out.append((t[0], t[1], t[2]))
+    return out
+
+
+def p62_classical_repair_step(n: int, x: int, y: int, z: int) -> tuple[int, int, int] | None:
+    """Classical baseline: valid neighbor with smallest |residual| (ties broken
+    lexicographically for determinism)."""
+    best: tuple[int, tuple[int, int, int]] | None = None
+    for nb in p62_neighbors(x, y, z):
+        r = abs(p62_exact_residual(n, *nb))
+        if best is None or (r, nb) < (best[0], best[1]):
+            best = (r, nb)
+    return None if best is None else best[1]
+
+
+def p62_random_repair_step(
+    n: int, x: int, y: int, z: int, seed: int
+) -> tuple[int, int, int] | None:
+    """Random baseline: seeded uniform choice among valid neighbors."""
+    import random as _random
+
+    _ = n
+    opts = p62_neighbors(x, y, z)
+    if not opts:
+        return None
+    return _random.Random(int(seed)).choice(opts)
+
+
+def p62_split_by_origin(
+    records: list[dict[str, Any]], key: str = "n"
+) -> dict[str, list[dict[str, Any]]]:
+    """Deterministic split with disjoint origins: sorted unique key values go
+    alternately to train/dev, so no origin ever appears on both sides."""
+    origins = sorted({r[key] for r in records})
+    train_origins = set(origins[::2])
+    return {
+        "train": [r for r in records if r[key] in train_origins],
+        "dev": [r for r in records if r[key] not in train_origins],
+    }
+
+
+def p62_repair_cycles(
+    n: int,
+    start: tuple[int, int, int],
+    policy: str = "classical",
+    max_cycles: int = 12,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Bounded repair loop from a perturbed triple until the fixed checkers
+    certify, a state repeats (stalled) or the cycle cap hits (exhausted)."""
+    if policy not in ("classical", "random"):
+        raise ValueError(f"Unknown P62 repair policy: {policy}")
+    x, y, z = (int(v) for v in start)
+    residuals: list[int] = []
+    visited = {(x, y, z)}
+    cycles = 0
+    while cycles < int(max_cycles):
+        ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+        if ok1 and ok2:
+            return {
+                "certified": True,
+                "triple": (x, y, z),
+                "cycles_used": cycles,
+                "residuals": residuals,
+                "status": "certified",
+            }
+        if policy == "classical":
+            nxt = p62_classical_repair_step(int(n), x, y, z)
+        else:
+            nxt = p62_random_repair_step(int(n), x, y, z, int(seed) + cycles)
+        if nxt is None or nxt in visited:
+            return {
+                "certified": False,
+                "triple": (x, y, z),
+                "cycles_used": cycles,
+                "residuals": residuals,
+                "status": "stalled",
+            }
+        visited.add(nxt)
+        x, y, z = nxt
+        residuals.append(p62_exact_residual(int(n), x, y, z))
+        cycles += 1
+    ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+    certified = bool(ok1 and ok2)
+    return {
+        "certified": certified,
+        "triple": (x, y, z),
+        "cycles_used": cycles,
+        "residuals": residuals,
+        "status": "certified" if certified else "exhausted",
+    }
+
+
+# ==============================================================================
+# P62 entrega 2 — H01 reparador pequeno treinado e comparação com custos
+# ==============================================================================
+#
+# Um único reparador (MLP ~150 parâmetros, clonagem comportamental das
+# trajetórias clássicas em origens de treino) escolhe entre os 18 vizinhos
+# a partir de descritores computáveis sem a solução: |R| e Δ|R| do vizinho,
+# coordenada e passo. Baselines aleatório e clássico sob a mesma vizinhança;
+# comparação com entradas iguais, custo de coleta/treino faturado ao braço
+# aprendido. Splits por origem: nenhuma origem treina e avalia.
+
+P62_REPAIR_FEATURE_SCALE = 10000.0
+
+
+class P62RepairScorer(torch.nn.Module):
+    """Tiny shared per-neighbor scorer (~150 params, CPU)."""
+
+    def __init__(self, hidden: int = 16) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(6, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p62_neighbor_features(n: int, x: int, y: int, z: int) -> torch.Tensor:
+    """Solution-free neighbor descriptors: scaled |R|, Δ|R|, coord, step."""
+    cur = abs(p62_exact_residual(n, x, y, z))
+    rows = []
+    for idx, nb in enumerate(p62_neighbors(x, y, z)):
+        r_nb = abs(p62_exact_residual(n, *nb))
+        onehot = [0.0, 0.0, 0.0]
+        onehot[idx // 6] = 1.0
+        step = P62_NEIGHBORHOOD_STEPS[idx % 6] / 3.0
+        rows.append(
+            [
+                r_nb / P62_REPAIR_FEATURE_SCALE,
+                (r_nb - cur) / P62_REPAIR_FEATURE_SCALE,
+                *onehot,
+                step,
+            ]
+        )
+    return torch.tensor(rows, dtype=torch.float32)
+
+
+def p62_collect_cloning_samples(
+    n_values: list[int],
+    starts_per_solution: int = 6,
+    seed: int = 0,
+    max_cycles: int = 12,
+) -> tuple[list[dict[str, Any]], float]:
+    """Classical repair trajectories on train origins as imitation samples.
+
+    Each step records neighbor descriptors plus the classical choice index
+    (exact label from the fixed checkers' residual, never a private answer:
+    the label is argmin |R| over the same public neighborhood).
+    """
+    import random as _random
+
+    t0 = time.perf_counter()
+    rng = _random.Random(int(seed))
+    samples: list[dict[str, Any]] = []
+    for n in n_values:
+        sols = [
+            tuple(int(v) for v in fam["triple"])
+            for fam in p57_classical_constructions(int(n))
+            if fam["verified"]
+        ]
+        for sol in sols:
+            cand_starts = {sol}
+            while len(cand_starts) < starts_per_solution + 1:
+                cand_starts.add(
+                    (
+                        max(1, sol[0] + rng.randint(-4, 4)),
+                        max(1, sol[1] + rng.randint(-4, 4)),
+                        max(1, sol[2] + rng.randint(-4, 4)),
+                    )
+                )
+            for start in sorted(cand_starts - {sol}):
+                x, y, z = start
+                visited = {(x, y, z)}
+                for _ in range(int(max_cycles)):
+                    ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+                    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+                    if ok1 and ok2:
+                        break
+                    nbs = p62_neighbors(x, y, z)
+                    choice = p62_classical_repair_step(int(n), x, y, z)
+                    if choice is None or choice in visited:
+                        break
+                    samples.append(
+                        {
+                            "n": int(n),
+                            "state": (x, y, z),
+                            "choice": nbs.index(choice),
+                        }
+                    )
+                    visited.add(choice)
+                    x, y, z = choice
+    return samples, time.perf_counter() - t0
+
+
+def p62_train_repairer(
+    samples: list[dict[str, Any]], seed: int = 0, epochs: int = 60, lr: float = 0.05
+) -> dict[str, Any]:
+    """Train the single small repairer (behavior cloning, full-batch CPU)."""
+    if not samples:
+        raise ValueError("P62 training needs non-empty samples")
+    torch.manual_seed(int(seed))
+    model = P62RepairScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.CrossEntropyLoss()
+    feats = [p62_neighbor_features(s["n"], *s["state"]) for s in samples]
+    labels = [int(s["choice"]) for s in samples]
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        total = sum(
+            loss_fn(model(f).unsqueeze(0), torch.tensor([y])) for f, y in zip(feats, labels)
+        ) / len(feats)
+        total.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        hits = sum(int(model(f).argmax().item()) == y for f, y in zip(feats, labels))
+        train_acc = hits / len(feats)
+    n_params = sum(p.numel() for p in model.parameters())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(n_params),
+        "n_samples": len(samples),
+        "train_acc": train_acc,
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p62_learned_repair_step(
+    weights: dict[str, torch.Tensor], n: int, x: int, y: int, z: int
+) -> tuple[int, int, int] | None:
+    """Learned policy: argmax shared-scorer choice (deterministic, solution-free)."""
+    nbs = p62_neighbors(x, y, z)
+    if not nbs:
+        return None
+    model = P62RepairScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    with torch.no_grad():
+        scores = model(p62_neighbor_features(int(n), x, y, z))
+    return nbs[int(scores.argmax().item())]
+
+
+def p62_repair_cycles_learned(
+    n: int,
+    start: tuple[int, int, int],
+    weights: dict[str, torch.Tensor],
+    max_cycles: int = 12,
+) -> dict[str, Any]:
+    """Bounded repair loop under the learned policy (same gates as classical)."""
+    x, y, z = (int(v) for v in start)
+    residuals: list[int] = []
+    visited = {(x, y, z)}
+    cycles = 0
+    while cycles < int(max_cycles):
+        ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+        if ok1 and ok2:
+            return {
+                "certified": True,
+                "triple": (x, y, z),
+                "cycles_used": cycles,
+                "residuals": residuals,
+                "status": "certified",
+            }
+        nxt = p62_learned_repair_step(weights, int(n), x, y, z)
+        if nxt is None or nxt in visited:
+            return {
+                "certified": False,
+                "triple": (x, y, z),
+                "cycles_used": cycles,
+                "residuals": residuals,
+                "status": "stalled",
+            }
+        visited.add(nxt)
+        x, y, z = nxt
+        residuals.append(p62_exact_residual(int(n), x, y, z))
+        cycles += 1
+    ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+    certified = bool(ok1 and ok2)
+    return {
+        "certified": certified,
+        "triple": (x, y, z),
+        "cycles_used": cycles,
+        "residuals": residuals,
+        "status": "certified" if certified else "exhausted",
+    }
+
+
+def p62_compare_repair_policies(
+    weights: dict[str, torch.Tensor],
+    train_sec: float,
+    starts: list[tuple[int, tuple[int, int, int]]],
+    max_cycles: int = 12,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Equal-input comparison: classical vs random vs learned on same starts.
+
+    Collection/training cost is billed to the learned arm only; repair-loop
+    cost is measured per policy. No promotion here: numbers are reported.
+    """
+    out: dict[str, Any] = {}
+    for policy in ("classical", "random", "learned"):
+        t0 = time.perf_counter()
+        certified = 0
+        cycles_total = 0
+        for n, start in starts:
+            if policy == "learned":
+                rep = p62_repair_cycles_learned(n, start, weights, max_cycles)
+            else:
+                rep = p62_repair_cycles(n, start, policy=policy, max_cycles=max_cycles, seed=seed)
+            certified += 1 if rep["certified"] else 0
+            cycles_total += rep["cycles_used"]
+        loop_sec = time.perf_counter() - t0
+        billed = loop_sec + (float(train_sec) if policy == "learned" else 0.0)
+        out[policy] = {
+            "starts": len(starts),
+            "certified": certified,
+            "cycles_total": cycles_total,
+            "loop_sec": loop_sec,
+            "train_sec_billed": float(train_sec) if policy == "learned" else 0.0,
+            "total_sec": billed,
+        }
+    return out
+
+
+# ==============================================================================
+# P63 entrega 1 — H08 códigos estruturados de rejeição do verificador
+# ==============================================================================
+#
+# Códigos fixos (IDs inteiros/tensores no ciclo, sem texto ou parsing):
+# denominador zero, limite violado, resíduo não nulo, domínio inválido e
+# prova incompleta. Emissão pura sobre os checkers existentes — enunciado,
+# axiomas e regra de aceitação inalterados. INCOMPLETE_PROOF reserva
+# divergência entre checkers (ex.: fronteira formal); em triplas inteiras
+# os dois checkers coincidem, então ele segue não observado aqui.
+
+P63_REJECTION_CODES = {
+    "ACCEPT": 0,
+    "ZERO_DENOMINATOR": 1,
+    "BOUND_VIOLATED": 2,
+    "NONZERO_RESIDUAL": 3,
+    "INVALID_DOMAIN": 4,
+    "INCOMPLETE_PROOF": 5,
+}
+
+
+def p63_rejection_code(n: int, x: int, y: int, z: int, max_coord: int = 10**9) -> int:
+    """Structured rejection ID for one candidate (deterministic, exact ints)."""
+    C = P63_REJECTION_CODES
+    if (
+        not isinstance(x, int)
+        or not isinstance(y, int)
+        or not isinstance(z, int)
+        or isinstance(x, bool)
+        or isinstance(y, bool)
+        or isinstance(z, bool)
+        or x < 1
+        or y < 1
+        or z < 1
+    ):
+        return C["INVALID_DOMAIN"]
+    if max(x, y, z) > int(max_coord):
+        return C["BOUND_VIOLATED"]
+    if 4 * x * y - int(n) * (x + y) == 0:
+        return C["ZERO_DENOMINATOR"]
+    ok1, residual, _ = check_erdos_straus(int(n), x, y, z)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+    if ok1 and ok2:
+        return C["ACCEPT"]
+    if residual != 0:
+        return C["NONZERO_RESIDUAL"]
+    return C["INCOMPLETE_PROOF"]
+
+
+def p63_code_tensor(codes: list[int], device: torch.device | None = None) -> torch.Tensor:
+    """One-hot float tensor over the frozen codebook (loop-safe, no text)."""
+    dev = device if device is not None else torch.device("cpu")
+    width = len(P63_REJECTION_CODES)
+    out = torch.zeros((len(codes), width), dtype=torch.float32, device=dev)
+    for i, code in enumerate(codes):
+        if 0 <= int(code) < width:
+            out[i, int(code)] = 1.0
+    return out
+
+
+def p63_shuffle_codes(seed: int) -> dict[int, int]:
+    """Deterministic codebook permutation for the shuffled ablation arm."""
+    import random as _random
+
+    ids = list(range(len(P63_REJECTION_CODES)))
+    perm = ids[:]
+    _random.Random(int(seed)).shuffle(perm)
+    return dict(zip(ids, perm))
+
+
+def p63_scalar_score(n: int, x: int, y: int, z: int, max_coord: int = 10**9) -> float:
+    """Single-scalar baseline feedback: 1.0 iff exact, decaying with |R|."""
+    if not all(isinstance(v, int) and not isinstance(v, bool) for v in (x, y, z)):
+        return 0.0
+    if min(x, y, z) < 1 or max(x, y, z) > int(max_coord):
+        return 0.0
+    return 1.0 / (1.0 + abs(p62_exact_residual(int(n), x, y, z)))
+
+
+# ==============================================================================
+# P63 entrega 2 — H08 comparação real × embaralhado × escalar com custos
+# ==============================================================================
+#
+# Mesmo loop de reparo e mesmo orçamento para os três braços; só o feedback
+# muda. Real usa o código verdadeiro, embaralhado passa pela permutação
+# congelada (ablação: mesma distribuição, estrutura destruída) e escalar usa
+# só 1/(1+|R|). Toda consulta ao verificador é contada e há teto registrado;
+# estourar o teto encerra como query-capped. Pesos de prioridade congelados
+# e arbitrários (não ajustados): só o contraste entre braços importa.
+
+P63_CODE_PRIORITY = (0, 3, 4, 2, 5, 1)
+
+P63_FEEDBACK_ARMS = ("real", "shuffled", "scalar")
+
+
+def p63_neighbor_key(
+    arm: str, code: int, residual_abs: int, coords: tuple[int, int, int], perm: dict[int, int]
+) -> tuple[int, int, tuple[int, int, int]]:
+    """Frozen ranking key per arm (ties broken by |R| then coordinates)."""
+    if arm == "real":
+        shown = int(code)
+    elif arm == "shuffled":
+        shown = int(perm.get(int(code), int(code)))
+    elif arm == "scalar":
+        shown = 0 if int(residual_abs) == 0 else 2
+    else:
+        raise ValueError(f"Unknown P63 feedback arm: {arm}")
+    return (P63_CODE_PRIORITY[shown], int(residual_abs), coords)
+
+
+def p63_compare_feedback_arms(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    max_cycles: int = 12,
+    query_limit: int = 2000,
+    shuffle_seed: int = 7,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Equal-budget repair comparison across the three feedback arms."""
+    perm = p63_shuffle_codes(int(shuffle_seed))
+    out: dict[str, Any] = {}
+    for arm in P63_FEEDBACK_ARMS:
+        t0 = time.perf_counter()
+        certified = 0
+        cycles_total = 0
+        queries_total = 0
+        details = []
+        for start in starts:
+            x, y, z = (int(v) for v in start)
+            visited = {(x, y, z)}
+            traj: list[int] = []
+            cycles = 0
+            status = "exhausted"
+            while cycles < int(max_cycles):
+                queries_total += 1
+                ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+                ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+                if ok1 and ok2:
+                    status = "certified"
+                    certified += 1
+                    break
+                if queries_total >= int(query_limit):
+                    status = "query-capped"
+                    break
+                ranked = []
+                for nb in p62_neighbors(x, y, z):
+                    if arm == "scalar":
+                        code = P63_REJECTION_CODES["NONZERO_RESIDUAL"]
+                    else:
+                        code = p63_rejection_code(int(n), *nb, max_coord=int(max_coord))
+                        queries_total += 1
+                    r_nb = abs(p62_exact_residual(int(n), *nb))
+                    ranked.append((p63_neighbor_key(arm, code, r_nb, nb, perm), nb))
+                if not ranked:
+                    status = "stalled"
+                    break
+                ranked.sort(key=lambda kv: kv[0])
+                nxt = ranked[0][1]
+                if nxt in visited:
+                    status = "stalled"
+                    break
+                visited.add(nxt)
+                x, y, z = nxt
+                traj.append(p63_rejection_code(int(n), x, y, z, max_coord=int(max_coord)))
+                queries_total += 1
+                cycles += 1
+            cycles_total += cycles
+            details.append(
+                {
+                    "start": list(start),
+                    "status": status,
+                    "cycles": cycles,
+                    "codes": traj,
+                    "triple": [x, y, z],
+                }
+            )
+        out[arm] = {
+            "starts": len(starts),
+            "certified": certified,
+            "cycles_total": cycles_total,
+            "queries_total": queries_total,
+            "loop_sec": time.perf_counter() - t0,
+            "details": details,
+        }
+    return out
+
+
+# ==============================================================================
+# P63 entrega 3 — H08 scorer único treinado em development + interface
+# ==============================================================================
+#
+# Um único scorer ([one-hot(6) do código, escalar]) clonado das escolhas
+# clássicas em origens de treino. Na inferência, os três braços usam OS
+# MESMOS pesos: real (códigos verdadeiros), shuffled (one-hot permutado,
+# mesma distribuição) e scalar (one-hot zerado). Custo de coleta/treino
+# faturado uma vez; loops com mesmo teto de ciclos/queries. Trajetórias de
+# códigos + tripla final persistidas por start para replay.
+
+P63_FEEDBACK_INPUT_DIM = 7
+
+
+class P63FeedbackScorer(torch.nn.Module):
+    """Tiny shared scorer over [code one-hot, scalar] (~160 params, CPU)."""
+
+    def __init__(self, hidden: int = 16) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(P63_FEEDBACK_INPUT_DIM, hidden),
+            torch.nn.Tanh(),
+            torch.nn.Linear(hidden, 1),
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p63_feedback_neighbor_features(
+    n: int, x: int, y: int, z: int, max_coord: int = 10**9
+) -> tuple[torch.Tensor, list[tuple[int, int, int]], list[int]]:
+    """Per-neighbor [code one-hot, scalar] rows plus neighbors and codes."""
+    rows = []
+    nbs = p62_neighbors(x, y, z)
+    codes = [p63_rejection_code(int(n), *nb, max_coord=int(max_coord)) for nb in nbs]
+    for nb, code in zip(nbs, codes):
+        onehot = [0.0] * len(P63_REJECTION_CODES)
+        onehot[int(code)] = 1.0
+        rows.append([*onehot, p63_scalar_score(int(n), *nb, max_coord=int(max_coord))])
+    return torch.tensor(rows, dtype=torch.float32), nbs, codes
+
+
+def p63_train_feedback_scorer(
+    samples: list[dict[str, Any]],
+    seed: int = 0,
+    epochs: int = 40,
+    lr: float = 0.05,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Behavior-clone classical choices from true-code feedback (development)."""
+    if not samples:
+        raise ValueError("P63 training needs non-empty samples")
+    torch.manual_seed(int(seed))
+    model = P63FeedbackScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.CrossEntropyLoss()
+    feats = [
+        p63_feedback_neighbor_features(s["n"], *s["state"], max_coord=int(max_coord))[0]
+        for s in samples
+    ]
+    labels = [int(s["choice"]) for s in samples]
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        total = sum(
+            loss_fn(model(f).unsqueeze(0), torch.tensor([y])) for f, y in zip(feats, labels)
+        ) / len(feats)
+        total.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        hits = sum(int(model(f).argmax().item()) == y for f, y in zip(feats, labels))
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_samples": len(samples),
+        "train_acc": hits / len(feats),
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p63_feedback_repair_cycles(
+    n: int,
+    start: tuple[int, int, int],
+    weights: dict[str, torch.Tensor],
+    arm: str,
+    perm: dict[int, int],
+    max_cycles: int = 12,
+    query_limit: int = 2000,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Bounded repair loop under one feedback arm of the shared scorer."""
+    if arm not in P63_FEEDBACK_ARMS:
+        raise ValueError(f"Unknown P63 feedback arm: {arm}")
+    model = P63FeedbackScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    x, y, z = (int(v) for v in start)
+    visited = {(x, y, z)}
+    codes_traj: list[int] = []
+    queries = 0
+    cycles = 0
+    status = "exhausted"
+    while cycles < int(max_cycles):
+        queries += 1
+        ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+        if ok1 and ok2:
+            status = "certified"
+            break
+        if queries >= int(query_limit):
+            status = "query-capped"
+            break
+        nbs = p62_neighbors(x, y, z)
+        if not nbs:
+            status = "stalled"
+            break
+        rows = []
+        for nb in nbs:
+            if arm == "scalar":
+                onehot = [0.0] * len(P63_REJECTION_CODES)
+            else:
+                code = p63_rejection_code(int(n), *nb, max_coord=int(max_coord))
+                queries += 1
+                if arm == "shuffled":
+                    code = int(perm.get(int(code), int(code)))
+                onehot = [0.0] * len(P63_REJECTION_CODES)
+                onehot[int(code)] = 1.0
+            rows.append([*onehot, p63_scalar_score(int(n), *nb, max_coord=int(max_coord))])
+        with torch.no_grad():
+            nxt = nbs[int(model(torch.tensor(rows, dtype=torch.float32)).argmax().item())]
+        if nxt in visited:
+            status = "stalled"
+            break
+        visited.add(nxt)
+        x, y, z = nxt
+        codes_traj.append(p63_rejection_code(int(n), x, y, z, max_coord=int(max_coord)))
+        queries += 1
+        cycles += 1
+    ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+    if status != "certified":
+        status = "certified" if (ok1 and ok2) else status
+    return {
+        "certified": status == "certified",
+        "triple": [x, y, z],
+        "cycles_used": cycles,
+        "queries": queries,
+        "codes": codes_traj,
+        "status": status,
+    }
+
+
+def p63_compare_learned_feedback(
+    weights: dict[str, torch.Tensor],
+    starts: list[tuple[int, tuple[int, int, int]]],
+    shuffle_seed: int = 7,
+    max_cycles: int = 12,
+    query_limit: int = 2000,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Same weights, three feedbacks: real vs shuffled vs scalar."""
+    perm = p63_shuffle_codes(int(shuffle_seed))
+    out: dict[str, Any] = {}
+    for arm in P63_FEEDBACK_ARMS:
+        t0 = time.perf_counter()
+        reps = [
+            p63_feedback_repair_cycles(
+                n, start, weights, arm, perm, max_cycles, query_limit, max_coord
+            )
+            for n, start in starts
+        ]
+        out[arm] = {
+            "starts": len(starts),
+            "certified": sum(1 for r in reps if r["certified"]),
+            "cycles_total": sum(r["cycles_used"] for r in reps),
+            "queries_total": sum(r["queries"] for r in reps),
+            "loop_sec": time.perf_counter() - t0,
+            "details": reps,
+        }
+    return out
+
+
+# ==============================================================================
+# P64 entrega 1 — H03 regras de obstrução: sugestão, prova e aplicação
+# ==============================================================================
+#
+# Regras pequenas sobre paridade, divisibilidade e intervalos. A rede (ou
+# qualquer heurística) SUGERE; a verdade se decide por demonstração no
+# domínio declarado ou enumeração completa de domínio finito pequeno.
+# Timeout de busca nunca vira label impossível. Só regra PROVEN elimina
+# permanentemente; sem prova, no máximo prioridade com exploração.
+
+P64_RULE_KINDS = ("parity", "divisibility", "interval")
+
+P64_RULE_STATUS = ("PROVEN", "REFUTED", "UNPROVEN")
+
+
+def p64_rule_matches(rule: dict[str, Any], triple: tuple[int, int, int]) -> bool:
+    """Whether a triple falls in the rule region (deterministic)."""
+    x, y, z = (int(v) for v in triple)
+    kind = rule.get("kind")
+    if kind == "parity":
+        return (x, y, z)[int(rule["coord"])] % 2 == int(rule["residue"])
+    if kind == "divisibility":
+        return (x, y, z)[int(rule["coord"])] % int(rule["mod"]) == int(rule["residue"])
+    if kind == "interval":
+        if rule.get("bound") == "sum_le":
+            return x + y + z <= int(rule["value"])
+        if rule.get("op") == "le":
+            return (x, y, z)[int(rule["coord"])] <= int(rule["value"])
+        return (x, y, z)[int(rule["coord"])] >= int(rule["value"])
+    raise ValueError(f"Unknown P64 rule kind: {kind}")
+
+
+def p64_suggest_rules(
+    errors: list[tuple[int, int, int]], min_coverage: int = 1
+) -> list[dict[str, Any]]:
+    """Deterministic candidate rules covering development errors (suggestion only)."""
+    candidates: list[dict[str, Any]] = []
+    for coord in range(3):
+        for residue in (0, 1):
+            candidates.append({"kind": "parity", "coord": coord, "residue": residue})
+    for coord in range(3):
+        for mod in (3, 5):
+            for residue in range(mod):
+                candidates.append(
+                    {"kind": "divisibility", "coord": coord, "mod": mod, "residue": residue}
+                )
+    for value in (4, 6, 8, 12):
+        candidates.append({"kind": "interval", "bound": "sum_le", "value": value})
+    return [
+        rule
+        for rule in candidates
+        if sum(1 for t in errors if p64_rule_matches(rule, t)) >= int(min_coverage)
+    ]
+
+
+def p64_prove_rule(
+    rule: dict[str, Any],
+    n: int,
+    box: int,
+    max_checks: int = 200000,
+) -> dict[str, Any]:
+    """Prove a forbidden region by complete enumeration of [1..box]^3.
+
+    Every matching triple must fail the dual exact checkers; an exact match
+    REFUTEs the rule (with counterexample). A box bigger than the check
+    budget stays UNPROVEN: search timeout is never an impossibility label.
+    """
+    volume = int(box) ** 3
+    if volume > int(max_checks):
+        return {
+            "status": "UNPROVEN",
+            "checks": 0,
+            "counterexample": None,
+            "reason": f"box volume {volume} exceeds check budget {max_checks}",
+        }
+    checks = 0
+    matched = 0
+    for x in range(1, int(box) + 1):
+        for y in range(1, int(box) + 1):
+            for z in range(1, int(box) + 1):
+                if not p64_rule_matches(rule, (x, y, z)):
+                    continue
+                matched += 1
+                checks += 1
+                ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+                ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+                if ok1 and ok2:
+                    return {
+                        "status": "REFUTED",
+                        "checks": checks,
+                        "counterexample": [x, y, z],
+                        "reason": "exact solution inside the rule region",
+                    }
+    return {
+        "status": "PROVEN",
+        "checks": checks,
+        "counterexample": None,
+        "matched": matched,
+        "reason": f"no exact solution in {matched} matching triples of box {box}",
+    }
+
+
+def p64_apply_rules(
+    triples: list[tuple[int, int, int]],
+    proven_rules: list[dict[str, Any]],
+    priority_rules: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Eliminate only via PROVEN rules; unproven rules only prioritize.
+
+    Returns kept indices, eliminated indices (with the proving rule recorded)
+    and a priority score per triple (count of matching unproven rules).
+    """
+    kept: list[int] = []
+    eliminated: list[dict[str, Any]] = []
+    for i, triple in enumerate(triples):
+        hit = next((r for r in proven_rules if p64_rule_matches(r, triple)), None)
+        if hit is not None:
+            eliminated.append({"index": i, "triple": list(triple), "rule": hit})
+        else:
+            kept.append(i)
+    return {
+        "kept": kept,
+        "eliminated": eliminated,
+        "priority": [sum(1 for r in priority_rules if p64_rule_matches(r, t)) for t in triples],
+    }
+
+
+def p64_rule_report(
+    rule: dict[str, Any],
+    proof: dict[str, Any],
+    errors: list[tuple[int, int, int]],
+) -> dict[str, Any]:
+    """Published coverage and limits of one rule (no promotion inside)."""
+    covered = sum(1 for t in errors if p64_rule_matches(rule, t))
+    return {
+        "rule": rule,
+        "status": proof.get("status"),
+        "checks": proof.get("checks", 0),
+        "coverage": f"{covered}/{len(errors)} development errors",
+        "coverage_fraction": (covered / len(errors)) if errors else 0.0,
+        "limits": "claim holds only inside the proven box; outside it the rule is priority-only",
+    }
+
+
+def p64_proof_vs_saved(
+    rule: dict[str, Any],
+    n: int,
+    proof_box: int,
+    search_box: int = 12,
+    max_checks: int = 200000,
+) -> dict[str, Any]:
+    """Compare proof cost against checker cost saved on a search box.
+
+    Proves the rule (timed), then applies it to every triple of the search
+    box: eliminated triples are still checker-timed once, and that measured
+    time is the saved search. UNPROVEN/REFUTED rules save nothing and
+    eliminate nothing. Net may be negative; it is reported, not assumed.
+    """
+    t0 = time.perf_counter()
+    proof = p64_prove_rule(rule, int(n), int(proof_box), max_checks=int(max_checks))
+    proof_sec = time.perf_counter() - t0
+    if proof.get("status") != "PROVEN":
+        return {
+            "status": proof.get("status"),
+            "proof_sec": proof_sec,
+            "proof_checks": proof.get("checks", 0),
+            "eliminated": 0,
+            "saved_sec": 0.0,
+            "net_sec": -proof_sec,
+            "reason": "only PROVEN rules save search",
+        }
+    eliminated = 0
+    saved_sec = 0.0
+    for x in range(1, int(search_box) + 1):
+        for y in range(1, int(search_box) + 1):
+            for z in range(1, int(search_box) + 1):
+                if not p64_rule_matches(rule, (x, y, z)):
+                    continue
+                eliminated += 1
+                t1 = time.perf_counter()
+                check_erdos_straus(int(n), x, y, z)
+                check_erdos_straus_fractions(int(n), x, y, z)
+                saved_sec += time.perf_counter() - t1
+    return {
+        "status": "PROVEN",
+        "proof_sec": proof_sec,
+        "proof_checks": proof.get("checks", 0),
+        "eliminated": eliminated,
+        "saved_sec": saved_sec,
+        "net_sec": saved_sec - proof_sec,
+        "reason": f"{eliminated} triples eliminated from search box {search_box}",
+    }
+
+
+def p64_prioritized_scan(
+    triples: list[tuple[int, int, int]],
+    priority_rules: list[dict[str, Any]],
+    explore_frac: float = 0.1,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Scan order with guaranteed unfiltered exploration fraction.
+
+    Unproven rules only prioritize: all triples appear exactly once, but at
+    least explore_frac of positions hold filter-independent picks (seeded
+    uniform sample of the whole set), so exploration never collapses to the
+    filter even when few triples escape it. Nothing is eliminated here.
+    """
+    import math as _math
+    import random as _random
+
+    if not 0.0 < float(explore_frac) <= 1.0:
+        raise ValueError("P64 explore_frac must lie in (0, 1]")
+    n_total = len(triples)
+    if n_total == 0:
+        return {"order": [], "unfiltered_fraction": 0.0, "explore_frac": float(explore_frac)}
+    rng = _random.Random(int(seed))
+    shuffled = list(range(n_total))
+    rng.shuffle(shuffled)
+    n_exp = _math.ceil(float(explore_frac) * n_total)
+    explore = set(shuffled[:n_exp])
+    rest = [i for i, t in enumerate(triples) if i not in explore]
+    rest.sort(
+        key=lambda i: (0 if any(p64_rule_matches(r, triples[i]) for r in priority_rules) else 1, i)
+    )
+    explore_sorted = sorted(explore)
+    k = max(1, round(n_total / n_exp))
+    order: list[int] = []
+    ei = ri = 0
+    for pos in range(1, n_total + 1):
+        if pos % k == 0 and ei < len(explore_sorted):
+            order.append(explore_sorted[ei])
+            ei += 1
+        elif ri < len(rest):
+            order.append(rest[ri])
+            ri += 1
+        else:
+            order.append(explore_sorted[ei])
+            ei += 1
+    unfiltered = sum(1 for i in order if i in explore)
+    return {
+        "order": order,
+        "unfiltered_fraction": unfiltered / n_total,
+        "explore_frac": float(explore_frac),
+    }
+
+
+# ==============================================================================
+# P65 entrega 1 — H04 biblioteca de construções e pontes determinísticas
+# ==============================================================================
+#
+# Construções exatas paramétricas com representação compacta (família,
+# parâmetros, hipóteses de cobertura e limites). Ponte = instanciar a
+# primeira entrada que cobre o alvo e verificar com os checkers fixos
+# CONTRA O ALVO FIXADO — nunca um enunciado substituído. Âncoras conhecidas
+# entram rotuladas como rediscovery. Tamanho máximo congelado antes da coleta.
+
+P65_MAX_LIBRARY = 8
+
+
+def p65_build_library() -> list[dict[str, Any]]:
+    """Frozen construction library (parametric families plus labeled anchors)."""
+    return [
+        {
+            "id": "even",
+            "kind": "parametric",
+            "params": ["m"],
+            "hypotheses": "covers even n = 2m",
+            "bounds": {"max_coord": 10**9},
+        },
+        {
+            "id": "n=2-mod-3",
+            "kind": "parametric",
+            "params": ["n"],
+            "hypotheses": "covers n with (n+1) divisible by 3",
+            "bounds": {"max_coord": 10**9},
+        },
+        {
+            "id": "multiple-of-3",
+            "kind": "parametric",
+            "params": ["n"],
+            "hypotheses": "covers multiples of 3",
+            "bounds": {"max_coord": 10**9},
+        },
+        {
+            "id": "anchor-1009",
+            "kind": "anchor",
+            "params": [],
+            "hypotheses": "covers n = 1009 only; rediscovery, never discovery",
+            "bounds": {"max_coord": 10**9},
+        },
+    ]
+
+
+def p65_instantiate(entry: dict[str, Any], n: int) -> tuple[int, int, int] | None:
+    """Instantiate one entry for n, or None when the entry does not cover it."""
+    n = int(n)
+    eid = entry.get("id")
+    if eid == "even":
+        if n % 2 != 0:
+            return None
+        m = n // 2
+        return (m, m + 1, m * (m + 1))
+    if eid == "n=2-mod-3":
+        if (n + 1) % 3 != 0:
+            return None
+        return (n, (n + 1) // 3, n * (n + 1) // 3)
+    if eid == "multiple-of-3":
+        if n % 3 != 0:
+            return None
+        return (n // 3, 2 * n, 2 * n)
+    if eid == "anchor-1009":
+        if n != 1009:
+            return None
+        return tuple(int(v) for v in P57_KNOWN_TRIPLE_1009)
+    raise ValueError(f"Unknown P65 library entry: {eid}")
+
+
+def p65_find_bridge(
+    library: list[dict[str, Any]], n: int, max_coord: int = 10**9
+) -> dict[str, Any] | None:
+    """First covering entry, instantiated and dual-verified for the fixed n.
+
+    Returns None when no entry covers n (honest NULL path). Rediscovered
+    triples stay labeled rediscovery via the frozen classifier.
+    """
+    if len(library) > P65_MAX_LIBRARY:
+        raise ValueError(f"P65 library exceeds frozen max {P65_MAX_LIBRARY}")
+    for entry in library:
+        triple = p65_instantiate(entry, int(n))
+        if triple is None:
+            continue
+        if max(triple) > int(max_coord):
+            continue
+        ok1, _, _ = check_erdos_straus(int(n), *triple)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+        if ok1 and ok2:
+            return {
+                "entry_id": entry["id"],
+                "kind": entry["kind"],
+                "triple": list(triple),
+                "label": p57_classify_solved(int(n), tuple(triple)),
+                "verified_for_n": int(n),
+            }
+    return None
+
+
+# ==============================================================================
+# P65 entrega 2 — H04 seletor pequeno e comparação de bibliotecas com custos
+# ==============================================================================
+#
+# Biblioteca mista (estruturada + construções aleatórias seedadas) e quatro
+# braços: sorteio aleatório, primeira cobertura estruturada (sem modelo),
+# escolha do seletor por features públicas e busca direta. Geração da
+# biblioteca, busca da ponte e certificação faturados por braço via ledger
+# completo; treino só no braço com modelo. Labels exatos (cobre-e-verifica).
+
+P65_BRIDGE_ARMS = ("random-pick", "structured-first", "model-pick", "direct-search")
+
+
+def p65_random_library(n_entries: int, coord_bound: int, seed: int) -> list[dict[str, Any]]:
+    """Seeded random constructions (honest weak baseline, usually covering nothing)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    return [
+        {
+            "id": f"random-{i}",
+            "kind": "random",
+            "triple": [
+                rng.randint(1, int(coord_bound)),
+                rng.randint(1, int(coord_bound)),
+                rng.randint(1, int(coord_bound)),
+            ],
+            "hypotheses": "no coverage claim",
+            "bounds": {"max_coord": 10**9},
+        }
+        for i in range(int(n_entries))
+    ]
+
+
+def p65_entry_features(n: int, entry: dict[str, Any]) -> list[float]:
+    """Public features only: residues of n plus entry kind/coverage class."""
+    kinds = ("parametric", "anchor", "random")
+    covers = ("even", "n=2-mod-3", "multiple-of-3", "anchor-1009", "none")
+    eid = str(entry.get("id"))
+    cover = eid if eid in covers else "none"
+    return [
+        float(int(n) % 2),
+        float(int(n) % 3),
+        float(int(n) % 4),
+        *[1.0 if entry.get("kind") == k else 0.0 for k in kinds],
+        *[1.0 if cover == c else 0.0 for c in covers],
+    ]
+
+
+class P65BridgeScorer(torch.nn.Module):
+    """Tiny coverage scorer (~100 params, CPU)."""
+
+    def __init__(self, hidden: int = 8) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(11, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p65_entry_verifies(entry: dict[str, Any], n: int, max_coord: int = 10**9) -> bool:
+    """Exact label: the entry covers n and its triple verifies (or anchor match)."""
+    if entry.get("kind") == "random":
+        (x, y, z) = (int(v) for v in entry["triple"])
+        if max((x, y, z)) > int(max_coord):
+            return False
+        ok1, _, _ = check_erdos_straus(int(n), x, y, z)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), x, y, z)
+        return bool(ok1 and ok2)
+    triple = p65_instantiate(entry, int(n))
+    if triple is None or max(triple) > int(max_coord):
+        return False
+    ok1, _, _ = check_erdos_straus(int(n), *triple)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+    return bool(ok1 and ok2)
+
+
+def p65_train_bridge_scorer(
+    library: list[dict[str, Any]],
+    n_values: list[int],
+    seed: int = 0,
+    epochs: int = 30,
+    lr: float = 0.05,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Train the coverage scorer on exact covers-and-verifies labels."""
+    if not library or not n_values:
+        raise ValueError("P65 training needs a non-empty library and n values")
+    torch.manual_seed(int(seed))
+    model = P65BridgeScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+    rows = []
+    labels = []
+    for n in n_values:
+        for entry in library:
+            rows.append(p65_entry_features(int(n), entry))
+            labels.append(1.0 if p65_entry_verifies(entry, int(n), int(max_coord)) else 0.0)
+    feats = torch.tensor(rows, dtype=torch.float32)
+    target = torch.tensor(labels, dtype=torch.float32)
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        loss = loss_fn(model(feats), target)
+        loss.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        acc = float(((model(feats) > 0.0) == (target > 0.5)).float().mean().item())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_samples": len(rows),
+        "train_acc": acc,
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p65_model_pick(
+    library: list[dict[str, Any]], weights: dict[str, torch.Tensor], n: int
+) -> dict[str, Any] | None:
+    """Highest-scoring entry instantiated and verified (miss stays a miss)."""
+    model = P65BridgeScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    feats = torch.tensor([p65_entry_features(int(n), e) for e in library], dtype=torch.float32)
+    with torch.no_grad():
+        order = torch.argsort(model(feats), descending=True).tolist()
+    for idx in order:
+        entry = library[idx]
+        triple = (
+            tuple(int(v) for v in entry["triple"])
+            if entry.get("kind") == "random"
+            else p65_instantiate(entry, int(n))
+        )
+        if triple is None:
+            continue
+        ok1, _, _ = check_erdos_straus(int(n), *triple)
+        ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+        if ok1 and ok2:
+            return {
+                "entry_id": entry["id"],
+                "kind": entry["kind"],
+                "triple": list(triple),
+                "label": p57_classify_solved(int(n), tuple(triple)),
+                "verified_for_n": int(n),
+            }
+    return None
+
+
+def p65_compare_libraries(
+    targets: list[int],
+    n_random: int = 6,
+    coord_bound: int = 50,
+    seed: int = 0,
+    max_coord: int = 10**9,
+    train_n: list[int] | None = None,
+    epochs: int = 30,
+) -> dict[str, Any]:
+    """Four arms, same targets: random-pick, structured-first, model-pick,
+    direct-search. Library build, bridge search and certification billed per
+    arm through a complete ledger; training billed to model-pick only."""
+    import random as _random
+
+    structured = p65_build_library()
+    t_lib0 = time.perf_counter()
+    mixed = structured + p65_random_library(int(n_random), int(coord_bound), int(seed))
+    lib_sec = time.perf_counter() - t_lib0
+    scorer = p65_train_bridge_scorer(
+        mixed, list(train_n or []), seed=int(seed), epochs=int(epochs), max_coord=int(max_coord)
+    )
+    rng = _random.Random(int(seed))
+    out: dict[str, Any] = {}
+    for arm in P65_BRIDGE_ARMS:
+        t0 = time.perf_counter()
+        certified = 0
+        check_sec = 0.0
+        for n in targets:
+            if arm == "random-pick":
+                entry = rng.choice(mixed)
+                cand = (
+                    tuple(int(v) for v in entry["triple"])
+                    if entry.get("kind") == "random"
+                    else p65_instantiate(entry, int(n))
+                )
+                bridge = None
+                if cand is not None:
+                    t2 = time.perf_counter()
+                    ok1, _, _ = check_erdos_straus(int(n), *cand)
+                    ok2, _, _ = check_erdos_straus_fractions(int(n), *cand)
+                    check_sec += time.perf_counter() - t2
+                    if ok1 and ok2:
+                        bridge = {"entry_id": entry["id"]}
+            elif arm == "structured-first":
+                bridge = p65_find_bridge(structured, int(n), int(max_coord))
+            elif arm == "model-pick":
+                bridge = p65_model_pick(mixed, scorer["state_dict"], int(n))
+            else:
+                rec = run_p59_matched_es_trial(
+                    "cpu_enumeration",
+                    p59_es_public_inputs(int(n), max_coord=int(max_coord)),
+                )
+                bridge = {"entry_id": "cpu-enumeration"} if rec["status"] == "certified" else None
+            if bridge is not None:
+                certified += 1
+        loop_sec = time.perf_counter() - t0
+        ledger = p59_cost_ledger(
+            train=float(scorer["train_sec"]) if arm == "model-pick" else 0.0,
+            generation=lib_sec + loop_sec,
+            inference=0.0,
+            filters=0.0,
+            checkers=check_sec,
+            tracking=0.0,
+        )
+        out[arm] = {
+            "targets": len(targets),
+            "certified": certified,
+            "ledger": ledger,
+        }
+    out["library_size"] = len(mixed)
+    out["train"] = {k: v for k, v in scorer.items() if k != "state_dict"}
+    return out
+
+
+# ==============================================================================
+# P66 entrega 1 — H05 pacotes de edições e comparação com operações iguais
+# ==============================================================================
+#
+# Pacotes de 2–4 edições válidas (uma coordenada, passos ±1..±3). No salto,
+# intermediários podem falhar na equação mas seguem objetos representáveis
+# (inteiros >= 1); pacote que sai do domínio é inválido, não silencioso.
+# Braço pacote avalia só finais (salta intermediários); braço isolado
+# avalia cada edição — mesmo total de operações, coberturas distintas.
+# Alcance, duplicação e certificados registrados; custo reconciliado.
+
+P66_PACKET_MIN_LEN = 2
+
+P66_PACKET_MAX_LEN = 4
+
+P66_PACKET_ARMS = ("packet", "isolated")
+
+
+def p66_random_packet(seed: int, length: int | None = None) -> tuple[tuple[int, int], ...]:
+    """Seeded packet of 2–4 single-coordinate edits (coord, step)."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    size = (
+        int(length) if length is not None else rng.randint(P66_PACKET_MIN_LEN, P66_PACKET_MAX_LEN)
+    )
+    if not P66_PACKET_MIN_LEN <= size <= P66_PACKET_MAX_LEN:
+        raise ValueError(f"P66 packet length must be {P66_PACKET_MIN_LEN}..{P66_PACKET_MAX_LEN}")
+    return tuple((rng.randint(0, 2), rng.choice(P62_NEIGHBORHOOD_STEPS)) for _ in range(size))
+
+
+def p66_apply_packet(
+    start: tuple[int, int, int], packet: tuple[tuple[int, int], ...]
+) -> dict[str, Any]:
+    """Apply one packet; intermediates stay representable or packet is invalid."""
+    if not P66_PACKET_MIN_LEN <= len(packet) <= P66_PACKET_MAX_LEN:
+        return {"valid": False, "final": None, "intermediates": [], "ops": 0}
+    triple = [int(v) for v in start]
+    intermediates = []
+    for coord, step in packet:
+        triple[int(coord)] += int(step)
+        if min(triple) < 1:
+            return {
+                "valid": False,
+                "final": None,
+                "intermediates": intermediates,
+                "ops": len(packet),
+            }
+        intermediates.append((triple[0], triple[1], triple[2]))
+    return {
+        "valid": True,
+        "final": (triple[0], triple[1], triple[2]),
+        "intermediates": intermediates,
+        "ops": len(packet),
+    }
+
+
+def p66_compare_packets(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    n_packets: int = 8,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Packet jumps vs isolated edits under exactly equal total operations."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    packets = [p66_random_packet(rng.randint(0, 2**31 - 1)) for _ in range(int(n_packets))]
+    out: dict[str, Any] = {}
+    for arm in P66_PACKET_ARMS:
+        t0 = time.perf_counter()
+        evaluated: list[tuple[int, int, int]] = []
+        ops_total = 0
+        for start in starts:
+            if arm == "packet":
+                for packet in packets:
+                    res = p66_apply_packet(start, packet)
+                    ops_total += res["ops"]
+                    if res["valid"]:
+                        evaluated.append(res["final"])
+            else:
+                for packet in packets:
+                    triple = [int(v) for v in start]
+                    for coord, step in packet:
+                        triple[int(coord)] += int(step)
+                        ops_total += 1
+                        if min(triple) >= 1:
+                            evaluated.append((triple[0], triple[1], triple[2]))
+        certs: set[tuple[int, int, int]] = set()
+        for triple in evaluated:
+            if max(triple) > int(max_coord):
+                continue
+            ok1, _, _ = check_erdos_straus(int(n), *triple)
+            ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+            if ok1 and ok2:
+                certs.add(triple)
+        out[arm] = {
+            "starts": len(starts),
+            "ops_total": ops_total,
+            "evaluated": len(evaluated),
+            "reach": len(set(evaluated)),
+            "duplicates": len(evaluated) - len(set(evaluated)),
+            "certificates": sorted(certs),
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
+# ==============================================================================
+# P66 entrega 2 — H05 distribuição guiada e comparação de três braços
+# ==============================================================================
+#
+# No máximo UMA distribuição de pacotes aprendida: scorer tiny sobre
+# descritores públicos (start + pacote, sem solução) treinado em
+# cobre-e-verifica exatos. Braço guiado ranqueia um pool seedado e toma os
+# melhores; comparação com pacote aleatório e edições isoladas sob o MESMO
+# total de operações (isolado espelha as ops do guiado). Histogramas de
+# comprimento reportados; amplitude sem certificado não promove nada.
+
+P66_GUIDED_ARMS = ("guided", "random", "isolated")
+
+
+def p66_packet_features(
+    n: int, start: tuple[int, int, int], packet: tuple[tuple[int, int], ...]
+) -> list[float]:
+    """Public packet descriptors: start residual plus packet shape."""
+    counts = [0.0, 0.0, 0.0]
+    steps = 0
+    for coord, step in packet:
+        counts[int(coord)] += 1.0
+        steps += abs(int(step))
+    size = max(1, len(packet))
+    return [
+        abs(p62_exact_residual(int(n), *start)) / 10000.0,
+        len(packet) / 4.0,
+        counts[0] / size,
+        counts[1] / size,
+        counts[2] / size,
+        steps / (3.0 * size),
+    ]
+
+
+class P66PacketScorer(torch.nn.Module):
+    """Tiny packet scorer (~70 params, CPU)."""
+
+    def __init__(self, hidden: int = 8) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(6, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p66_collect_packet_samples(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    n_packets: int = 16,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> tuple[list[dict[str, Any]], float]:
+    """Random packets labeled by exact covers-and-verifies (development)."""
+    import random as _random
+
+    t0 = time.perf_counter()
+    rng = _random.Random(int(seed))
+    samples: list[dict[str, Any]] = []
+    for start in starts:
+        for _ in range(int(n_packets)):
+            packet = p66_random_packet(rng.randint(0, 2**31 - 1))
+            res = p66_apply_packet(start, packet)
+            label = 0.0
+            if res["valid"] and max(res["final"]) <= int(max_coord):
+                ok1, _, _ = check_erdos_straus(int(n), *res["final"])
+                ok2, _, _ = check_erdos_straus_fractions(int(n), *res["final"])
+                label = 1.0 if (ok1 and ok2) else 0.0
+            samples.append({"n": int(n), "start": start, "packet": packet, "label": label})
+    return samples, time.perf_counter() - t0
+
+
+def p66_train_packet_scorer(
+    samples: list[dict[str, Any]], seed: int = 0, epochs: int = 40, lr: float = 0.05
+) -> dict[str, Any]:
+    """Train the single packet distribution (BCE on exact labels)."""
+    if not samples:
+        raise ValueError("P66 training needs non-empty samples")
+    torch.manual_seed(int(seed))
+    model = P66PacketScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+    feats = torch.stack(
+        [torch.tensor(p66_packet_features(s["n"], s["start"], s["packet"])) for s in samples]
+    ).float()
+    target = torch.tensor([float(s["label"]) for s in samples], dtype=torch.float32)
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        loss = loss_fn(model(feats), target)
+        loss.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        acc = float((((model(feats) > 0.0).float()) == target).float().mean().item())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_samples": len(samples),
+        "positives": int(target.sum().item()),
+        "train_acc": acc,
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p66_guided_packets(
+    weights: dict[str, torch.Tensor],
+    n: int,
+    start: tuple[int, int, int],
+    n_packets: int = 8,
+    pool_factor: int = 8,
+    seed: int = 0,
+) -> list[tuple[tuple[int, int], ...]]:
+    """Top-ranked packets from a seeded pool under the learned scorer."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    model = P66PacketScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    pool = [
+        p66_random_packet(rng.randint(0, 2**31 - 1))
+        for _ in range(int(n_packets) * int(pool_factor))
+    ]
+    feats = torch.stack([torch.tensor(p66_packet_features(int(n), start, p)) for p in pool]).float()
+    with torch.no_grad():
+        order = torch.argsort(model(feats), descending=True).tolist()
+    return [pool[i] for i in order[: int(n_packets)]]
+
+
+def p66_compare_guided(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    weights: dict[str, torch.Tensor],
+    n_packets: int = 8,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Guided vs random packets vs isolated edits under equal total ops."""
+    guided = {
+        idx: p66_guided_packets(weights, int(n), start, int(n_packets), seed=int(seed) + idx)
+        for idx, start in enumerate(starts)
+    }
+    out: dict[str, Any] = {}
+    for arm in P66_GUIDED_ARMS:
+        t0 = time.perf_counter()
+        evaluated: list[tuple[int, int, int]] = []
+        ops_total = 0
+        lengths: list[int] = []
+        for idx, start in enumerate(starts):
+            packets = (
+                guided[idx]
+                if arm in ("guided", "isolated")
+                else [p66_random_packet(int(seed) + 1000 * idx + j) for j in range(int(n_packets))]
+            )
+            if arm == "isolated":
+                triple = [int(v) for v in start]
+                for packet in packets:
+                    for coord, step in packet:
+                        triple[int(coord)] += int(step)
+                        ops_total += 1
+                        lengths.append(1)
+                        if min(triple) >= 1:
+                            evaluated.append((triple[0], triple[1], triple[2]))
+            else:
+                for packet in packets:
+                    res = p66_apply_packet(start, packet)
+                    ops_total += res["ops"]
+                    lengths.append(len(packet))
+                    if res["valid"]:
+                        evaluated.append(res["final"])
+        certs: set[tuple[int, int, int]] = set()
+        for triple in evaluated:
+            if max(triple) > int(max_coord):
+                continue
+            ok1, _, _ = check_erdos_straus(int(n), *triple)
+            ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+            if ok1 and ok2:
+                certs.add(triple)
+        out[arm] = {
+            "starts": len(starts),
+            "ops_total": ops_total,
+            "evaluated": len(evaluated),
+            "reach": len(set(evaluated)),
+            "duplicates": len(evaluated) - len(set(evaluated)),
+            "certificates": sorted(certs),
+            "certified": len(certs),
+            "length_histogram": {k: lengths.count(k) for k in sorted(set(lengths))},
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
+# ==============================================================================
+# P68 entrega 1 — H07 jogo proponente-atacante com refutações certificadas
+# ==============================================================================
+#
+# Templates (família + domínio público) atacados por instâncias do domínio:
+# sistemática (ordem) e aleatória (seeded). Cada refutação carrega prova
+# exata (não-cobertura, tripla inexata ou fora do limite). Refutar um
+# template nunca equivale a refutar Erdős–Straus. Teto combinado de 1M de
+# parâmetros para os dois modelos; atacante vê só o público.
+
+P68_COMBINED_PARAM_CAP = 1000000
+
+P68_ATTACKERS = ("systematic", "random")
+
+P68_TEMPLATE_FAMILIES = ("even", "n=2-mod-3", "multiple-of-3")
+
+
+def p68_propose_template(family_id: str, lo: int, hi: int) -> dict[str, Any]:
+    """Propose a template claim: family covers every n in [lo, hi]."""
+    if family_id not in P68_TEMPLATE_FAMILIES:
+        raise ValueError(f"Unknown P68 template family: {family_id}")
+    if not 2 <= int(lo) <= int(hi):
+        raise ValueError("P68 domain needs 2 <= lo <= hi")
+    return {"family_id": str(family_id), "domain": [int(lo), int(hi)]}
+
+
+def p68_n_refutes(
+    entry: dict[str, Any], n: int, max_coord: int = 10**9
+) -> tuple[bool, dict[str, Any]]:
+    """Exact refutation check for one instance (shared by game and comparison)."""
+    triple = p65_instantiate(entry, int(n))
+    if triple is None:
+        return True, {
+            "n": int(n),
+            "triple": None,
+            "reason": "not-covered",
+            "residual": None,
+            "exact": False,
+        }
+    if max(triple) > int(max_coord):
+        return True, {
+            "n": int(n),
+            "triple": list(triple),
+            "reason": "out-of-bounds",
+            "residual": None,
+            "exact": False,
+        }
+    ok1, residual, _ = check_erdos_straus(int(n), *triple)
+    ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+    if not (ok1 and ok2):
+        return True, {
+            "n": int(n),
+            "triple": list(triple),
+            "reason": "inexact",
+            "residual": int(residual),
+            "exact": False,
+        }
+    return False, {}
+
+
+def p68_attack_template(
+    template: dict[str, Any],
+    attacker: str = "systematic",
+    budget: int = 50,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Attack a template inside its public domain (no private answers seen).
+
+    Returns refutations with exact evidence, or survival when the budget
+    finds nothing. Survival is not a theorem.
+    """
+    import random as _random
+
+    if attacker not in P68_ATTACKERS:
+        raise ValueError(f"Unknown P68 attacker: {attacker}")
+    lo, hi = (int(v) for v in template["domain"])
+    order = list(range(lo, hi + 1))
+    if attacker == "random":
+        _random.Random(int(seed)).shuffle(order)
+    entry = {"id": template["family_id"], "kind": "parametric"}
+    refutations = []
+    queries = 0
+    for n in order[: max(0, int(budget))]:
+        queries += 1
+        hit, record = p68_n_refutes(entry, n, max_coord=int(max_coord))
+        if hit:
+            refutations.append(record)
+    return {
+        "family_id": template["family_id"],
+        "attacker": attacker,
+        "queries": queries,
+        "refuted": len(refutations) > 0,
+        "refutations": refutations,
+        "survived": len(refutations) == 0,
+    }
+
+
+# ==============================================================================
+# P68 entrega 2 — H07 atacante aprendido e comparação com custo igual
+# ==============================================================================
+#
+# Um único atacante (MLP tiny sobre resíduos de n, posição no domínio e
+# família — tudo público) treinado em rótulos exatos refuta-ou-não em
+# templates development. Comparação learned × random × systematic sob o
+# MESMO orçamento de queries; refutações e custo total reportados por braço.
+
+P68_LEARNED_ATTACKERS = ("learned", "random", "systematic")
+
+
+def p68_instance_features(template: dict[str, Any], n: int) -> list[float]:
+    """Public instance descriptors: residues, domain position, family."""
+    lo, hi = (int(v) for v in template["domain"])
+    span = max(1, hi - lo)
+    fams = list(P68_TEMPLATE_FAMILIES)
+    return [
+        float(int(n) % 2),
+        float(int(n) % 3),
+        float(int(n) % 5),
+        (int(n) - lo) / span,
+        *[1.0 if template["family_id"] == f else 0.0 for f in fams],
+    ]
+
+
+class P68AttackScorer(torch.nn.Module):
+    """Tiny refutation scorer (~90 params, CPU)."""
+
+    def __init__(self, hidden: int = 8) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(7, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p68_collect_attack_samples(
+    templates: list[dict[str, Any]], max_coord: int = 10**9
+) -> tuple[list[dict[str, Any]], float]:
+    """Exact refutes-or-not labels over full template domains (development)."""
+    t0 = time.perf_counter()
+    samples: list[dict[str, Any]] = []
+    for template in templates:
+        lo, hi = (int(v) for v in template["domain"])
+        entry = {"id": template["family_id"], "kind": "parametric"}
+        for n in range(lo, hi + 1):
+            triple = p65_instantiate(entry, n)
+            if triple is None or max(triple) > int(max_coord):
+                label = 1.0
+            else:
+                ok1, _, _ = check_erdos_straus(n, *triple)
+                ok2, _, _ = check_erdos_straus_fractions(n, *triple)
+                label = 0.0 if (ok1 and ok2) else 1.0
+            samples.append({"template": template, "n": n, "label": label})
+    return samples, time.perf_counter() - t0
+
+
+def p68_train_attack_scorer(
+    samples: list[dict[str, Any]], seed: int = 0, epochs: int = 40, lr: float = 0.05
+) -> dict[str, Any]:
+    """Train the single attacker (BCE on exact refutation labels)."""
+    if not samples:
+        raise ValueError("P68 training needs non-empty samples")
+    torch.manual_seed(int(seed))
+    model = P68AttackScorer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+    feats = torch.stack(
+        [torch.tensor(p68_instance_features(s["template"], s["n"])) for s in samples]
+    ).float()
+    target = torch.tensor([float(s["label"]) for s in samples], dtype=torch.float32)
+    t0 = time.perf_counter()
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        loss = loss_fn(model(feats), target)
+        loss.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        acc = float((((model(feats) > 0.0).float()) == target).float().mean().item())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_samples": len(samples),
+        "train_acc": acc,
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p68_compare_attackers(
+    weights: dict[str, torch.Tensor],
+    templates: list[dict[str, Any]],
+    budget: int = 50,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Learned vs random vs systematic attackers under the same query budget.
+
+    Each arm orders the domain its own way (model scores, seeded shuffle,
+    natural order) and spends at most `budget` exact evaluations per
+    template. Refutation counts and query totals are reported per arm.
+    """
+    import random as _random
+
+    model = P68AttackScorer()
+    model.load_state_dict(weights)
+    model.eval()
+    out: dict[str, Any] = {}
+    for arm in P68_LEARNED_ATTACKERS:
+        t0 = time.perf_counter()
+        refuted = 0
+        queries_total = 0
+        for template in templates:
+            lo, hi = (int(v) for v in template["domain"])
+            domain = list(range(lo, hi + 1))
+            if arm == "learned":
+                feats = torch.stack(
+                    [torch.tensor(p68_instance_features(template, n)) for n in domain]
+                ).float()
+                with torch.no_grad():
+                    ranked = torch.argsort(model(feats), descending=True).tolist()
+                order = [domain[i] for i in ranked]
+            elif arm == "random":
+                order = domain[:]
+                _random.Random(int(seed)).shuffle(order)
+            elif arm == "systematic":
+                order = domain
+            else:
+                raise ValueError(f"Unknown P68 attacker: {arm}")
+            entry = {"id": template["family_id"], "kind": "parametric"}
+            found = False
+            for n in order[: max(0, int(budget))]:
+                queries_total += 1
+                hit, _ = p68_n_refutes(entry, n, max_coord=int(max_coord))
+                if hit:
+                    found = True
+                    break
+            refuted += 1 if found else 0
+        out[arm] = {
+            "templates": len(templates),
+            "budget": int(budget),
+            "refuted": refuted,
+            "queries_total": queries_total,
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
+# ==============================================================================
+# P69 entrega 2 — H09 loop de busca em ilhas e comparação de migrações
+# ==============================================================================
+#
+# Quatro ilhas lógicas com população total constante, mesmo número de
+# gerações e mesmos starts em todos os braços (residue/elite/random/none).
+# Passo local guloso por |R| com vizinhança de edição única (mesma definição
+# congelada de P62); migração via p69_migrate com custo de sincronização
+# faturado à parte. Diversidade útil = triplas distintas / total;
+# certificados só pelos checkers exatos; ancestralidade nas moves.
+
+P69_ISLAND_COUNT = 4
+
+P69_MIGRATION_COMPARISON_ARMS = ("residue", "elite", "random", "none")
+
+
+def p69_island_search(
+    n: int,
+    starts: list[tuple[int, int, int]],
+    policy: str = "residue",
+    generations: int = 6,
+    pop_per_island: int = 4,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Island hill-climb with one migration round per generation."""
+    import random as _random
+
+    from evobyte.islands import p69_migrate as _migrate
+
+    if not starts:
+        raise ValueError("P69 island search needs non-empty starts")
+    rng = _random.Random(int(seed))
+    islands = [
+        [starts[(i * int(pop_per_island) + j) % len(starts)] for j in range(int(pop_per_island))]
+        for i in range(P69_ISLAND_COUNT)
+    ]
+    sync_sec = 0.0
+    search_sec = 0.0
+    all_moves: list[dict[str, Any]] = []
+    t0 = time.perf_counter()
+    for gen in range(int(generations)):
+        t1 = time.perf_counter()
+        for isl in islands:
+            for idx, member in enumerate(isl):
+                best, best_r = member, abs(p62_exact_residual(int(n), *member))
+                for _ in range(2):
+                    cand = p62_random_repair_step(int(n), *best, seed=rng.randint(0, 2**31 - 1))
+                    if cand is None:
+                        continue
+                    r_cand = abs(p62_exact_residual(int(n), *cand))
+                    if r_cand < best_r:
+                        best, best_r = cand, r_cand
+                isl[idx] = best
+        search_sec += time.perf_counter() - t1
+        t1 = time.perf_counter()
+        rep = _migrate(
+            islands, int(n), policy=policy, seed=int(seed) + gen, max_coord=int(max_coord)
+        )
+        sync_sec += time.perf_counter() - t1
+        islands = rep["islands"]
+        all_moves.extend(rep["moves"])
+    total = time.perf_counter() - t0
+    seen: set[tuple[int, int, int]] = set()
+    certs: set[tuple[int, int, int]] = set()
+    for isl in islands:
+        for triple in isl:
+            seen.add(tuple(int(v) for v in triple))
+            ok1, _, _ = check_erdos_straus(int(n), *triple)
+            ok2, _, _ = check_erdos_straus_fractions(int(n), *triple)
+            if ok1 and ok2:
+                certs.add(tuple(int(v) for v in triple))
+    pop_total = sum(len(isl) for isl in islands)
+    return {
+        "policy": policy,
+        "islands": [[tuple(int(v) for v in t) for t in isl] for isl in islands],
+        "population_total": pop_total,
+        "generations": int(generations),
+        "distinct": len(seen),
+        "diversity": len(seen) / pop_total if pop_total else 0.0,
+        "certificates": sorted(certs),
+        "recombinations": sum(1 for m in all_moves if m.get("recombined")),
+        "moves": all_moves,
+        "search_sec": search_sec,
+        "sync_sec": sync_sec,
+        "total_sec": total,
+    }
+
+
+def p69_compare_migrations(
+    n_values: list[int],
+    starts: list[tuple[int, int, int]],
+    generations: int = 6,
+    pop_per_island: int = 4,
+    seed: int = 0,
+    max_coord: int = 10**9,
+) -> dict[str, Any]:
+    """Four migration arms, same resources: islands, generations, starts."""
+    out: dict[str, Any] = {}
+    for arm in P69_MIGRATION_COMPARISON_ARMS:
+        cert_n = 0
+        diversity_sum = 0.0
+        sync_total = 0.0
+        loop_total = 0.0
+        recomb_total = 0
+        for n in n_values:
+            rep = p69_island_search(
+                int(n),
+                starts,
+                policy=arm,
+                generations=int(generations),
+                pop_per_island=int(pop_per_island),
+                seed=int(seed),
+                max_coord=int(max_coord),
+            )
+            assert rep["population_total"] == P69_ISLAND_COUNT * int(pop_per_island)
+            cert_n += 1 if rep["certificates"] else 0
+            diversity_sum += rep["diversity"]
+            sync_total += rep["sync_sec"]
+            loop_total += rep["total_sec"]
+            recomb_total += rep["recombinations"]
+        out[arm] = {
+            "problems": len(n_values),
+            "certified_problems": cert_n,
+            "diversity_mean": diversity_sum / len(n_values) if n_values else 0.0,
+            "sync_sec": sync_total,
+            "total_sec": loop_total,
+            "recombinations": recomb_total,
+        }
+    return out
+
+
+# ==============================================================================
+# P70 entrega 1 — H10 templates racionais e verificação algébrica
+# ==============================================================================
+#
+# Templates de grau ≤ 2 com coeficientes limitados sobre classes n = m*k+r
+# em domínio inteiro declarado. Verificação em quatro partes: identidade
+# (SymPy exato como função racional), denominadores não nulos, positividade
+# e coordenadas inteiras — tudo no domínio declarado. Controles conhecidos
+# verificam PROVEN; variantes quebradas falham com motivo registrado.
+
+P70_MAX_COEFF_ABS = 10
+
+P70_MAX_DEGREE = 2
+
+
+def p70_eval_poly(coeffs: list[int], n: int) -> int:
+    """Evaluate c0 + c1*n + c2*n^2 with exact ints (degree ≤ 2)."""
+    if len(coeffs) > P70_MAX_DEGREE + 1:
+        raise ValueError("P70 template degree exceeds 2")
+    return sum(int(c) * int(n) ** i for i, c in enumerate(coeffs))
+
+
+def p70_nominate_templates() -> list[dict[str, Any]]:
+    """Frozen nominated set: known controls plus bounded variants under test."""
+    return [
+        {
+            "id": "control-even",
+            "n_class": {"k": 2, "r": 0},
+            "triple": [([0, 1, 0], 2), ([2, 1, 0], 2), ([0, 2, 1], 4)],
+            "domain": [2, 200],
+            "note": "known even family as control",
+        },
+        {
+            "id": "control-2mod3",
+            "n_class": {"k": 3, "r": 2},
+            "triple": [([0, 1, 0], 1), ([1, 1, 0], 3), ([0, 1, 1], 3)],
+            "domain": [2, 200],
+            "note": "known (n+1)/3 family as control",
+        },
+        {
+            "id": "control-mult3",
+            "n_class": {"k": 3, "r": 0},
+            "triple": [([0, 1, 0], 3), ([0, 2, 0], 1), ([0, 2, 0], 1)],
+            "domain": [3, 200],
+            "note": "known multiple-of-3 family as control",
+        },
+        {
+            "id": "variant-broken-identity",
+            "n_class": {"k": 2, "r": 0},
+            "triple": [([0, 1, 0], 2), ([2, 1, 0], 2), ([4, 2, 1], 4)],
+            "domain": [2, 200],
+            "note": "x3 numerator shifted; identity must fail",
+        },
+        {
+            "id": "variant-broken-integers",
+            "n_class": {"k": 2, "r": 0},
+            "triple": [([1, 1, 0], 2), ([2, 1, 0], 2), ([0, 2, 1], 4)],
+            "domain": [2, 200],
+            "note": "x1 numerator shifted; integers must fail on even n",
+        },
+    ]
+
+
+def p70_class_values(n_class: dict[str, int], lo: int, hi: int) -> list[int]:
+    """All n = m*k+r inside [lo, hi]."""
+    k, r = int(n_class["k"]), int(n_class["r"])
+    return [n for n in range(int(lo), int(hi) + 1) if n % k == r % k]
+
+
+def p70_verify_template(template: dict[str, Any]) -> dict[str, Any]:
+    """Four-part verification over the declared integer domain."""
+    import sympy as _sympy
+
+    n_class = template["n_class"]
+    lo, hi = (int(v) for v in template["domain"])
+    triple = [([int(c) for c in num], int(d)) for num, d in template["triple"]]
+    for num, den in triple:
+        if den == 0 or any(abs(int(c)) > P70_MAX_COEFF_ABS for c in num):
+            return {"status": "FAILED", "reason": "coefficients out of frozen bounds", "checks": {}}
+    n_sym = _sympy.Symbol("n")
+    expr = _sympy.Integer(4) / n_sym
+    for num, den in triple:
+        poly = sum(_sympy.Integer(c) * n_sym**i for i, c in enumerate(num))
+        expr -= _sympy.Integer(den) / poly
+    identity = bool(_sympy.simplify(expr) == 0)
+    checks: dict[str, Any] = {"identity": identity}
+    if not identity:
+        return {"status": "FAILED", "reason": "rational identity false", "checks": checks}
+    members = p70_class_values(n_class, lo, hi)
+    if not members:
+        return {"status": "FAILED", "reason": "empty class domain", "checks": checks}
+    for n in members:
+        vals = []
+        for num, den in triple:
+            num_v = p70_eval_poly(num, n)
+            if num_v == 0:
+                return {
+                    "status": "FAILED",
+                    "reason": f"zero denominator at n={n}",
+                    "checks": checks,
+                }
+            if num_v <= 0:
+                return {
+                    "status": "FAILED",
+                    "reason": f"non-positive coordinate at n={n}",
+                    "checks": checks,
+                }
+            if num_v % den != 0:
+                return {
+                    "status": "FAILED",
+                    "reason": f"non-integer coordinate at n={n}",
+                    "checks": checks,
+                }
+            vals.append(num_v // den)
+        ok1, _, _ = check_erdos_straus(n, *vals)
+        ok2, _, _ = check_erdos_straus_fractions(n, *vals)
+        if not (ok1 and ok2):
+            return {"status": "FAILED", "reason": f"evaluates inexact at n={n}", "checks": checks}
+    checks.update({"denominators": True, "positivity": True, "integers": True, "spot_exact": True})
+    return {
+        "status": "PROVEN",
+        "reason": f"identity plus {len(members)} exact domain evaluations",
+        "checks": checks,
+        "members": len(members),
+    }
+
+
+# ==============================================================================
+# P70 entrega 2 — H10 proponente pequeno e comparação com custos
+# ==============================================================================
+#
+# Grade limitada de templates (controles + perturbações + sorteados seedados,
+# coeficientes dentro dos limites congelados). Um único proponente (MLP tiny
+# sobre descritores públicos do template) treinado em rótulos exatos
+# verifica-ou-não. Braços: proponente (ranqueado), busca estruturada (ordem
+# fixa) e derivação clássica (só os controles); só filtros determinísticos
+# exatos, sem empilhar modelos anteriores. Todos os custos contam.
+
+P70_PROPOSER_ARMS = ("proposer", "structured", "classical")
+
+
+def p70_template_features(template: dict[str, Any]) -> list[float]:
+    """Public template descriptors: class, degree, coefficient stats."""
+    classes = [(2, 0), (3, 2), (3, 0)]
+    cls = (int(template["n_class"]["k"]), int(template["n_class"]["r"]))
+    coeffs = [int(c) for num, _ in template["triple"] for c in num]
+    denoms = [int(d) for _, d in template["triple"]]
+    degree = max((len(num) - 1 for num, _ in template["triple"]), default=0)
+    return [
+        *[1.0 if cls == c else 0.0 for c in classes],
+        float(degree) / 2.0,
+        sum(abs(c) for c in coeffs) / (P70_MAX_COEFF_ABS * 9.0),
+        sum(denoms) / 12.0,
+    ]
+
+
+class P70Proposer(torch.nn.Module):
+    """Tiny template scorer (~80 params, CPU)."""
+
+    def __init__(self, hidden: int = 8) -> None:
+        super().__init__()
+        self.net = torch.nn.Sequential(
+            torch.nn.Linear(6, hidden), torch.nn.Tanh(), torch.nn.Linear(hidden, 1)
+        )
+
+    def forward(self, feats: torch.Tensor) -> torch.Tensor:
+        return self.net(feats).squeeze(-1)
+
+
+def p70_proposer_grid(seed: int = 0) -> list[dict[str, Any]]:
+    """Bounded candidate grid: controls plus coefficient variants plus seeded draws."""
+    import random as _random
+
+    rng = _random.Random(int(seed))
+    grid = list(p70_nominate_templates())
+    seen = {
+        (
+            t["n_class"]["k"],
+            t["n_class"]["r"],
+            tuple((tuple(n), d) for n, d in t["triple"]),
+        )
+        for t in grid
+    }
+    for base in p70_nominate_templates()[:3]:
+        for ci in range(3):
+            for pos in range(len(base["triple"][ci][0])):
+                for delta in (-2, -1, 1, 2):
+                    num = [list(n) for n, _ in base["triple"]]
+                    num[ci][pos] += delta
+                    if any(abs(c) > P70_MAX_COEFF_ABS for row in num for c in row):
+                        continue
+                    key = (
+                        base["n_class"]["k"],
+                        base["n_class"]["r"],
+                        tuple((tuple(n), d) for n, d in zip(num, [d for _, d in base["triple"]])),
+                    )
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    grid.append(
+                        {
+                            "id": f"variant-{len(grid):02d}",
+                            "n_class": dict(base["n_class"]),
+                            "triple": [(n, d) for n, d in zip(num, [d for _, d in base["triple"]])],
+                            "domain": list(base["domain"]),
+                            "note": "bounded coefficient variant under test",
+                        }
+                    )
+    while len([t for t in grid if t["id"].startswith("draw-")]) < 12:
+        num = [[rng.randint(-3, 3) for _ in range(rng.randint(1, 3))] for _ in range(3)]
+        dens = [rng.randint(1, 4) for _ in range(3)]
+        key = (2, 0, tuple((tuple(n), d) for n, d in zip(num, dens)))
+        if key in seen:
+            continue
+        seen.add(key)
+        grid.append(
+            {
+                "id": f"draw-{len(grid):02d}",
+                "n_class": {"k": 2, "r": 0},
+                "triple": [(n, d) for n, d in zip(num, dens)],
+                "domain": [2, 60],
+                "note": "seeded bounded draw under test",
+            }
+        )
+    return grid
+
+
+def p70_train_proposer(
+    grid: list[dict[str, Any]], seed: int = 0, epochs: int = 30, lr: float = 0.05
+) -> dict[str, Any]:
+    """Train the single proposer on exact verifies-or-not labels."""
+    if not grid:
+        raise ValueError("P70 training needs a non-empty grid")
+    torch.manual_seed(int(seed))
+    model = P70Proposer()
+    opt = torch.optim.Adam(model.parameters(), lr=float(lr))
+    loss_fn = torch.nn.BCEWithLogitsLoss()
+    t0 = time.perf_counter()
+    labels = [1.0 if p70_verify_template(t)["status"] == "PROVEN" else 0.0 for t in grid]
+    label_sec = time.perf_counter() - t0
+    feats = torch.stack([torch.tensor(p70_template_features(t)) for t in grid]).float()
+    target = torch.tensor(labels, dtype=torch.float32)
+    for _ in range(int(epochs)):
+        opt.zero_grad()
+        loss = loss_fn(model(feats), target)
+        loss.backward()
+        opt.step()
+    train_sec = time.perf_counter() - t0
+    with torch.no_grad():
+        acc = float((((model(feats) > 0.0).float()) == target).float().mean().item())
+    return {
+        "state_dict": {k: v.detach().cpu() for k, v in model.state_dict().items()},
+        "n_params": int(sum(p.numel() for p in model.parameters())),
+        "n_templates": len(grid),
+        "positives": int(target.sum().item()),
+        "train_acc": acc,
+        "label_sec": float(label_sec),
+        "train_sec": float(train_sec),
+        "epochs": int(epochs),
+        "seed": int(seed),
+    }
+
+
+def p70_compare_proposers(
+    grid: list[dict[str, Any]],
+    weights: dict[str, torch.Tensor],
+    budget: int = 20,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """Proposer vs structured scan vs classical derivation, same verification budget.
+
+    Each arm verifies templates in its own order until the first PROVEN (or
+    budget exhaustion). Verification is the deterministic exact verifier for
+    every arm; every check is counted and billed.
+    """
+    model = P70Proposer()
+    model.load_state_dict(weights)
+    model.eval()
+    feats = torch.stack([torch.tensor(p70_template_features(t)) for t in grid]).float()
+    with torch.no_grad():
+        ranked = torch.argsort(model(feats), descending=True).tolist()
+    classical_ids = {"control-even", "control-2mod3", "control-mult3"}
+    orders = {
+        "proposer": ranked,
+        "structured": list(range(len(grid))),
+        "classical": [i for i, t in enumerate(grid) if t["id"] in classical_ids],
+    }
+    out: dict[str, Any] = {}
+    for arm in P70_PROPOSER_ARMS:
+        t0 = time.perf_counter()
+        found = None
+        verifications = 0
+        for idx in orders[arm][: max(0, int(budget))]:
+            verifications += 1
+            if p70_verify_template(grid[idx])["status"] == "PROVEN":
+                found = grid[idx]["id"]
+                break
+        out[arm] = {
+            "templates": len(grid),
+            "budget": int(budget),
+            "verifications": verifications,
+            "found": found,
+            "loop_sec": time.perf_counter() - t0,
+        }
+    return out
+
+
+# ==============================================================================
+# P72 — Mathematical Result Nomination and Novelty Verification
+# ==============================================================================
+
+P72_PROBLEM_ID = "erdos-242"
+P72_MAX_COORD = 1_000_000_000
+P72_CEILING_SEC = 3600.0
+P72_DISALLOWED_MODULES = [
+    "H01-repair",
+    "H02-shadows",
+    "H03-obstructions",
+    "H04-bridges",
+    "H05-jumps",
+    "H06-macros",
+    "H07-adversaries",
+    "H08-feedback",
+    "H09-islands",
+    "H10-templates",
+]
+
+
+def p72_nominate_target() -> dict[str, Any]:
+    """Frozen P72 nomination of a single target from the reviewed catalogue."""
+    return {
+        "problem_id": P72_PROBLEM_ID,
+        "title": "Erdos Problem #242",
+        "domain": "number theory / unit fractions",
+        "statement": "For every n > 2 there exist distinct integers 1 <= x < y < z such that 4/n = 1/x + 1/y + 1/z.",
+        "catalog_path": "docs/research/open-problems.json",
+        "catalog_sha256": "bd976f3b315bab263cbb956e5b016467b326994c984cfa74baa41efbd75b37c2",
+        "primary_source": {
+            "citation": "Thomas Bloom, Erdos Problems database, Problem 242",
+            "url": "https://www.erdosproblems.com/242",
+            "dataset": "Teorth/erdosproblems data/problems.yaml (Apache-2.0)",
+        },
+        "literature_citations": [
+            "Erdos 1948",
+            "Mordell 1967",
+            "Elsholtz-Tao 2013",
+            "Bloom 2026",
+        ],
+        "state_in_catalog": "finitely-settleable-unsolved",
+        "certificate_type": "exact_integer_triple_and_rational_identity",
+        "hard_class": "primes n = 1 mod 24",
+        "calibration_anchor": {
+            "n": 1009,
+            "triple": (253, 85100, 944524900),
+            "classification": "rediscovery",
+        },
+        "campaign_instances": [1009, 10007, 100003],
+        "max_coord": P72_MAX_COORD,
+        "ceiling_sec": P72_CEILING_SEC,
+        "accepted_components_only": True,
+        "disallowed_components": P72_DISALLOWED_MODULES,
+    }
+
+
+def p72_verify_triple(
+    n: int, triple: tuple[int, int, int], max_coord: int = P72_MAX_COORD
+) -> dict[str, Any]:
+    """Exact dual verification of an Erdős-Straus solution candidate."""
+    x, y, z = int(triple[0]), int(triple[1]), int(triple[2])
+    ok_int, res_int, _ = check_erdos_straus(n, x, y, z)
+    ok_rat = False
+    with contextlib.suppress(ZeroDivisionError, ValueError, OverflowError):
+        ok_rat = Fraction(4, int(n)) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
+    in_bounds = 1 <= x < y < z <= max_coord
+    verified = bool(ok_int and ok_rat and in_bounds)
+    return {
+        "n": int(n),
+        "triple": (x, y, z),
+        "verified": verified,
+        "integer_exact": bool(ok_int),
+        "rational_exact": bool(ok_rat),
+        "in_bounds": in_bounds,
+        "residual": int(res_int),
+    }
+
+
+def p72_classify_solution(n: int, triple: tuple[int, int, int]) -> dict[str, Any]:
+    """Novelty classification under the formal search contract."""
+    n_int = int(n)
+    t_int = (int(triple[0]), int(triple[1]), int(triple[2]))
+    fams = p57_classical_constructions(n_int)
+    for fam in fams:
+        if tuple(fam["triple"]) == t_int:
+            return {
+                "status": "rediscovery",
+                "reason": f"matches classical parametric family {fam['family']}",
+                "novelty_sustained": False,
+                "theorem": False,
+            }
+    if n_int == 1009 and t_int == (253, 85100, 944524900):
+        return {
+            "status": "rediscovery",
+            "reason": "matches known k3 anchor from literature",
+            "novelty_sustained": False,
+            "theorem": False,
+        }
+    return {
+        "status": "candidate",
+        "reason": (
+            "computationally verified instance; novelty not sustained "
+            "without peer-reviewed independent proof of a novel theorem"
+        ),
+        "novelty_sustained": False,
+        "theorem": False,
+    }
+
+
+def run_p72_bounded_campaign(
+    target: dict[str, Any],
+    *,
+    device: torch.device,
+    time_cap_sec: float = 3600.0,
+    max_coord: int = P72_MAX_COORD,
+) -> dict[str, Any]:
+    """Execute P72 bounded campaign on the nominated target using accepted components only."""
+    t0 = time.perf_counter()
+    instances = [int(n) for n in target.get("campaign_instances", [1009])]
+    solved = []
+    total_evals = 0
+    for n in instances:
+        if time.perf_counter() - t0 > time_cap_sec:
+            solved.append({"n": n, "status": "budget-exhausted", "triple": None, "verified": False})
+            continue
+        part = run_erdos_straus_campaign(
+            [n],
+            device=device,
+            bounds_strict=True,
+            max_coord=max_coord,
+        )
+        total_evals += part["total_evaluated"]
+        if part["instances"] and part["instances"][0]["found"]:
+            inst_data = part["instances"][0]
+            d = inst_data["details"] or {}
+            triple = (int(d["x"]), int(d["y"]), int(d["z"]))
+            v = p72_verify_triple(n, triple, max_coord=max_coord)
+            cl = p72_classify_solution(n, triple)
+            solved.append(
+                {
+                    "n": n,
+                    "found": True,
+                    "triple": triple,
+                    "verified": v["verified"],
+                    "status": cl["status"] if v["verified"] else "invalid",
+                    "classification": cl,
+                }
+            )
+        else:
+            solved.append(
+                {
+                    "n": n,
+                    "found": False,
+                    "triple": None,
+                    "verified": False,
+                    "status": "budget-exhausted",
+                }
+            )
+    elapsed = time.perf_counter() - t0
+    return {
+        "target_id": target.get("problem_id", P72_PROBLEM_ID),
+        "instances": solved,
+        "total_evaluated": total_evals,
+        "elapsed_sec": elapsed,
     }
 
 

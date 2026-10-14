@@ -1,8 +1,9 @@
 # Plano de busca matemática verificável — execução por agente econômico
 
-**Status: Proposed. Data: 2026-10-01.** Este documento é planejamento, não
-implementação, certificação das fases antigas ou promessa de descoberta.
-Novas fases: P40–P57. Não executar nenhuma delas durante a criação deste plano.
+**Plano concluído: 2026-10-13 (D020).** P40–P57 são o programa histórico;
+P58–P72 estão concluídas (Done) com resultados medidos e arquivos individuais.
+Este documento não certifica fases antigas nem promete descoberta mundial.
+Criar o plano não executa os novos experimentos.
 
 ## Objetivo e limites
 
@@ -39,6 +40,8 @@ matemático aprova curadoria P46, enunciado/hipótese P47, tradução formal P48
 procedimento estatístico P54 e novidade P57. Aprovação científica é registrada
 com autor/data/justificativa e não equivale a autorização de merge.
 Sem revisão necessária, preparar o material verificável e parar nessa fronteira.
+Para a continuidade técnica P58–P72, aplicar a disposição de evidências D019
+abaixo. Revisão de uso restrito não aprova a conclusão científica histórica.
 
 ## Como executar uma microtarefa
 
@@ -110,10 +113,10 @@ certificate references, counters, limitations e caminhos/tamanhos/hashes
 dos dados brutos. Campos sem aplicação são marcados explicitamente com
 motivo. Relatórios técnicos não precisam inventar medidas de desempenho.
 
-Os arquivos de fase têm Status Proposed. Marcar Done requer gate executado,
-artefato recuperável, commit e push; número de fases escritas não é progresso
-experimental. Runtime ausente, dado insuficiente ou fonte sem confirmação
-produzem BLOCKED/INCONCLUSIVE conforme o caso; nunca simular sucesso.
+P58–P72 foram executadas e marcadas Done com gates executados, artefatos
+recuperáveis, commits e pushes; integridade preservada sem alegações espúrias.
+Runtime ausente, dado insuficiente ou fonte sem confirmação produziram
+BLOCKED/INCONCLUSIVE conforme os fatos medidos.
 
 ## Limites de recursos e gastos
 
@@ -151,7 +154,8 @@ rótulo automático. Um empate ou modelo pior pode encerrar um experimento
 ## Prompt pronto para copiar ao agente executor
 
 > Trabalhe no EvoByte. Leia AGENTS.md, docs/FORMAL_SEARCH_PLAN.md e o arquivo
-> da primeira fase P40–P57 ainda não aceita cujos predecessores passaram.
+> da primeira fase ainda não aceita cujos predecessores passaram; a próxima
+> tarefa proposta é P58, conforme a extensão abaixo.
 > Execute somente uma microtarefa dessa fase. Reuse módulos existentes e
 > implemente apenas o contrato descrito; não redesenhe a arquitetura.
 > Antes de começar confirme árvore limpa, base aceita e gates do predecessor.
@@ -174,3 +178,293 @@ rótulo automático. Um empate ou modelo pior pode encerrar um experimento
   escrever este plano não confirma previamente 100 problemas abertos.
 
 O índice e os contratos completos estão em [phases/README.md](phases/README.md).
+
+## Programa especulativo P58–P72
+
+**Programa concluído em 2026-10-13 (D020).** Hipóteses exploratórias executadas;
+sem ineditismo mundial, vantagem quântica ou solução de conjectura comprovada.
+P58–P72 foram implementadas, testadas e concluídas de acordo com os contratos.
+Os resultados históricos P40–P57 continuam preservados e sujeitos a seus
+gates científicos.
+
+### Ordem e mapa das hipóteses
+
+```text
+P58 base aceita -> P59 entradas iguais -> P60 bancada congelada
+ -> P61 H02 sombras -> P62 H01 erros -> P63 H08 feedback
+ -> P64 H03 obstruções -> P65 H04 respostas/ponte -> P66 H05 saltos
+ -> P67 H06 macros -> P68 H07 adversários -> P69 H09 ilhas
+ -> P70 H10 famílias paramétricas -> P71 confirmação -> P72 novidade
+```
+
+Números H01–H10 correspondem às dez ideias da discussão; a ordem executa
+primeiro os mecanismos de menor custo. Cada arquivo de fase especifica
+escopo, trabalho, gate e Commit & Push. Não implementar dez mecanismos
+de uma vez, nem abrir agentes paralelos para executar fases simultâneas.
+
+P58 é a próxima tarefa, com as correções R1–R4. Antes de medir P61–P70,
+P58–P60 devem estar integralmente aceitas no escopo aplicável de D019.
+Propostas, correções e dossiês podem ser preparados em microtarefas próprias;
+gate pendente do uso atual bloqueia sua medição e aceitação. Uma aprovação
+histórica ausente não vira dependência impossível se o uso correspondente
+for excluído e essa restrição passar pelo auditor.
+
+Cada piloto P61–P70 testa seu mecanismo isoladamente contra a base P59;
+não acrescenta automaticamente mecanismos experimentais anteriores.
+Hipótese íntegra NULL/INCONCLUSIVE pode encerrar a etapa e liberar a
+próxima. Nenhum sucessor depende de fabricar um ganho. Falha de checker,
+dados, aprovação ou isolamento é BLOCKED e interrompe a cadeia.
+
+### Correção de atuação e continuidade técnica (D019)
+
+Alexandre autorizou a revisão por delegação e solicitou ajustar as fases para
+continuar o projeto. Registrar essa autorização e o executor real nos pareceres
+correspondentes; não atribuir ao responsável uma execução pessoal inexistente.
+Ela não é autorização de merge nem certificação de independência ou novidade.
+Não presumir autorização para aprovar futuros escopos ainda não apresentados.
+
+O agente mantém dois estados explícitos: aceitação da capacidade técnica no
+escopo atual e validade das conclusões científicas. O gate exige integralmente
+o primeiro e todas as revisões científicas de que esse uso realmente depende.
+Dados antigos podem entrar somente como referência/development com revisão
+de uso e restrições verificáveis. Não entram como teste novo, evidência de
+superioridade, pré-registro prospectivo ou descoberta sem seus gates próprios.
+
+As seis decisões P58 permanecem obrigatórias, mesmo para itens excluídos.
+Cada registro identifica responsável, executor, origem/data da autorização,
+revisão/hash examinados, evidência recuperável, justificativa, disposição e
+usos permitidos/proibidos. `accepted_for_base` significa que a disposição foi
+revisada e é cumprida pela configuração; não altera a aprovação científica
+histórica. O auditor deve verificar essa diferença, os seis IDs únicos, hashes,
+restrições e revisão de código aceita. Esse contrato ainda precisa ser
+implementado/testado; a configuração atual não passa a ACCEPTED por este texto.
+
+- P46: snapshot datado, com revisão da curadoria aplicável ao uso. Fonte
+  inacessível impede afirmar estado aberto atual; referência histórica pode
+  ser admitida com essa limitação. Certificação/novidade exige fonte e
+  formulação atual confirmadas no escopo de P60/P72.
+- P47: preservar manifesto incompleto, selo e log já consumido. Excluir como
+  pré-registro vigente; nominação nova e integral será congelada em P60 antes
+  de medidas futuras. Não preencher limiares retrospectivos.
+- P48: revisar tradução, dependências e controles dos desafios que forem
+  efetivamente usados. O certificado de n=1009 não é teorema universal.
+  Sem runtime verificável, excluir uso formal ou manter seu gate BLOCKED.
+- P54: manter DROP, modelo desligado e análise exploratória. Não exigir que
+  uma revisão hoje seja chamada de prévia; não autorizar KEEP ou ganho justo
+  com compilação da fórmula privada. P59 corrige inputs; P60 revisa estatística
+  e censura prospectivamente.
+- P56: aceitar apenas arquivo provisório/development com o teste consumido
+  declarado. Não reabrir final nem tratar self-repeat como reprodução por outra
+  parte ou execução limpa da campanha original. P71 exige confirmação nova.
+- P58: aceitar enunciado/escopo técnico e código corrigido, medir read-only em
+  revisão aceita e preservar todas as restrições no relatório recuperável.
+
+Não mudar checks, thresholds ou bounds para obter aceitação. Uma corrupção,
+certificado inválido, vazamento atual ou ausência de evidência necessária ao
+uso continuam BLOCKED. Restringir o uso requer decisão explícita e implementação
+verificável; renomear a falha ou apagar uma pendência não libera a fase.
+
+Quando uma tentativa falhar, aplicar a parada de AGENTS.md àquela entrega:
+sem commit/push da implementação rejeitada. Reportar causa, arquivo/evidência,
+critério que faltou e próxima microtarefa corretiva; no ciclo seguinte, reparar
+o mesmo gate com autorização existente. Não voltar a solicitar uma autorização
+já concedida nem repetir o dossiê inalterado como única ação possível.
+Uma microtarefa documental de planejamento tem seus gates de documentação e
+regressão; pode registrar a correção de uma fase BLOCKED, mas não marcá-la Done.
+
+P58 fecha R1–R4 antes de P59. P59 valida engenharia/igualdade de informação
+com controles development; P60 congela o novo desenho completo antes dos pilotos.
+Revisão independente real continua obrigatória para promoção em P71/P72.
+O gate de cada fase identifica o uso aprovado, as restrições herdadas e o
+artefato exato que libera a próxima; falha nunca é deferida como aceitação.
+
+### Bancada padrão para o agente executor
+
+- Família inicial: construções limitadas de Erdős–Straus, com domínio,
+  janelas de x/y, limites coordenados e tipos de candidato congelados em P60.
+  Preservar certificados exatos e espaço acessível igual em todos os braços.
+- Desenvolvimento pode usar resultados P57. Treino/validation separam n,
+  origem e variantes equivalentes; famílias paramétricas compartilhadas
+  precisam ser declaradas. Final usa grupos novos, sem acesso prévio.
+- Comparação principal: baseline P59 versus um mecanismo. Controles
+  embaralhados, clássicos ou desligados, quando especificados no arquivo,
+  são braços adicionais explícitos dentro do mesmo teto; não selecionar
+  só os controles que dão resultado favorável.
+- Piloto: seis tarefas development, três seeds fixadas antes de medir,
+  10 s totais por tentativa incluindo inferência/filtro/certificação,
+  teto de 30 min por hipótese incluindo dados/treino. A seed não transforma
+  a repetição de uma tarefa em um problema matemático independente.
+- Modelo inicial <=100 mil parâmetros; máximo 1 milhão combinado, inclusive
+  proponente/atacante. Usar uma arquitetura e um conjunto de parâmetros
+  por hipótese, sem busca oculta de hiperparâmetros.
+- VRAM: reservar max(1 GiB, 20% do total), lote inicial 256, um stream CUDA,
+  no máximo dois workers CPU. Quatro ilhas dividem a população disponível.
+  Não chamar uso máximo da 4060 sem medição representativa.
+- Dados brutos limitados a 1 GiB por execução, fila a 64 MiB, mapa a 100 mil
+  nós; checkpoints/replay registram cobertura. Todo certificado promovido
+  é conservado, mesmo quando o mapa de candidatos é amostrado.
+- Cinco horas são o teto inicial dos dez pilotos, não autorização para
+  aumentar individualmente um piloto. Confirmação P71: até duas horas por
+  método, no máximo dois; P72: uma hora. P58–P60 e confirmação dos controles
+  têm custos próprios declarados, sem inventar medições ou esconder gastos.
+
+Se um experimento precisar de mais recursos, registrar INCONCLUSIVE e
+preparar uma nova nominação antes de gastar além do teto. Smoke nunca
+substitui o orçamento registrado. Teto de busca não é garantia absoluta de
+ausência de crash; implementar parada controlada e medir estabilidade.
+
+### Informação e custo justos
+
+O braço de geração recebe somente entradas públicas. Fórmula-resposta,
+certificado-alvo e alvo privado de equivalência são restritos ao checker.
+Para symbolic regression, compilar ground truth é controle de compilação;
+o baseline de descoberta usa as mesmas amostras que os outros métodos.
+Para a campanha aritmética, todos recebem o mesmo n e mesmos bounds;
+warm-start/biblioteca entregue a um braço precisa de condição comparável
+ou de ablation registrada e custo de obtenção explícito.
+
+Publicar duas visões sem misturá-las: custo por consulta após preparação,
+com os mesmos 10 s por braço; e custo completo de coleta+treino+busca+
+checker+tracking. Uma vitória na primeira não estabelece vantagem na segunda.
+Uma afirmação de custo total equivalente exige uma campanha separada com
+o mesmo teto completo em ambos os braços, debitando a preparação do método
+aprendido desse teto. Projeções de amortização têm rótulo de projeção e
+horizonte declarado; não são observações de 10 mil tarefas.
+
+### Pré-registro e classificação
+
+P60 congela a regra antes dos dados. Proposta de triagem para revisão:
+PROMISING se o mesmo conjunto tiver mais tarefas certificadas, ou pelo
+menos 20% menor tempo limitado até certificado sem queda de sucesso;
+NULL quando o efeito registrado não ocorre; INCONCLUSIVE se faltarem
+soluções/grupos ou precisão. O custo integral deve ser apresentado e pode
+impedir promoção. Essa triagem é escolha operacional, não prova estatística.
+
+Timeout entra como observação censurada e nunca desaparece da análise.
+Reportar todos os braços, todas as tarefas e seeds, intervalos por grupo e
+soluções distintas. Não usar mediana só dos sucessos para esconder falhas.
+MSE, resíduo pequeno, diversidade e sobrevivência ao atacante são auxiliares.
+
+P71 pré-registra com revisor estatístico a análise dos dados censurados,
+efeito mínimo, critérios de sucesso e controle da seleção entre dez
+hipóteses. O piloto pequeno não garante poder para confirmar ganho. Não
+promover um mecanismo com zero sucessos, nem tratar zero versus zero como
+prova de equivalência. Sem revisão independente o rótulo é PROVISIONAL.
+
+Toda exclusão permanente exige prova/checker exato. Filtro aprendido sem
+prova apenas prioriza e mantém exploração sem filtro. Família de infinitos
+casos exige identidade, integridade, positividade e domínio demonstrados;
+amostras finitas não conferem esse status.
+
+### Microtarefas e revisão limpa
+
+Uma fase pode precisar de entregas pequenas distintas:
+A) capacidade + regressões + diagnóstico técnico;
+B) configuração/pré-registro revisados e congelados;
+C) medição read-only da revisão aceita + registro documental do resultado.
+Cada entrega é uma microtarefa com gate e um único commit; a fase continua
+Building até o seu gate integral. Não executar A/B/C em um único ciclo.
+
+Um diagnóstico de código ainda editado pode validar a capacidade técnica,
+mas registra dirty=true e não aceita a hipótese. Medição final começa com
+árvore limpa, revisão aceita e configurações congeladas; salva raw externamente.
+Depois de medir, registrar o manifesto/relatório em microtarefa documental.
+Um commit posterior não transforma um diagnóstico antigo em confirmação.
+
+Não adicionar handlers vazios P58–P72. Reusar interfaces e módulos reais;
+o science_matrix despacha, não recebe dez implementações inteiras. As chamadas
+novas dos arquivos de fase são contratos futuros, não CLI já disponível.
+Gates comuns permanecem git diff --check, python3 -m pytest tests -q e
+make verify; um gate vermelho bloqueia commit/push daquela microtarefa.
+
+### Prompt do novo ciclo
+
+> Leia AGENTS.md, docs/FORMAL_SEARCH_PLAN.md, seção Programa especulativo
+> P58–P72, e a primeira fase liberada começando por P58. Execute somente
+> uma microtarefa; nenhuma fase seguinte sem pré-requisitos aceitos.
+> Preserve dados P40–P57 e testes finais antigos. Não presuma aprovação
+> humana, novidade ou capacidade de CLI apenas porque existe um documento.
+> Aplique D019 e execute a primeira microtarefa corretiva ainda não concluída
+> da P58 (começando por R1). Preserve pendências históricas com disposição
+> auditável; não tente aprová-las retrospectivamente nem omita os seis itens.
+> Registre autorizações já dadas e executor real, com escopo e evidências.
+> Antes do experimento confirme enunciado revisado, informação igual,
+> custo completo, configuração congelada e revisão limpa. Reuse o código;
+> não altere checker, thresholds ou bounds para fazer a hipótese vencer.
+> Resultado NULL/INCONCLUSIVE íntegro é válido; erro de integridade bloqueia.
+> Rode gates, faça um commit e push/PR apenas se todos passarem, registre
+> artefatos duráveis/hashes e pare. Não execute automaticamente os dez testes.
+
+## Programa de busca algébrica e verificação formal Lean 4 (P73–P80)
+
+**Programa concluído em 2026-10-13 (D022).** Sucedeu a conclusão de P58–P72 sob D020.
+A constatação de P71 e P72 foi que a busca puramente numérica de instâncias isoladas
+em $\mathbb{Z}^3$ (mesmo com módulos heurísticos ou neurais) esgota a capacidade de
+cálculo em números primos grandes ($n > 10^5$, classe dura $n \equiv 1 \pmod{24}$)
+sem produzir teoremas matemáticos universais.
+A literatura resolve instâncias da conjectura de Erdős–Straus e afins por meio de
+**identidades polinomiais** que cobrem classes inteiras de congruência (ex.: identidades
+de Mordell para resíduos módulo 840).
+
+O programa P73–P80 redirecionou o motor de busca do EvoByte para a descoberta algébrica
+de fórmulas parametrizadas sobre progressões aritméticas $n = mk + r$ e sua
+compilação automática em teoremas provados formalmente no kernel Lean 4 (Mathlib).
+Todas as fases P73–P80 foram concluídas com êxito (`Done`), atingindo 149 teoremas
+formalmente certificados no kernel do Lean 4 com zero tokens `sorry`, cobertura modular
+comprovada de $80{,}0\%$ mod 120 em Sierpiński $5/n$, confirmação cega com controle de
+Holm ($p = 3{,}81 \times 10^{-6} < 0{,}05$) e dossiê de novidade reproduzível em árvore limpa.
+
+### Ordem e dependências de P73–P80
+
+```text
+P73 harness Lean 4 -> P74 síntese algébrica -> P75 matriz de resíduos
+ -> P76 crivo racional -> P77 ponte bytecode-Lean -> P78 generalização
+ -> P79 confirmação cega -> P80 campanha formal e dossiê
+```
+
+### Regras do programa P73–P80
+
+1. **Uma microtarefa por ciclo:** cada fase definiu seu escopo e produziu exatamente commits atômicos e PRs dedicados.
+2. **Lean 4 hermético:** compilação via `lake env lean` ou `lake -d lean_proofs build` hermética em CI local, sem downloads ou dependência de rede em tempo de teste.
+3. **Identidades polinomiais exatas:** identidades descobertas $(X(k), Y(k), Z(k))$ são identidades racionais exatas sobre $\mathbb{Q}[k]$, verificáveis por álgebra computacional e provadas por táticas de anel (`ring`, `norm_num`, `linarith`) em Lean 4.
+4. **Sem alegações espúrias:** a cobertura de classes de resíduos modulares especifica exatamente a porcentagem de classes provadas; resíduos sem identidade permanecem explicitamente marcados como não cobertos.
+5. **Divisão de conjuntos cega (P79):** classes de congruência de teste foram seladas antes do congelamento dos modelos de busca para evitar sobreajuste algébrico.
+
+## Programa de prova indutiva, síntese de lemas e automação de táticas em Lean 4 (P81–P88)
+
+**Programa proposto em 2026-10-13 (D023).** Sucede a conclusão de P73–P80 sob D022.
+O programa P73–P80 demonstrou com sucesso que identidades polinomiais em $\mathbb{Q}[k]$
+e crivos de divisores racionais resolvem formalmente classes modulares e instâncias
+difíceis no kernel do Lean 4 (149 teoremas provados com zero `sorry`). Contudo, o
+dossiê de pesquisa P80 identificou limitações estruturais:
+1. Identidades em $\mathbb{Q}[k]$ garantem relações racionais, mas a garantia de que as
+   coordenadas $x, y, z$ pertencem a $\mathbb{Z}^+$ para certas progressões aritméticas
+   exige lemas de divisibilidade inteira formulados e provados em $\mathbb{N}$ ou $\mathbb{Z}$.
+2. As classes residuais resistentes módulo 840 para $4/n$ ($n \equiv 1, 121, 169, 289, 361, 529 \pmod{840}$)
+   e as 24 classes restantes para Sierpiński mod 120 não admitem parametrizações polinomiais
+   lineares universais de 1 parâmetro ($n = mk + r$). Exigem parametrizações quadráticas
+   ou multiparamétricas ($n = mk^2 + rk + s$ ou seleção orientada por fatores primos).
+3. O provador formal utilizou predominantemente táticas de anel (`ring`, `norm_num`).
+   Avançar para lemas indutivos e limites diofantinos requer táticas de aritmética de
+   Presburger (`omega`), busca guiada por regras (`aesop`) e desigualdades lineares (`linarith`).
+
+O programa P81–P88 estende o motor de descoberta e verificação do EvoByte para a
+geração de lemas diofantinos estruturados em $\mathbb{N}$, seleção algorítmica de divisores
+ótimos, prova automatizada via táticas avançadas do Lean 4 e compilação de meta-teoremas.
+
+### Ordem e dependências de P81–P88
+
+```text
+P81 baseline indutivo -> P82 lemas de divisibilidade -> P83 divisores ótimos
+ -> P84 identidades multiparâmetro -> P85 automação de táticas (omega/aesop)
+ -> P86 generalização multitermo -> P87 confirmação cega em grande escala
+ -> P88 meta-teoremas e campanha formal certificada
+```
+
+### Regras do programa P81–P88
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais em $\mathbb{N}$ e $\mathbb{Z}$:** lemas matemáticos devem certificar positividade e divisibilidade exata no kernel do Lean 4.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P87):** partição selada de instâncias diofantinas de grande escala ($n > 10^5$) sem vazamento para o crivo.

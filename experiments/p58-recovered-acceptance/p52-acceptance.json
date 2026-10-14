@@ -1,0 +1,103 @@
+{
+  "budgets": {
+    "audit_recheck_sec": 4.762964128996828
+  },
+  "certificate_references": [
+    {
+      "item_id": "p52_tr_0000",
+      "sha256": "f80924940a38bd943c86d31ff8db6e2b8b8c9b3f5f00e08eb4925e1bcb147205"
+    },
+    {
+      "item_id": "p52_tr_0001",
+      "sha256": "0b02b24d261a95cd2e9db3ef737822b25ad44bf5ed5865a55842e01b72bf3ea3"
+    },
+    {
+      "item_id": "p52_tr_0002",
+      "sha256": "6059f306d840901920ec010cc0d656309a87b1c6e9220acec2fe6b9f56895898"
+    },
+    {
+      "item_id": "p52_tr_0003",
+      "sha256": "703af230cca573c039832a67375725a87f47efea72c23dce2f00979cef6a9f65"
+    },
+    {
+      "item_id": "p52_tr_0004",
+      "sha256": "4d437f57d2368bb7be0d17819df751471520bace2e27d7db1979b7d28a5e7e26"
+    }
+  ],
+  "claim_scope": "certified train/val data only; engineering minimums, no statistical claim",
+  "controls_found": [
+    "x**2 + 3*x + 7",
+    "x**2 - 1"
+  ],
+  "counters": {
+    "controls": 2,
+    "negatives": 6,
+    "positives": 320,
+    "rechecked_exact": 320
+  },
+  "dirty": "M benchmarks/math_corpus.py\n M benchmarks/math_specialist.py\n M benchmarks/science_matrix.py\n?? experiments/p52-certified-data-raw.json\n?? experiments/p52-certified-data.json\n?? experiments/p52-config.json\n?? experiments/p52-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 4.762968739996722,
+  "errors": [],
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "integrity_ok": true,
+  "limitations": [
+    "Minimum counts are engineering readiness, not statistical power.",
+    "INCONCLUSIVE blocks P53 training but permits P54 baselines without learning.",
+    "Single-template corpus: group/item isolation enforced, template sharing disclosed."
+  ],
+  "minimums_actual": {
+    "train_groups": 256,
+    "train_positives": 256,
+    "val_groups": 64,
+    "val_positives": 64
+  },
+  "minimums_met": true,
+  "minimums_required": {
+    "train_groups": 32,
+    "train_positives": 256,
+    "val_groups": 8,
+    "val_positives": 64
+  },
+  "negatives_rejected": 6,
+  "negatives_total": 6,
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P52",
+  "rechecked_exact": 320,
+  "rechecked_total": 320,
+  "resolved_config": {
+    "acceptance_phase": "P52",
+    "config_path": "experiments/p52-config.json",
+    "config_sha256": "bfabedf16db29a6b5f40ec1276d9123bcfbcffb4ef7fb3f05fa01cac4359e5bc",
+    "corpus_manifest": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/experiments/p52-certified-data.json"
+  },
+  "revision": "5b5ba86d6644d7b105d693a99f0a416a4b802fef",
+  "run_id": "3b1539a5d7be4c89",
+  "seeds_rng": "deterministic enumeration; seed-shuffled split; no search RNG",
+  "splits": {
+    "group_overlap": [],
+    "train_groups": 256,
+    "val_groups": 64
+  },
+  "teacher_cap_sec": 3600.0,
+  "teacher_total_sec": 3.9211712900651037,
+  "verdict": "ACCEPTED"
+}

@@ -1,0 +1,266 @@
+{
+  "phase": "P71",
+  "artifact": "h06-learned-library",
+  "generator": "p67_mine_macros(p67_dev_programs(seed=0), top_k=8)",
+  "macros": [
+    {
+      "id": "M00",
+      "length": 2,
+      "count": 2,
+      "canonical": [
+        [
+          3,
+          0,
+          1,
+          1
+        ],
+        [
+          10,
+          2,
+          3,
+          1
+        ]
+      ],
+      "expansion": [
+        16909059,
+        16844554
+      ],
+      "domain": {
+        "registers": [
+          1,
+          2,
+          3,
+          7
+        ],
+        "n_regs": 8,
+        "opcode_version": 0
+      }
+    },
+    {
+      "id": "M01",
+      "length": 2,
+      "count": 1,
+      "canonical": [
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          2,
+          3,
+          1
+        ]
+      ],
+      "expansion": [
+        17040897,
+        17104897
+      ],
+      "domain": {
+        "registers": [
+          0,
+          4,
+          5,
+          6
+        ],
+        "n_regs": 8,
+        "opcode_version": 0
+      }
+    },
+    {
+      "id": "M02",
+      "length": 2,
+      "count": 1,
+      "canonical": [
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          14,
+          0,
+          2,
+          1
+        ]
+      ],
+      "expansion": [
+        16909313,
+        16843790
+      ],
+      "domain": {
+        "registers": [
+          1,
+          2,
+          4
+        ],
+        "n_regs": 8,
+        "opcode_version": 0
+      }
+    },
+    {
+      "id": "M03",
+      "length": 2,
+      "count": 1,
+      "canonical": [
+        [
+          1,
+          0,
+          1,
+          1
+        ],
+        [
+          14,
+          2,
+          1,
+          1
+        ]
+      ],
+      "expansion": [
+        17104897,
+        17105678
+      ],
+      "domain": {
+        "registers": [
+          0,
+          3,
+          5
+        ],
+        "n_regs": 8,
+        "opcode_version": 0
+      }
+    },
+    {
+      "id": "M04",
+      "length": 2,
+      "count": 1,
+      "canonical": [
+        [
+          2,
+          0,
+          1,
+          1
+        ],
+        [
+          13,
+          2,
+          1,
+          1
+        ]
+      ],
+      "expansion": [
+        16777730,
+        16779021
+      ],
+      "domain": {
+        "registers": [
+          0,
+          2,
+          7
+        ],
+        "n_regs": 8,
+        "opcode_version": 0
+      }
+    },
+    {
+      "id": "M05",
+      "length": 2,
+      "count": 1,
+      "canonical": [
+        [
+          2,
+          0,
+          1,
+          1
+        ],
+        [
+          14,
+          2,
+          3,
+          1
+        ]
+      ],
+      "expansion": [
+        16843266,
+        17039374
+      ],
+      "domain": {
+        "registers": [
+          0,
+          1,
+          2,
+          4
+        ],
+        "n_regs": 8,
+        "opcode_version": 0
+      }
+    },
+    {
+      "id": "M06",
+      "length": 2,
+      "count": 1,
+      "canonical": [
+        [
+          3,
+          0,
+          1,
+          1
+        ],
+        [
+          12,
+          2,
+          2,
+          1
+        ]
+      ],
+      "expansion": [
+        16974851,
+        17171980
+      ],
+      "domain": {
+        "registers": [
+          3,
+          4,
+          6
+        ],
+        "n_regs": 8,
+        "opcode_version": 0
+      }
+    },
+    {
+      "id": "M07",
+      "length": 2,
+      "count": 1,
+      "canonical": [
+        [
+          10,
+          0,
+          1,
+          1
+        ],
+        [
+          1,
+          2,
+          0,
+          1
+        ]
+      ],
+      "expansion": [
+        17105418,
+        16909313
+      ],
+      "domain": {
+        "registers": [
+          2,
+          4,
+          5
+        ],
+        "n_regs": 8,
+        "opcode_version": 0
+      }
+    }
+  ]
+}

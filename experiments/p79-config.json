@@ -1,0 +1,12 @@
+{
+  "alpha": 0.05,
+  "max_baseline_y_steps": 5000,
+  "max_coord": 1000000000,
+  "min_decisive_instances": 10,
+  "note": "P79 blind residue confirmation and statistical selection control frozen configuration. Validates generalized algebraic search engine on a sealed blind residue split (Erdos-Straus a=4 mod 840 and Sierpinski a=5 mod 120) under strict Holm family-wise error rate control (alpha=0.05).",
+  "phase": "P79",
+  "require_clean_tree": true,
+  "seed": 42,
+  "split_path": "experiments/p79-blind-split.json",
+  "split_sha256": "d1d657cc0077fd205f2cde7b5ba6bb772b0144ad2d5025cb345b9440e21b63c6"
+}

@@ -8,9 +8,16 @@ import numpy as np
 import pytest
 
 from evobyte.islands import (
+    P69_MIGRATION_POLICIES,
+    P69_SIGNATURE_MODULI,
     IslandModel,
     IslandRunnerConfig,
     get_default_island_configs,
+    p69_migrate,
+    p69_recombine,
+    p69_residual,
+    p69_signature,
+    p69_signature_distance,
     run_evolution_islands,
 )
 
@@ -107,3 +114,63 @@ def test_islands_checkpoint_hook(tmp_path: Path) -> None:
     assert len(loaded["populations"]) == 4
     for pop in loaded["populations"]:
         assert len(pop) == 20
+
+
+def _p69_islands():
+    return [
+        [(2, 3, 6), (2, 3, 7), (5, 5, 5)],
+        [(3, 4, 12), (4, 4, 12), (1, 1, 2)],
+        [(2, 4, 4), (3, 3, 6), (7, 7, 7)],
+        [(3, 18, 18), (2, 2, 3), (9, 9, 9)],
+    ]
+
+
+def test_p69_signature_distance_and_residual() -> None:
+    assert P69_SIGNATURE_MODULI == (2, 3, 5)
+    assert set(P69_MIGRATION_POLICIES) == {"residue", "elite", "random", "none"}
+    assert p69_signature((2, 3, 6)) == p69_signature((2, 3, 6))
+    assert p69_signature_distance((0, 1), (0, 1)) == 0
+    assert p69_signature_distance((0, 1), (1, 0)) == 2
+    assert p69_residual(4, (2, 3, 6)) == 0
+    assert p69_residual(4, (2, 3, 7)) == 4
+
+
+def test_p69_recombine_records_parents_and_domain() -> None:
+    first = p69_recombine((2, 3, 7), (5, 5, 5), seed=0)
+    assert first == p69_recombine((2, 3, 7), (5, 5, 5), seed=0)
+    assert first["rejected"] is False
+    assert first["parents"] == [(2, 3, 7), (5, 5, 5)]
+    assert first["child"] is not None
+    assert min(first["child"]) >= 1
+    tiny = p69_recombine((1, 1, 1), (10**9 + 5, 10**9 + 5, 10**9 + 5), seed=0)
+    assert tiny["rejected"] is True
+    assert tiny["child"] is None
+    assert tiny["parents"] == [(1, 1, 1), (10**9 + 5, 10**9 + 5, 10**9 + 5)]
+
+
+def test_p69_migrate_constant_population_and_ancestry() -> None:
+    import pytest
+
+    for policy in ("residue", "elite", "random"):
+        rep = p69_migrate(_p69_islands(), 4, policy=policy, seed=0)
+        assert [len(isl) for isl in rep["islands"]] == [3, 3, 3, 3]
+        assert len(rep["moves"]) == 4
+        for move in rep["moves"]:
+            assert move["dst"] == (move["src"] + 1) % 4
+            assert len(move["parents"]) in (1, 2)
+            if move["recombined"]:
+                assert len(move["parents"]) == 2
+    assert p69_migrate(_p69_islands(), 4, policy="residue", seed=0) == p69_migrate(
+        _p69_islands(), 4, policy="residue", seed=0
+    )
+    same = p69_migrate(_p69_islands(), 4, policy="none", seed=0)
+    assert same["islands"] == _p69_islands()
+    assert same["moves"] == []
+    with pytest.raises(ValueError, match="Unknown P69 migration policy"):
+        p69_migrate(_p69_islands(), 4, policy="oracle", seed=0)
+
+
+def test_p69_elite_picks_best_residual() -> None:
+    islands = [[(5, 5, 5), (2, 3, 7), (2, 3, 6)], [(1, 1, 2)]]
+    rep = p69_migrate(islands, 4, policy="elite", seed=0)
+    assert rep["moves"][0]["emigrant"] == (2, 3, 6)

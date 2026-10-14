@@ -1,0 +1,11 @@
+{
+  "phase": "P76",
+  "note": "P76 rational divisor sieve and binary quadratic divisor decomposition frozen configuration. Target instances: challenging primes n = 1 mod 24 and resistant residues mod 840 [1009, 1033, 1129, 1153, 1201, 1249, 1297, 1321, 1489, 1609]; min_speedup: 3.0; min_candidate_reduction: 100.0; exact integer Diophantine certification.",
+  "target_instances": [1009, 1033, 1129, 1153, 1201, 1249, 1297, 1321, 1489, 1609],
+  "min_speedup": 3.0,
+  "min_candidate_reduction": 100.0,
+  "max_d_quad": 100,
+  "max_coord": 1000000000,
+  "seed": 42,
+  "require_clean_tree": true
+}

@@ -49,6 +49,11 @@ P37 one controlled quantum-inspired sampling hypothesis
 P38 clean-environment confirmation + frozen model export
 P39 bounded mathematical campaign + novelty review
 P40–P57 guided formal-search program (see executor runbook and phase index)
+P58–P60 accepted base, equal-information controls and frozen workbench
+P61–P70 ten isolated speculative hypotheses
+P71 fresh independent confirmation with selection control
+P72 one precise novelty nomination and certified campaign
+P73–P80 algebraic discovery & Lean 4 formal verification program (D021)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -131,9 +136,76 @@ a fresh sealed test and an unchanged accepted implementation. End with one
 bounded campaign and human novelty review, not a universal theorem claim
 based on tested instances.
 
-P40 is next, subject to accepted-base reconciliation; none of P40–P57 has
-been executed by adding this plan. No historical H1, P14 or cross-family
-claim is unlocked. The existing quantum roadmap is preserved.
+P40 was the entry of D017. P40–P57 outcomes now exist in their phase files;
+their recorded human-review pendencies and provisional evidence are not
+waived by Done labels. No historical H1, P14 or cross-family claim is unlocked.
+The existing quantum roadmap is preserved.
+
+## Speculative hypotheses extension (D018)
+
+[P58–P72](phases/README.md#speculative-hypothesis-program-p58p72) and
+[the updated executor contract](FORMAL_SEARCH_PLAN.md#programa-especulativo-p58p72)
+track P58–P72 as completed (Done, D020). P58 reconciled evidence and durable artifacts;
+and outstanding review; P59 separates public problem inputs from private
+answers and establishes equal-cost comparisons. P60 preregisters one family,
+strong classical baselines, small models and bounded resource budgets.
+The [D019 repair contract](FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019)
+defines P58 R1–R4 and scoped dispositions for historical evidence. Technical
+continuation requires enforced restrictions and accepted review; it neither
+retroactively approves P47/P54/P56 nor promotes their scientific claims.
+
+P61–P70 test modular shadows, error repair, verifier feedback, learned
+obstructions, backward constructions, composite jumps, verified macros,
+adversarial conjectures, residue-guided islands and parametric proof search.
+Each tests one mechanism; null results are retained and modules are not
+automatically stacked. P71 confirms at most two selected methods on fresh
+groups with independent review and selection/multiple-comparison control.
+P72 nominates one precise mathematical result and reviews correctness,
+novelty and reproduction. No universal claim follows from finite testing.
+
+Adding these files executes no new experiment and establishes no worldwide
+novelty, quantum advantage or solved open problem. Existing results remain
+unchanged; integrity failures block advancement, not honest negative findings.
+
+## Algebraic discovery & Lean 4 formal verification (D021, completed under D022)
+
+[P73–P80](phases/README.md#algebraic-discovery--lean-4-formal-verification-program-p73p80)
+define the formal extension following the conclusion of P58–P72, now completed (Done, D022).
+Empirical search in $\mathbb{Z}^3$ showed that numerical point-hunting hits
+finite resource bounds on hard primes ($n \equiv 1 \pmod{24}$) without
+proving theorems. P73–P80 pivoted from instance-level search to
+polynomial identity synthesis and automated theorem extraction in Lean 4.
+
+P73 audited and froze the hermetic Lean 4 / Lake verification harness.
+P74 synthesized algebraic polynomial identities $(X(k), Y(k), Z(k))$ covering
+linear arithmetic progressions $n = mk + r$. P75 constructed an exact residue
+class coverage matrix for moduli $M \in \{24, 120, 840\}$, isolating resistant
+residues. P76 implemented an exact rational divisor sieve on
+$(4xy - n(x+y)) \mid n^2$. P77 compiled discovered algebraic bytecode into
+certified Lean 4 Mathlib theorems with automated tactic proofs (`ring`,
+`norm_num`, `linarith`). P78 generalized to Sierpiński ($5/n$)
+and Schinzel ($a/n$) families with 80% coverage mod 120. P79 confirmed blinded
+residue partitions under Holm FWER control ($p = 3.81 \times 10^{-6}$).
+P80 executed a bounded campaign, verifying 149 Lean 4 theorems with zero sorry
+and compiling the formal research dossier. All phases P73–P80 are Done.
+
+## Inductive proof, lemma synthesis & tactic automation (D023)
+
+[P81–P88](phases/README.md#inductive-proof-lemma-synthesis--tactic-automation-program-p81p88)
+define the formal extension following the conclusion of P73–P80 under D022.
+P73–P80 established 149 certified theorems in $\mathbb{Q}[k]$ and exact certificates in $\mathbb{Q}$,
+identifying the necessity of structured integer divisibility lemmas in $\mathbb{N}$,
+multiparameter quadratic identities, and automated proof search with advanced Lean 4 tactics.
+
+P81 audits and establishes the inductive proof and Presburger arithmetic baseline in Lean 4 (Done).
+P82 synthesizes and proves integer divisibility lemmas for Diophantine denominators in $\mathbb{N}$ and $\mathbb{Z}$ (Done).
+P83 implements optimal divisor selection algorithms minimizing coordinate bounds $\max(x, y, z)$ (Done).
+P84 synthesizes multiparameter quadratic polynomial forms for resistant residues (Done).
+P85 automates tactic proof compilation using `omega`, `aesop`, and `linarith` (Done).
+P86 generalizes to multiterm and coprimality-constrained Diophantine equations (Done).
+P87 confirms performance on a sealed blind split of large instances ($n > 10^5$) under Holm FWER control (Done).
+P88 executes a bounded meta-theorem campaign and exports the certified formal dossier (Done).
+All phases P81–P88 are Done.
 
 ## Quantum track (experimental, deferred expansion)
 

@@ -1,0 +1,14 @@
+{
+  "phase": "P70",
+  "note": "Frozen P70 template search. Bounded grid with exact labels; sealed finals excluded.",
+  "device": "cpu",
+  "seed": 0,
+  "require_clean_tree": true,
+  "grid_seed": 0,
+  "budget": 20,
+  "training": {
+    "seed": 0,
+    "epochs": 30
+  },
+  "param_cap": 100000
+}

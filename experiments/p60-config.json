@@ -1,0 +1,72 @@
+{
+  "phase": "P60",
+  "note": "Frozen P60 pre-registration (reviewed, unmeasured). Development workbench only; no hypothesis confirmed or promoted; fresh confirmation final reserved, unreferenced.",
+  "manifest_path": "experiments/p60-workbench-manifest.json",
+  "manifest_version": 1,
+  "manifest_sha256": "e6204e980cb0170e09432155e86fb6a2b0814f949f4b5f465a3cc3d0b85045e7",
+  "development_tasks": [
+    {
+      "task_id": "es-dev-04",
+      "n": 4,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-06",
+      "n": 6,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-08",
+      "n": 8,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-09",
+      "n": 9,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-10",
+      "n": 10,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-12",
+      "n": 12,
+      "max_coord": 1000000000
+    }
+  ],
+  "seeds": [
+    7,
+    42,
+    101
+  ],
+  "comparison": "baseline versus one hypothesis at a time",
+  "budgets": {
+    "search_cert_per_attempt_sec": 10,
+    "per_hypothesis_ceiling_min": 30,
+    "ten_pilots_initial_ceiling_h": 5,
+    "p71_per_method_h": 2,
+    "p72_h": 1,
+    "raw_data_per_run_gib": 1,
+    "model_reserve_params": 100000,
+    "model_absolute_cap_params": 1000000
+  },
+  "review": {
+    "status": "accepted",
+    "reviewer": "Alexandre (delegação D019)",
+    "executor": "agente executor",
+    "review_id": "p60-manifest-review-001",
+    "record": "docs/research/p60-manifest-review.md",
+    "date": "2026-10-07",
+    "scope": "workbench manifest v1 (908b089)"
+  },
+  "device": "cpu",
+  "require_clean_tree": true,
+  "es_space": {
+    "max_coord": 1000000000,
+    "x_steps": 50,
+    "y_cap": 200000,
+    "warm_start": []
+  }
+}

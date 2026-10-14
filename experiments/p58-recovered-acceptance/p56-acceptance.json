@@ -1,0 +1,292 @@
+{
+  "artifacts_restored": {
+    "experiments/p52-certified-data.json": true,
+    "experiments/p53-proposer-manifest.json": true,
+    "experiments/p53-proposer.pt": true,
+    "experiments/p56-final-tasks.json": true
+  },
+  "budgets": {
+    "budget_sec": 10.0,
+    "campaign_cap_sec": 10800.0
+  },
+  "by_task": {
+    "p56_f00/classical": {
+      "certified": 20,
+      "median_time_to_cert": 0.011852892002934823,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f00/evolution": {
+      "certified": 20,
+      "median_time_to_cert": 0.09472635299971444,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f00/structured_random": {
+      "certified": 20,
+      "median_time_to_cert": 0.10410965749906609,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f01/classical": {
+      "certified": 20,
+      "median_time_to_cert": 0.014333711998915533,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f01/evolution": {
+      "certified": 0,
+      "median_time_to_cert": 10.0,
+      "trials": 20,
+      "wilson_95": [
+        0.0,
+        0.16113012549493322
+      ]
+    },
+    "p56_f01/structured_random": {
+      "certified": 0,
+      "median_time_to_cert": 10.0,
+      "trials": 20,
+      "wilson_95": [
+        0.0,
+        0.16113012549493322
+      ]
+    },
+    "p56_f02/classical": {
+      "certified": 20,
+      "median_time_to_cert": 0.01276605399834807,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f02/evolution": {
+      "certified": 0,
+      "median_time_to_cert": 10.0,
+      "trials": 20,
+      "wilson_95": [
+        0.0,
+        0.16113012549493322
+      ]
+    },
+    "p56_f02/structured_random": {
+      "certified": 0,
+      "median_time_to_cert": 10.0,
+      "trials": 20,
+      "wilson_95": [
+        0.0,
+        0.16113012549493322
+      ]
+    },
+    "p56_f03/classical": {
+      "certified": 20,
+      "median_time_to_cert": 0.009422915500181261,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f03/evolution": {
+      "certified": 0,
+      "median_time_to_cert": 10.0,
+      "trials": 20,
+      "wilson_95": [
+        0.0,
+        0.16113012549493322
+      ]
+    },
+    "p56_f03/structured_random": {
+      "certified": 0,
+      "median_time_to_cert": 10.0,
+      "trials": 20,
+      "wilson_95": [
+        0.0,
+        0.16113012549493322
+      ]
+    },
+    "p56_f04/classical": {
+      "certified": 20,
+      "median_time_to_cert": 0.010605139497783966,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f04/evolution": {
+      "certified": 20,
+      "median_time_to_cert": 0.08900816800087341,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f04/structured_random": {
+      "certified": 20,
+      "median_time_to_cert": 2.583922622998216,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f05/classical": {
+      "certified": 20,
+      "median_time_to_cert": 0.011542863998329267,
+      "trials": 20,
+      "wilson_95": [
+        0.8388698745050667,
+        1.0
+      ]
+    },
+    "p56_f05/evolution": {
+      "certified": 0,
+      "median_time_to_cert": 10.0,
+      "trials": 20,
+      "wilson_95": [
+        0.0,
+        0.16113012549493322
+      ]
+    },
+    "p56_f05/structured_random": {
+      "certified": 0,
+      "median_time_to_cert": 10.0,
+      "trials": 20,
+      "wilson_95": [
+        0.0,
+        0.16113012549493322
+      ]
+    }
+  },
+  "certificate_references": [],
+  "claim_scope": "frozen method on six fresh tasks; loss and tie are valid results",
+  "clean_rerun": {
+    "artifacts_restored": {
+      "experiments/p52-certified-data.json": true,
+      "experiments/p53-proposer-manifest.json": true,
+      "experiments/p53-proposer.pt": true,
+      "experiments/p56-final-tasks.json": true
+    },
+    "controls_restored": 2,
+    "controls_total": 2,
+    "errors": [],
+    "label": "self-repeat in a clean process (not independent review)",
+    "negatives_rejected": 6,
+    "negatives_total": 6,
+    "ok": true,
+    "p43_resume": {
+      "bit_exact_continuation": true
+    },
+    "tasks_restored": 6,
+    "tasks_total": 6
+  },
+  "counters": {
+    "tasks": 6,
+    "trials": 360
+  },
+  "dirty": "M benchmarks/science_matrix.py\n M experiments/p47-final-test/access-log.json\n M tests/test_science.py\n?? experiments/p56-config.json\n?? experiments/p56-final-tasks.json\n?? experiments/p56-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 1696.0499976319988,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "Six tasks cannot prove generality; sample limits published per task.",
+    "Provisional without independent review; a post-final change needs a new future test."
+  ],
+  "p43_resume": {
+    "bit_exact_continuation": true
+  },
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "per_arm": {
+    "classical": {
+      "cert_sec": 1.2500385890016332,
+      "certified": 120,
+      "search_sec": 1.4642228249576874,
+      "trials": 120
+    },
+    "evolution": {
+      "cert_sec": 0.5728537219692953,
+      "certified": 40,
+      "search_sec": 816.0465671630445,
+      "trials": 120
+    },
+    "structured_random": {
+      "cert_sec": 0.49431133396865334,
+      "certified": 40,
+      "search_sec": 871.8869332869799,
+      "trials": 120
+    }
+  },
+  "phase": "P56",
+  "reason": "recoverable package with complete final results",
+  "resolved_config": {
+    "acceptance_phase": "P56",
+    "config_path": "experiments/p56-config.json",
+    "config_sha256": "d343bd8b438993778a0efb2084c96d8310c2281abd7f754034bc588f67c46d7e"
+  },
+  "result_label": "provisional-confirmation (independent review pending; never a discovery label)",
+  "revision": "23303042f8ffff67564dfa8124360b75995e49e8",
+  "run_id": "5a40f9179c9839c3",
+  "seeds_rng": "fixed seeds 900..919 (20); paired across arms",
+  "task_origin": "sealed-final",
+  "task_seal_sha256": "d4c94417e94550ec6cfa4723f54ba04c9d9868f30a6c0ca3320112e1af4beb44",
+  "tasks": [
+    {
+      "canonical_formula": "3*x**2 - x/2 + 1/2",
+      "task_id": "p56_f00"
+    },
+    {
+      "canonical_formula": "100*x**2 + x/2 + 1",
+      "task_id": "p56_f01"
+    },
+    {
+      "canonical_formula": "7*x**2 + 100*x",
+      "task_id": "p56_f02"
+    },
+    {
+      "canonical_formula": "-x**2 + 100*x + 1",
+      "task_id": "p56_f03"
+    },
+    {
+      "canonical_formula": "x**2 - 10*x + 2",
+      "task_id": "p56_f04"
+    },
+    {
+      "canonical_formula": "100*x**2 - 10*x + 2",
+      "task_id": "p56_f05"
+    }
+  ],
+  "verdict": "CONFIRMED"
+}
