@@ -1,6 +1,6 @@
 # P96 — Grande campanha formal e dossiê certificado final em Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P95 Proposed; branch a partir de `codex/p95-extreme-scale-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P95 concluída com confirmação estatística extrema aprovada.
