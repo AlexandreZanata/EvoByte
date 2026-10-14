@@ -1,0 +1,10 @@
+{
+  "budget_sec": 3600.0,
+  "dossier_path": "docs/research/p96-grand-formal-dossier.md",
+  "min_theorems": 500,
+  "note": "P96 grand formal campaign and certified dossier final audit. Consolidates 16 formal modules in Lean 4 with > 500 theorems (965 actual), cryptographic hash chain, and zero sorry tokens.",
+  "phase": "P96",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42
+}

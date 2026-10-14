@@ -754,3 +754,79 @@ def test_p94_universal_multiterm_catalog_export():
     sound, findings = verify_universal_multiterm_catalog_soundness(catalog, min_theorems=100)
     assert sound is True
     assert len(findings) == 0
+
+
+def test_p96_audit_grand_formal_library():
+    from evobyte.formal_bridge import (
+        audit_grand_formal_library,
+        verify_grand_formal_campaign_soundness,
+    )
+
+    res = audit_grand_formal_library(verify_lake=False)
+    assert res["total_modules"] == 16
+    assert res["total_theorems"] >= 500
+    assert res["total_theorems"] == 965
+    assert res["has_sorry"] is False
+    assert len(res["missing_modules"]) == 0
+    assert len(res["hash_chain"]) == 16
+    assert (
+        res["final_chain_hash"]
+        == "5de47dc7b3987ef724e685d2bac5a944ee1cd4ade4a8178f2d74ae0c9471878c"
+    )
+
+    # Verify soundness check
+    # Lake flag set to true for soundness verification test
+    res_copy = dict(res, lake_passed=True)
+    sound, findings = verify_grand_formal_campaign_soundness(res_copy, min_theorems=500)
+    assert sound is True
+    assert len(findings) == 0
+
+
+def test_p96_dossier_integrity():
+    dossier_p = Path("docs/research/p96-grand-formal-dossier.md")
+    assert dossier_p.exists()
+    content = dossier_p.read_text(encoding="utf-8")
+    assert "965" in content
+    assert "16" in content
+    assert "5de47dc7b3987ef724e685d2bac5a944ee1cd4ade4a8178f2d74ae0c9471878c" in content
+    assert "P96" in content
+
+
+def test_p96_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p96_grand_campaign_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P96 configuration"):
+        run_p96_grand_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p96_grand_campaign_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p96_grand_campaign_audit
+
+    cfg = {
+        "phase": "P96",
+        "min_theorems": 500,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "dossier_path": "docs/research/p96-grand-formal-dossier.md",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p96-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p96-out.json"
+
+    report = run_p96_grand_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P96"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_modules"] == 16
+    assert report["total_formal_theorems"] >= 500
+    assert report["has_sorry"] is False
+    assert (
+        report["final_chain_hash"]
+        == "5de47dc7b3987ef724e685d2bac5a944ee1cd4ade4a8178f2d74ae0c9471878c"
+    )

@@ -3329,3 +3329,147 @@ def verify_universal_multiterm_catalog_soundness(
         findings.append("INVALID_CHECKSUM_UNIVERSAL_MULTITERM_THEOREMS")
 
     return (len(findings) == 0), findings
+
+
+# ============================================================================
+# P96: Grand formal campaign, certified library audit, and hash chain
+# ============================================================================
+
+
+def audit_grand_formal_library(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    expected_modules: list[str] | None = None,
+    verify_lake: bool = True,
+) -> dict[str, Any]:
+    """Audit the complete Lean 4 formal library and compute cryptographic hash chain (P96).
+
+    Inspects all formal modules in `lean_proofs/Generated/`, computes SHA-256 for each,
+    verifies absence of `sorry` tokens, counts formal `theorem` and `lemma` declarations,
+    computes an immutable cryptographic hash chain, and validates Lake compilation.
+    """
+    import re
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+
+    if expected_modules is None:
+        expected_modules = [
+            "AsymptoticDensityTheorems.lean",
+            "AutomatedTheorems.lean",
+            "BytecodeTheorems.lean",
+            "CustomTacticTheorems.lean",
+            "DivisibilityLemmas.lean",
+            "ErdosStrausCertificates.lean",
+            "ErdosStrausIdentities.lean",
+            "ExtremalBoundsTheorems.lean",
+            "InductiveLemmas.lean",
+            "MultitermTheorems.lean",
+            "OptimalCertificates.lean",
+            "QuadraticIdentities.lean",
+            "QuadraticRingTheorems.lean",
+            "SchinzelTheorems.lean",
+            "SierpinskiTheorems.lean",
+            "UniversalMultitermTheorems.lean",
+        ]
+
+    chain_state = hashlib.sha256(b"EvoByte Grand Formal Campaign Root P96").hexdigest()
+    hash_chain: list[dict[str, Any]] = []
+    modules_summary: dict[str, Any] = {}
+    total_theorems = 0
+    has_any_sorry = False
+    missing_modules: list[str] = []
+
+    for mod_name in sorted(expected_modules):
+        mod_p = gen / mod_name
+        if not mod_p.exists():
+            missing_modules.append(mod_name)
+            continue
+
+        mod_bytes = mod_p.read_bytes()
+        mod_text = mod_bytes.decode("utf-8")
+        mod_sha = hashlib.sha256(mod_bytes).hexdigest()
+
+        thms_count = len(re.findall(r"^(?:theorem|lemma)\s+", mod_text, flags=re.MULTILINE))
+        sorry_present = bool(re.search(r"\bsorry\b", mod_text))
+        if sorry_present:
+            has_any_sorry = True
+
+        total_theorems += thms_count
+
+        step_payload = f"{chain_state}:{mod_name}:{mod_sha}:{thms_count}".encode()
+        chain_state = hashlib.sha256(step_payload).hexdigest()
+
+        entry = {
+            "module": mod_name,
+            "path": str(mod_p),
+            "sha256": mod_sha,
+            "theorem_count": thms_count,
+            "has_sorry": sorry_present,
+            "chain_hash": chain_state,
+        }
+        hash_chain.append(entry)
+        modules_summary[mod_name] = entry
+
+    lake_passed = True
+    lake_reasons: list[str] = []
+    if verify_lake:
+        bins = lean_resolve_binaries(proj)
+        lake_proc = subprocess.run(
+            [bins["lake"], "-d", str(proj), "build", "Generated"],
+            capture_output=True,
+            text=True,
+            cwd=str(proj),
+            timeout=180,
+            check=False,
+        )
+        if lake_proc.returncode != 0:
+            lake_passed = False
+            lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "project_dir": str(proj),
+        "generated_dir": str(gen),
+        "total_modules": len(hash_chain),
+        "total_theorems": total_theorems,
+        "has_sorry": has_any_sorry,
+        "missing_modules": missing_modules,
+        "hash_chain": hash_chain,
+        "final_chain_hash": chain_state,
+        "modules": modules_summary,
+        "lake_passed": lake_passed,
+        "lake_reasons": lake_reasons,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_grand_formal_campaign_soundness(
+    campaign_summary: dict[str, Any], min_theorems: int = 500
+) -> tuple[bool, list[str]]:
+    """Audit grand formal campaign summary for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if campaign_summary.get("missing_modules"):
+        findings.append(f"MISSING_MODULES: {campaign_summary.get('missing_modules')}")
+
+    if campaign_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: formal library contains unproven sorry tokens")
+
+    total_thms = campaign_summary.get("total_theorems", 0)
+    if total_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
+
+    if not campaign_summary.get("lake_passed", False):
+        findings.append(f"LAKE_BUILD_FAILED: {campaign_summary.get('lake_reasons')}")
+
+    if len(campaign_summary.get("hash_chain", [])) < 16:
+        findings.append(
+            f"INCOMPLETE_HASH_CHAIN: expected >= 16 modules, got {len(campaign_summary.get('hash_chain', []))}"
+        )
+
+    return (len(findings) == 0), findings
