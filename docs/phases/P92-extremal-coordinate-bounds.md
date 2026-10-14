@@ -1,6 +1,6 @@
 # P92 — Limites extremais certificados e minimização de coordenadas
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P91 Proposed; branch a partir de `codex/p91-quadratic-ring-sieve`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P91 concluída com crivo quadrático verificado.

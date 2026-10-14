@@ -1,0 +1,16 @@
+{
+  "phase": "P92",
+  "budget_sec": 300.0,
+  "min_theorems": 60,
+  "max_constant": 4.0,
+  "a_values": [4, 5],
+  "instances": [
+    73, 97, 193, 241, 313, 337, 409, 457,
+    1009, 1129, 1201, 1369, 1681, 1801, 1849, 1969,
+    2003, 2041, 2209, 2521, 2641, 2689, 2809, 2881, 3049
+  ],
+  "project_dir": "lean_proofs",
+  "output_dir": "lean_proofs/Generated",
+  "seed": 42,
+  "require_clean_tree": true
+}

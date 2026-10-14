@@ -571,3 +571,53 @@ def test_p91_quadratic_ring_catalog_export():
     sound, findings = verify_quadratic_ring_catalog_soundness(catalog, min_theorems=50)
     assert sound is True
     assert len(findings) == 0
+
+
+def test_p92_extremal_coordinate_bounds_metrics():
+    from evobyte.algebraic import compute_coordinate_bounds
+
+    # 4/73 = 1/20 + 1/292 + 1/730
+    metrics = compute_coordinate_bounds(73, (20, 292, 730), a=4)
+    assert metrics["max_coord"] == 730
+    assert metrics["is_subcubic"] is True
+    assert metrics["is_exact"] is True
+    assert metrics["quadratic_ratio"] < 1.0
+
+
+def test_p92_extremal_coordinate_bounds_coverage():
+    from evobyte.algebraic import evaluate_extremal_coordinate_bounds_coverage
+
+    cov = evaluate_extremal_coordinate_bounds_coverage(instances=[73, 97, 193], a_values=[4, 5])
+    assert cov["total_tested"] == 6
+    assert cov["coverage"] == 1.0
+    assert cov["subcubic_rate"] == 1.0
+    assert cov["quadratic_rate"] == 1.0
+    assert cov["all_subcubic"] is True
+    assert cov["all_quadratic_bounded"] is True
+
+
+def test_p92_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p92_extremal_bounds_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P92 configuration"):
+        run_p92_extremal_bounds_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p92_extremal_bounds_catalog_export():
+    from evobyte.formal_bridge import (
+        export_extremal_bounds_theorems_catalog,
+        verify_extremal_bounds_catalog_soundness,
+    )
+
+    catalog = export_extremal_bounds_theorems_catalog()
+    assert catalog["accepted"] is True
+    assert catalog["total_theorems"] >= 60
+    assert catalog["has_sorry"] is False
+    assert len(catalog["sha256"]) == 64
+
+    sound, findings = verify_extremal_bounds_catalog_soundness(catalog, min_theorems=60)
+    assert sound is True
+    assert len(findings) == 0
