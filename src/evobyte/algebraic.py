@@ -2361,3 +2361,400 @@ def evaluate_resistant_residues_coverage() -> dict[str, Any]:
         "all_verified": all_valid,
         "instances": verified_instances,
     }
+
+
+def check_multiterm_diophantine(
+    a: int, n: int, terms: tuple[int, ...] | list[int]
+) -> tuple[bool, int, dict[str, Any]]:
+    """Exact decidable integer checker for general k-term Egyptian fractions (P86):
+
+    a/n = sum_{i=1}^k (1 / x_i)  <=>  a * prod(x) == n * sum_i(prod(x) / x_i) with x_i > 0.
+    """
+    if not (isinstance(a, int) and isinstance(n, int) and not isinstance(a, bool) and not isinstance(n, bool)):
+        return False, -1, {"error": "a and n must be integers"}
+    if a < 1 or n < 2:
+        return False, -1, {"error": "Domain requirement: a >= 1, n >= 2"}
+    if not terms or len(terms) < 2:
+        return False, -1, {"error": "terms must contain at least 2 elements"}
+    for x in terms:
+        if not isinstance(x, int) or isinstance(x, bool) or x <= 0:
+            return False, -1, {"error": f"All terms must be positive integers, got {x}"}
+
+    P = 1
+    for x in terms:
+        P *= int(x)
+
+    S = 0
+    for x in terms:
+        S += P // int(x)
+
+    lhs = int(a) * P
+    rhs = int(n) * S
+    residual = lhs - rhs
+    is_valid = (residual == 0)
+
+    details = {
+        "a": int(a),
+        "n": int(n),
+        "k_terms": len(terms),
+        "terms": [int(x) for x in terms],
+        "product_P": str(P),
+        "sum_S": str(S),
+        "lhs": str(lhs),
+        "rhs": str(rhs),
+        "residual": int(residual),
+        "verified_exact": is_valid,
+    }
+    return is_valid, residual, details
+
+
+def check_multiterm_fractions(
+    a: int, n: int, terms: tuple[int, ...] | list[int]
+) -> tuple[bool, Fraction, dict[str, Any]]:
+    """Independent second checker using exact rational arithmetic (fractions.Fraction) (P86)."""
+    if not (isinstance(a, int) and isinstance(n, int) and not isinstance(a, bool) and not isinstance(n, bool)):
+        return False, Fraction(1), {"error": "a and n must be integers"}
+    if a < 1 or n < 2:
+        return False, Fraction(1), {"error": "Domain requirement: a >= 1, n >= 2"}
+    if not terms or len(terms) < 2:
+        return False, Fraction(1), {"error": "terms must contain at least 2 elements"}
+    for x in terms:
+        if not isinstance(x, int) or isinstance(x, bool) or x <= 0:
+            return False, Fraction(1), {"error": f"All terms must be positive integers, got {x}"}
+
+    lhs_frac = Fraction(a, n)
+    rhs_frac = sum((Fraction(1, int(x)) for x in terms), Fraction(0))
+    diff = lhs_frac - rhs_frac
+    is_valid = (diff == 0)
+
+    details = {
+        "a": int(a),
+        "n": int(n),
+        "k_terms": len(terms),
+        "terms": [int(x) for x in terms],
+        "lhs_fraction": str(lhs_frac),
+        "rhs_fraction": str(rhs_frac),
+        "difference": str(diff),
+        "verified_exact": is_valid,
+    }
+    return is_valid, diff, details
+
+
+def is_coprime_decomposition(
+    terms: tuple[int, ...] | list[int]
+) -> tuple[bool, int, dict[str, Any]]:
+    """Check joint and pairwise coprimality and strict ordering of Egyptian fraction terms (P86).
+
+    A decomposition (x_1, ..., x_k) is strictly coprime if gcd(x_1, ..., x_k) == 1.
+    """
+    if not terms:
+        return False, 0, {"error": "terms cannot be empty"}
+
+    t_list = [int(x) for x in terms]
+    joint_gcd = functools.reduce(math.gcd, t_list)
+    strictly_coprime = (joint_gcd == 1)
+
+    pairwise_gcds: dict[str, int] = {}
+    pairwise_coprime = True
+    for i in range(len(t_list)):
+        for j in range(i + 1, len(t_list)):
+            g = math.gcd(t_list[i], t_list[j])
+            pairwise_gcds[f"gcd({t_list[i]},{t_list[j]})"] = g
+            if g != 1:
+                pairwise_coprime = False
+
+    is_strictly_ordered = all(t_list[i] < t_list[i + 1] for i in range(len(t_list) - 1))
+    distinct = len(set(t_list)) == len(t_list)
+
+    details = {
+        "terms": t_list,
+        "k_terms": len(t_list),
+        "joint_gcd": joint_gcd,
+        "strictly_coprime": strictly_coprime,
+        "pairwise_coprime": pairwise_coprime,
+        "pairwise_gcds": pairwise_gcds,
+        "strictly_ordered": is_strictly_ordered,
+        "distinct": distinct,
+    }
+    return strictly_coprime, joint_gcd, details
+
+
+def optimal_coprime_divisor_sieve(
+    a: int,
+    n: int,
+    max_x_steps: int = 100,
+    max_coord: int = 10**14,
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Sublinear deterministic rational divisor sieve with strict coprimality constraint gcd(x, y, z) = 1 (P86)."""
+    if a < 1 or n < 2:
+        return None, {"error": "a must be >= 1 and n >= 2", "candidates_evaluated": 0}
+
+    t0 = time.perf_counter()
+    x0 = n // a + 1
+    candidates_evaluated = 0
+
+    fn = integer_factorization(n)
+
+    for x_step in range(max_x_steps):
+        x = x0 + x_step
+        u = a * x - n
+        if u <= 0:
+            continue
+        D = n * x
+        D2 = D * D
+
+        fx = integer_factorization(x)
+        fd2: dict[int, int] = {}
+        for p, c in fn.items():
+            fd2[p] = fd2.get(p, 0) + 2 * c
+        for p, c in fx.items():
+            fd2[p] = fd2.get(p, 0) + 2 * c
+
+        divs = [1]
+        for p, exp in fd2.items():
+            new_d: list[int] = []
+            for d in divs:
+                pk = 1
+                for _ in range(exp + 1):
+                    cur = d * pk
+                    if cur <= D:
+                        new_d.append(cur)
+                    pk *= p
+            divs = new_d
+
+        divs.sort(reverse=True)
+
+        for d in divs:
+            candidates_evaluated += 1
+            if (D + d) % u != 0:
+                continue
+
+            y = (D + d) // u
+            z = (D + (D2 // d)) // u
+
+            if 0 < x < y < z:
+                if max_coord and max(x, y, z) > max_coord:
+                    continue
+                if (
+                    a * x * y * z == n * (x * y + y * z + z * x)
+                    and math.gcd(math.gcd(x, y), z) == 1
+                ):
+                    elapsed = time.perf_counter() - t0
+                    return (x, y, z), {
+                        "status": "certified",
+                        "candidates_evaluated": candidates_evaluated,
+                        "d": d,
+                        "u": u,
+                        "x_step": x_step,
+                        "max_coord": max(x, y, z),
+                        "coprime": True,
+                        "elapsed_sec": elapsed,
+                    }
+
+    elapsed = time.perf_counter() - t0
+    return None, {
+        "status": "unsolved",
+        "candidates_evaluated": candidates_evaluated,
+        "elapsed_sec": elapsed,
+    }
+
+
+def multiterm_divisor_sieve(
+    a: int,
+    n: int,
+    k_terms: int = 4,
+    max_x1_steps: int = 40,
+    max_x2_steps: int = 25,
+    require_coprime: bool = True,
+    max_coord: int = 10**16,
+) -> tuple[tuple[int, ...] | None, dict[str, Any]]:
+    """Deterministic Diophantine sieve for 4-term Egyptian fraction decompositions (P86).
+
+    Solves a/n = 1/x_1 + 1/x_2 + 1/x_3 + 1/x_4 with strict ordering x_1 < x_2 < x_3 < x_4,
+    controlled coordinate bounds, and optional strict coprimality constraint gcd(x_1, ..., x_4) = 1.
+    """
+    if a < 1 or n < 2:
+        return None, {"error": "a must be >= 1 and n >= 2", "candidates_evaluated": 0}
+    if k_terms != 4:
+        raise NotImplementedError("multiterm_divisor_sieve currently specializes to k_terms=4")
+
+    t0 = time.perf_counter()
+    candidates_evaluated = 0
+    x1_min = n // a + 1
+
+    for step1 in range(max_x1_steps):
+        x1 = x1_min + step1
+        rem = Fraction(a, n) - Fraction(1, x1)
+        if rem <= 0:
+            continue
+
+        a1, n1 = rem.numerator, rem.denominator
+        x2_min = n1 // a1 + 1
+        fn1 = integer_factorization(n1)
+
+        for step2 in range(max_x2_steps):
+            x2 = max(x1 + 1, x2_min + step2)
+            u = a1 * x2 - n1
+            if u <= 0:
+                continue
+
+            D = n1 * x2
+            D2 = D * D
+
+            fx2 = integer_factorization(x2)
+            fd2: dict[int, int] = {}
+            for p, c in fn1.items():
+                fd2[p] = fd2.get(p, 0) + 2 * c
+            for p, c in fx2.items():
+                fd2[p] = fd2.get(p, 0) + 2 * c
+
+            divs = [1]
+            for p, exp in fd2.items():
+                new_d: list[int] = []
+                for d in divs:
+                    pk = 1
+                    for _ in range(exp + 1):
+                        cur = d * pk
+                        if cur <= D:
+                            new_d.append(cur)
+                        pk *= p
+                divs = new_d
+
+            divs.sort(reverse=True)
+
+            for d in divs:
+                candidates_evaluated += 1
+                if (D + d) % u != 0:
+                    continue
+
+                x3 = (D + d) // u
+                x4 = (D + (D2 // d)) // u
+
+                if x1 < x2 < x3 < x4:
+                    if max_coord and max(x1, x2, x3, x4) > max_coord:
+                        continue
+                    # Check exact Diophantine balance
+                    is_exact, _, _ = check_multiterm_diophantine(a, n, (x1, x2, x3, x4))
+                    if is_exact:
+                        g = functools.reduce(math.gcd, (x1, x2, x3, x4))
+                        if not require_coprime or g == 1:
+                            elapsed = time.perf_counter() - t0
+                            return (x1, x2, x3, x4), {
+                                "status": "certified",
+                                "candidates_evaluated": candidates_evaluated,
+                                "step1": step1,
+                                "step2": step2,
+                                "d": d,
+                                "u": u,
+                                "joint_gcd": g,
+                                "coprime": (g == 1),
+                                "max_coord": max(x1, x2, x3, x4),
+                                "elapsed_sec": elapsed,
+                            }
+
+    elapsed = time.perf_counter() - t0
+    return None, {
+        "status": "unsolved",
+        "candidates_evaluated": candidates_evaluated,
+        "elapsed_sec": elapsed,
+    }
+
+
+def evaluate_multiterm_coprime_coverage(
+    cases: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Evaluate and certify multiterm decompositions and coprime Egyptian fractions (P86).
+
+    Evaluates across a standardized suite of 24 test cases including:
+    - Primes and challenging composite residues under Erdős–Straus (a=4).
+    - Resistant residues mod 840 (ES) and mod 120 (Sierpiński).
+    - Obstinate cases where 3-term coprime solutions do not exist (e.g. n=13),
+      provably resolved via 4-term coprime decompositions.
+    """
+    default_cases = [
+        # Erdős–Straus (a=4) instances
+        {"a": 4, "n": 5, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 7, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 11, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 13, "conjecture": "erdos_straus", "obstinate_3term": True},
+        {"a": 4, "n": 17, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 19, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 23, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 25, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 29, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 31, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 41, "conjecture": "erdos_straus"},
+        {"a": 4, "n": 121, "conjecture": "erdos_straus", "mod840_resistant": True},
+        {"a": 4, "n": 169, "conjecture": "erdos_straus", "mod840_resistant": True},
+        {"a": 4, "n": 289, "conjecture": "erdos_straus", "mod840_resistant": True},
+        {"a": 4, "n": 361, "conjecture": "erdos_straus", "mod840_resistant": True},
+        {"a": 4, "n": 529, "conjecture": "erdos_straus", "mod840_resistant": True},
+        # Sierpiński (a=5) instances
+        {"a": 5, "n": 7, "conjecture": "sierpinski"},
+        {"a": 5, "n": 9, "conjecture": "sierpinski", "mod120_resistant": True},
+        {"a": 5, "n": 11, "conjecture": "sierpinski"},
+        {"a": 5, "n": 13, "conjecture": "sierpinski"},
+        {"a": 5, "n": 21, "conjecture": "sierpinski"},
+        {"a": 5, "n": 49, "conjecture": "sierpinski", "mod120_resistant": True},
+        {"a": 5, "n": 121, "conjecture": "sierpinski", "mod120_resistant": True},
+        {"a": 5, "n": 169, "conjecture": "sierpinski", "mod120_resistant": True},
+    ]
+
+    target_cases = cases or default_cases
+    results: list[dict[str, Any]] = []
+    all_valid = True
+    four_term_certified = 0
+    three_term_coprime_certified = 0
+
+    for item in target_cases:
+        a = item["a"]
+        n = item["n"]
+
+        # 1. Attempt 3-term coprime solution
+        sol3, _meta3 = optimal_coprime_divisor_sieve(a, n)
+        has_sol3 = sol3 is not None
+        if has_sol3:
+            v_int3, _, _ = check_multiterm_diophantine(a, n, sol3)
+            v_frac3, _, _ = check_multiterm_fractions(a, n, sol3)
+            coprime3, g3, _ = is_coprime_decomposition(sol3)
+            ok3 = v_int3 and v_frac3 and coprime3 and (g3 == 1)
+            if ok3:
+                three_term_coprime_certified += 1
+        else:
+            ok3 = False
+
+        # 2. Compute 4-term coprime solution
+        sol4, meta4 = multiterm_divisor_sieve(a, n, k_terms=4, require_coprime=True)
+        has_sol4 = sol4 is not None
+        if has_sol4:
+            v_int4, _, _ = check_multiterm_diophantine(a, n, sol4)
+            v_frac4, _, _ = check_multiterm_fractions(a, n, sol4)
+            coprime4, g4, _ = is_coprime_decomposition(sol4)
+            ok4 = v_int4 and v_frac4 and coprime4 and (g4 == 1)
+            if ok4:
+                four_term_certified += 1
+            else:
+                all_valid = False
+        else:
+            ok4 = False
+            all_valid = False
+
+        results.append({
+            "a": a,
+            "n": n,
+            "conjecture": item.get("conjecture"),
+            "obstinate_3term": item.get("obstinate_3term", False),
+            "sol_3term": sol3,
+            "sol_3term_verified": ok3,
+            "sol_4term": sol4,
+            "sol_4term_verified": ok4,
+            "sol_4term_meta": meta4,
+        })
+
+    return {
+        "total_cases": len(results),
+        "four_term_certified": four_term_certified,
+        "three_term_coprime_certified": three_term_coprime_certified,
+        "all_verified": all_valid,
+        "results": results,
+    }

@@ -857,3 +857,108 @@ def test_p84_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P84 configuration"):
         run_p84_quadratic_identities_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_multiterm_diophantine_checkers():
+    from evobyte.algebraic import (
+        check_multiterm_diophantine,
+        check_multiterm_fractions,
+        is_coprime_decomposition,
+    )
+
+    # 4/13 = 1/4 + 1/18 + 1/900 + 1/975
+    terms = (4, 18, 900, 975)
+    ok_int, res_int, det_int = check_multiterm_diophantine(4, 13, terms)
+    assert ok_int is True
+    assert res_int == 0
+    assert det_int["verified_exact"] is True
+
+    ok_frac, diff_frac, det_frac = check_multiterm_fractions(4, 13, terms)
+    assert ok_frac is True
+    assert diff_frac == 0
+    assert det_frac["verified_exact"] is True
+
+    coprime, joint_gcd, det_coprime = is_coprime_decomposition(terms)
+    assert coprime is True
+    assert joint_gcd == 1
+    assert det_coprime["strictly_ordered"] is True
+    assert det_coprime["distinct"] is True
+
+    # Bad terms: not an Egyptian fraction
+    bad_terms = (4, 18, 900, 976)
+    b_int, b_res, _ = check_multiterm_diophantine(4, 13, bad_terms)
+    assert b_int is False
+    assert b_res != 0
+
+    # Non-coprime decomposition
+    non_coprime_terms = (4, 26, 52)
+    c, g, _ = is_coprime_decomposition(non_coprime_terms)
+    assert c is False
+    assert g == 2
+
+
+def test_optimal_coprime_and_multiterm_sieve():
+    from evobyte.algebraic import (
+        multiterm_divisor_sieve,
+        optimal_coprime_divisor_sieve,
+    )
+
+    # 4/5 has 3-term coprime solution
+    sol3, meta3 = optimal_coprime_divisor_sieve(4, 5)
+    assert sol3 is not None
+    assert sol3 == (2, 5, 10)
+    assert meta3["coprime"] is True
+
+    # 4/13 has NO 3-term coprime solution
+    sol3_13, _ = optimal_coprime_divisor_sieve(4, 13)
+    assert sol3_13 is None
+
+    # 4/13 has verified 4-term coprime solution
+    sol4_13, meta4_13 = multiterm_divisor_sieve(4, 13, k_terms=4, require_coprime=True)
+    assert sol4_13 is not None
+    assert sol4_13 == (4, 18, 900, 975)
+    assert meta4_13["coprime"] is True
+    assert meta4_13["joint_gcd"] == 1
+
+
+def test_evaluate_multiterm_coprime_coverage():
+    from evobyte.algebraic import evaluate_multiterm_coprime_coverage
+
+    cov = evaluate_multiterm_coprime_coverage()
+    assert cov["total_cases"] >= 20
+    assert cov["four_term_certified"] >= 20
+    assert cov["all_verified"] is True
+
+
+def test_p86_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p86_multiterm_audit
+
+    cfg = {
+        "phase": "P86",
+        "output_dir": "lean_proofs/Generated",
+        "project_dir": "lean_proofs",
+        "min_instances": 12,
+        "min_theorems": 24,
+        "seed": 42,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p86-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p86-out.json"
+
+    report = run_p86_multiterm_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P86"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 24
+    assert report["has_sorry"] is False
+    assert report["four_term_certified"] >= 12
+
+
+def test_p86_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p86_multiterm_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P86 configuration"):
+        run_p86_multiterm_audit(cfg_p, tmp_path / "out.json")

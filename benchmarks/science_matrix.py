@@ -724,6 +724,7 @@ ACCEPTANCE_PHASES = (
     "P83",
     "P84",
     "P85",
+    "P86",
 )
 
 
@@ -5713,6 +5714,153 @@ def run_p85_tactic_dispatch_audit(
     return report
 
 
+def run_p86_multiterm_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P86 audit: multiterm Diophantine generalization and coprime Egyptian fractions.
+
+    Verifies:
+    1. Strict coprimality verification and 3-term coprime sieve (gcd(x, y, z) = 1).
+    2. 4-term Diophantine sieve extension with controlled coordinate bounds.
+    3. Complete resolution of obstinate non-coprime cases (e.g. n=13) via 4-term coprime solutions.
+    4. Export and Lean 4 formal certification of `MultitermTheorems.lean` with zero sorry.
+    5. Clean tree enforcement and SHA-256 artifact verification.
+    """
+    import torch as _torch
+
+    from evobyte.algebraic import evaluate_multiterm_coprime_coverage
+    from evobyte.formal_bridge import (
+        export_multiterm_theorems_catalog,
+        verify_multiterm_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P86":
+        raise ValueError(f"Config {cfg_p} is not a P86 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P86 MULTITERM DIOPHANTINE & COPRIME EGYPTIAN FRACTION AUDIT (3-term & 4-term sieve)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    # 1. Run algorithmic multiterm coverage evaluation
+    min_instances = int(config.get("min_instances", 12))
+    cov = evaluate_multiterm_coprime_coverage()
+    if cov["four_term_certified"] < min_instances:
+        findings.append(
+            f"INSUFFICIENT_CERTIFIED_INSTANCES: expected >= {min_instances}, got {cov['four_term_certified']}"
+        )
+    if not cov["all_verified"]:
+        findings.append("UNVERIFIED_MULTITERM_INSTANCES: some instances failed exact dual-checkers")
+
+    # Confirm obstinate 3-term case (4/13) has verified 4-term coprime solution
+    obstinate_case = next((r for r in cov["results"] if r.get("a") == 4 and r.get("n") == 13), None)
+    if obstinate_case is None or not obstinate_case.get("sol_4term_verified", False):
+        findings.append("OBSTINATE_CASE_UNRESOLVED: 4/13 missing verified 4-term coprime decomposition")
+    elif obstinate_case.get("sol_3term") is not None:
+        findings.append("CONTRADICTION: 4/13 unexpectedly admitted a 3-term coprime decomposition")
+
+    # 2. Export and verify formal theorems catalog in Lean 4
+    min_theorems = int(config.get("min_theorems", 24))
+    output_dir = config.get("output_dir", "lean_proofs/Generated")
+    project_dir = config.get("project_dir", "lean_proofs")
+
+    catalog = export_multiterm_theorems_catalog(
+        output_dir=output_dir, project_dir=project_dir
+    )
+    sound, soundness_findings = verify_multiterm_catalog_soundness(
+        catalog, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    if catalog.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: multiterm theorems catalog contains incomplete proofs")
+
+    if not catalog.get("accepted", False):
+        findings.append(f"MULTITERM_CATALOG_REJECTED: {catalog.get('reasons')}")
+
+    elapsed = time.perf_counter() - t0
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; multiterm claims from dirty code rejected")
+
+    claim_scope = (
+        "Multiterm Diophantine generalization and coprime Egyptian fraction decompositions (3-term and "
+        "4-term) with controlled coordinate bounds; exact integer and rational dual-checkers verified, "
+        "obstinate cases (such as 4/13) resolved via 4 terms with gcd=1, and formal compilation in Lean 4 "
+        "with zero sorry tokens."
+    )
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p86_config": config_sha[:16]},
+        config={"acceptance_phase": "P86"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    report = {
+        "phase": "P86",
+        "verdict": verdict,
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "claim_scope": claim_scope,
+        "total_instances_evaluated": cov.get("total_cases", 0),
+        "four_term_certified": cov.get("four_term_certified", 0),
+        "three_term_coprime_certified": cov.get("three_term_coprime_certified", 0),
+        "total_formal_theorems": catalog.get("total_theorems", 0),
+        "file": catalog.get("file"),
+        "sha256": catalog.get("sha256"),
+        "has_sorry": catalog.get("has_sorry", False),
+        "findings": findings,
+        "elapsed_sec": elapsed,
+        "resolved_config": {
+            "acceptance_phase": "P86",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "hardware": prov["hardware"],
+        "limitations": [
+            (
+                "Multiterm decompositions and strict coprimality constraints are verified and certified "
+                "over the finite experimental test suite; asymptotic universality across all natural numbers "
+                "without controlled bounds remains unproven and outside the present scope."
+            ),
+            (
+                "4-term representations relax coordinate constraints and eliminate obstructions, but minimal-coordinate "
+                "complexity grows with problem size and necessitates controlled heuristic or sieve windows."
+            ),
+        ],
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(
+        f"P86 audit {verdict}: {catalog.get('total_theorems', 0)} theorems verified across {cov.get('four_term_certified', 0)} "
+        f"certified instances; report -> {out_p}"
+    )
+    return report
+
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -9735,6 +9883,8 @@ def main() -> int:
             run_p84_quadratic_identities_audit(args.config, args.output)
         elif args.acceptance_phase == "P85":
             run_p85_tactic_dispatch_audit(args.config, args.output)
+        elif args.acceptance_phase == "P86":
+            run_p86_multiterm_audit(args.config, args.output)
         return 0
 
     seeds = (

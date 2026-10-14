@@ -371,6 +371,7 @@ def export_formal_proof_catalog(
         "Generated.OptimalCertificates",
         "Generated.QuadraticIdentities",
         "Generated.AutomatedTheorems",
+        "Generated.MultitermTheorems",
     ]
     existing_content = root_file.read_text(encoding="utf-8") if root_file.exists() else ""
     imports_to_write = []
@@ -1824,5 +1825,190 @@ def verify_automated_catalog_soundness(
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_AUTOMATED_THEOREMS")
+
+    return (len(findings) == 0), findings
+
+
+DEFAULT_MULTITERM_INSTANCES: list[dict[str, Any]] = [
+    # 3-term strictly coprime Erdős–Straus
+    {"a": 4, "n": 5, "terms": (2, 5, 10), "id": "es_5_3t", "conjecture": "erdos_straus"},
+    {"a": 4, "n": 7, "terms": (2, 21, 42), "id": "es_7_3t", "conjecture": "erdos_straus"},
+    {"a": 4, "n": 11, "terms": (3, 44, 132), "id": "es_11_3t", "conjecture": "erdos_straus"},
+    {"a": 4, "n": 29, "terms": (8, 87, 696), "id": "es_29_3t", "conjecture": "erdos_straus"},
+    {"a": 4, "n": 121, "terms": (31, 1694, 4774), "id": "es_121_3t", "conjecture": "erdos_straus"},
+    # 3-term strictly coprime Sierpiński
+    {"a": 5, "n": 9, "terms": (2, 30, 45), "id": "sier_9_3t", "conjecture": "sierpinski"},
+    # 4-term strictly coprime Erdős–Straus
+    {"a": 4, "n": 5, "terms": (2, 4, 36, 45), "id": "es_5_4t", "conjecture": "erdos_straus"},
+    {"a": 4, "n": 13, "terms": (4, 18, 900, 975), "id": "es_13_4t", "conjecture": "erdos_straus"},
+    {"a": 4, "n": 169, "terms": (43, 2423, 11739435, 35208615), "id": "es_169_4t", "conjecture": "erdos_straus"},
+    {"a": 4, "n": 289, "terms": (73, 7033, 130919295, 171202155), "id": "es_289_4t", "conjecture": "erdos_straus"},
+    # 4-term strictly coprime Sierpiński
+    {"a": 5, "n": 7, "terms": (2, 5, 120, 168), "id": "sier_7_4t", "conjecture": "sierpinski"},
+    {"a": 5, "n": 49, "terms": (10, 491, 480690, 481671), "id": "sier_49_4t", "conjecture": "sierpinski"},
+]
+
+
+def multiterm_instance_to_lean_theorems(
+    a: int,
+    n: int,
+    terms: tuple[int, ...] | list[int],
+    instance_id: str,
+    conjecture: str = "erdos_straus",
+) -> list[str]:
+    """Generate certified Lean 4 theorems for a multiterm/coprime Egyptian fraction decomposition (P86).
+
+    Produces:
+    1. Exact fractional decomposition proven by `norm_num`.
+    2. Exact Diophantine integer balance proven by `norm_num`.
+    3. Strict coprimality constraint gcd(x_1, ..., x_k) = 1 proven by `decide`.
+    """
+    t_list = [int(x) for x in terms]
+    k = len(t_list)
+
+    # 1. Fractional decomposition theorem
+    frac_sum = " + ".join(f"1 / {x}" for x in t_list)
+    thm_frac = (
+        f"/-- Multiterm Egyptian fraction for {conjecture} {a}/{n} with {k} terms (P86).\n"
+        f"    Guarantees exact rational balance {a}/{n} = ∑ 1/x_i without unproven axioms or holes. -/\n"
+        f"theorem multiterm_frac_{instance_id} : ({a} : ℚ) / {n} = {frac_sum} := by\n"
+        f"  norm_num\n"
+    )
+
+    # 2. Integer balance theorem
+    prod_terms = " * ".join(str(x) for x in t_list)
+    P_expr = f"({prod_terms} : ℤ)"
+    sum_parts = []
+    for i in range(k):
+        sub_prod = " * ".join(str(t_list[j]) for j in range(k) if j != i)
+        sum_parts.append(f"({sub_prod} : ℤ)")
+    S_expr = " + ".join(sum_parts)
+    thm_int = (
+        f"/-- Multiterm Egyptian fraction exact Diophantine integer balance for {a}/{n} (P86).\n"
+        f"    Guarantees {a} * ∏ x_i = {n} * ∑ (∏_{{j≠i}} x_j) without unproven axioms or holes. -/\n"
+        f"theorem multiterm_int_{instance_id} : {a} * {P_expr} = {n} * ({S_expr}) := by\n"
+        f"  norm_num\n"
+    )
+
+    # 3. Strict coprimality theorem
+    gcd_expr = f"Nat.gcd {t_list[0]} {t_list[1]}"
+    for x in t_list[2:]:
+        gcd_expr = f"Nat.gcd ({gcd_expr}) {x}"
+    thm_coprime = (
+        f"/-- Multiterm Egyptian fraction strict coprimality constraint gcd({', '.join(str(x) for x in t_list)}) = 1 (P86).\n"
+        f"    Verified by kernel decision procedure without unproven axioms or holes. -/\n"
+        f"theorem multiterm_coprime_{instance_id} : {gcd_expr} = 1 := by\n"
+        f"  decide\n"
+    )
+
+    return [thm_frac, thm_int, thm_coprime]
+
+
+def export_multiterm_theorems_catalog(
+    instances: list[dict[str, Any]] | None = None,
+    output_dir: str | Path = "lean_proofs/Generated",
+    project_dir: str | Path = "lean_proofs",
+) -> dict[str, Any]:
+    """Generate, export, and certify multiterm and coprime Egyptian fraction theorems in Lean 4 (P86)."""
+    import subprocess
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    target_instances = instances or DEFAULT_MULTITERM_INSTANCES
+    theorems: list[str] = []
+
+    for item in target_instances:
+        a = int(item["a"])
+        n = int(item["n"])
+        terms = item["terms"]
+        inst_id = item["id"]
+        conj = item.get("conjecture", "erdos_straus")
+        thms = multiterm_instance_to_lean_theorems(a, n, terms, inst_id, conjecture=conj)
+        theorems.extend(thms)
+
+    doc_header = (
+        "EvoByte Formal Proof Catalog: Multiterm and Coprime Egyptian Fraction Theorems (P86)."
+    )
+    src = generate_lean_proof_module(
+        theorems,
+        doc_header,
+        imports=[
+            "Mathlib.Tactic.NormNum",
+            "Mathlib.Data.Rat.Defs",
+        ],
+    )
+    multi_file = out / "MultitermTheorems.lean"
+    multi_file.write_text(src, encoding="utf-8")
+    file_sha = hashlib.sha256(multi_file.read_bytes()).hexdigest()
+
+    # Ensure Generated.lean imports MultitermTheorems
+    root_file = proj / "Generated.lean"
+    if root_file.exists():
+        root_content = root_file.read_text(encoding="utf-8")
+        if "import Generated.MultitermTheorems" not in root_content:
+            root_content = root_content.rstrip() + "\nimport Generated.MultitermTheorems\n"
+            root_file.write_text(root_content, encoding="utf-8")
+    else:
+        root_file.write_text(
+            "-- EvoByte Root Generated Formal Library\nimport Generated.MultitermTheorems\n",
+            encoding="utf-8",
+        )
+
+    v_res = compile_lean_file(multi_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+
+    bins = lean_resolve_binaries(proj)
+    lake_proc = subprocess.run(
+        [bins["lake"], "-d", str(proj), "build", "Generated"],
+        capture_output=True,
+        text=True,
+        cwd=str(proj),
+        timeout=180,
+        check=False,
+    )
+    if lake_proc.returncode != 0:
+        accepted = False
+        reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+    total_theorems = src.count("theorem ")
+
+    return {
+        "catalog_dir": str(out),
+        "total_instances": len(target_instances),
+        "total_theorems": total_theorems,
+        "file": str(multi_file),
+        "sha256": file_sha,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in multi_file.read_text(encoding="utf-8"),
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_multiterm_catalog_soundness(
+    catalog_summary: dict[str, Any], min_theorems: int = 24
+) -> tuple[bool, list[str]]:
+    """Audit multiterm theorems catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(f"MULTITERM_THEOREMS_COMPILATION_FAILED: {catalog_summary.get('reasons')}")
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: multiterm theorems catalog contains sorry")
+
+    total_thms = catalog_summary.get("total_theorems", 0)
+    if total_thms < min_theorems:
+        findings.append(
+            f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}"
+        )
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_MULTITERM_THEOREMS")
 
     return (len(findings) == 0), findings

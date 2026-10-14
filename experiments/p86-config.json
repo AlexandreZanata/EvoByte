@@ -1,0 +1,9 @@
+{
+  "phase": "P86",
+  "min_instances": 12,
+  "min_theorems": 24,
+  "output_dir": "lean_proofs/Generated",
+  "project_dir": "lean_proofs",
+  "seed": 42,
+  "require_clean_tree": true
+}

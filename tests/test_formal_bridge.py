@@ -402,3 +402,20 @@ def test_p85_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P85 configuration"):
         run_p85_tactic_dispatch_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_multiterm_theorems_catalog_export():
+    from evobyte.formal_bridge import (
+        export_multiterm_theorems_catalog,
+        verify_multiterm_catalog_soundness,
+    )
+
+    catalog = export_multiterm_theorems_catalog()
+    assert catalog["accepted"] is True
+    assert catalog["total_theorems"] >= 24
+    assert catalog["has_sorry"] is False
+    assert len(catalog["sha256"]) == 64
+
+    sound, findings = verify_multiterm_catalog_soundness(catalog, min_theorems=24)
+    assert sound is True
+    assert len(findings) == 0
