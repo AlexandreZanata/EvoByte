@@ -8,6 +8,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from evobyte.verifier import is_lean_available
+
+needs_lean = pytest.mark.skipif(not is_lean_available(), reason="requires Lean 4 toolchain")
+
 from evobyte.algebraic import Poly1D, get_algebraic_identity_for_residue
 from evobyte.bytecode import encode_instr
 from evobyte.formal_bridge import (
@@ -83,6 +87,7 @@ def test_generate_lean_proof_module():
     assert "theorem dummy" in module_src
 
 
+@needs_lean
 def test_compile_lean_file_valid(tmp_path: Path):
     proj = Path("lean_proofs").resolve()
     test_src = """import Mathlib.Tactic.Ring
@@ -102,6 +107,7 @@ theorem test_square : ∀ x : ℚ, (x + 1) * (x - 1) = x ^ 2 - 1 := by
         test_file.unlink(missing_ok=True)
 
 
+@needs_lean
 def test_compile_lean_file_rejects_sorry(tmp_path: Path):
     proj = Path("lean_proofs").resolve()
     test_src = """import Mathlib.Data.Rat.Defs
@@ -120,6 +126,7 @@ theorem unproven_claim : ∀ x : ℚ, x = x + 1 := by
         test_file.unlink(missing_ok=True)
 
 
+@needs_lean
 def test_compile_lean_file_rejects_unsound():
     proj = Path("lean_proofs").resolve()
     test_src = """import Mathlib.Tactic.NormNum
@@ -138,6 +145,7 @@ theorem false_equality : (4 : ℚ) / 5 = 1 / 2 := by
         test_file.unlink(missing_ok=True)
 
 
+@needs_lean
 def test_export_formal_proof_catalog_and_soundness():
     cat = export_formal_proof_catalog()
     assert cat["all_passed"] is True
@@ -152,6 +160,7 @@ def test_export_formal_proof_catalog_and_soundness():
     assert findings == []
 
 
+@needs_lean
 def test_p77_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p77_formal_audit
 
@@ -181,6 +190,7 @@ def test_p77_acceptance_rejects_wrong_phase(tmp_path: Path):
         run_p77_formal_audit(cfg_p, tmp_path / "out.json")
 
 
+@needs_lean
 def test_p80_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p80_formal_campaign_audit
 
@@ -215,6 +225,7 @@ def test_p80_acceptance_rejects_wrong_phase(tmp_path: Path):
         run_p80_formal_campaign_audit(cfg_p, tmp_path / "out.json")
 
 
+@needs_lean
 def test_inductive_lemmas_catalog_generation():
     from evobyte.formal_bridge import (
         export_inductive_lemmas_catalog,
@@ -232,6 +243,7 @@ def test_inductive_lemmas_catalog_generation():
     assert findings == []
 
 
+@needs_lean
 def test_p81_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p81_inductive_baseline_audit
 
@@ -282,6 +294,7 @@ def test_divisibility_lemmas_catalog_generation():
     assert src.count("theorem ") >= 50
 
 
+@needs_lean
 def test_p82_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p82_divisibility_synthesis_audit
 
@@ -315,6 +328,7 @@ def test_p82_acceptance_rejects_wrong_phase(tmp_path: Path):
         run_p82_divisibility_synthesis_audit(cfg_p, tmp_path / "out.json")
 
 
+@needs_lean
 def test_try_prove_lemma_with_tactics():
     from evobyte.formal_bridge import try_prove_lemma_with_tactics
 
@@ -338,6 +352,7 @@ def test_try_prove_lemma_with_tactics():
     assert res_aesop["winning_tactic"] == "aesop"
 
 
+@needs_lean
 def test_benchmark_tactic_dispatch_suite():
     from evobyte.formal_bridge import benchmark_tactic_dispatch
 
@@ -351,6 +366,7 @@ def test_benchmark_tactic_dispatch_suite():
     assert "aesop" in dist
 
 
+@needs_lean
 def test_export_automated_theorems_catalog_soundness():
     from evobyte.formal_bridge import (
         export_automated_theorems_catalog,
@@ -367,6 +383,7 @@ def test_export_automated_theorems_catalog_soundness():
     assert findings == []
 
 
+@needs_lean
 def test_p85_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p85_tactic_dispatch_audit
 
@@ -402,6 +419,7 @@ def test_p85_acceptance_rejects_wrong_phase(tmp_path: Path):
         run_p85_tactic_dispatch_audit(cfg_p, tmp_path / "out.json")
 
 
+@needs_lean
 def test_multiterm_theorems_catalog_export():
     from evobyte.formal_bridge import (
         export_multiterm_theorems_catalog,

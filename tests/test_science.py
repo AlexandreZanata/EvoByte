@@ -6,6 +6,11 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
+
+from evobyte.verifier import is_lean_available
+
+needs_lean = pytest.mark.skipif(not is_lean_available(), reason="requires Lean 4 toolchain")
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
@@ -1571,6 +1576,7 @@ def _p73_smoke_config(tmp_path):
     return cfg_p
 
 
+@needs_lean
 def test_p73_lean_harness_verification():
     from evobyte.verifier import verify_lean_harness
 
@@ -1583,6 +1589,7 @@ def test_p73_lean_harness_verification():
     assert st["checks"]["soundness_rejection"]["rejected_properly"] is True
 
 
+@needs_lean
 def test_p73_lean_checker_direct_proofs():
     from evobyte.verifier import run_lean_checker
 
@@ -1605,6 +1612,7 @@ def test_p73_lean_checker_direct_proofs():
     assert res2["theorem_name"] == "erdos_straus_1009"
 
 
+@needs_lean
 def test_p73_lean_checker_rejects_false_proof(tmp_path):
     from evobyte.verifier import run_lean_checker
 
@@ -1615,6 +1623,7 @@ def test_p73_lean_checker_rejects_false_proof(tmp_path):
     assert any("compile_rejected" in r or "theorem_mismatch" in r for r in res["reasons"])
 
 
+@needs_lean
 def test_p73_acceptance_smoke(tmp_path):
     from benchmarks.science_matrix import run_p73_lean_audit
 

@@ -828,6 +828,15 @@ def lean_resolve_binaries(project_dir: str | Path | None = None) -> dict[str, st
     return found
 
 
+def is_lean_available(project_dir: str | Path | None = None) -> bool:
+    """Return True if lean, lake, and elan binaries are available."""
+    try:
+        lean_resolve_binaries(project_dir)
+        return True
+    except LeanToolchainUnavailable:
+        return False
+
+
 def run_lean_checker(
     proof_file: str | Path,
     *,

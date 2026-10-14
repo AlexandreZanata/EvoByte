@@ -14,6 +14,9 @@ from evobyte.algebraic import (
     audit_algebraic_coverage,
     synthesize_mordell_identity,
 )
+from evobyte.verifier import is_lean_available
+
+needs_lean = pytest.mark.skipif(not is_lean_available(), reason="requires Lean 4 toolchain")
 
 
 def test_poly1d_arithmetic():
@@ -608,6 +611,7 @@ def test_p78_lean_generators():
         sierpinski_instance_to_lean_theorem(1009, 1, 2, 3)
 
 
+@needs_lean
 def test_p78_acceptance_smoke(tmp_path):
     import json
 
@@ -746,6 +750,7 @@ def test_optimal_divisor_benchmark_reduction():
     assert res["max_reduction_factor"] >= 100.0
 
 
+@needs_lean
 def test_p83_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p83_optimal_divisor_audit
 
@@ -832,6 +837,7 @@ def test_resistant_residues_coverage():
         assert target in ns
 
 
+@needs_lean
 def test_p84_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p84_quadratic_identities_audit
 
@@ -937,6 +943,7 @@ def test_evaluate_multiterm_coprime_coverage():
     assert cov["all_verified"] is True
 
 
+@needs_lean
 def test_p86_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p86_multiterm_audit
 
@@ -1009,6 +1016,7 @@ def test_p87_acceptance_rejects_wrong_phase(tmp_path: Path):
         run_p87_large_instance_audit(cfg_p, tmp_path / "out.json")
 
 
+@needs_lean
 def test_p88_acceptance_smoke(tmp_path: Path):
     from benchmarks.science_matrix import run_p88_meta_theorem_campaign_audit
 
