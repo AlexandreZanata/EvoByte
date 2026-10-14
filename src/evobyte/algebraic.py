@@ -2994,3 +2994,162 @@ def evaluate_quadratic_ring_sieve_coverage(modulus: int = 840, k_count: int = 10
         "all_certified": total_solved == total_tested and total_norm_certified == total_tested,
         "results": results,
     }
+
+
+def compute_coordinate_bounds(n: int, solution: tuple[int, int, int], a: int = 4) -> dict[str, Any]:
+    """Compute exact coordinate bounds, quadratic ratio, and subcubic growth for (x, y, z) (P92).
+
+    Given a unit-fraction solution a/n = 1/x + 1/y + 1/z:
+    - max_coord = max(x, y, z)
+    - quadratic ratio: c_quad = max_coord / (n^2)
+    - growth exponent: alpha = log(max_coord) / log(n) (for n > 1)
+    - subcubic: max_coord < n^3 (and alpha < 3.0)
+    - quadratic bounded: max_coord <= max_constant * n^2
+    """
+    x, y, z = solution
+    max_c = max(x, y, z)
+    n2 = n * n
+    n3 = n * n * n
+    c_quad = float(max_c / n2)
+    alpha = float(math.log(max_c) / math.log(n)) if n > 1 and max_c > 0 else 0.0
+    is_subcubic = max_c < n3
+    is_exact = (a * x * y * z) == (n * (x * y + y * z + z * x))
+
+    return {
+        "a": a,
+        "n": n,
+        "x": x,
+        "y": y,
+        "z": z,
+        "max_coord": max_c,
+        "n_squared": n2,
+        "n_cubed": n3,
+        "quadratic_ratio": c_quad,
+        "growth_exponent": alpha,
+        "is_subcubic": is_subcubic,
+        "is_exact": is_exact,
+    }
+
+
+def find_subcubic_bounded_solution(
+    n: int, a: int = 4, max_constant: float = 4.0, max_x_steps: int = 200
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Search for an exact unit fraction solution satisfying max(x, y, z) <= max_constant * n^2 < n^3 (P92).
+
+    Uses the structured optimal divisor sieve which sorts divisors in descending order
+    to directly minimize the extremal coordinate z = (D + D^2 / d) / u.
+    """
+    sol, meta = optimal_schinzel_divisor_sieve(
+        a, n, max_x_steps=max_x_steps, max_coord=int(max_constant * n * n)
+    )
+    if sol is not None:
+        metrics = compute_coordinate_bounds(n, sol, a=a)
+        metrics.update(meta)
+        return sol, metrics
+
+    # Fallback to general schinzel_divisor_sieve
+    sol2, meta2 = schinzel_divisor_sieve(a, n, max_x_steps=max_x_steps)
+    if sol2 is not None:
+        metrics2 = compute_coordinate_bounds(n, sol2, a=a)
+        metrics2.update(meta2)
+        return sol2, metrics2
+
+    return None, {"error": "unsolved", "n": n, "a": a}
+
+
+def evaluate_extremal_coordinate_bounds_coverage(
+    instances: list[int] | None = None,
+    a_values: list[int] | None = None,
+    max_constant: float = 4.0,
+) -> dict[str, Any]:
+    """Evaluate coordinate bounds across test instances and numerators (P92).
+
+    Verifies:
+    1. 100% solution coverage.
+    2. 100% subcubic bounds: max(x, y, z) < n^3.
+    3. 100% quadratic bounds: max(x, y, z) <= max_constant * n^2.
+    """
+    targets = a_values or [4, 5]
+    test_instances = instances or [
+        73,
+        97,
+        193,
+        241,
+        313,
+        337,
+        409,
+        457,
+        1009,
+        1129,
+        1201,
+        1369,
+        1681,
+        1801,
+        1849,
+        1969,
+        2003,
+        2041,
+        2209,
+        2521,
+        2641,
+        2689,
+        2809,
+        2881,
+        3049,
+    ]
+    results: list[dict[str, Any]] = []
+    subcubic_count = 0
+    quadratic_count = 0
+    max_observed_ratio = 0.0
+
+    for a in targets:
+        for n in test_instances:
+            sol, metrics = find_subcubic_bounded_solution(n, a=a, max_constant=max_constant)
+            if sol is not None and metrics.get("is_exact", False):
+                ratio = metrics["quadratic_ratio"]
+                max_observed_ratio = max(max_observed_ratio, ratio)
+                if metrics["is_subcubic"]:
+                    subcubic_count += 1
+                if ratio <= max_constant:
+                    quadratic_count += 1
+                results.append(
+                    {
+                        "a": a,
+                        "n": n,
+                        "solution": sol,
+                        "max_coord": metrics["max_coord"],
+                        "quadratic_ratio": ratio,
+                        "growth_exponent": metrics["growth_exponent"],
+                        "subcubic": metrics["is_subcubic"],
+                        "solved": True,
+                    }
+                )
+            else:
+                results.append(
+                    {
+                        "a": a,
+                        "n": n,
+                        "solved": False,
+                    }
+                )
+
+    total = len(results)
+    solved_count = sum(1 for r in results if r.get("solved", False))
+    coverage = float(solved_count / total) if total > 0 else 0.0
+    subcubic_rate = float(subcubic_count / total) if total > 0 else 0.0
+    quadratic_rate = float(quadratic_count / total) if total > 0 else 0.0
+
+    return {
+        "total_tested": total,
+        "solved_count": solved_count,
+        "coverage": coverage,
+        "subcubic_count": subcubic_count,
+        "subcubic_rate": subcubic_rate,
+        "quadratic_count": quadratic_count,
+        "quadratic_rate": quadratic_rate,
+        "max_observed_ratio": max_observed_ratio,
+        "max_constant_threshold": max_constant,
+        "all_subcubic": subcubic_rate == 1.0,
+        "all_quadratic_bounded": quadratic_rate == 1.0,
+        "results": results,
+    }
