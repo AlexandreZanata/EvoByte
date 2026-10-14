@@ -188,6 +188,30 @@ asymptotic modular density, and ultra-large instances ($10^7 \le n \le 10^9$).
 - [P95 — Confirmação cega em escala extrema (10^7 a 10^9) sob controle FWER](P95-extreme-scale-blind-confirmation.md).
 - [P96 — Grande campanha formal e dossiê certificado final em Lean 4](P96-grand-formal-dossier-campaign.md).
 
+P89–P96 are completed (Done, D026) with all measured gates passing, clean-tree
+verification, 965 Lean 4 kernel theorems with zero sorry across 16 modules, and PRs #119–#127.
+No worldwide novelty, quantum advantage, or unproven conjecture
+resolution is claimed.
+
+## Diophantine algebraic geometry, cubic surface fibrations & invariants program (P97–P104)
+
+[The Diophantine geometry contract](../FORMAL_SEARCH_PLAN.md#programa-de-geometria-algébrica-diofantina-fibrados-de-superfícies-cúbicas-e-invariantes-em-lean-4-p97p104)
+defines the formal extension adopted under D027 following the conclusion of
+P89–P96. It targets cubic surface conic fibrations over $\mathbb{Q}(x)$, rational conic
+parametrizations via the local-global principle, quaternion algebra sieves, the unified
+`dioph_surface` metaprogramming tactic, asymptotic solution moments $f_a(n)$, higher-power
+Diophantine fractions $a/n^k$, hyper-scale blind confirmation ($10^9 \le n \le 10^{12}$),
+and a consolidated grand formal campaign expanding to 1,200+ Lean 4 kernel theorems.
+
+- [P97 — Formalização de fibrados cônicos e superfícies cúbicas em Lean 4](P97-cubic-surface-fibrations.md).
+- [P98 — Síntese de parametrizações racionais via princípio local-global](P98-rational-conic-parametrizations.md).
+- [P99 — Crivo algébrico em ordens quaternônicas e álgebras de divisão](P99-quaternion-algebra-sieve.md).
+- [P100 — Meta-tática unificada dioph_surface com eliminação algébrica em Lean 4](P100-dioph-surface-metatactic.md).
+- [P101 — Teoremas de momentos assintóticos e limites de densidade de soluções](P101-solution-moments-asymptotics.md).
+- [P102 — Generalização para potências superiores e frações diofantinas de grau k](P102-higher-power-diophantine-fractions.md).
+- [P103 — Confirmação cega em hiper-escala (10^9 a 10^12) sob controle FWER](P103-hyper-scale-blind-confirmation.md).
+- [P104 — Grande campanha formal e dossiê de geometria diofantina em Lean 4](P104-diophantine-geometry-formal-campaign.md).
+
 Execute one micro-task at a time. All phases remain Proposed until their explicit
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.

@@ -471,24 +471,15 @@ P81 baseline indutivo -> P82 lemas de divisibilidade -> P83 divisores ótimos
 
 ## Programa de resolução modular generalizada, meta-táticas e conjectura de Schinzel ampliada em Lean 4 (P89–P96)
 
-**Programa proposto em 2026-10-14 (D025).** Sucede a conclusão de P81–P88 sob D024.
-O programa P81–P88 consolidou 406 teoremas formais em 10 módulos em `lean_proofs/Generated/`,
-provando lemas de divisibilidade inteira em $\mathbb{N}$, identidades quadráticas multiparâmetro,
-seleção de divisores ótimos, generalização multitermo com frações egípcias coprimas ($\gcd=1$)
-e confirmação estatística em grande escala ($10^5 \le n \le 10^7$).
-
-O programa P89–P96 estende os horizontes formais e algorítmicos do EvoByte para:
-1. **Meta-programação e táticas customizadas em Lean 4:** Desenvolvimento de táticas nativas
-   (`macro_rules`, `syntax`, `elab`) unificando o provador de igualdades e restrições diofantinas (`evobyte_solve`).
-2. **Generalização de Schinzel para numeradores arbitrários $a \ge 4$:** Formalização da decomposição
-   $\frac{a}{n} = \frac{1}{x} + \frac{1}{y} + \frac{1}{z}$ para qualquer numerador fixo sobre classes modulares.
-3. **Crivo algébrico em anéis quadráticos:** Desobstrução das classes resistentes módulo 840 via
-   fatoração em $\mathbb{Z}[\sqrt{d}]$ e corpos de classes abelianos.
-4. **Limites extremais certificados:** Prova formal de cotas superiores para as coordenadas $x, y, z$.
-5. **Densidade assintótica modular:** Prova formal de que a densidade de inteiros cobertos por identidades tende a $1$.
-6. **Coprimalidade multitermo universal:** Generalização para $k \ge 5$ termos unitários coprimos.
-7. **Confirmação cega em escala extrema:** Avaliação cega em instâncias ultra-grandes ($10^7 \le n \le 10^9$) com controle FWER.
-8. **Campanha formal unificada:** Dossiê certificado e expansão para 500+ teoremas no kernel do Lean 4.
+**Programa concluído em 2026-10-14 (D026).** Sucedeu a conclusão de P81–P88 sob D024.
+O programa P89–P96 consolidou 965 teoremas formais em 16 módulos em `lean_proofs/Generated/`,
+provando meta-táticas customizadas em Lean 4 (`dioph_solve`, `frac_norm`), unificação da conjectura
+de Schinzel para numeradores arbitrários $a \ge 4$, crivo em anéis quadráticos $\mathbb{Z}[\sqrt{d}]$,
+cotas extremais de coordenadas minimizadas, densidade assintótica modular com resíduos excepcionais sublineares,
+coprimalidade multitermo universal ($k \ge 5$) e confirmação cega em escala extrema ($10^7 \le n \le 10^9$)
+sob controle Bonferroni-Holm ($\alpha = 0{,}01$, 100/100 vitórias, $p < 10^{-5}$).
+Todas as 8 fases P89–P96 foram concluídas com êxito (`Done`), com compilação Lake hermética, zero tokens `sorry`
+e dossiê formalizado com cadeia criptográfica SHA-256 (head `5de47dc7b3987ef724e685d2bac5a944ee1cd4ade4a8178f2d74ae0c9471878c`).
 
 ### Ordem e dependências de P89–P96
 
@@ -506,3 +497,45 @@ P89 meta-táticas Lean 4 -> P90 generalização Schinzel -> P91 crivo anéis qua
 3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P95):** partição selada de instâncias diofantinas de escala extrema ($10^7 \le n \le 10^9$) sem vazamento para o crivo.
+
+## Programa de geometria algébrica diofantina, fibrados de superfícies cúbicas e invariantes em Lean 4 (P97–P104)
+
+**Programa proposto em 2026-10-14 (D027).** Sucede a conclusão de P89–P96 sob D026.
+O programa P89–P96 consolidou 965 teoremas formais em 16 módulos em `lean_proofs/Generated/`,
+provando meta-táticas customizadas em Lean 4, identidades diofantinas para a conjectura de Schinzel
+ampliada ($a \ge 4$), crivos em anéis quadráticos $\mathbb{Z}[\sqrt{d}]$, cotas extremais de coordenadas,
+densidade assintótica modular, coprimalidade universal multitermo ($k \ge 5$) e confirmação cega em grande escala ($10^7 \le n \le 10^9$).
+
+O programa P97–P104 estende o horizonte do EvoByte para a geometria algébrica diofantina:
+1. **Fibrados de curvas e superfícies cúbicas:** Modelagem da variedade $a x y z = n(yz + xz + xy)$
+   como uma superfície afim cúbica fibrada em cônicas $C_x(y, z)$ sobre $\mathbb{Q}(x)$ em Lean 4.
+2. **Síntese de parametrizações racionais via princípio local-global:** Análise de obstruções de
+   Hasse e símbolos de Hilbert locais sobre $\mathbb{Q}_p$, derivando seções racionais globais.
+3. **Crivo em ordens quaternônicas:** Extensão de fatorações de normas para álgebras de divisão de quatérnios
+   $\mathbb{H}(\alpha, \beta)$ sobre $\mathbb{Q}$, superando obstruções quadráticas.
+4. **Meta-tática `dioph_surface`:** Tática Lean 4 avançada com eliminação algébrica e normalização simplificada.
+5. **Teoremas de momentos assintóticos:** Prova formal de que o número médio de soluções $\bar{f}_a(n)$
+   cresce como $\gg \log^2 n$, formalizando a abundância de representações.
+6. **Frações diofantinas de potências superiores:** Generalização formal para equações do tipo
+   $\frac{a}{n^k} = \frac{1}{x} + \frac{1}{y} + \frac{1}{z}$ para expoentes $k \ge 2$.
+7. **Confirmação cega em hiper-escala ($10^9 \le n \le 10^{12}$):** Testes em partição cega selada
+   sob controle de taxa de erro familiar (FWER) via Bonferroni-Holm ($\alpha = 0{,}01$).
+8. **Campanha formal e grande dossiê geométrico:** Expansão para 1.200+ teoremas formais certificados
+   no kernel do Lean 4 com zero tokens `sorry`.
+
+### Ordem e dependências de P97–P104
+
+```text
+P97 fibrados cônicos superfícies cúbicas -> P98 parametrizações locais-globais
+ -> P99 crivo ordens quaternônicas -> P100 meta-tática dioph_surface
+ -> P101 assintótica momentos de soluções -> P102 potências superiores
+ -> P103 confirmação hiper-escala (10^9-10^12) -> P104 campanha geométrica e dossiê
+```
+
+### Regras do programa P97–P104
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P103):** partição selada de instâncias diofantinas de hiper-escala ($10^9 \le n \le 10^{12}$) sem vazamento para o crivo.

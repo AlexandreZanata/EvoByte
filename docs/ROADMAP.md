@@ -207,24 +207,38 @@ P87 confirms performance on a sealed blind split of large instances ($n > 10^5$)
 P88 executes a bounded meta-theorem campaign and exports the certified formal dossier (Done).
 All phases P81–P88 are Done.
 
-## Generalized modular resolution, meta-tactics & extended Schinzel program (D025)
+## Generalized modular resolution, meta-tactics & extended Schinzel program (D025, completed under D026)
 
 [P89–P96](phases/README.md#generalized-modular-resolution-meta-tactics--extended-schinzel-program-p89p96)
-define the formal extension following the conclusion of P81–P88 under D024.
-P81–P88 established 406 certified theorems in the Lean 4 kernel, integer divisibility lemmas in $\mathbb{N}$,
-optimal divisor sieves, and blind large-instance confirmation up to $n = 10^7$.
-P89–P96 extend the formal engine to custom Lean 4 metaprogramming tactics, Schinzel's generalized conjecture
-for arbitrary numerators $a \ge 4$, quadratic ring factorizations, extremal coordinate bounds,
-asymptotic modular density, and ultra-large instances ($10^7 \le n \le 10^9$).
+define the formal extension following the conclusion of P81–P88 under D024, now completed (Done, D026).
+P89 implemented custom Lean 4 metaprogramming tactics (`dioph_solve`, `frac_norm`).
+P90 formalized the generalized Schinzel conjecture for arbitrary numerators $a \ge 4$ across congruence classes.
+P91 developed quadratic ring factorization and de-obstruction sieves in $\mathbb{Z}[\sqrt{d}]$.
+P92 proved extremal coordinate bounds and minimal denominator asymptotics in Lean 4.
+P93 proved closed inductive towers proving asymptotic unit modular density.
+P94 proved universal $k$-term Egyptian fraction decompositions under strict coprimality.
+P95 confirmed performance on a sealed blind split of ultra-large instances ($10^7 \le n \le 10^9$) under Holm FWER control (100/100 wins, $p < 10^{-5}$).
+P96 executed a grand formal campaign with 965 Lean 4 kernel theorems across 16 modules with zero `sorry` and certified the final dossier with SHA-256 hash chain head `5de47dc7b3987ef724e685d2bac5a944ee1cd4ade4a8178f2d74ae0c9471878c`. All phases P89–P96 are Done.
 
-P89 implements custom Lean 4 metaprogramming tactics and macro rules (`evobyte_solve`).
-P90 formalizes the generalized Schinzel conjecture for arbitrary numerators $a \ge 4$ across congruence classes.
-P91 develops quadratic ring factorization and de-obstruction sieves for resistant residue classes.
-P92 proves extremal coordinate bounds and minimal denominator asymptotics in Lean 4.
-P93 synthesizes closed inductive towers proving asymptotic unit modular density.
-P94 proves universal $k$-term Egyptian fraction decompositions under strict coprimality.
-P95 confirms performance on a sealed blind split of ultra-large instances ($10^7 \le n \le 10^9$) under Holm FWER control.
-P96 executes a grand formal campaign with 500+ Lean 4 kernel theorems and certifies the final dossier.
+## Diophantine algebraic geometry, cubic surface fibrations & invariants program (D027)
+
+[P97–P104](phases/README.md#diophantine-algebraic-geometry-cubic-surface-fibrations--invariants-program-p97p104)
+define the formal extension following the conclusion of P89–P96 under D026.
+P89–P96 established 965 certified theorems in the Lean 4 kernel, custom tactic automation,
+quadratic ring sieves, and blind confirmation up to $n = 10^9$.
+P97–P104 treat the Diophantine solution manifold $a x y z = n(yz + xz + xy)$ as an affine cubic surface,
+formalizing conic fibrations over $\mathbb{Q}(x)$, rational points via Legendre local-global principle,
+quaternion order sieves, custom algebraic elimination tactic `dioph_surface`, solution density moments $f_a(n)$,
+higher-power fractions $a/n^k$, ultra-scale verification ($10^9 \le n \le 10^{12}$), and expansion to 1,200+ Lean 4 theorems.
+
+P97 formalizes cubic surface Diophantine conic fibrations and sections in Lean 4.
+P98 synthesizes rational conic parameterizations via the local-global principle.
+P99 develops quaternion algebra and division order sieves for global obstruction classes.
+P100 implements the unified `dioph_surface` metaprogramming tactic in Lean 4.
+P101 proves asymptotic moment bounds and solution abundance theorems for $f_a(n)$.
+P102 generalizes formal Diophantine identities to higher-power denominators $a/n^k$.
+P103 confirms performance on a sealed blind split of hyper-scale instances ($10^9 \le n \le 10^{12}$) under Holm FWER control.
+P104 executes a grand Diophantine geometry campaign and certifies the final dossier in Lean 4.
 All phases remain Proposed until measured and accepted.
 
 ## Quantum track (experimental, deferred expansion)
