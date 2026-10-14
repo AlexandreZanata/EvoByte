@@ -357,7 +357,10 @@ def test_p75_acceptance_smoke(tmp_path: Path):
     assert report["verdict"] == "ACCEPTED"
     assert report["coverage_840"]["covered_count"] == 834
     assert report["coverage_840"]["resistant_count"] == 6
-    assert report["coverage_840"]["checksum"] == "34ce9589bc7cd7684415a67ea86f1dd85ab765c8137d62c3b3d1818cdc287fa7"
+    assert (
+        report["coverage_840"]["checksum"]
+        == "34ce9589bc7cd7684415a67ea86f1dd85ab765c8137d62c3b3d1818cdc287fa7"
+    )
     assert len(report["multi_moduli_summary"]) == 3
 
 
@@ -452,12 +455,16 @@ def test_open_problems_algebraic_congruence_with_sieve_fallback():
     from benchmarks.open_problems import check_erdos_straus_algebraic_congruence
 
     # Without fallback, resistant residue 1009 returns False
-    ok_no_fallback, det_no_fallback = check_erdos_straus_algebraic_congruence(1009, 840, fallback_sieve=False)
+    ok_no_fallback, det_no_fallback = check_erdos_straus_algebraic_congruence(
+        1009, 840, fallback_sieve=False
+    )
     assert ok_no_fallback is False
     assert det_no_fallback["classification"]["is_resistant"] is True
 
     # With fallback, resistant residue 1009 is solved and verified
-    ok_fallback, det_fallback = check_erdos_straus_algebraic_congruence(1009, 840, fallback_sieve=True)
+    ok_fallback, det_fallback = check_erdos_straus_algebraic_congruence(
+        1009, 840, fallback_sieve=True
+    )
     assert ok_fallback is True
     assert det_fallback["verified_exact"] is True
     assert det_fallback["status"] == "solved_by_rational_divisor_sieve"
@@ -779,8 +786,8 @@ def test_poly2d_arithmetic():
     v = Poly2D.var_v()
     one = Poly2D.constant(1)
 
-    p1 = (u * 4 - one)
-    p2 = (v * 4 - one)
+    p1 = u * 4 - one
+    p2 = v * 4 - one
     prod = p1 * p2
 
     assert prod.total_degree == 2
@@ -792,7 +799,7 @@ def test_poly2d_arithmetic():
     assert prod.is_integer_valued(5) is True
 
     # Power
-    p_sq = p1 ** 2
+    p_sq = p1**2
     assert p_sq.eval(3, 0) == 121  # 11^2 = 121
     assert p_sq.degree_u == 2
     assert p_sq.degree_v == -1 or p_sq.degree_v == 0

@@ -109,11 +109,7 @@ def erdos_straus_instance_to_lean_theorem(
         f"/-- Certified Erdős–Straus Diophantine solution for n = {n}.\n"
         f"    Verified exact: 4/{n} = 1/{x} + 1/{y} + 1/{z}. -/"
     )
-    stmt = (
-        f"theorem {name} :\n"
-        f"    (4 : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n"
-        f"  norm_num"
-    )
+    stmt = f"theorem {name} :\n    (4 : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n  norm_num"
     return f"{doc}\n{stmt}\n"
 
 
@@ -140,11 +136,7 @@ def sierpinski_instance_to_lean_theorem(
         f"/-- Certified Sierpiński Diophantine solution for n = {n}.\n"
         f"    Verified exact: 5/{n} = 1/{x} + 1/{y} + 1/{z}. -/"
     )
-    stmt = (
-        f"theorem {name} :\n"
-        f"    (5 : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n"
-        f"  norm_num"
-    )
+    stmt = f"theorem {name} :\n    (5 : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n  norm_num"
     return f"{doc}\n{stmt}\n"
 
 
@@ -275,7 +267,9 @@ def export_formal_proof_catalog(
         if ident is not None and ident.verify_exact():
             ident_theorems.append(algebraic_identity_to_lean_theorem(ident))
 
-    identities_doc = "EvoByte Formal Proof Catalog: Certified Erdős–Straus Polynomial Identities in Q[k]."
+    identities_doc = (
+        "EvoByte Formal Proof Catalog: Certified Erdős–Straus Polynomial Identities in Q[k]."
+    )
     identities_src = generate_lean_proof_module(ident_theorems, identities_doc)
     identities_file = out / "ErdosStrausIdentities.lean"
     identities_file.write_text(identities_src, encoding="utf-8")
@@ -311,7 +305,10 @@ def export_formal_proof_catalog(
     prog_b, _ = compile_horner_to_bytecode(HornerPoly(coeff_indices=[3, 0, 11]))
     if prog_b is not None:
         thm_b = bytecode_to_lean_theorem(
-            prog_b, "bytecode_quadratic_2x2_plus_3", "(2 : ℚ) * x ^ 2 + 3", "bytecode_spec_quadratic"
+            prog_b,
+            "bytecode_quadratic_2x2_plus_3",
+            "(2 : ℚ) * x ^ 2 + 3",
+            "bytecode_spec_quadratic",
         )
         bytecode_theorems.append(thm_b)
 
@@ -331,7 +328,9 @@ def export_formal_proof_catalog(
         )
         bytecode_theorems.append(thm_d)
 
-    bytecode_doc = "EvoByte Formal Proof Catalog: Bytecode Decompilations and Algebraic Equivalence Theorems."
+    bytecode_doc = (
+        "EvoByte Formal Proof Catalog: Bytecode Decompilations and Algebraic Equivalence Theorems."
+    )
     bytecode_src = generate_lean_proof_module(
         bytecode_theorems, bytecode_doc, imports=["Mathlib.Tactic.Ring", "Mathlib.Data.Rat.Defs"]
     )
@@ -418,6 +417,7 @@ def export_formal_proof_catalog(
 
     # Build the entire Generated library via Lake
     import subprocess
+
     bins = lean_resolve_binaries(proj)
     lake_proc = subprocess.run(
         [bins["lake"], "-d", str(proj), "build", "Generated"],
@@ -427,7 +427,7 @@ def export_formal_proof_catalog(
         timeout=120,
         check=False,
     )
-    lake_built_ok = (lake_proc.returncode == 0)
+    lake_built_ok = lake_proc.returncode == 0
     verifications["Generated.lean"] = {
         "path": str(root_file),
         "sha256": hashlib.sha256(root_file.read_bytes()).hexdigest(),
@@ -450,9 +450,7 @@ def export_formal_proof_catalog(
         },
         "modules": verifications,
         "all_passed": all_passed,
-        "has_sorry": any(
-            "sorry" in mod.get("reasons", []) for mod in verifications.values()
-        ),
+        "has_sorry": any("sorry" in mod.get("reasons", []) for mod in verifications.values()),
     }
 
 
@@ -478,9 +476,13 @@ def verify_proof_catalog_soundness(catalog_summary: dict[str, Any]) -> tuple[boo
     if counts.get("bytecode_specifications", 0) < 3:
         findings.append("MISSING_BYTECODE_SPECS: less than 3 bytecode specifications verified")
     if counts.get("sierpinski_identities", 0) < 20:
-        findings.append("MISSING_SIERPINSKI_IDENTITIES: less than 20 Sierpiński identities verified")
+        findings.append(
+            "MISSING_SIERPINSKI_IDENTITIES: less than 20 Sierpiński identities verified"
+        )
     if counts.get("sierpinski_certificates", 0) < 10:
-        findings.append("MISSING_SIERPINSKI_CERTIFICATES: less than 10 Sierpiński certificates verified")
+        findings.append(
+            "MISSING_SIERPINSKI_CERTIFICATES: less than 10 Sierpiński certificates verified"
+        )
 
     modules = catalog_summary.get("modules", {})
     for mod_name, mod_info in modules.items():
@@ -817,15 +819,35 @@ DIVISIBILITY_NAT_LEMMAS: list[tuple[str, str, str]] = [
     ("div_nat_k1_prod", "∀ (k : Nat), (k + 1) ∣ (k + 1) * (4 * k + 1)", "⟨4 * k + 1, rfl⟩"),
     ("div_nat_2k1_prod", "∀ (k : Nat), (2 * k + 1) ∣ (2 * k + 1) * (k + 2)", "⟨k + 2, rfl⟩"),
     ("div_nat_4k1_sq", "∀ (k : Nat), (4 * k + 1) ∣ 16 * k ^ 2 + 8 * k + 1", "⟨4 * k + 1, by ring⟩"),
-    ("div_nat_4k3_sq", "∀ (k : Nat), (4 * k + 3) ∣ 16 * k ^ 2 + 24 * k + 9", "⟨4 * k + 3, by ring⟩"),
+    (
+        "div_nat_4k3_sq",
+        "∀ (k : Nat), (4 * k + 3) ∣ 16 * k ^ 2 + 24 * k + 9",
+        "⟨4 * k + 3, by ring⟩",
+    ),
     ("div_nat_k1_sq", "∀ (k : Nat), (k + 1) ∣ k ^ 2 + 2 * k + 1", "⟨k + 1, by ring⟩"),
-    ("div_nat_k1_cube", "∀ (k : Nat), (k + 1) ∣ k ^ 3 + 3 * k ^ 2 + 3 * k + 1", "⟨k ^ 2 + 2 * k + 1, by ring⟩"),
+    (
+        "div_nat_k1_cube",
+        "∀ (k : Nat), (k + 1) ∣ k ^ 3 + 3 * k ^ 2 + 3 * k + 1",
+        "⟨k ^ 2 + 2 * k + 1, by ring⟩",
+    ),
     ("div_nat_2k1_sq", "∀ (k : Nat), (2 * k + 1) ∣ 4 * k ^ 2 + 4 * k + 1", "⟨2 * k + 1, by ring⟩"),
     ("div_nat_3k2_sq", "∀ (k : Nat), (3 * k + 2) ∣ 9 * k ^ 2 + 12 * k + 4", "⟨3 * k + 2, by ring⟩"),
     ("div_nat_k1_quad", "∀ (k : Nat), (k + 1) ∣ 4 * k ^ 2 + 5 * k + 1", "⟨4 * k + 1, by ring⟩"),
-    ("div_nat_2k1_quad", "∀ (k : Nat), (2 * k + 1) ∣ 8 * k ^ 2 + 6 * k + 1", "⟨4 * k + 1, by ring⟩"),
-    ("div_nat_3k1_quad", "∀ (k : Nat), (3 * k + 1) ∣ 9 * k ^ 2 + 6 * k + 1", "⟨3 * k + 1, by ring⟩"),
-    ("div_nat_4k1_quad", "∀ (k : Nat), (4 * k + 1) ∣ 24 * k ^ 2 + 10 * k + 1", "⟨6 * k + 1, by ring⟩"),
+    (
+        "div_nat_2k1_quad",
+        "∀ (k : Nat), (2 * k + 1) ∣ 8 * k ^ 2 + 6 * k + 1",
+        "⟨4 * k + 1, by ring⟩",
+    ),
+    (
+        "div_nat_3k1_quad",
+        "∀ (k : Nat), (3 * k + 1) ∣ 9 * k ^ 2 + 6 * k + 1",
+        "⟨3 * k + 1, by ring⟩",
+    ),
+    (
+        "div_nat_4k1_quad",
+        "∀ (k : Nat), (4 * k + 1) ∣ 24 * k ^ 2 + 10 * k + 1",
+        "⟨6 * k + 1, by ring⟩",
+    ),
 ]
 
 
@@ -965,7 +987,9 @@ def export_divisibility_lemmas_catalog(
     }
 
 
-def verify_divisibility_catalog_soundness(catalog_summary: dict[str, Any]) -> tuple[bool, list[str]]:
+def verify_divisibility_catalog_soundness(
+    catalog_summary: dict[str, Any],
+) -> tuple[bool, list[str]]:
     """Audit divisibility lemmas catalog for complete acceptance, zero sorry, and soundness."""
     findings: list[str] = []
 
@@ -1139,7 +1163,9 @@ def verify_optimal_catalog_soundness(
 
     total_certs = catalog_summary.get("total_certificates", 0)
     if total_certs < min_certificates:
-        findings.append(f"INSUFFICIENT_CERTIFICATES: expected >= {min_certificates}, got {total_certs}")
+        findings.append(
+            f"INSUFFICIENT_CERTIFICATES: expected >= {min_certificates}, got {total_certs}"
+        )
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_OPTIMAL_CERTIFICATES")
@@ -1185,9 +1211,7 @@ def export_quadratic_identities_catalog(
             f"    Verified exact: {a}/{n} = 1/{x} + 1/{y} + 1/{z} with pairwise distinct positive integers. -/"
         )
         stmt = (
-            f"theorem {name} :\n"
-            f"    ({a} : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n"
-            f"  norm_num"
+            f"theorem {name} :\n    ({a} : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n  norm_num"
         )
         theorems.append(f"{doc}\n{stmt}\n")
 
@@ -1262,9 +1286,7 @@ def verify_quadratic_catalog_soundness(
 
     total_thms = catalog_summary.get("total_theorems", 0)
     if total_thms < min_identities:
-        findings.append(
-            f"INSUFFICIENT_THEOREMS: expected >= {min_identities}, got {total_thms}"
-        )
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_identities}, got {total_thms}")
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_QUADRATIC_IDENTITIES")
@@ -1404,7 +1426,6 @@ DIOPHANTINE_BENCHMARK_30: list[tuple[str, str, list[str], str, str]] = [
         "omega",
         "Linear sum lower bound for positive parameters",
     ),
-
     # 19..24: Rational linear inequality bounds (linarith)
     (
         "es_rat_bound_4_over_n",
@@ -1448,7 +1469,6 @@ DIOPHANTINE_BENCHMARK_30: list[tuple[str, str, list[str], str, str]] = [
         "linarith",
         "Sierpiński coordinate lower bound inequality",
     ),
-
     # 25..28: Structural logic and proposition resolution (aesop)
     (
         "diophantine_solution_conjunction",
@@ -1478,7 +1498,6 @@ DIOPHANTINE_BENCHMARK_30: list[tuple[str, str, list[str], str, str]] = [
         "aesop",
         "Conjunction left elimination for existence witness",
     ),
-
     # 29..30: ring & norm_num
     (
         "es_algebraic_linear_decomp",
@@ -1618,9 +1637,7 @@ def benchmark_tactic_dispatch(
         "import Mathlib.Tactic.Ring\n"
         "import Mathlib.Tactic.NormNum\n"
         "import Mathlib.Tactic.Linarith\n"
-        "import Mathlib.Data.Rat.Defs\n\n"
-        + "\n\n".join(theorems_parts)
-        + "\n"
+        "import Mathlib.Data.Rat.Defs\n\n" + "\n\n".join(theorems_parts) + "\n"
     )
 
     batch_ok = False
@@ -1648,14 +1665,16 @@ def benchmark_tactic_dispatch(
             stmt = item[1]
             primary_tactic, script = expected_scripts[name]
             tactic_counts[primary_tactic] = tactic_counts.get(primary_tactic, 0) + 1
-            results.append({
-                "name": name,
-                "statement": stmt,
-                "success": True,
-                "winning_tactic": primary_tactic,
-                "proof_script": script,
-                "attempts": 1,
-            })
+            results.append(
+                {
+                    "name": name,
+                    "statement": stmt,
+                    "success": True,
+                    "winning_tactic": primary_tactic,
+                    "proof_script": script,
+                    "attempts": 1,
+                }
+            )
     else:
         for item in target_lemmas:
             name, stmt, intros = item[0], item[1], item[2]
@@ -1677,14 +1696,16 @@ def benchmark_tactic_dispatch(
             winning = res.get("winning_tactic") or "none"
             if res.get("success", False):
                 tactic_counts[winning] = tactic_counts.get(winning, 0) + 1
-            results.append({
-                "name": name,
-                "statement": stmt,
-                "success": res.get("success", False),
-                "winning_tactic": winning,
-                "proof_script": res.get("proof_script"),
-                "attempts": res.get("attempts", 1),
-            })
+            results.append(
+                {
+                    "name": name,
+                    "statement": stmt,
+                    "success": res.get("success", False),
+                    "winning_tactic": winning,
+                    "proof_script": res.get("proof_script"),
+                    "attempts": res.get("attempts", 1),
+                }
+            )
 
     solved_count = sum(1 for r in results if r["success"])
     total_lemmas = len(target_lemmas)
@@ -1720,7 +1741,10 @@ def export_automated_theorems_catalog(
 
     theorems: list[str] = []
     target_lemmas = lemmas or DIOPHANTINE_BENCHMARK_30
-    docs = {item[0]: (item[4] if len(item) > 4 else f"Automated theorem {item[0]}") for item in target_lemmas}
+    docs = {
+        item[0]: (item[4] if len(item) > 4 else f"Automated theorem {item[0]}")
+        for item in target_lemmas
+    }
 
     for res in results:
         name = res["name"]
@@ -1814,9 +1838,7 @@ def verify_automated_catalog_soundness(
 
     total_thms = catalog_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
-        findings.append(
-            f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}"
-        )
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
 
     if catalog_summary.get("success_rate", 0.0) < 1.0:
         findings.append(
@@ -1841,11 +1863,29 @@ DEFAULT_MULTITERM_INSTANCES: list[dict[str, Any]] = [
     # 4-term strictly coprime Erdős–Straus
     {"a": 4, "n": 5, "terms": (2, 4, 36, 45), "id": "es_5_4t", "conjecture": "erdos_straus"},
     {"a": 4, "n": 13, "terms": (4, 18, 900, 975), "id": "es_13_4t", "conjecture": "erdos_straus"},
-    {"a": 4, "n": 169, "terms": (43, 2423, 11739435, 35208615), "id": "es_169_4t", "conjecture": "erdos_straus"},
-    {"a": 4, "n": 289, "terms": (73, 7033, 130919295, 171202155), "id": "es_289_4t", "conjecture": "erdos_straus"},
+    {
+        "a": 4,
+        "n": 169,
+        "terms": (43, 2423, 11739435, 35208615),
+        "id": "es_169_4t",
+        "conjecture": "erdos_straus",
+    },
+    {
+        "a": 4,
+        "n": 289,
+        "terms": (73, 7033, 130919295, 171202155),
+        "id": "es_289_4t",
+        "conjecture": "erdos_straus",
+    },
     # 4-term strictly coprime Sierpiński
     {"a": 5, "n": 7, "terms": (2, 5, 120, 168), "id": "sier_7_4t", "conjecture": "sierpinski"},
-    {"a": 5, "n": 49, "terms": (10, 491, 480690, 481671), "id": "sier_49_4t", "conjecture": "sierpinski"},
+    {
+        "a": 5,
+        "n": 49,
+        "terms": (10, 491, 480690, 481671),
+        "id": "sier_49_4t",
+        "conjecture": "sierpinski",
+    },
 ]
 
 
@@ -2004,9 +2044,7 @@ def verify_multiterm_catalog_soundness(
 
     total_thms = catalog_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
-        findings.append(
-            f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}"
-        )
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_MULTITERM_THEOREMS")

@@ -333,9 +333,7 @@ def test_try_prove_lemma_with_tactics():
     assert res_lin["winning_tactic"] == "linarith"
 
     # 3. Aesop test
-    res_aesop = try_prove_lemma_with_tactics(
-        "test_aesop_sub", "∀ (p q : Prop), p ∧ q → q ∧ p", []
-    )
+    res_aesop = try_prove_lemma_with_tactics("test_aesop_sub", "∀ (p q : Prop), p ∧ q → q ∧ p", [])
     assert res_aesop["success"] is True
     assert res_aesop["winning_tactic"] == "aesop"
 

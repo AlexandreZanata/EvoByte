@@ -235,7 +235,6 @@ def run_sierpinski_campaign(
     }
 
 
-
 def check_taxicab(sum_val: int, a: int, b: int, c: int, d: int) -> tuple[bool, int, dict[str, Any]]:
     """Exact checker for Taxicab identity: a^3 + b^3 == c^3 + d^3 == sum_val."""
     if min(a, b, c, d) <= 0:

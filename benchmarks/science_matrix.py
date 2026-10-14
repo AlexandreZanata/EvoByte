@@ -4161,9 +4161,7 @@ def run_p75_coverage_audit(config_path: str | Path, output_path: str | Path) -> 
         )
 
     if matrix_840["covered_count"] != 834:
-        findings.append(
-            f"COVERED_COUNT_MISMATCH: expected 834, got {matrix_840['covered_count']}"
-        )
+        findings.append(f"COVERED_COUNT_MISMATCH: expected 834, got {matrix_840['covered_count']}")
 
     multi_moduli_summary: dict[str, Any] = {}
     for m in config.get("moduli", [24, 120, 840, 2520]):
@@ -4275,12 +4273,16 @@ def run_p76_sieve_audit(config_path: str | Path, output_path: str | Path) -> dic
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P76 RATIONAL DIVISOR SIEVE AUDIT (Sublinear divisor decomposition & modular elimination)")
+    print(
+        "P76 RATIONAL DIVISOR SIEVE AUDIT (Sublinear divisor decomposition & modular elimination)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
 
-    target_instances = [int(x) for x in config.get("target_instances", [1009, 1033, 1129, 1153, 1201])]
+    target_instances = [
+        int(x) for x in config.get("target_instances", [1009, 1033, 1129, 1153, 1201])
+    ]
     min_speedup = float(config.get("min_speedup", 3.0))
     min_reduction = float(config.get("min_candidate_reduction", 100.0))
 
@@ -4288,24 +4290,32 @@ def run_p76_sieve_audit(config_path: str | Path, output_path: str | Path) -> dic
     quad_checks: list[dict[str, Any]] = []
     for n in target_instances[:5]:
         sol_q, det_q = quadratic_divisor_decomposition(n, max_d=int(config.get("max_d_quad", 100)))
-        quad_checks.append({
-            "n": n,
-            "solved": sol_q is not None,
-            "details": det_q,
-        })
+        quad_checks.append(
+            {
+                "n": n,
+                "solved": sol_q is not None,
+                "details": det_q,
+            }
+        )
         if sol_q is not None:
             qx, qy, qz = sol_q
             if 4 * qx * qy * qz != n * (qx * qy + qy * qz + qz * qx):
                 findings.append(f"QUAD_DECOMP_INVALID: n={n} produced non-solution {sol_q}")
 
     # 2. Benchmark sieve vs baseline
-    bench = benchmark_sieve_vs_baseline(target_instances, max_coord=int(config.get("max_coord", 10**9)))
+    bench = benchmark_sieve_vs_baseline(
+        target_instances, max_coord=int(config.get("max_coord", 10**9))
+    )
 
     if bench["false_negatives"] > 0:
-        findings.append(f"FALSE_NEGATIVES_FOUND: {bench['false_negatives']} instances missed by sieve")
+        findings.append(
+            f"FALSE_NEGATIVES_FOUND: {bench['false_negatives']} instances missed by sieve"
+        )
 
     if not bench["all_sieve_valid"]:
-        findings.append("SIEVE_INVALID_SOLUTION: one or more sieve solutions failed Diophantine check")
+        findings.append(
+            "SIEVE_INVALID_SOLUTION: one or more sieve solutions failed Diophantine check"
+        )
 
     if bench["overall_candidate_reduction"] < min_reduction:
         findings.append(
@@ -4490,9 +4500,6 @@ def run_p77_formal_audit(config_path: str | Path, output_path: str | Path) -> di
     return report
 
 
-
-
-
 def run_p78_sierpinski_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P78 audit: Sierpiński/Schinzel generalization of the algebraic engine.
 
@@ -4565,7 +4572,9 @@ def run_p78_sierpinski_audit(config_path: str | Path, output_path: str | Path) -
         a_values=[4, 5], test_instances=test_instances or None, modulus=modulus
     )
     if not comparison["verified"]:
-        findings.append("COMPARISON_UNVERIFIED: 4-vs-5 sieve comparison did not solve all instances")
+        findings.append(
+            "COMPARISON_UNVERIFIED: 4-vs-5 sieve comparison did not solve all instances"
+        )
 
     catalog = export_formal_proof_catalog(
         output_dir=config.get("output_dir", "lean_proofs/Generated"),
@@ -4785,14 +4794,16 @@ def run_p79_confirmation_audit(config_path: str | Path, output_path: str | Path)
                 ties += 1
                 outcome = "tie"
 
-            pairs.append({
-                "instance_id": inst.get("instance_id", str(n_val)),
-                "n": n_val,
-                "engine_candidates": c_engine,
-                "baseline_candidates": c_base,
-                "outcome": outcome,
-                "reduction": (c_base / c_engine) if c_engine > 0 else 1.0,
-            })
+            pairs.append(
+                {
+                    "instance_id": inst.get("instance_id", str(n_val)),
+                    "n": n_val,
+                    "engine_candidates": c_engine,
+                    "baseline_candidates": c_base,
+                    "outcome": outcome,
+                    "reduction": (c_base / c_engine) if c_engine > 0 else 1.0,
+                }
+            )
 
         p_val = _sign_pvalue(wins, losses)
         track_pvalues[track_key] = p_val
@@ -4810,7 +4821,9 @@ def run_p79_confirmation_audit(config_path: str | Path, output_path: str | Path)
             "raw_p_value": p_val,
             "total_engine_candidates": total_engine_cands,
             "total_baseline_candidates": total_base_cands,
-            "candidate_reduction": (total_base_cands / total_engine_cands) if total_engine_cands > 0 else 1.0,
+            "candidate_reduction": (total_base_cands / total_engine_cands)
+            if total_engine_cands > 0
+            else 1.0,
             "all_verified": all_engine_verified,
             "elapsed_sec": elapsed_track,
             "pairs": pairs,
@@ -4833,7 +4846,9 @@ def run_p79_confirmation_audit(config_path: str | Path, output_path: str | Path)
         if t_summary["decisive_count"] < min_decisive:
             t_summary["outcome"] = "INCONCLUSIVE"
             t_summary["reason"] = f"fewer than {min_decisive} decisive instances"
-        elif adj_p < alpha and t_summary["all_verified"] and t_summary["wins"] > t_summary["losses"]:
+        elif (
+            adj_p < alpha and t_summary["all_verified"] and t_summary["wins"] > t_summary["losses"]
+        ):
             t_summary["outcome"] = "CONFIRMED"
             t_summary["reason"] = f"statistically superior (Holm p={adj_p:.4e} < alpha={alpha})"
         else:
@@ -5010,7 +5025,9 @@ def run_p80_formal_campaign_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty:
-        findings.append("DIRTY_SOURCE: tree not clean; formal campaign claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; formal campaign claims from dirty code rejected"
+        )
 
     verdict = "ACCEPTED" if not findings else "REJECTED"
 
@@ -5133,7 +5150,9 @@ def run_p81_inductive_baseline_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty:
-        findings.append("DIRTY_SOURCE: tree not clean; inductive baseline claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; inductive baseline claims from dirty code rejected"
+        )
 
     verdict = "ACCEPTED" if not findings else "REJECTED"
 
@@ -5246,7 +5265,9 @@ def run_p82_divisibility_synthesis_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty:
-        findings.append("DIRTY_SOURCE: tree not clean; divisibility synthesis claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; divisibility synthesis claims from dirty code rejected"
+        )
 
     claim_scope = (
         "Diophantine divisibility lemma synthesis in Nat and Int certified in Lean 4 "
@@ -5353,7 +5374,9 @@ def run_p83_optimal_divisor_audit(
     max_reduction = bench_results.get("max_reduction_factor", 1.0)
 
     if avg_reduction < min_reduction:
-        findings.append(f"INSUFFICIENT_REDUCTION: expected >= {min_reduction}x, got {avg_reduction:.2f}x")
+        findings.append(
+            f"INSUFFICIENT_REDUCTION: expected >= {min_reduction}x, got {avg_reduction:.2f}x"
+        )
 
     output_dir = config.get("output_dir", "lean_proofs/Generated")
     project_dir = config.get("project_dir", "lean_proofs")
@@ -5379,7 +5402,9 @@ def run_p83_optimal_divisor_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty:
-        findings.append("DIRTY_SOURCE: tree not clean; optimal divisor claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; optimal divisor claims from dirty code rejected"
+        )
 
     claim_scope = (
         "Structured divisor sieve and optimal divisor selection minimizing coordinate "
@@ -5485,7 +5510,9 @@ def run_p84_quadratic_identities_audit(
     identities = synthesize_quadratic_identities()
     min_parametric = int(config.get("min_parametric_identities", 10))
     if len(identities) < min_parametric:
-        findings.append(f"INSUFFICIENT_IDENTITIES: expected >= {min_parametric}, got {len(identities)}")
+        findings.append(
+            f"INSUFFICIENT_IDENTITIES: expected >= {min_parametric}, got {len(identities)}"
+        )
 
     for ident in identities:
         if not ident.verify_exact(grid_size=5):
@@ -5495,7 +5522,9 @@ def run_p84_quadratic_identities_audit(
     res_cov = evaluate_resistant_residues_coverage()
     min_instances = int(config.get("min_instance_certificates", 8))
     if res_cov["total_evaluated"] < min_instances:
-        findings.append(f"INSUFFICIENT_INSTANCES: expected >= {min_instances}, got {res_cov['total_evaluated']}")
+        findings.append(
+            f"INSUFFICIENT_INSTANCES: expected >= {min_instances}, got {res_cov['total_evaluated']}"
+        )
     if not res_cov["all_verified"]:
         findings.append("RESISTANT_INSTANCES_FAILED_VERIFICATION")
 
@@ -5503,9 +5532,7 @@ def run_p84_quadratic_identities_audit(
     output_dir = config.get("output_dir", "lean_proofs/Generated")
     project_dir = config.get("project_dir", "lean_proofs")
 
-    catalog = export_quadratic_identities_catalog(
-        output_dir=output_dir, project_dir=project_dir
-    )
+    catalog = export_quadratic_identities_catalog(output_dir=output_dir, project_dir=project_dir)
     sound, soundness_findings = verify_quadratic_catalog_soundness(
         catalog, min_identities=min_parametric
     )
@@ -5523,7 +5550,9 @@ def run_p84_quadratic_identities_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty:
-        findings.append("DIRTY_SOURCE: tree not clean; quadratic identity claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; quadratic identity claims from dirty code rejected"
+        )
 
     claim_scope = (
         "Synthesis of multiparameter and quadratic Diophantine polynomial identities over "
@@ -5626,7 +5655,9 @@ def run_p85_tactic_dispatch_audit(
 
     bench = benchmark_tactic_dispatch()
     if bench["total_lemmas"] < min_theorems:
-        findings.append(f"INSUFFICIENT_LEMMAS: expected >= {min_theorems}, got {bench['total_lemmas']}")
+        findings.append(
+            f"INSUFFICIENT_LEMMAS: expected >= {min_theorems}, got {bench['total_lemmas']}"
+        )
     if bench["success_rate"] < min_success_rate:
         findings.append(
             f"SUBOPTIMAL_SUCCESS_RATE: expected >= {min_success_rate}, got {bench['success_rate']:.2f}"
@@ -5636,9 +5667,7 @@ def run_p85_tactic_dispatch_audit(
     output_dir = config.get("output_dir", "lean_proofs/Generated")
     project_dir = config.get("project_dir", "lean_proofs")
 
-    catalog = export_automated_theorems_catalog(
-        output_dir=output_dir, project_dir=project_dir
-    )
+    catalog = export_automated_theorems_catalog(output_dir=output_dir, project_dir=project_dir)
     sound, soundness_findings = verify_automated_catalog_soundness(
         catalog, min_theorems=min_theorems
     )
@@ -5656,7 +5685,9 @@ def run_p85_tactic_dispatch_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty:
-        findings.append("DIRTY_SOURCE: tree not clean; automated tactic claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; automated tactic claims from dirty code rejected"
+        )
 
     claim_scope = (
         "Automated tactic dispatch and proof compilation in Lean 4 using omega, linarith, "
@@ -5716,9 +5747,7 @@ def run_p85_tactic_dispatch_audit(
     return report
 
 
-def run_p86_multiterm_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p86_multiterm_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P86 audit: multiterm Diophantine generalization and coprime Egyptian fractions.
 
     Verifies:
@@ -5768,7 +5797,9 @@ def run_p86_multiterm_audit(
     # Confirm obstinate 3-term case (4/13) has verified 4-term coprime solution
     obstinate_case = next((r for r in cov["results"] if r.get("a") == 4 and r.get("n") == 13), None)
     if obstinate_case is None or not obstinate_case.get("sol_4term_verified", False):
-        findings.append("OBSTINATE_CASE_UNRESOLVED: 4/13 missing verified 4-term coprime decomposition")
+        findings.append(
+            "OBSTINATE_CASE_UNRESOLVED: 4/13 missing verified 4-term coprime decomposition"
+        )
     elif obstinate_case.get("sol_3term") is not None:
         findings.append("CONTRADICTION: 4/13 unexpectedly admitted a 3-term coprime decomposition")
 
@@ -5777,9 +5808,7 @@ def run_p86_multiterm_audit(
     output_dir = config.get("output_dir", "lean_proofs/Generated")
     project_dir = config.get("project_dir", "lean_proofs")
 
-    catalog = export_multiterm_theorems_catalog(
-        output_dir=output_dir, project_dir=project_dir
-    )
+    catalog = export_multiterm_theorems_catalog(output_dir=output_dir, project_dir=project_dir)
     sound, soundness_findings = verify_multiterm_catalog_soundness(
         catalog, min_theorems=min_theorems
     )
@@ -5991,7 +6020,9 @@ def run_p87_large_instance_audit(
 
         for inst in instances:
             n_val = int(inst["n"])
-            sol_engine, det_engine = optimal_schinzel_divisor_sieve(a_val, n_val, max_coord=max_coord)
+            sol_engine, det_engine = optimal_schinzel_divisor_sieve(
+                a_val, n_val, max_coord=max_coord
+            )
             if sol_engine is None:
                 findings.append(f"ENGINE_FAILED: track={track_key} n={n_val}")
                 all_engine_verified = False
@@ -6023,14 +6054,16 @@ def run_p87_large_instance_audit(
                 ties += 1
                 outcome = "tie"
 
-            pairs.append({
-                "instance_id": inst.get("instance_id", str(n_val)),
-                "n": n_val,
-                "engine_candidates": c_engine,
-                "baseline_candidates": c_base,
-                "outcome": outcome,
-                "reduction": (c_base / c_engine) if c_engine > 0 else 1.0,
-            })
+            pairs.append(
+                {
+                    "instance_id": inst.get("instance_id", str(n_val)),
+                    "n": n_val,
+                    "engine_candidates": c_engine,
+                    "baseline_candidates": c_base,
+                    "outcome": outcome,
+                    "reduction": (c_base / c_engine) if c_engine > 0 else 1.0,
+                }
+            )
 
         # Wilcoxon signed-rank test
         try:
@@ -6061,7 +6094,9 @@ def run_p87_large_instance_audit(
             "raw_p_value": chosen_p,
             "total_engine_candidates": total_engine_cands,
             "total_baseline_candidates": total_base_cands,
-            "candidate_reduction": (total_base_cands / total_engine_cands) if total_engine_cands > 0 else 1.0,
+            "candidate_reduction": (total_base_cands / total_engine_cands)
+            if total_engine_cands > 0
+            else 1.0,
             "all_verified": all_engine_verified,
             "elapsed_sec": elapsed_track,
             "pairs": pairs,
@@ -6084,7 +6119,9 @@ def run_p87_large_instance_audit(
         if t_summary["decisive_count"] < min_decisive:
             t_summary["outcome"] = "INCONCLUSIVE"
             t_summary["reason"] = f"fewer than {min_decisive} decisive instances"
-        elif adj_p < alpha and t_summary["all_verified"] and t_summary["wins"] > t_summary["losses"]:
+        elif (
+            adj_p < alpha and t_summary["all_verified"] and t_summary["wins"] > t_summary["losses"]
+        ):
             t_summary["outcome"] = "CONFIRMED"
             t_summary["reason"] = f"statistically superior (Holm p={adj_p:.4e} < alpha={alpha})"
         else:
@@ -6263,7 +6300,9 @@ def run_p88_meta_theorem_campaign_audit(
         }
 
     if total_theorems < min_theorems:
-        findings.append(f"INSUFFICIENT_FORMAL_THEOREMS: expected >= {min_theorems}, got {total_theorems}")
+        findings.append(
+            f"INSUFFICIENT_FORMAL_THEOREMS: expected >= {min_theorems}, got {total_theorems}"
+        )
 
     # Lake build verification
     bins = lean_resolve_binaries(project_dir)
@@ -6291,7 +6330,9 @@ def run_p88_meta_theorem_campaign_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty:
-        findings.append("DIRTY_SOURCE: tree not clean; formal campaign claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; formal campaign claims from dirty code rejected"
+        )
 
     claim_scope = (
         "Consolidated meta-theorem formal campaign and Lean 4 Mathlib theorem dossier for inductive "
@@ -6358,7 +6399,6 @@ def run_p88_meta_theorem_campaign_audit(
         f"modules verified with zero sorry; report -> {out_p}"
     )
     return report
-
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:

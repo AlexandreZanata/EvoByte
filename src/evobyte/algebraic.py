@@ -244,7 +244,6 @@ class AlgebraicIdentity:
 SchinzelIdentity = AlgebraicIdentity
 
 
-
 def synthesize_mordell_identity(
     m: int,
     r: int,
@@ -587,7 +586,9 @@ def build_congruence_coverage_matrix(modulus: int = 840) -> dict[str, Any]:
         "verified": all_verified,
     }
 
-    canonical_bytes = json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     result = dict(canonical_data)
@@ -637,7 +638,9 @@ def verify_coverage_matrix_soundness(matrix: dict[str, Any]) -> tuple[bool, list
         "identities": matrix.get("identities", {}),
         "verified": matrix.get("verified", False),
     }
-    canonical_bytes = json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     expected_checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     if matrix.get("checksum") != expected_checksum:
@@ -743,16 +746,16 @@ def quadratic_divisor_decomposition(
             if x > 0 and y > 0 and z > 0 and 4 * x * y * z == n * (x * y + y * z + z * x):
                 elapsed = time.perf_counter() - t0
                 return (x, y, z), {
-                        "n": n,
-                        "d": d,
-                        "A": A,
-                        "B": B,
-                        "triple": (x, y, z),
-                        "candidates_evaluated": candidates_evaluated,
-                        "modular_pruned": modular_pruned,
-                        "elapsed_sec": elapsed,
-                        "verified_exact": True,
-                    }
+                    "n": n,
+                    "d": d,
+                    "A": A,
+                    "B": B,
+                    "triple": (x, y, z),
+                    "candidates_evaluated": candidates_evaluated,
+                    "modular_pruned": modular_pruned,
+                    "elapsed_sec": elapsed,
+                    "verified_exact": True,
+                }
 
     elapsed = time.perf_counter() - t0
     return None, {
@@ -764,9 +767,7 @@ def quadratic_divisor_decomposition(
     }
 
 
-def check_schinzel(
-    a: int, n: int, x: int, y: int, z: int
-) -> tuple[bool, int, dict[str, Any]]:
+def check_schinzel(a: int, n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[str, Any]]:
     """Exact decidable integer checker for Schinzel Egyptian fraction conjecture:
 
     a/n = 1/x + 1/y + 1/z  <=>  a*x*y*z == n*(x*y + y*z + z*x) with x, y, z > 0.
@@ -790,7 +791,7 @@ def check_schinzel(
     lhs = int(a) * int(x) * int(y) * int(z)
     rhs = int(n) * (int(x) * int(y) + int(y) * int(z) + int(x) * int(z))
     residual = lhs - rhs
-    is_valid = (residual == 0)
+    is_valid = residual == 0
 
     details = {
         "a": int(a),
@@ -806,9 +807,7 @@ def check_schinzel(
     return is_valid, residual, details
 
 
-def check_sierpinski(
-    n: int, x: int, y: int, z: int
-) -> tuple[bool, int, dict[str, Any]]:
+def check_sierpinski(n: int, x: int, y: int, z: int) -> tuple[bool, int, dict[str, Any]]:
     """Exact decidable integer checker for Sierpiński conjecture (5/n = 1/x + 1/y + 1/z)."""
     return check_schinzel(5, n, x, y, z)
 
@@ -836,7 +835,7 @@ def check_schinzel_fractions(
     lhs_frac = Fraction(a, n)
     rhs_frac = Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
     diff = lhs_frac - rhs_frac
-    is_valid = (diff == 0)
+    is_valid = diff == 0
 
     details = {
         "a": int(a),
@@ -1089,7 +1088,11 @@ def optimal_schinzel_divisor_sieve(
                         }
                     break
 
-        if best_sol is not None and solutions_found >= 1 and x_step >= (best_meta.get("x_step", 0) + x_window):
+        if (
+            best_sol is not None
+            and solutions_found >= 1
+            and x_step >= (best_meta.get("x_step", 0) + x_window)
+        ):
             break
 
     elapsed = time.perf_counter() - t0
@@ -1189,19 +1192,24 @@ def benchmark_optimal_vs_naive_sieve(
 
     avg_reduction = float(sum(reductions) / len(reductions)) if reductions else 1.0
     max_reduction = float(max(reductions)) if reductions else 1.0
-    geo_reduction = float(math.exp(sum(math.log(r) for r in reductions) / len(reductions))) if reductions else 1.0
+    geo_reduction = (
+        float(math.exp(sum(math.log(r) for r in reductions) / len(reductions)))
+        if reductions
+        else 1.0
+    )
 
     return {
         "instances_tested": len(results),
         "total_naive_coord": total_naive_coord,
         "total_opt_coord": total_opt_coord,
-        "overall_reduction_factor": float(total_naive_coord / total_opt_coord) if total_opt_coord else 1.0,
+        "overall_reduction_factor": float(total_naive_coord / total_opt_coord)
+        if total_opt_coord
+        else 1.0,
         "average_reduction_factor": avg_reduction,
         "geometric_mean_reduction": geo_reduction,
         "max_reduction_factor": max_reduction,
         "results": results,
     }
-
 
 
 def solve_erdos_straus_sieve(
@@ -1219,9 +1227,7 @@ def solve_erdos_straus_sieve(
     return None, {"method": "none", "n": n, "verified_exact": False}
 
 
-def benchmark_sieve_vs_baseline(
-    n_instances: list[int], max_coord: int = 10**9
-) -> dict[str, Any]:
+def benchmark_sieve_vs_baseline(n_instances: list[int], max_coord: int = 10**9) -> dict[str, Any]:
     """Compare rational divisor sieve against baseline arithmetic enumeration on challenging instances."""
     results: list[dict[str, Any]] = []
     total_baseline_cands = 0
@@ -1269,12 +1275,12 @@ def benchmark_sieve_vs_baseline(
         base_valid = False
         if base_sol is not None:
             bx, by, bz = base_sol
-            base_valid = (4 * bx * by * bz == n * (bx * by + by * bz + bz * bx))
+            base_valid = 4 * bx * by * bz == n * (bx * by + by * bz + bz * bx)
 
         sieve_valid = False
         if sieve_sol is not None:
             sx, sy, sz = sieve_sol
-            sieve_valid = (4 * sx * sy * sz == n * (sx * sy + sy * sz + sz * sx))
+            sieve_valid = 4 * sx * sy * sz == n * (sx * sy + sy * sz + sz * sx)
 
         if base_valid and not sieve_valid:
             false_negatives += 1
@@ -1282,25 +1288,27 @@ def benchmark_sieve_vs_baseline(
         cand_reduction = (base_cands / sieve_cands) if sieve_cands > 0 else 1.0
         speedup = (t_base / t_sieve) if t_sieve > 0 else 1.0
 
-        results.append({
-            "n": n,
-            "baseline": {
-                "solved": base_valid,
-                "solution": base_sol,
-                "candidates": base_cands,
-                "time_sec": t_base,
-            },
-            "sieve": {
-                "solved": sieve_valid,
-                "solution": sieve_sol,
-                "candidates": sieve_cands,
-                "time_sec": t_sieve,
-                "pruned_small_primes": sieve_det.get("pruned_by_small_primes", 0),
-                "pruned_by_u": sieve_det.get("pruned_by_u", 0),
-            },
-            "candidate_reduction": cand_reduction,
-            "speedup": speedup,
-        })
+        results.append(
+            {
+                "n": n,
+                "baseline": {
+                    "solved": base_valid,
+                    "solution": base_sol,
+                    "candidates": base_cands,
+                    "time_sec": t_base,
+                },
+                "sieve": {
+                    "solved": sieve_valid,
+                    "solution": sieve_sol,
+                    "candidates": sieve_cands,
+                    "time_sec": t_sieve,
+                    "pruned_small_primes": sieve_det.get("pruned_by_small_primes", 0),
+                    "pruned_by_u": sieve_det.get("pruned_by_u", 0),
+                },
+                "candidate_reduction": cand_reduction,
+                "speedup": speedup,
+            }
+        )
 
         total_baseline_cands += base_cands
         total_sieve_cands += sieve_cands
@@ -1355,9 +1363,7 @@ def synthesize_schinzel_identity(
         if m % 4 == 0 and r % 4 == 0:
             V = Poly1D.linear(m // 4, r // 4 if r > 0 else m // 4)
             if V.is_strictly_positive(5):
-                ident = AlgebraicIdentity(
-                    m=m, r=r, n_poly=n, X=V + 1, Y=V * (V + 1), Z=V * 4, a=5
-                )
+                ident = AlgebraicIdentity(m=m, r=r, n_poly=n, X=V + 1, Y=V * (V + 1), Z=V * 4, a=5)
                 if ident.verify_exact():
                     return ident
         if m % 4 == 0 and r % 4 == 2:
@@ -1366,9 +1372,7 @@ def synthesize_schinzel_identity(
             Y = W * (W + 1) * Fraction(1, 2)
             Z = W * 2
             if X.is_strictly_positive(5) and X.is_integer_valued(5):
-                ident = AlgebraicIdentity(
-                    m=m, r=r, n_poly=n, X=X, Y=Y, Z=Z, a=5
-                )
+                ident = AlgebraicIdentity(m=m, r=r, n_poly=n, X=X, Y=Y, Z=Z, a=5)
                 if ident.verify_exact():
                     return ident
 
@@ -1424,16 +1428,12 @@ def synthesize_schinzel_identity(
     return None
 
 
-def synthesize_sierpinski_identity(
-    m: int, r: int, max_c: int = 30
-) -> AlgebraicIdentity | None:
+def synthesize_sierpinski_identity(m: int, r: int, max_c: int = 30) -> AlgebraicIdentity | None:
     """Synthesize an exact polynomial identity for Sierpiński conjecture (5/n)."""
     return synthesize_schinzel_identity(5, m, r, max_c=max_c)
 
 
-def build_sierpinski_coverage_matrix(
-    modulus: int = 120, max_c: int = 30
-) -> dict[str, Any]:
+def build_sierpinski_coverage_matrix(modulus: int = 120, max_c: int = 30) -> dict[str, Any]:
     """Evaluate modular residue coverage for Sierpiński conjecture (5/n) over modulus m."""
     covered: list[int] = []
     uncovered: list[int] = []
@@ -1461,9 +1461,7 @@ def build_sierpinski_coverage_matrix(
         "covered_residues": sorted(covered),
         "uncovered_residues": sorted(uncovered),
         "identities": identities_dict,
-        "verified_exact": all(
-            identities_dict[str(r)]["a"] == 5 for r in covered
-        ),
+        "verified_exact": all(identities_dict[str(r)]["a"] == 5 for r in covered),
     }
 
 
@@ -1480,7 +1478,32 @@ def compare_schinzel_synthesis(
         a_values = [4, 5]
     if test_instances is None:
         test_instances = [
-            3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 1009,
+            3,
+            5,
+            7,
+            11,
+            13,
+            17,
+            19,
+            23,
+            29,
+            31,
+            37,
+            41,
+            43,
+            47,
+            53,
+            59,
+            61,
+            67,
+            71,
+            73,
+            79,
+            83,
+            89,
+            97,
+            101,
+            1009,
         ]
 
     per_numerator: dict[str, Any] = {}
@@ -1526,12 +1549,14 @@ def compare_schinzel_synthesis(
                 all_solved = False
             cands = det.get("candidates_evaluated", 0)
             total_cands += cands
-            sieve_results.append({
-                "n": p,
-                "triple": (x, y, z),
-                "candidates": cands,
-                "verified_exact": ok_int and ok_frac,
-            })
+            sieve_results.append(
+                {
+                    "n": p,
+                    "triple": (x, y, z),
+                    "candidates": cands,
+                    "verified_exact": ok_int and ok_frac,
+                }
+            )
 
         elapsed_sieve = time.perf_counter() - t0_sieve
 
@@ -1555,8 +1580,7 @@ def compare_schinzel_synthesis(
                 per_numerator["5"]["coverage_ratio"] - per_numerator["4"]["coverage_ratio"]
             ),
             "synthesis_time_ratio": (
-                per_numerator["5"]["synthesis_sec"]
-                / max(per_numerator["4"]["synthesis_sec"], 1e-9)
+                per_numerator["5"]["synthesis_sec"] / max(per_numerator["4"]["synthesis_sec"], 1e-9)
             ),
             "sieve_candidates_ratio": (
                 per_numerator["5"]["sieve_total_candidates"]
@@ -1583,9 +1607,7 @@ class Poly2D:
 
     __slots__ = ("terms",)
 
-    def __init__(
-        self, terms: dict[tuple[int, int], Fraction | int] | None = None
-    ) -> None:
+    def __init__(self, terms: dict[tuple[int, int], Fraction | int] | None = None) -> None:
         self.terms: dict[tuple[int, int], Fraction] = {}
         if terms:
             for (i, j), c in terms.items():
@@ -1800,13 +1822,8 @@ class QuadraticIdentity:
         x_val = self.X.eval(u, v)
         y_val = self.Y.eval(u, v)
         z_val = self.Z.eval(u, v)
-        if any(
-            val.denominator != 1
-            for val in (n_val, x_val, y_val, z_val)
-        ):
-            raise ValueError(
-                f"Identity {self.name} evaluated to non-integers at u={u}, v={v}"
-            )
+        if any(val.denominator != 1 for val in (n_val, x_val, y_val, z_val)):
+            raise ValueError(f"Identity {self.name} evaluated to non-integers at u={u}, v={v}")
         return (int(n_val), int(x_val), int(y_val), int(z_val))
 
     def to_lean_theorem(self) -> str:
@@ -2345,16 +2362,18 @@ def evaluate_resistant_residues_coverage() -> dict[str, Any]:
         is_int_exact = (a * x * y * z) == (n * (x * y + y * z + z * x))
         frac_exact = Fraction(a, n) == (Fraction(1, x) + Fraction(1, y) + Fraction(1, z))
         distinct = len({x, y, z}) == 3
-        pos = (x > 0 and y > 0 and z > 0)
+        pos = x > 0 and y > 0 and z > 0
         ok = is_int_exact and frac_exact and distinct and pos
         if not ok:
             all_valid = False
-        verified_instances.append({
-            **item,
-            "verified_exact": ok,
-            "distinct_coordinates": distinct,
-            "positive": pos,
-        })
+        verified_instances.append(
+            {
+                **item,
+                "verified_exact": ok,
+                "distinct_coordinates": distinct,
+                "positive": pos,
+            }
+        )
 
     return {
         "total_evaluated": len(verified_instances),
@@ -2370,7 +2389,12 @@ def check_multiterm_diophantine(
 
     a/n = sum_{i=1}^k (1 / x_i)  <=>  a * prod(x) == n * sum_i(prod(x) / x_i) with x_i > 0.
     """
-    if not (isinstance(a, int) and isinstance(n, int) and not isinstance(a, bool) and not isinstance(n, bool)):
+    if not (
+        isinstance(a, int)
+        and isinstance(n, int)
+        and not isinstance(a, bool)
+        and not isinstance(n, bool)
+    ):
         return False, -1, {"error": "a and n must be integers"}
     if a < 1 or n < 2:
         return False, -1, {"error": "Domain requirement: a >= 1, n >= 2"}
@@ -2391,7 +2415,7 @@ def check_multiterm_diophantine(
     lhs = int(a) * P
     rhs = int(n) * S
     residual = lhs - rhs
-    is_valid = (residual == 0)
+    is_valid = residual == 0
 
     details = {
         "a": int(a),
@@ -2412,7 +2436,12 @@ def check_multiterm_fractions(
     a: int, n: int, terms: tuple[int, ...] | list[int]
 ) -> tuple[bool, Fraction, dict[str, Any]]:
     """Independent second checker using exact rational arithmetic (fractions.Fraction) (P86)."""
-    if not (isinstance(a, int) and isinstance(n, int) and not isinstance(a, bool) and not isinstance(n, bool)):
+    if not (
+        isinstance(a, int)
+        and isinstance(n, int)
+        and not isinstance(a, bool)
+        and not isinstance(n, bool)
+    ):
         return False, Fraction(1), {"error": "a and n must be integers"}
     if a < 1 or n < 2:
         return False, Fraction(1), {"error": "Domain requirement: a >= 1, n >= 2"}
@@ -2425,7 +2454,7 @@ def check_multiterm_fractions(
     lhs_frac = Fraction(a, n)
     rhs_frac = sum((Fraction(1, int(x)) for x in terms), Fraction(0))
     diff = lhs_frac - rhs_frac
-    is_valid = (diff == 0)
+    is_valid = diff == 0
 
     details = {
         "a": int(a),
@@ -2441,7 +2470,7 @@ def check_multiterm_fractions(
 
 
 def is_coprime_decomposition(
-    terms: tuple[int, ...] | list[int]
+    terms: tuple[int, ...] | list[int],
 ) -> tuple[bool, int, dict[str, Any]]:
     """Check joint and pairwise coprimality and strict ordering of Egyptian fraction terms (P86).
 
@@ -2452,7 +2481,7 @@ def is_coprime_decomposition(
 
     t_list = [int(x) for x in terms]
     joint_gcd = functools.reduce(math.gcd, t_list)
-    strictly_coprime = (joint_gcd == 1)
+    strictly_coprime = joint_gcd == 1
 
     pairwise_gcds: dict[str, int] = {}
     pairwise_coprime = True
@@ -2739,17 +2768,19 @@ def evaluate_multiterm_coprime_coverage(
             ok4 = False
             all_valid = False
 
-        results.append({
-            "a": a,
-            "n": n,
-            "conjecture": item.get("conjecture"),
-            "obstinate_3term": item.get("obstinate_3term", False),
-            "sol_3term": sol3,
-            "sol_3term_verified": ok3,
-            "sol_4term": sol4,
-            "sol_4term_verified": ok4,
-            "sol_4term_meta": meta4,
-        })
+        results.append(
+            {
+                "a": a,
+                "n": n,
+                "conjecture": item.get("conjecture"),
+                "obstinate_3term": item.get("obstinate_3term", False),
+                "sol_3term": sol3,
+                "sol_3term_verified": ok3,
+                "sol_4term": sol4,
+                "sol_4term_verified": ok4,
+                "sol_4term_meta": meta4,
+            }
+        )
 
     return {
         "total_cases": len(results),
