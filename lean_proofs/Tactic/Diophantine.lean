@@ -16,11 +16,11 @@ set_option linter.unreachableTactic false
 syntax "evobyte_solve" : tactic
 
 macro_rules
-  | `(tactic| evobyte_solve) => `(tactic| first | ring1 | omega | linarith | aesop | norm_num | ring)
+  | `(tactic| evobyte_solve) => `(tactic| first | ring1 | omega | linarith | aesop | norm_num | decide | ring)
 
 /-- Custom macro tactic `evobyte_diophantine` that introduces all hypotheses
     and dispatches to `evobyte_solve`. -/
 syntax "evobyte_diophantine" : tactic
 
 macro_rules
-  | `(tactic| evobyte_diophantine) => `(tactic| intros; first | ring1 | omega | linarith | aesop | norm_num | ring)
+  | `(tactic| evobyte_diophantine) => `(tactic| intros; first | ring1 | omega | linarith | aesop | norm_num | decide | ring)
