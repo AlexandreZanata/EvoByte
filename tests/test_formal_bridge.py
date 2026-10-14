@@ -435,3 +435,40 @@ def test_multiterm_theorems_catalog_export():
     sound, findings = verify_multiterm_catalog_soundness(catalog, min_theorems=24)
     assert sound is True
     assert len(findings) == 0
+
+
+def test_p89_tactic_diophantine_file_exists():
+    tactic_p = Path("lean_proofs/Tactic/Diophantine.lean")
+    assert tactic_p.exists()
+    content = tactic_p.read_text(encoding="utf-8")
+    assert 'syntax "evobyte_solve"' in content
+    assert 'syntax "evobyte_diophantine"' in content
+    assert "macro_rules" in content
+
+
+def test_p89_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p89_custom_tactic_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P89 configuration"):
+        run_p89_custom_tactic_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p89_custom_tactic_catalog_export():
+    from evobyte.formal_bridge import (
+        export_custom_tactic_theorems_catalog,
+        verify_custom_tactic_catalog_soundness,
+    )
+
+    catalog = export_custom_tactic_theorems_catalog()
+    assert catalog["accepted"] is True
+    assert catalog["total_theorems"] >= 30
+    assert catalog["success_rate"] == 1.0
+    assert catalog["has_sorry"] is False
+    assert len(catalog["sha256"]) == 64
+
+    sound, findings = verify_custom_tactic_catalog_soundness(catalog, min_theorems=30)
+    assert sound is True
+    assert len(findings) == 0

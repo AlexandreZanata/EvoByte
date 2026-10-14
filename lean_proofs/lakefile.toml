@@ -1,6 +1,6 @@
 name = "p48_proofs"
 version = "0.1.0"
-defaultTargets = ["P48Proofs", "Generated"]
+defaultTargets = ["P48Proofs", "Generated", "Tactic"]
 
 [[require]]
 name = "mathlib"
@@ -12,3 +12,6 @@ name = "P48Proofs"
 
 [[lean_lib]]
 name = "Generated"
+
+[[lean_lib]]
+name = "Tactic"
