@@ -2841,3 +2841,156 @@ def generate_schinzel_instance_certificates(
                         }
                     )
     return certificates
+
+
+def find_quadratic_norm_decomposition(
+    delta: int, d_candidates: list[int] | None = None, max_v: int = 100
+) -> tuple[int, int, int] | None:
+    """Find a quadratic ring representation delta = |u^2 - d*v^2| in Z[sqrt(d)] (P91).
+
+    Returns (d, u, v) such that |u^2 - d*v^2| == delta with u >= 0, v >= 1.
+    """
+    if delta <= 0:
+        return None
+    candidates = d_candidates or [2, 3, 5, 6, 7, 10, 11, 13, 14, 15, 17, 19, 21, 22, 23, 29, 30]
+
+    for d in candidates:
+        for v in range(1, max_v + 1):
+            dv2 = d * v * v
+            # Case 1: u^2 - d*v^2 = delta => u^2 = delta + d*v^2
+            target1 = delta + dv2
+            if target1 > 0:
+                u1 = math.isqrt(target1)
+                if u1 * u1 == target1:
+                    return (d, u1, v)
+            # Case 2: d*v^2 - u^2 = delta => u^2 = d*v^2 - delta
+            target2 = dv2 - delta
+            if target2 >= 0:
+                u2 = math.isqrt(target2)
+                if u2 * u2 == target2:
+                    return (d, u2, v)
+    return None
+
+
+def quadratic_ring_sieve(
+    n: int,
+    a: int = 4,
+    max_x_steps: int = 500,
+    d_candidates: list[int] | None = None,
+) -> tuple[tuple[int, int, int] | None, dict[str, Any]]:
+    """Solve a/n = 1/x + 1/y + 1/z using quadratic ring norm factorization (P91).
+
+    Searches divisors delta of D^2 = (n*x)^2 satisfying D + delta = 0 (mod U)
+    and certifies delta as an algebraic integer norm N(u + v*sqrt(d)) in Z[sqrt(d)].
+    """
+    if n <= 1:
+        return None, {"solved": False, "reason": "n <= 1"}
+
+    x_min = (n + a - 1) // a
+    for step in range(max_x_steps):
+        x = x_min + step
+        U = a * x - n
+        if U <= 0:
+            continue
+        D = n * x
+        D2 = D * D
+
+        # Factor D2 into divisors
+        divisors: list[int] = []
+        limit = min(D, 200000)
+        for d_cand in range(1, limit + 1):
+            if d_cand * d_cand > D2:
+                break
+            if D2 % d_cand == 0:
+                divisors.append(d_cand)
+                other = D2 // d_cand
+                if other != d_cand and other <= D:
+                    divisors.append(other)
+
+        for delta in divisors:
+            if (D + delta) % U == 0:
+                y = (D + delta) // U
+                other_div = D2 // delta
+                if (D + other_div) % U == 0:
+                    z = (D + other_div) // U
+                    if x > 0 and y > 0 and z > 0:
+                        norm_info = find_quadratic_norm_decomposition(
+                            delta, d_candidates=d_candidates
+                        )
+                        meta = {
+                            "solved": True,
+                            "a": a,
+                            "n": n,
+                            "x": x,
+                            "y": y,
+                            "z": z,
+                            "U": U,
+                            "D": D,
+                            "delta": delta,
+                            "norm_decomposition": norm_info,
+                            "has_norm_witness": norm_info is not None,
+                            "steps": step + 1,
+                        }
+                        return (x, y, z), meta
+
+    return None, {"solved": False, "steps": max_x_steps}
+
+
+def evaluate_quadratic_ring_sieve_coverage(modulus: int = 840, k_count: int = 10) -> dict[str, Any]:
+    """Evaluate and certify quadratic ring sieve solutions for resistant residues mod 840 (P91)."""
+    resistant_res = get_resistant_residues(modulus)
+    results: list[dict[str, Any]] = []
+    total_tested = 0
+    total_solved = 0
+    total_norm_certified = 0
+
+    for r in resistant_res:
+        for k in range(k_count):
+            n = modulus * k + r
+            if n < 2:
+                continue
+            total_tested += 1
+            sol, meta = quadratic_ring_sieve(n, a=4, max_x_steps=500)
+            if sol is not None:
+                total_solved += 1
+                has_norm = meta.get("has_norm_witness", False)
+                if has_norm:
+                    total_norm_certified += 1
+                results.append(
+                    {
+                        "residue": r,
+                        "k": k,
+                        "n": n,
+                        "solution": sol,
+                        "delta": meta.get("delta"),
+                        "norm_decomposition": meta.get("norm_decomposition"),
+                        "solved": True,
+                        "has_norm_witness": has_norm,
+                    }
+                )
+            else:
+                results.append(
+                    {
+                        "residue": r,
+                        "k": k,
+                        "n": n,
+                        "solution": None,
+                        "solved": False,
+                        "has_norm_witness": False,
+                    }
+                )
+
+    success_rate = total_solved / total_tested if total_tested > 0 else 0.0
+    norm_rate = total_norm_certified / total_tested if total_tested > 0 else 0.0
+
+    return {
+        "modulus": modulus,
+        "resistant_residues": resistant_res,
+        "total_tested": total_tested,
+        "total_solved": total_solved,
+        "total_norm_certified": total_norm_certified,
+        "success_rate": success_rate,
+        "norm_rate": norm_rate,
+        "all_certified": total_solved == total_tested and total_norm_certified == total_tested,
+        "results": results,
+    }

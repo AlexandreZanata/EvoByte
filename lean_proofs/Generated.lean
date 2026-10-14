@@ -11,3 +11,4 @@ import Generated.AutomatedTheorems
 import Generated.MultitermTheorems
 import Generated.CustomTacticTheorems
 import Generated.SchinzelTheorems
+import Generated.QuadraticRingTheorems
