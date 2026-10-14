@@ -866,3 +866,62 @@ def test_p97_cubic_surface_audit_smoke(tmp_path: Path):
     assert report["total_formal_theorems"] >= 40
     assert report["has_sorry"] is False
     assert report["module"] == "CubicSurfaceFibrations"
+
+
+def test_p98_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p98_conic_parametrizations_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P98 configuration"):
+        run_p98_conic_parametrizations_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p98_algebraic_coverage():
+    from fractions import Fraction
+    from evobyte.algebraic import (
+        evaluate_conic_legendre_parametrization,
+        evaluate_local_global_conic_solvability,
+        evaluate_conic_parametrizations_coverage,
+    )
+
+    pt = evaluate_conic_legendre_parametrization(4, 1009, 253, Fraction(1, 1))
+    assert pt["verified"] is True
+    assert pt["conic_valid"] is True
+    assert pt["legendre_valid"] is True
+
+    lg = evaluate_local_global_conic_solvability(4, 1009, 253)
+    assert lg["verified"] is True
+    assert lg["real_solvable"] is True
+    assert lg["padic_unobstructed"] is True
+
+    cov = evaluate_conic_parametrizations_coverage()
+    assert cov["all_verified"] is True
+    assert cov["success_rate"] == 1.0
+
+
+@needs_lean
+def test_p98_conic_parametrizations_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p98_conic_parametrizations_audit
+
+    cfg = {
+        "phase": "P98",
+        "min_theorems": 40,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "output_dir": "lean_proofs/Generated",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p98-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p98-out.json"
+
+    report = run_p98_conic_parametrizations_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P98"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 40
+    assert report["has_sorry"] is False
+    assert report["module"] == "ConicParametrizations"
