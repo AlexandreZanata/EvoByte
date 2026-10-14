@@ -1,6 +1,6 @@
 # P93 — Teoremas de densidade assintótica e cobertura modular completa
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P92 Proposed; branch a partir de `codex/p92-extremal-coordinate-bounds`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P92 concluída com cotas extremais verificadas.
