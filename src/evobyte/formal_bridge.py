@@ -3473,3 +3473,202 @@ def verify_grand_formal_campaign_soundness(
         )
 
     return (len(findings) == 0), findings
+
+
+def export_cubic_surface_theorems_catalog(
+    project_dir: str | Path = "lean_proofs",
+    output_dir: str | Path = "lean_proofs/Generated",
+    instances: list[int] | None = None,
+    a_values: list[int] | None = None,
+) -> dict[str, Any]:
+    """Synthesize and compile Lean 4 formal catalog of Diophantine cubic surface conic fibrations (P97).
+
+    Formalizes:
+    1. Cubic surface polynomial definition: a*x*y*z - n*(y*z + x*z + x*y) = 0.
+    2. Conic bundle C_x(y, z) and equivalence to cubic surface fiber over Q(x).
+    3. Translated bilinear factorization: ((a*x - n)*y - n*x)*((a*x - n)*z - n*x) - (n*x)^2 = 0.
+    4. Conic fibration central discriminant: Delta(x) = (n*x)^2.
+    5. Permutation and cyclic symmetries of the cubic surface under S_3.
+    6. Certified rational parametric sections on the cubic surface across Q[k].
+    7. Exact rational point certificates on the cubic surface for nominated resistant primes.
+
+    Emits `CubicSurfaceFibrations.lean` and verifies in the Lean 4 kernel with zero sorry.
+    """
+    from evobyte.algebraic import (
+        generate_cubic_surface_parametric_sections,
+        optimal_schinzel_divisor_sieve,
+    )
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    if instances is None:
+        instances = [
+            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
+            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+        ]
+    if a_values is None:
+        a_values = [4]
+
+    lines: list[str] = [
+        "/-",
+        "EvoByte Formal Proof Catalog: Diophantine Cubic Surface Conic Fibrations (P97).",
+        "Varietal formulation a*x*y*z = n*(y*z + x*z + x*y) and conic bundle C_x(y, z) over Q(x).",
+        "-/",
+        "",
+        "import Mathlib.Tactic.Ring",
+        "import Mathlib.Tactic.NormNum",
+        "import Mathlib.Data.Rat.Defs",
+        "",
+        "def cubic_surface_poly (a n x y z : ℚ) : ℚ :=",
+        "  a * x * y * z - n * (y * z + x * z + x * y)",
+        "",
+        "def conic_fiber_x (a n x y z : ℚ) : ℚ :=",
+        "  (a * x - n) * y * z - n * x * (y + z)",
+        "",
+        "def conic_bilinear_x (a n x y z : ℚ) : ℚ :=",
+        "  ((a * x - n) * y - n * x) * ((a * x - n) * z - n * x) - (n * x)^2",
+        "",
+        "def conic_discriminant (n x : ℚ) : ℚ :=",
+        "  (n * x)^2",
+        "",
+        "/-- Equivalence between cubic surface equation and affine conic fibration fiber at x. -/",
+        "theorem cubic_surface_fiber_x_equiv (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = conic_fiber_x a n x y z := by",
+        "  dsimp [cubic_surface_poly, conic_fiber_x]",
+        "  ring",
+        "",
+        "/-- Bilinear factorization of affine conic fiber into translated hyperbolic components. -/",
+        "theorem cubic_surface_bilinear_factorization (a n x y z : ℚ) :",
+        "  conic_bilinear_x a n x y z = (a * x - n) * conic_fiber_x a n x y z := by",
+        "  dsimp [conic_bilinear_x, conic_fiber_x]",
+        "  ring",
+        "",
+        "/-- Central discriminant expansion of affine conic fibration at x. -/",
+        "theorem conic_fibration_discriminant_sq (n x : ℚ) :",
+        "  conic_discriminant n x = n^2 * x^2 := by",
+        "  dsimp [conic_discriminant]",
+        "  ring",
+        "",
+        "/-- Translated hyperbolic expansion of conic fiber at x. -/",
+        "theorem conic_fiber_translation_identity (a n x y z : ℚ) :",
+        "  ((a * x - n) * y - n * x) * ((a * x - n) * z - n * x) =",
+        "  (a * x - n)^2 * y * z - n * x * (a * x - n) * (y + z) + (n * x)^2 := by",
+        "  ring",
+        "",
+        "/-- S_3 permutation invariance of cubic surface under (x, y) swap. -/",
+        "theorem cubic_surface_symm_xy (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = cubic_surface_poly a n y x z := by",
+        "  dsimp [cubic_surface_poly]",
+        "  ring",
+        "",
+        "/-- S_3 permutation invariance of cubic surface under (y, z) swap. -/",
+        "theorem cubic_surface_symm_yz (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = cubic_surface_poly a n x z y := by",
+        "  dsimp [cubic_surface_poly]",
+        "  ring",
+        "",
+        "/-- S_3 permutation invariance of cubic surface under (x, z) swap. -/",
+        "theorem cubic_surface_symm_xz (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = cubic_surface_poly a n z y x := by",
+        "  dsimp [cubic_surface_poly]",
+        "  ring",
+        "",
+        "/-- S_3 cyclic permutation invariance of cubic surface. -/",
+        "theorem cubic_surface_cyclic_perm (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = cubic_surface_poly a n y z x := by",
+        "  dsimp [cubic_surface_poly]",
+        "  ring",
+        "",
+    ]
+
+    total_theorems = 8
+
+    # Add parametric sections
+    sections = generate_cubic_surface_parametric_sections()
+    for s in sections:
+        s_name = s["name"]
+        a_val = s["a"]
+        ident = s["identity"]
+        n_str = poly1d_to_lean(ident.n_poly, "k")
+        x_str = poly1d_to_lean(ident.X, "k")
+        y_str = poly1d_to_lean(ident.Y, "k")
+        z_str = poly1d_to_lean(ident.Z, "k")
+
+        lines.extend([
+            f"/-- Parametric rational section on cubic surface for family {s_name} (a = {a_val}). -/",
+            f"theorem cubic_surface_section_{s_name} (k : ℚ) :",
+            f"  cubic_surface_poly {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
+            "  dsimp [cubic_surface_poly]",
+            "  ring",
+            "",
+        ])
+        total_theorems += 1
+
+    # Add exact rational point certificates on the cubic surface
+    for a in a_values:
+        for n in instances:
+            sol, _meta = optimal_schinzel_divisor_sieve(a=a, n=n)
+            if sol:
+                x, y, z = sol
+                lines.extend([
+                    f"/-- Certified unit fraction decomposition on cubic surface for a = {a}, n = {n}. -/",
+                    f"theorem cubic_surface_cert_a{a}_n{n} :",
+                    f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                    "  norm_num",
+                    "",
+                    f"/-- Vanishing of cubic surface polynomial at rational point a = {a}, n = {n}. -/",
+                    f"theorem cubic_surface_point_zero_a{a}_n{n} :",
+                    f"  cubic_surface_poly {a} {n} {x} {y} {z} = 0 := by",
+                    "  dsimp [cubic_surface_poly]",
+                    "  ring",
+                    "",
+                ])
+                total_theorems += 2
+
+    cub_file = out / "CubicSurfaceFibrations.lean"
+    cub_content = "\n".join(lines)
+    cub_file.write_text(cub_content, encoding="utf-8")
+    file_sha = hashlib.sha256(cub_file.read_bytes()).hexdigest()
+
+    v_res = compile_lean_file(cub_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "module": "CubicSurfaceFibrations",
+        "file": str(cub_file),
+        "sha256": file_sha,
+        "total_theorems": total_theorems,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in cub_content,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_cubic_surface_catalog_soundness(
+    catalog_summary: dict[str, Any], min_theorems: int = 40
+) -> tuple[bool, list[str]]:
+    """Audit cubic surface theorems catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(
+            f"CUBIC_SURFACE_THEOREMS_COMPILATION_FAILED: {catalog_summary.get('reasons')}"
+        )
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: cubic surface theorems catalog contains sorry")
+
+    total_thms = catalog_summary.get("total_theorems", 0)
+    if total_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_CUBIC_SURFACE_THEOREMS")
+
+    return (len(findings) == 0), findings
