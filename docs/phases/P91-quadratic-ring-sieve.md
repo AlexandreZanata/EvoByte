@@ -1,6 +1,6 @@
 # P91 — Crivo algébrico em anéis quadráticos para classes resistentes
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P90 Proposed; branch a partir de `codex/p90-schinzel-generalized-numerator`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P90 concluída com formalização de Schinzel unificada.

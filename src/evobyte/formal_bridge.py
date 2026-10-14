@@ -18,6 +18,7 @@ import numpy as np
 from evobyte.algebraic import (
     AlgebraicIdentity,
     Poly1D,
+    evaluate_quadratic_ring_sieve_coverage,
     evaluate_resistant_residues_coverage,
     generate_schinzel_instance_certificates,
     generate_schinzel_parametric_identities,
@@ -375,6 +376,7 @@ def export_formal_proof_catalog(
         "Generated.MultitermTheorems",
         "Generated.CustomTacticTheorems",
         "Generated.SchinzelTheorems",
+        "Generated.QuadraticRingTheorems",
     ]
     existing_content = root_file.read_text(encoding="utf-8") if root_file.exists() else ""
     imports_to_write = []
@@ -2348,5 +2350,167 @@ def verify_schinzel_catalog_soundness(
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_SCHINZEL_THEOREMS")
+
+    return (len(findings) == 0), findings
+
+
+def export_quadratic_ring_theorems_catalog(
+    modulus: int = 840,
+    k_count: int = 5,
+    output_dir: str | Path = "lean_proofs/Generated",
+    project_dir: str | Path = "lean_proofs",
+) -> dict[str, Any]:
+    """Generate, export, and certify quadratic ring theorems and norm factorizations in Lean 4 (P91).
+
+    Covers resistant residue classes modulo 840 (n = 1, 121, 169, 289, 361, 529 mod 840),
+    formalizing unit fraction solutions and quadratic integer norm identities |u^2 - d*v^2| = delta.
+    """
+    import subprocess
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    cov = evaluate_quadratic_ring_sieve_coverage(modulus=modulus, k_count=k_count)
+    results = cov.get("results", [])
+
+    theorems: list[str] = []
+    unit_frac_count = 0
+    norm_ident_count = 0
+
+    for item in results:
+        if not item.get("solved", False):
+            continue
+        r = item["residue"]
+        k = item["k"]
+        n = item["n"]
+        x, y, z = item["solution"]
+        norm_rep = item.get("norm_decomposition")
+
+        # 1. Unit fraction solution theorem in Q
+        thm_name_frac = f"qring_cert_res{r}_k{k}"
+        doc_frac = (
+            f"/-- Erdős–Straus unit fraction solution for resistant residue n = {n} (r = {r} mod 840, k = {k}).\n"
+            f"    Derived via quadratic ring norm factorization in Z[sqrt(d)] (P91). -/\n"
+        )
+        stmt_frac = (
+            f"{doc_frac}"
+            f"theorem {thm_name_frac} : (4 : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by\n"
+            f"  norm_num\n"
+        )
+        theorems.append(stmt_frac)
+        unit_frac_count += 1
+
+        # 2. Quadratic ring norm factorization theorem in Z
+        if norm_rep is not None:
+            d, u, v = norm_rep
+            norm_val = abs(u * u - d * v * v)
+            thm_name_norm = f"qring_norm_res{r}_k{k}"
+            doc_norm = f"/-- Quadratic ring norm identity in Z[sqrt({d})] for divisor delta = {norm_val} (n = {n}, P91). -/\n"
+            stmt_norm = (
+                f"{doc_norm}"
+                f"theorem {thm_name_norm} : ({u} : ℤ)^2 - {d} * ({v} : ℤ)^2 = {u * u - d * v * v} := by\n"
+                f"  ring\n"
+            )
+            theorems.append(stmt_norm)
+            norm_ident_count += 1
+
+    doc_header = (
+        "EvoByte Formal Proof Catalog: Quadratic Ring Sieve and Norm Factorization Theorems (P91)."
+    )
+    src = generate_lean_proof_module(
+        theorems,
+        doc_header,
+        imports=[
+            "Mathlib.Tactic.Ring",
+            "Mathlib.Tactic.NormNum",
+            "Mathlib.Data.Rat.Defs",
+        ],
+    )
+    qring_file = out / "QuadraticRingTheorems.lean"
+    qring_file.write_text(src, encoding="utf-8")
+    file_sha = hashlib.sha256(qring_file.read_bytes()).hexdigest()
+
+    # Ensure Generated.lean imports QuadraticRingTheorems
+    root_file = proj / "Generated.lean"
+    if root_file.exists():
+        root_content = root_file.read_text(encoding="utf-8")
+        if "import Generated.QuadraticRingTheorems" not in root_content:
+            root_content = root_content.rstrip() + "\nimport Generated.QuadraticRingTheorems\n"
+            root_file.write_text(root_content, encoding="utf-8")
+    else:
+        root_file.write_text(
+            "-- EvoByte Root Generated Formal Library\nimport Generated.QuadraticRingTheorems\n",
+            encoding="utf-8",
+        )
+
+    v_res = compile_lean_file(qring_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+
+    bins = lean_resolve_binaries(proj)
+    lake_proc = subprocess.run(
+        [bins["lake"], "-d", str(proj), "build", "Generated"],
+        capture_output=True,
+        text=True,
+        cwd=str(proj),
+        timeout=180,
+        check=False,
+    )
+    if lake_proc.returncode != 0:
+        accepted = False
+        reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+    total_theorems = src.count("theorem ")
+
+    return {
+        "catalog_dir": str(out),
+        "total_theorems": total_theorems,
+        "unit_frac_count": unit_frac_count,
+        "norm_ident_count": norm_ident_count,
+        "resistant_residues": cov.get("resistant_residues", []),
+        "success_rate": cov.get("success_rate", 0.0),
+        "norm_rate": cov.get("norm_rate", 0.0),
+        "file": str(qring_file),
+        "sha256": file_sha,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in qring_file.read_text(encoding="utf-8"),
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_quadratic_ring_catalog_soundness(
+    catalog_summary: dict[str, Any], min_theorems: int = 50
+) -> tuple[bool, list[str]]:
+    """Audit quadratic ring theorems catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(
+            f"QUADRATIC_RING_THEOREMS_COMPILATION_FAILED: {catalog_summary.get('reasons')}"
+        )
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: quadratic ring theorems catalog contains sorry")
+
+    total_thms = catalog_summary.get("total_theorems", 0)
+    if total_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
+
+    if catalog_summary.get("success_rate", 0.0) < 1.0:
+        findings.append(
+            f"SUBOPTIMAL_SUCCESS_RATE: expected 1.0, got {catalog_summary.get('success_rate')}"
+        )
+
+    if catalog_summary.get("norm_rate", 0.0) < 1.0:
+        findings.append(
+            f"SUBOPTIMAL_NORM_RATE: expected 1.0, got {catalog_summary.get('norm_rate')}"
+        )
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_QUADRATIC_RING_THEOREMS")
 
     return (len(findings) == 0), findings

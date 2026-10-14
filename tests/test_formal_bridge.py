@@ -518,3 +518,56 @@ def test_p90_schinzel_catalog_export():
     sound, findings = verify_schinzel_catalog_soundness(catalog, min_theorems=100)
     assert sound is True
     assert len(findings) == 0
+
+
+def test_p91_quadratic_norm_decomposition():
+    from evobyte.algebraic import find_quadratic_norm_decomposition
+
+    # delta = 29 = 7^2 - 5*2^2 = |49 - 20|
+    norm29 = find_quadratic_norm_decomposition(29)
+    assert norm29 is not None
+    d, u, v = norm29
+    assert abs(u * u - d * v * v) == 29
+
+    # delta = 23 = 5^2 - 2*1^2 = 25 - 2
+    norm23 = find_quadratic_norm_decomposition(23)
+    assert norm23 is not None
+    d, u, v = norm23
+    assert abs(u * u - d * v * v) == 23
+
+
+def test_p91_quadratic_ring_sieve_coverage():
+    from evobyte.algebraic import evaluate_quadratic_ring_sieve_coverage
+
+    cov = evaluate_quadratic_ring_sieve_coverage(modulus=840, k_count=3)
+    assert cov["total_tested"] >= 15
+    assert cov["success_rate"] == 1.0
+    assert cov["norm_rate"] == 1.0
+    assert cov["all_certified"] is True
+
+
+def test_p91_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p91_quadratic_ring_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P91 configuration"):
+        run_p91_quadratic_ring_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p91_quadratic_ring_catalog_export():
+    from evobyte.formal_bridge import (
+        export_quadratic_ring_theorems_catalog,
+        verify_quadratic_ring_catalog_soundness,
+    )
+
+    catalog = export_quadratic_ring_theorems_catalog(modulus=840, k_count=5)
+    assert catalog["accepted"] is True
+    assert catalog["total_theorems"] >= 50
+    assert catalog["has_sorry"] is False
+    assert len(catalog["sha256"]) == 64
+
+    sound, findings = verify_quadratic_ring_catalog_soundness(catalog, min_theorems=50)
+    assert sound is True
+    assert len(findings) == 0
