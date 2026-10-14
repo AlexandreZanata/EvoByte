@@ -9,3 +9,4 @@ import Generated.OptimalCertificates
 import Generated.QuadraticIdentities
 import Generated.AutomatedTheorems
 import Generated.MultitermTheorems
+import Generated.CustomTacticTheorems

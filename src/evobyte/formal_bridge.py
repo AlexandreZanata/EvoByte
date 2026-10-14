@@ -371,6 +371,7 @@ def export_formal_proof_catalog(
         "Generated.QuadraticIdentities",
         "Generated.AutomatedTheorems",
         "Generated.MultitermTheorems",
+        "Generated.CustomTacticTheorems",
     ]
     existing_content = root_file.read_text(encoding="utf-8") if root_file.exists() else ""
     imports_to_write = []
@@ -2048,5 +2049,139 @@ def verify_multiterm_catalog_soundness(
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_MULTITERM_THEOREMS")
+
+    return (len(findings) == 0), findings
+
+
+def export_custom_tactic_theorems_catalog(
+    lemmas: list[tuple[str, str, list[str], str, str]] | None = None,
+    output_dir: str | Path = "lean_proofs/Generated",
+    project_dir: str | Path = "lean_proofs",
+    use_diophantine_tactic: bool = False,
+) -> dict[str, Any]:
+    """Generate, export, and certify custom metaprogramming tactic-proven theorems in Lean 4 (P89).
+
+    Uses `evobyte_solve` (or `evobyte_diophantine`) defined in `Tactic.Diophantine`
+    to prove a diverse benchmark of Diophantine equalities, inequalities, and bounds.
+    """
+    import subprocess
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    target_lemmas = lemmas or DIOPHANTINE_BENCHMARK_30
+    theorems: list[str] = []
+    solved_count = 0
+
+    tactic_name = "evobyte_diophantine" if use_diophantine_tactic else "evobyte_solve"
+
+    for item in target_lemmas:
+        name = f"meta_{item[0]}"
+        stmt = item[1]
+        intros = item[2]
+        doc = item[4] if len(item) > 4 else f"Custom tactic theorem {name}"
+        if use_diophantine_tactic:
+            proof_body = "evobyte_diophantine"
+        else:
+            intro_str = f"intro {' '.join(intros)}\n  " if intros else ""
+            proof_body = f"{intro_str}evobyte_solve"
+
+        thm_text = (
+            f"/-- {doc} (P89).\n"
+            f"    Proven automatically by custom metaprogramming tactic `{tactic_name}` without unproven axioms or holes. -/\n"
+            f"theorem {name} : {stmt} := by\n"
+            f"  {proof_body}\n"
+        )
+        theorems.append(thm_text)
+        solved_count += 1
+
+    doc_header = "EvoByte Formal Proof Catalog: Custom Metaprogramming Tactic Theorems via evobyte_solve (P89)."
+    src = generate_lean_proof_module(
+        theorems,
+        doc_header,
+        imports=[
+            "Tactic.Diophantine",
+        ],
+    )
+    custom_file = out / "CustomTacticTheorems.lean"
+    custom_file.write_text(src, encoding="utf-8")
+    file_sha = hashlib.sha256(custom_file.read_bytes()).hexdigest()
+
+    # Ensure Generated.lean imports CustomTacticTheorems
+    root_file = proj / "Generated.lean"
+    if root_file.exists():
+        root_content = root_file.read_text(encoding="utf-8")
+        if "import Generated.CustomTacticTheorems" not in root_content:
+            root_content = root_content.rstrip() + "\nimport Generated.CustomTacticTheorems\n"
+            root_file.write_text(root_content, encoding="utf-8")
+    else:
+        root_file.write_text(
+            "-- EvoByte Root Generated Formal Library\nimport Generated.CustomTacticTheorems\n",
+            encoding="utf-8",
+        )
+
+    v_res = compile_lean_file(custom_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+
+    bins = lean_resolve_binaries(proj)
+    lake_proc = subprocess.run(
+        [bins["lake"], "-d", str(proj), "build", "Generated"],
+        capture_output=True,
+        text=True,
+        cwd=str(proj),
+        timeout=180,
+        check=False,
+    )
+    if lake_proc.returncode != 0:
+        accepted = False
+        reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+    total_theorems = src.count("theorem ")
+    success_rate = 1.0 if (total_theorems > 0 and accepted) else 0.0
+
+    return {
+        "catalog_dir": str(out),
+        "total_theorems": total_theorems,
+        "solved_count": solved_count,
+        "success_rate": success_rate,
+        "tactic_name": tactic_name,
+        "file": str(custom_file),
+        "sha256": file_sha,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in custom_file.read_text(encoding="utf-8"),
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_custom_tactic_catalog_soundness(
+    catalog_summary: dict[str, Any], min_theorems: int = 30
+) -> tuple[bool, list[str]]:
+    """Audit custom tactic theorems catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(
+            f"CUSTOM_TACTIC_THEOREMS_COMPILATION_FAILED: {catalog_summary.get('reasons')}"
+        )
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: custom tactic theorems catalog contains sorry")
+
+    total_thms = catalog_summary.get("total_theorems", 0)
+    if total_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
+
+    if catalog_summary.get("success_rate", 0.0) < 1.0:
+        findings.append(
+            f"SUBOPTIMAL_SUCCESS_RATE: expected 1.0, got {catalog_summary.get('success_rate')}"
+        )
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_CUSTOM_TACTIC_THEOREMS")
 
     return (len(findings) == 0), findings

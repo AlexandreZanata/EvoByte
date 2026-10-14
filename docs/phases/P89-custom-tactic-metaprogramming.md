@@ -1,6 +1,6 @@
 # P89 — Meta-programação e tática customizada evobyte_solve em Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P88 concluída na `main` e P89-P96 formalizados; branch a partir de `codex/p89-p96-generalized-schinzel-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P88 concluída com 406 teoremas Lean 4 verificados e consolidação na branch main; ambiente Lean 4 e Lake herméticos.

@@ -752,7 +752,7 @@ def verify_l2(
 
 
 LEAN_PINNED_TOOLCHAIN = "leanprover/lean4:v4.34.0"
-LEAN_ALLOWED_IMPORT_PREFIXES = ("Mathlib", "Generated")
+LEAN_ALLOWED_IMPORT_PREFIXES = ("Mathlib", "Generated", "Tactic")
 LEAN_SORRY_TOKENS = ("sorry", "admit", "sorryAx")
 
 
