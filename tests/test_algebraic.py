@@ -770,3 +770,90 @@ def test_p83_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P83 configuration"):
         run_p83_optimal_divisor_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_poly2d_arithmetic():
+    from evobyte.algebraic import Poly2D
+
+    u = Poly2D.var_u()
+    v = Poly2D.var_v()
+    one = Poly2D.constant(1)
+
+    p1 = (u * 4 - one)
+    p2 = (v * 4 - one)
+    prod = p1 * p2
+
+    assert prod.total_degree == 2
+    assert prod.degree_u == 1
+    assert prod.degree_v == 1
+    assert prod.eval(1, 1) == 9  # (4 - 1)*(4 - 1) = 9
+    assert prod.eval(2, 3) == 7 * 11  # 77
+    assert prod.is_strictly_positive(5) is True
+    assert prod.is_integer_valued(5) is True
+
+    # Power
+    p_sq = p1 ** 2
+    assert p_sq.eval(3, 0) == 121  # 11^2 = 121
+    assert p_sq.degree_u == 2
+    assert p_sq.degree_v == -1 or p_sq.degree_v == 0
+
+
+def test_quadratic_identity_synthesis():
+    from evobyte.algebraic import synthesize_quadratic_identities
+
+    idents = synthesize_quadratic_identities()
+    assert len(idents) >= 12
+
+    for ident in idents:
+        assert ident.verify_exact(grid_size=5) is True
+        lean_thm = ident.to_lean_theorem()
+        assert f"theorem {ident.name}" in lean_thm
+        assert "ring" in lean_thm
+
+
+def test_resistant_residues_coverage():
+    from evobyte.algebraic import evaluate_resistant_residues_coverage
+
+    res = evaluate_resistant_residues_coverage()
+    assert res["total_evaluated"] >= 10
+    assert res["all_verified"] is True
+
+    # Check resistant residues are included
+    instances = res["instances"]
+    ns = [inst["n"] for inst in instances]
+    for target in (121, 169, 289, 361, 529, 9, 49):
+        assert target in ns
+
+
+def test_p84_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p84_quadratic_identities_audit
+
+    cfg = {
+        "phase": "P84",
+        "output_dir": "lean_proofs/Generated",
+        "project_dir": "lean_proofs",
+        "min_parametric_identities": 10,
+        "min_instance_certificates": 8,
+        "seed": 42,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p84-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p84-out.json"
+
+    report = run_p84_quadratic_identities_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P84"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 12
+    assert report["has_sorry"] is False
+    assert report["file"] is not None
+
+
+def test_p84_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p84_quadratic_identities_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P84 configuration"):
+        run_p84_quadratic_identities_audit(cfg_p, tmp_path / "out.json")

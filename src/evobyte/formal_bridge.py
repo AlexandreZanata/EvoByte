@@ -18,10 +18,12 @@ import numpy as np
 from evobyte.algebraic import (
     AlgebraicIdentity,
     Poly1D,
+    evaluate_resistant_residues_coverage,
     get_algebraic_identity_for_residue,
     get_resistant_residues,
     rational_divisor_sieve,
     sierpinski_divisor_sieve,
+    synthesize_quadratic_identities,
     synthesize_sierpinski_identity,
 )
 from evobyte.bytecode import CONST_BANK, decode_instr
@@ -358,15 +360,28 @@ def export_formal_proof_catalog(
     sier_file.write_text(sier_src, encoding="utf-8")
 
     # 4. Root Generated.lean module
-    root_src = (
-        "-- EvoByte Root Generated Formal Library\n"
-        "import Generated.ErdosStrausIdentities\n"
-        "import Generated.ErdosStrausCertificates\n"
-        "import Generated.BytecodeTheorems\n"
-        "import Generated.SierpinskiTheorems\n"
-    )
     root_file = proj / "Generated.lean"
-    root_file.write_text(root_src, encoding="utf-8")
+    base_imports = [
+        "Generated.ErdosStrausIdentities",
+        "Generated.ErdosStrausCertificates",
+        "Generated.BytecodeTheorems",
+        "Generated.SierpinskiTheorems",
+        "Generated.InductiveLemmas",
+        "Generated.DivisibilityLemmas",
+        "Generated.OptimalCertificates",
+        "Generated.QuadraticIdentities",
+    ]
+    existing_content = root_file.read_text(encoding="utf-8") if root_file.exists() else ""
+    imports_to_write = []
+    for mod in base_imports:
+        file_name = mod.split(".")[-1] + ".lean"
+        if f"import {mod}" in existing_content or (out / file_name).exists():
+            imports_to_write.append(f"import {mod}")
+    if not imports_to_write:
+        imports_to_write = [f"import {mod}" for mod in base_imports[:4]]
+    root_src = "-- EvoByte Root Generated Formal Library\n" + "\n".join(imports_to_write) + "\n"
+    if existing_content != root_src:
+        root_file.write_text(root_src, encoding="utf-8")
 
     # Ensure lakefile.toml includes Generated library and defaultTargets
     lakefile = proj / "lakefile.toml"
@@ -1126,5 +1141,130 @@ def verify_optimal_catalog_soundness(
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_OPTIMAL_CERTIFICATES")
+
+    return (len(findings) == 0), findings
+
+
+# -----------------------------------------------------------------------------
+# Multiparameter & Quadratic Identities (P84)
+# -----------------------------------------------------------------------------
+
+
+def export_quadratic_identities_catalog(
+    output_dir: str | Path = "lean_proofs/Generated",
+    project_dir: str | Path = "lean_proofs",
+) -> dict[str, Any]:
+    """Generate and verify multiparameter quadratic polynomial identities in Lean 4 (P84).
+
+    Exports `lean_proofs/Generated/QuadraticIdentities.lean`, containing:
+    1. 12 parametric theorems over Q[u, v] and Q[u] for Erdős–Straus (a = 4) and Sierpiński (a = 5),
+       proven with Lean 4 kernel tactic `ring` with zero sorry.
+    2. 10 certified Diophantine solution theorems for resistant residues mod 840 (ES) and mod 120 (Sierpiński),
+       proven with `norm_num`.
+    """
+    import subprocess
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    identities = synthesize_quadratic_identities()
+    theorems: list[str] = [ident.to_lean_theorem() for ident in identities]
+
+    res_cov = evaluate_resistant_residues_coverage()
+    for inst in res_cov["instances"]:
+        name = inst["lean_theorem_name"]
+        a = inst["a"]
+        n = inst["n"]
+        x, y, z = inst["solution"]
+        doc = (
+            f"/-- Certified Diophantine solution for resistant residue n = {n} (P84).\n"
+            f"    Verified exact: {a}/{n} = 1/{x} + 1/{y} + 1/{z} with pairwise distinct positive integers. -/"
+        )
+        stmt = (
+            f"theorem {name} :\n"
+            f"    ({a} : ℚ) / {n} = 1 / {x} + 1 / {y} + 1 / {z} := by\n"
+            f"  norm_num"
+        )
+        theorems.append(f"{doc}\n{stmt}\n")
+
+    doc_header = (
+        "EvoByte Formal Proof Catalog: Certified Multiparameter Quadratic Identities in Q[u, v]."
+    )
+    src = generate_lean_proof_module(theorems, doc_header)
+    quad_file = out / "QuadraticIdentities.lean"
+    quad_file.write_text(src, encoding="utf-8")
+    file_sha = hashlib.sha256(quad_file.read_bytes()).hexdigest()
+
+    # Ensure Generated.lean imports QuadraticIdentities
+    root_file = proj / "Generated.lean"
+    if root_file.exists():
+        root_content = root_file.read_text(encoding="utf-8")
+        if "import Generated.QuadraticIdentities" not in root_content:
+            root_content = root_content.rstrip() + "\nimport Generated.QuadraticIdentities\n"
+            root_file.write_text(root_content, encoding="utf-8")
+    else:
+        root_file.write_text(
+            "-- EvoByte Root Generated Formal Library\nimport Generated.QuadraticIdentities\n",
+            encoding="utf-8",
+        )
+
+    v_res = compile_lean_file(quad_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+
+    bins = lean_resolve_binaries(proj)
+    lake_proc = subprocess.run(
+        [bins["lake"], "-d", str(proj), "build", "Generated"],
+        capture_output=True,
+        text=True,
+        cwd=str(proj),
+        timeout=180,
+        check=False,
+    )
+    if lake_proc.returncode != 0:
+        accepted = False
+        reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+    total_theorems = src.count("theorem ")
+
+    return {
+        "catalog_dir": str(out),
+        "total_theorems": total_theorems,
+        "parametric_theorems_count": len(identities),
+        "instance_certificates_count": len(res_cov["instances"]),
+        "file": str(quad_file),
+        "sha256": file_sha,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in quad_file.read_text(encoding="utf-8"),
+        "identities": [ident.to_dict() for ident in identities],
+        "resistant_instances": res_cov["instances"],
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_quadratic_catalog_soundness(
+    catalog_summary: dict[str, Any], min_identities: int = 10
+) -> tuple[bool, list[str]]:
+    """Audit quadratic identities catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(f"QUADRATIC_COMPILATION_FAILED: {catalog_summary.get('reasons')}")
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: quadratic identities catalog contains sorry")
+
+    total_thms = catalog_summary.get("total_theorems", 0)
+    if total_thms < min_identities:
+        findings.append(
+            f"INSUFFICIENT_THEOREMS: expected >= {min_identities}, got {total_thms}"
+        )
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_QUADRATIC_IDENTITIES")
 
     return (len(findings) == 0), findings

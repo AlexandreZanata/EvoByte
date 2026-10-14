@@ -722,6 +722,7 @@ ACCEPTANCE_PHASES = (
     "P81",
     "P82",
     "P83",
+    "P84",
 )
 
 
@@ -5434,6 +5435,149 @@ def run_p83_optimal_divisor_audit(
     return report
 
 
+def run_p84_quadratic_identities_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P84 audit: multiparameter and quadratic Diophantine polynomial identities in Lean 4.
+
+    Verifies:
+    1. Discovery and synthesis of 2-parameter bilinear and quadratic Diophantine identities in Q[u, v].
+    2. Exact coverage of resistant quadratic residues mod 840 (ES: 121, 169, 289, 361, 529) and mod 120 (Sierpiński: 9, 49, 121, 169, 529).
+    3. Lean 4 kernel certification (`QuadraticIdentities.lean`) via `ring` and `norm_num` with zero sorry tokens.
+    4. Exactness and distinct positivity of all Diophantine coordinates: a*X*Y*Z == n*(YZ + XZ + XY).
+    5. Clean tree enforcement and SHA-256 artifact verification.
+    """
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        evaluate_resistant_residues_coverage,
+        synthesize_quadratic_identities,
+    )
+    from evobyte.formal_bridge import (
+        export_quadratic_identities_catalog,
+        verify_quadratic_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P84":
+        raise ValueError(f"Config {cfg_p} is not a P84 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P84 MULTIPARAMETER & QUADRATIC IDENTITIES AUDIT (Lean 4 Kernel ring / norm_num)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    # 1. Synthesize and verify all quadratic identities
+    identities = synthesize_quadratic_identities()
+    min_parametric = int(config.get("min_parametric_identities", 10))
+    if len(identities) < min_parametric:
+        findings.append(f"INSUFFICIENT_IDENTITIES: expected >= {min_parametric}, got {len(identities)}")
+
+    for ident in identities:
+        if not ident.verify_exact(grid_size=5):
+            findings.append(f"IDENTITY_VERIFICATION_FAILED_{ident.name}")
+
+    # 2. Evaluate resistant residue instances
+    res_cov = evaluate_resistant_residues_coverage()
+    min_instances = int(config.get("min_instance_certificates", 8))
+    if res_cov["total_evaluated"] < min_instances:
+        findings.append(f"INSUFFICIENT_INSTANCES: expected >= {min_instances}, got {res_cov['total_evaluated']}")
+    if not res_cov["all_verified"]:
+        findings.append("RESISTANT_INSTANCES_FAILED_VERIFICATION")
+
+    # 3. Export to Lean 4 catalog and verify
+    output_dir = config.get("output_dir", "lean_proofs/Generated")
+    project_dir = config.get("project_dir", "lean_proofs")
+
+    catalog = export_quadratic_identities_catalog(
+        output_dir=output_dir, project_dir=project_dir
+    )
+    sound, soundness_findings = verify_quadratic_catalog_soundness(
+        catalog, min_identities=min_parametric
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    if catalog.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: quadratic identities catalog contains incomplete proofs")
+
+    if not catalog.get("accepted", False):
+        findings.append(f"QUADRATIC_CATALOG_REJECTED: {catalog.get('reasons')}")
+
+    elapsed = time.perf_counter() - t0
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append("DIRTY_SOURCE: tree not clean; quadratic identity claims from dirty code rejected")
+
+    claim_scope = (
+        "Synthesis of multiparameter and quadratic Diophantine polynomial identities over "
+        "Q[u, v] for Erdős–Straus (a=4) and Sierpiński (a=5), addressing resistant quadratic "
+        "residues mod 840 and mod 120; certified in Lean 4 kernel with zero sorry tokens."
+    )
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p84_config": config_sha[:16]},
+        config={"acceptance_phase": "P84"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    report = {
+        "phase": "P84",
+        "verdict": verdict,
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "claim_scope": claim_scope,
+        "total_theorems": catalog.get("total_theorems", 0),
+        "parametric_theorems_count": catalog.get("parametric_theorems_count", 0),
+        "instance_certificates_count": catalog.get("instance_certificates_count", 0),
+        "file": catalog.get("file"),
+        "sha256": catalog.get("sha256"),
+        "has_sorry": catalog.get("has_sorry", False),
+        "findings": findings,
+        "elapsed_sec": elapsed,
+        "resolved_config": {
+            "acceptance_phase": "P84",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "hardware": prov["hardware"],
+        "limitations": [
+            (
+                "Quadratic and multiparameter identities prove solutions for infinite polynomial families "
+                "covering resistant residues and composite squares; universal coverage for all isolated "
+                "primes remains an open theoretical problem."
+            )
+        ],
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+    print(
+        f"P84 audit {verdict}: {catalog.get('total_theorems', 0)} theorems verified; "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -9452,6 +9596,8 @@ def main() -> int:
             run_p82_divisibility_synthesis_audit(args.config, args.output)
         elif args.acceptance_phase == "P83":
             run_p83_optimal_divisor_audit(args.config, args.output)
+        elif args.acceptance_phase == "P84":
+            run_p84_quadratic_identities_audit(args.config, args.output)
         return 0
 
     seeds = (

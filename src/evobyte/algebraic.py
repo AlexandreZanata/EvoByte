@@ -1571,3 +1571,793 @@ def compare_schinzel_synthesis(
         "comparisons": comp,
         "verified": all(info["all_sieve_solved"] for info in per_numerator.values()),
     }
+
+
+# =============================================================================
+# Multiparameter & Quadratic Diophantine Identity Synthesis (P84)
+# =============================================================================
+
+
+class Poly2D:
+    """Exact two-variable polynomial in Q[u, v] represented by rational coefficients."""
+
+    __slots__ = ("terms",)
+
+    def __init__(
+        self, terms: dict[tuple[int, int], Fraction | int] | None = None
+    ) -> None:
+        self.terms: dict[tuple[int, int], Fraction] = {}
+        if terms:
+            for (i, j), c in terms.items():
+                cf = Fraction(c)
+                if cf != 0:
+                    self.terms[(int(i), int(j))] = cf
+
+    @classmethod
+    def constant(cls, val: int | Fraction) -> Poly2D:
+        return cls({(0, 0): Fraction(val)})
+
+    @classmethod
+    def var_u(cls) -> Poly2D:
+        return cls({(1, 0): Fraction(1)})
+
+    @classmethod
+    def var_v(cls) -> Poly2D:
+        return cls({(0, 1): Fraction(1)})
+
+    @classmethod
+    def from_poly1d(cls, p: Poly1D, var: str = "u") -> Poly2D:
+        terms: dict[tuple[int, int], Fraction] = {}
+        for idx, c in enumerate(p.coeffs):
+            if c != 0:
+                if var == "u":
+                    terms[(idx, 0)] = c
+                else:
+                    terms[(0, idx)] = c
+        return cls(terms)
+
+    @property
+    def total_degree(self) -> int:
+        if not self.terms:
+            return -1
+        return max(i + j for (i, j) in self.terms)
+
+    @property
+    def degree_u(self) -> int:
+        if not self.terms:
+            return -1
+        return max(i for (i, _) in self.terms)
+
+    @property
+    def degree_v(self) -> int:
+        if not self.terms:
+            return -1
+        return max(j for (_, j) in self.terms)
+
+    def is_zero(self) -> bool:
+        return len(self.terms) == 0
+
+    def eval(self, u: int | Fraction, v: int | Fraction = Fraction(0)) -> Fraction:
+        uf = Fraction(u)
+        vf = Fraction(v)
+        res = Fraction(0)
+        for (i, j), c in self.terms.items():
+            res += c * (uf**i) * (vf**j)
+        return res
+
+    def is_strictly_positive(self, grid_size: int = 5) -> bool:
+        """Check if polynomial evaluates to strictly positive rationals on [1, grid_size]^2."""
+        for u in range(1, grid_size + 1):
+            for v in range(1, grid_size + 1):
+                if self.eval(u, v) <= 0:
+                    return False
+        return True
+
+    def is_integer_valued(self, grid_size: int = 5) -> bool:
+        """Check if polynomial evaluates to integers on [1, grid_size]^2."""
+        for u in range(1, grid_size + 1):
+            for v in range(1, grid_size + 1):
+                if self.eval(u, v).denominator != 1:
+                    return False
+        return True
+
+    def __add__(self, other: Poly2D | int | Fraction) -> Poly2D:
+        if not isinstance(other, Poly2D):
+            other = Poly2D.constant(other)
+        new_terms = dict(self.terms)
+        for k, v in other.terms.items():
+            new_terms[k] = new_terms.get(k, Fraction(0)) + v
+        return Poly2D(new_terms)
+
+    def __sub__(self, other: Poly2D | int | Fraction) -> Poly2D:
+        if not isinstance(other, Poly2D):
+            other = Poly2D.constant(other)
+        new_terms = dict(self.terms)
+        for k, v in other.terms.items():
+            new_terms[k] = new_terms.get(k, Fraction(0)) - v
+        return Poly2D(new_terms)
+
+    def __mul__(self, other: Poly2D | int | Fraction) -> Poly2D:
+        if not isinstance(other, Poly2D):
+            other = Poly2D.constant(other)
+        if self.is_zero() or other.is_zero():
+            return Poly2D()
+        new_terms: dict[tuple[int, int], Fraction] = {}
+        for (i1, j1), c1 in self.terms.items():
+            for (i2, j2), c2 in other.terms.items():
+                deg = (i1 + i2, j1 + j2)
+                new_terms[deg] = new_terms.get(deg, Fraction(0)) + (c1 * c2)
+        return Poly2D(new_terms)
+
+    def __pow__(self, exponent: int) -> Poly2D:
+        if exponent < 0:
+            raise ValueError("Negative powers not supported for Poly2D")
+        if exponent == 0:
+            return Poly2D.constant(1)
+        res = Poly2D.constant(1)
+        base = self
+        exp = exponent
+        while exp > 0:
+            if exp % 2 == 1:
+                res = res * base
+            base = base * base
+            exp //= 2
+        return res
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Poly2D):
+            if isinstance(other, (int, Fraction)):
+                return self.eval(0, 0) == other and len(self.terms) <= 1
+            return False
+        return self.terms == other.terms
+
+    def to_string(self, var_u: str = "u", var_v: str = "v") -> str:
+        if self.is_zero():
+            return "0"
+        sorted_items = sorted(
+            self.terms.items(),
+            key=lambda item: (item[0][0] + item[0][1], item[0][0]),
+            reverse=True,
+        )
+        terms_str: list[str] = []
+        for (i, j), c in sorted_items:
+            c_str = str(c)
+            parts: list[str] = []
+            if i == 0 and j == 0:
+                parts.append(c_str)
+            else:
+                if c == -1:
+                    parts.append("-")
+                elif c != 1:
+                    parts.append(f"{c_str}*")
+                if i == 1:
+                    parts.append(var_u)
+                elif i > 1:
+                    parts.append(f"{var_u}^{i}")
+                if j == 1:
+                    if parts and parts[-1] not in ("-", "") and not parts[-1].endswith("*"):
+                        parts.append(f"*{var_v}")
+                    else:
+                        parts.append(var_v)
+                elif j > 1:
+                    if parts and parts[-1] not in ("-", "") and not parts[-1].endswith("*"):
+                        parts.append(f"*{var_v}^{j}")
+                    else:
+                        parts.append(f"{var_v}^{j}")
+            terms_str.append("".join(parts))
+        return " + ".join(terms_str).replace("+ -", "- ")
+
+    def __repr__(self) -> str:
+        return f"Poly2D({self.to_string()})"
+
+
+@dataclass(frozen=True)
+class QuadraticIdentity:
+    """Exact multiparameter Diophantine identity a / n(u, v) = 1/X(u, v) + 1/Y(u, v) + 1/Z(u, v) over Q[u, v]."""
+
+    name: str
+    conjecture: str
+    a: int
+    n_poly: Poly2D
+    X: Poly2D
+    Y: Poly2D
+    Z: Poly2D
+    n_expr: str
+    X_expr: str
+    Y_expr: str
+    Z_expr: str
+    form_type: str
+    description: str
+    num_variables: int
+    target_residues: list[dict[str, int]]
+
+    def verify_exact(self, grid_size: int = 5) -> bool:
+        """Verify polynomial identity equality a*XYZ == n(YZ + XZ + XY) and positivity."""
+        YZ = self.Y * self.Z
+        XZ = self.X * self.Z
+        XY = self.X * self.Y
+        sum_terms = YZ + XZ + XY
+        lhs = self.X * YZ * self.a
+        rhs = self.n_poly * sum_terms
+        diff = lhs - rhs
+        if not diff.is_zero():
+            return False
+
+        for u in range(1, grid_size + 1):
+            for v in range(1, grid_size + 1):
+                if (
+                    self.X.eval(u, v) <= 0
+                    or self.Y.eval(u, v) <= 0
+                    or self.Z.eval(u, v) <= 0
+                    or self.n_poly.eval(u, v) <= 0
+                ):
+                    return False
+        return True
+
+    def evaluate(self, u: int, v: int = 1) -> tuple[int, int, int, int]:
+        """Evaluate (n, x, y, z) at specific parameter values."""
+        n_val = self.n_poly.eval(u, v)
+        x_val = self.X.eval(u, v)
+        y_val = self.Y.eval(u, v)
+        z_val = self.Z.eval(u, v)
+        if any(
+            val.denominator != 1
+            for val in (n_val, x_val, y_val, z_val)
+        ):
+            raise ValueError(
+                f"Identity {self.name} evaluated to non-integers at u={u}, v={v}"
+            )
+        return (int(n_val), int(x_val), int(y_val), int(z_val))
+
+    def to_lean_theorem(self) -> str:
+        vars_str = "u v" if self.num_variables == 2 else "u"
+        doc = (
+            f"/-- {self.description}\n"
+            f"    Verified exact in Q[{vars_str.replace(' ', ', ')}]: a*X*Y*Z = n*(Y*Z + X*Z + X*Y). -/"
+        )
+        stmt = (
+            f"theorem {self.name} : ∀ ({vars_str} : ℚ),\n"
+            f"    ({self.a} : ℚ) * ({self.X_expr}) * ({self.Y_expr}) * ({self.Z_expr}) =\n"
+            f"    ({self.n_expr}) * (({self.Y_expr}) * ({self.Z_expr}) + ({self.X_expr}) * ({self.Z_expr}) + ({self.X_expr}) * ({self.Y_expr})) := by\n"
+            f"  intro {vars_str}\n"
+            f"  ring"
+        )
+        return f"{doc}\n{stmt}\n"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "conjecture": self.conjecture,
+            "a": self.a,
+            "form_type": self.form_type,
+            "description": self.description,
+            "num_variables": self.num_variables,
+            "n_expr": self.n_expr,
+            "X_expr": self.X_expr,
+            "Y_expr": self.Y_expr,
+            "Z_expr": self.Z_expr,
+            "target_residues": self.target_residues,
+            "verified_exact": self.verify_exact(),
+        }
+
+
+def synthesize_quadratic_identities() -> list[QuadraticIdentity]:
+    """Synthesize complete family of certified quadratic and bilinear Diophantine identities
+
+    for Erdős–Straus (a = 4) and Sierpiński (a = 5) covering resistant residues mod 840 and mod 120.
+    """
+    u = Poly2D.var_u()
+    v = Poly2D.var_v()
+    one = Poly2D.constant(1)
+    two = Poly2D.constant(2)
+    half = Poly2D.constant(Fraction(1, 2))
+
+    identities: list[QuadraticIdentity] = []
+
+    # -------------------------------------------------------------------------
+    # 1. Erdős–Straus (a = 4): Bilinear Form (4u - 1)(4v - 1)
+    # -------------------------------------------------------------------------
+    n_es1 = (u * 4 - one) * (v * 4 - one)
+    X_es1 = u * (v * 4 - one)
+    Y_es1 = u * n_es1 + one
+    Z_es1 = u * n_es1 * (u * n_es1 + one)
+    identities.append(
+        QuadraticIdentity(
+            name="erdos_quadratic_bilinear_4u1_4v1",
+            conjecture="erdos_straus",
+            a=4,
+            n_poly=n_es1,
+            X=X_es1,
+            Y=Y_es1,
+            Z=Z_es1,
+            n_expr="(4 * u - 1) * (4 * v - 1)",
+            X_expr="u * (4 * v - 1)",
+            Y_expr="u * (4 * u - 1) * (4 * v - 1) + 1",
+            Z_expr="u * (4 * u - 1) * (4 * v - 1) * (u * (4 * u - 1) * (4 * v - 1) + 1)",
+            form_type="bilinear",
+            description="Erdős–Straus bilinear factor identity: n(u, v) = (4u - 1)(4v - 1)",
+            num_variables=2,
+            target_residues=[
+                {"modulus": 840, "residue": 121},
+                {"modulus": 840, "residue": 361},
+                {"modulus": 840, "residue": 529},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 2. Erdős–Straus (a = 4): Pure Square (4u - 1)^2
+    # -------------------------------------------------------------------------
+    n_es2 = (u * 4 - one) ** 2
+    X_es2 = u * (u * 4 - one)
+    Y_es2 = u * n_es2 + one
+    Z_es2 = u * n_es2 * (u * n_es2 + one)
+    identities.append(
+        QuadraticIdentity(
+            name="erdos_quadratic_square_4u1",
+            conjecture="erdos_straus",
+            a=4,
+            n_poly=n_es2,
+            X=X_es2,
+            Y=Y_es2,
+            Z=Z_es2,
+            n_expr="(4 * u - 1)^2",
+            X_expr="u * (4 * u - 1)",
+            Y_expr="u * (4 * u - 1)^2 + 1",
+            Z_expr="u * (4 * u - 1)^2 * (u * (4 * u - 1)^2 + 1)",
+            form_type="quadratic_square",
+            description="Erdős–Straus pure square identity: n(u) = (4u - 1)^2 = 16u^2 - 8u + 1",
+            num_variables=1,
+            target_residues=[
+                {"modulus": 840, "residue": 121},
+                {"modulus": 840, "residue": 361},
+                {"modulus": 840, "residue": 529},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 3. Erdős–Straus (a = 4): Bilinear Form (3u - 1)(3v - 1)
+    # -------------------------------------------------------------------------
+    n_es3 = (u * 3 - one) * (v * 3 - one)
+    X_es3 = u * (v * 3 - one)
+    Y_es3 = n_es3
+    Z_es3 = u * n_es3
+    identities.append(
+        QuadraticIdentity(
+            name="erdos_bilinear_3u1_3v1",
+            conjecture="erdos_straus",
+            a=4,
+            n_poly=n_es3,
+            X=X_es3,
+            Y=Y_es3,
+            Z=Z_es3,
+            n_expr="(3 * u - 1) * (3 * v - 1)",
+            X_expr="u * (3 * v - 1)",
+            Y_expr="(3 * u - 1) * (3 * v - 1)",
+            Z_expr="u * (3 * u - 1) * (3 * v - 1)",
+            form_type="bilinear",
+            description="Erdős–Straus bilinear factor identity: n(u, v) = (3u - 1)(3v - 1)",
+            num_variables=2,
+            target_residues=[
+                {"modulus": 840, "residue": 121},
+                {"modulus": 840, "residue": 289},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 4. Erdős–Straus (a = 4): Pure Square (3u - 1)^2
+    # -------------------------------------------------------------------------
+    n_es4 = (u * 3 - one) ** 2
+    X_es4 = u * (u * 3 - one)
+    Y_es4 = n_es4
+    Z_es4 = u * n_es4
+    identities.append(
+        QuadraticIdentity(
+            name="erdos_quadratic_square_3u1",
+            conjecture="erdos_straus",
+            a=4,
+            n_poly=n_es4,
+            X=X_es4,
+            Y=Y_es4,
+            Z=Z_es4,
+            n_expr="(3 * u - 1)^2",
+            X_expr="u * (3 * u - 1)",
+            Y_expr="(3 * u - 1)^2",
+            Z_expr="u * (3 * u - 1)^2",
+            form_type="quadratic_square",
+            description="Erdős–Straus pure square identity: n(u) = (3u - 1)^2 = 9u^2 - 6u + 1",
+            num_variables=1,
+            target_residues=[
+                {"modulus": 840, "residue": 121},
+                {"modulus": 840, "residue": 289},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 5. Erdős–Straus (a = 4): Bilinear Form (7u - 1) v
+    # -------------------------------------------------------------------------
+    n_es5 = (u * 7 - one) * v
+    X_es5 = u * v * 2
+    Y_es5 = n_es5 * 2
+    Z_es5 = u * n_es5 * 2
+    identities.append(
+        QuadraticIdentity(
+            name="erdos_bilinear_7u1_v",
+            conjecture="erdos_straus",
+            a=4,
+            n_poly=n_es5,
+            X=X_es5,
+            Y=Y_es5,
+            Z=Z_es5,
+            n_expr="(7 * u - 1) * v",
+            X_expr="2 * u * v",
+            Y_expr="2 * (7 * u - 1) * v",
+            Z_expr="2 * u * (7 * u - 1) * v",
+            form_type="bilinear",
+            description="Erdős–Straus bilinear factor identity: n(u, v) = (7u - 1) v",
+            num_variables=2,
+            target_residues=[
+                {"modulus": 840, "residue": 169},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 6. Erdős–Straus (a = 4): Pure Square (7u - 1)^2
+    # -------------------------------------------------------------------------
+    n_es6 = (u * 7 - one) ** 2
+    X_es6 = u * (u * 7 - one) * 2
+    Y_es6 = n_es6 * 2
+    Z_es6 = u * n_es6 * 2
+    identities.append(
+        QuadraticIdentity(
+            name="erdos_quadratic_square_7u1",
+            conjecture="erdos_straus",
+            a=4,
+            n_poly=n_es6,
+            X=X_es6,
+            Y=Y_es6,
+            Z=Z_es6,
+            n_expr="(7 * u - 1)^2",
+            X_expr="2 * u * (7 * u - 1)",
+            Y_expr="2 * (7 * u - 1)^2",
+            Z_expr="2 * u * (7 * u - 1)^2",
+            form_type="quadratic_square",
+            description="Erdős–Straus pure square identity: n(u) = (7u - 1)^2 = 49u^2 - 14u + 1",
+            num_variables=1,
+            target_residues=[
+                {"modulus": 840, "residue": 169},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 7. Sierpiński (a = 5): Bilinear Form (5u - 1)(5v - 1)
+    # -------------------------------------------------------------------------
+    n_sier1 = (u * 5 - one) * (v * 5 - one)
+    X_sier1 = u * (v * 5 - one)
+    Y_sier1 = u * n_sier1 + one
+    Z_sier1 = u * n_sier1 * (u * n_sier1 + one)
+    identities.append(
+        QuadraticIdentity(
+            name="sierpinski_bilinear_5u1_5v1",
+            conjecture="sierpinski",
+            a=5,
+            n_poly=n_sier1,
+            X=X_sier1,
+            Y=Y_sier1,
+            Z=Z_sier1,
+            n_expr="(5 * u - 1) * (5 * v - 1)",
+            X_expr="u * (5 * v - 1)",
+            Y_expr="u * (5 * u - 1) * (5 * v - 1) + 1",
+            Z_expr="u * (5 * u - 1) * (5 * v - 1) * (u * (5 * u - 1) * (5 * v - 1) + 1)",
+            form_type="bilinear",
+            description="Sierpiński bilinear factor identity: n(u, v) = (5u - 1)(5v - 1)",
+            num_variables=2,
+            target_residues=[
+                {"modulus": 120, "residue": 1},
+                {"modulus": 120, "residue": 16},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 8. Sierpiński (a = 5): Pure Square (5u - 1)^2
+    # -------------------------------------------------------------------------
+    n_sier2 = (u * 5 - one) ** 2
+    X_sier2 = u * (u * 5 - one)
+    Y_sier2 = u * n_sier2 + one
+    Z_sier2 = u * n_sier2 * (u * n_sier2 + one)
+    identities.append(
+        QuadraticIdentity(
+            name="sierpinski_quadratic_square_5u1",
+            conjecture="sierpinski",
+            a=5,
+            n_poly=n_sier2,
+            X=X_sier2,
+            Y=Y_sier2,
+            Z=Z_sier2,
+            n_expr="(5 * u - 1)^2",
+            X_expr="u * (5 * u - 1)",
+            Y_expr="u * (5 * u - 1)^2 + 1",
+            Z_expr="u * (5 * u - 1)^2 * (u * (5 * u - 1)^2 + 1)",
+            form_type="quadratic_square",
+            description="Sierpiński pure square identity: n(u) = (5u - 1)^2 = 25u^2 - 10u + 1",
+            num_variables=1,
+            target_residues=[
+                {"modulus": 120, "residue": 1},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 9. Sierpiński (a = 5): Bilinear Form (4u - 1)(4v - 1)
+    # -------------------------------------------------------------------------
+    n_sier3 = (u * 4 - one) * (v * 4 - one)
+    X_sier3 = u * (v * 4 - one)
+    Y_sier3 = n_sier3
+    Z_sier3 = u * n_sier3
+    identities.append(
+        QuadraticIdentity(
+            name="sierpinski_bilinear_4u1_4v1",
+            conjecture="sierpinski",
+            a=5,
+            n_poly=n_sier3,
+            X=X_sier3,
+            Y=Y_sier3,
+            Z=Z_sier3,
+            n_expr="(4 * u - 1) * (4 * v - 1)",
+            X_expr="u * (4 * v - 1)",
+            Y_expr="(4 * u - 1) * (4 * v - 1)",
+            Z_expr="u * (4 * u - 1) * (4 * v - 1)",
+            form_type="bilinear",
+            description="Sierpiński bilinear factor identity: n(u, v) = (4u - 1)(4v - 1)",
+            num_variables=2,
+            target_residues=[
+                {"modulus": 120, "residue": 49},
+                {"modulus": 120, "residue": 77},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 10. Sierpiński (a = 5): Pure Square (4u - 1)^2
+    # -------------------------------------------------------------------------
+    n_sier4 = (u * 4 - one) ** 2
+    X_sier4 = u * (u * 4 - one)
+    Y_sier4 = n_sier4
+    Z_sier4 = u * n_sier4
+    identities.append(
+        QuadraticIdentity(
+            name="sierpinski_quadratic_square_4u1",
+            conjecture="sierpinski",
+            a=5,
+            n_poly=n_sier4,
+            X=X_sier4,
+            Y=Y_sier4,
+            Z=Z_sier4,
+            n_expr="(4 * u - 1)^2",
+            X_expr="u * (4 * u - 1)",
+            Y_expr="(4 * u - 1)^2",
+            Z_expr="u * (4 * u - 1)^2",
+            form_type="quadratic_square",
+            description="Sierpiński pure square identity: n(u) = (4u - 1)^2 = 16u^2 - 8u + 1",
+            num_variables=1,
+            target_residues=[
+                {"modulus": 120, "residue": 49},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 11. Sierpiński (a = 5): Bilinear Form (5u - 2)(5v - 2)
+    # -------------------------------------------------------------------------
+    n_sier5 = (u * 5 - two) * (v * 5 - two)
+    X_sier5 = u * (v * 5 - two)
+    Y_sier5 = (u * n_sier5 + one) * half
+    Z_sier5 = (u * n_sier5 * (u * n_sier5 + one)) * half
+    identities.append(
+        QuadraticIdentity(
+            name="sierpinski_bilinear_5u2_5v2",
+            conjecture="sierpinski",
+            a=5,
+            n_poly=n_sier5,
+            X=X_sier5,
+            Y=Y_sier5,
+            Z=Z_sier5,
+            n_expr="(5 * u - 2) * (5 * v - 2)",
+            X_expr="u * (5 * v - 2)",
+            Y_expr="(u * (5 * u - 2) * (5 * v - 2) + 1) / 2",
+            Z_expr="(u * (5 * u - 2) * (5 * v - 2) * (u * (5 * u - 2) * (5 * v - 2) + 1)) / 2",
+            form_type="bilinear",
+            description="Sierpiński bilinear factor identity: n(u, v) = (5u - 2)(5v - 2)",
+            num_variables=2,
+            target_residues=[
+                {"modulus": 120, "residue": 9},
+                {"modulus": 120, "residue": 49},
+            ],
+        )
+    )
+
+    # -------------------------------------------------------------------------
+    # 12. Sierpiński (a = 5): Pure Square (5u - 2)^2
+    # -------------------------------------------------------------------------
+    n_sier6 = (u * 5 - two) ** 2
+    X_sier6 = u * (u * 5 - two)
+    Y_sier6 = (u * n_sier6 + one) * half
+    Z_sier6 = (u * n_sier6 * (u * n_sier6 + one)) * half
+    identities.append(
+        QuadraticIdentity(
+            name="sierpinski_quadratic_square_5u2",
+            conjecture="sierpinski",
+            a=5,
+            n_poly=n_sier6,
+            X=X_sier6,
+            Y=Y_sier6,
+            Z=Z_sier6,
+            n_expr="(5 * u - 2)^2",
+            X_expr="u * (5 * u - 2)",
+            Y_expr="(u * (5 * u - 2)^2 + 1) / 2",
+            Z_expr="(u * (5 * u - 2)^2 * (u * (5 * u - 2)^2 + 1)) / 2",
+            form_type="quadratic_square",
+            description="Sierpiński pure square identity: n(u) = (5u - 2)^2 = 25u^2 - 20u + 4",
+            num_variables=1,
+            target_residues=[
+                {"modulus": 120, "residue": 9},
+                {"modulus": 120, "residue": 49},
+            ],
+        )
+    )
+
+    return identities
+
+
+def evaluate_resistant_residues_coverage() -> dict[str, Any]:
+    """Evaluate and certify explicit Diophantine solutions for resistant quadratic residues
+
+    mod 840 (Erdős–Straus) and mod 120 (Sierpiński).
+    """
+    instances: list[dict[str, Any]] = [
+        # Erdős–Straus resistant residues mod 840
+        {
+            "conjecture": "erdos_straus",
+            "a": 4,
+            "modulus": 840,
+            "residue": 121,
+            "n": 121,
+            "solution": (44, 121, 484),
+            "source_identity": "erdos_quadratic_square_3u1",
+            "parameters": {"u": 4},
+            "lean_theorem_name": "erdos_straus_cert_res121",
+        },
+        {
+            "conjecture": "erdos_straus",
+            "a": 4,
+            "modulus": 840,
+            "residue": 169,
+            "n": 169,
+            "solution": (52, 338, 676),
+            "source_identity": "erdos_quadratic_square_7u1",
+            "parameters": {"u": 2},
+            "lean_theorem_name": "erdos_straus_cert_res169",
+        },
+        {
+            "conjecture": "erdos_straus",
+            "a": 4,
+            "modulus": 840,
+            "residue": 289,
+            "n": 289,
+            "solution": (102, 289, 1734),
+            "source_identity": "erdos_quadratic_square_3u1",
+            "parameters": {"u": 6},
+            "lean_theorem_name": "erdos_straus_cert_res289",
+        },
+        {
+            "conjecture": "erdos_straus",
+            "a": 4,
+            "modulus": 840,
+            "residue": 361,
+            "n": 361,
+            "solution": (95, 1806, 3259830),
+            "source_identity": "erdos_quadratic_square_4u1",
+            "parameters": {"u": 5},
+            "lean_theorem_name": "erdos_straus_cert_res361",
+        },
+        {
+            "conjecture": "erdos_straus",
+            "a": 4,
+            "modulus": 840,
+            "residue": 529,
+            "n": 529,
+            "solution": (138, 3175, 10077450),
+            "source_identity": "erdos_quadratic_square_4u1",
+            "parameters": {"u": 6},
+            "lean_theorem_name": "erdos_straus_cert_res529",
+        },
+        # Sierpiński resistant residues mod 120
+        {
+            "conjecture": "sierpinski",
+            "a": 5,
+            "modulus": 120,
+            "residue": 9,
+            "n": 9,
+            "solution": (3, 5, 45),
+            "source_identity": "sierpinski_quadratic_square_5u2",
+            "parameters": {"u": 1},
+            "lean_theorem_name": "sierpinski_cert_res9",
+        },
+        {
+            "conjecture": "sierpinski",
+            "a": 5,
+            "modulus": 120,
+            "residue": 49,
+            "n": 49,
+            "solution": (14, 49, 98),
+            "source_identity": "sierpinski_quadratic_square_4u1",
+            "parameters": {"u": 2},
+            "lean_theorem_name": "sierpinski_cert_res49",
+        },
+        {
+            "conjecture": "sierpinski",
+            "a": 5,
+            "modulus": 120,
+            "residue": 1,  # 121 = 1 mod 120
+            "n": 121,
+            "solution": (33, 121, 363),
+            "source_identity": "sierpinski_quadratic_square_4u1",
+            "parameters": {"u": 3},
+            "lean_theorem_name": "sierpinski_cert_res121",
+        },
+        {
+            "conjecture": "sierpinski",
+            "a": 5,
+            "modulus": 120,
+            "residue": 49,  # 169 = 49 mod 120
+            "n": 169,
+            "solution": (39, 254, 128778),
+            "source_identity": "sierpinski_quadratic_square_5u2",
+            "parameters": {"u": 3},
+            "lean_theorem_name": "sierpinski_cert_res169",
+        },
+        {
+            "conjecture": "sierpinski",
+            "a": 5,
+            "modulus": 120,
+            "residue": 49,  # 529 = 49 mod 120
+            "n": 529,
+            "solution": (115, 1323, 3499335),
+            "source_identity": "sierpinski_quadratic_square_5u2",
+            "parameters": {"u": 5},
+            "lean_theorem_name": "sierpinski_cert_res529",
+        },
+    ]
+
+    verified_instances: list[dict[str, Any]] = []
+    all_valid = True
+
+    for item in instances:
+        a = item["a"]
+        n = item["n"]
+        x, y, z = item["solution"]
+        is_int_exact = (a * x * y * z) == (n * (x * y + y * z + z * x))
+        frac_exact = Fraction(a, n) == (Fraction(1, x) + Fraction(1, y) + Fraction(1, z))
+        distinct = len({x, y, z}) == 3
+        pos = (x > 0 and y > 0 and z > 0)
+        ok = is_int_exact and frac_exact and distinct and pos
+        if not ok:
+            all_valid = False
+        verified_instances.append({
+            **item,
+            "verified_exact": ok,
+            "distinct_coordinates": distinct,
+            "positive": pos,
+        })
+
+    return {
+        "total_evaluated": len(verified_instances),
+        "all_verified": all_valid,
+        "instances": verified_instances,
+    }
