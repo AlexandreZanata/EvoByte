@@ -171,6 +171,27 @@ verification, 406 Lean 4 kernel theorems with zero sorry across 10 modules, and 
 No worldwide novelty, quantum advantage, or unproven universal conjecture
 resolution is claimed.
 
+## Generalized modular resolution, meta-tactics & extended Schinzel program (P89–P96)
+
+[The generalized modular search contract](../FORMAL_SEARCH_PLAN.md#programa-de-resolução-modular-generalizada-meta-táticas-e-conjectura-de-schinzel-ampliada-em-lean-4-p89p96)
+defines the formal extension adopted under D025 following the conclusion of
+P81–P88. It targets custom Lean 4 metaprogramming tactics, Schinzel's generalized conjecture
+for arbitrary numerators $a \ge 4$, quadratic ring factorization sieves, extremal coordinate bounds,
+asymptotic modular density, and ultra-large instances ($10^7 \le n \le 10^9$).
+
+- [P89 — Meta-programação e tática customizada evobyte_solve em Lean 4](P89-custom-tactic-metaprogramming.md).
+- [P90 — Formalização unificada da conjectura de Schinzel (a/n)](P90-schinzel-generalized-numerator.md).
+- [P91 — Crivo algébrico em anéis quadráticos para classes resistentes](P91-quadratic-ring-sieve.md).
+- [P92 — Limites extremais certificados e minimização de coordenadas](P92-extremal-coordinate-bounds.md).
+- [P93 — Teoremas de densidade assintótica e cobertura modular completa](P93-asymptotic-density-coverage.md).
+- [P94 — Generalização multitermo universal e coprimalidade total](P94-universal-multiterm-coprimality.md).
+- [P95 — Confirmação cega em escala extrema (10^7 a 10^9) sob controle FWER](P95-extreme-scale-blind-confirmation.md).
+- [P96 — Grande campanha formal e dossiê certificado final em Lean 4](P96-grand-formal-dossier-campaign.md).
+
+Execute one micro-task at a time. All phases remain Proposed until their explicit
+gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
+conjecture resolution is claimed.
+
 ## Historical execution and acceptance contract
 
 ```text
