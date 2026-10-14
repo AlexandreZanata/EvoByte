@@ -472,3 +472,49 @@ def test_p89_custom_tactic_catalog_export():
     sound, findings = verify_custom_tactic_catalog_soundness(catalog, min_theorems=30)
     assert sound is True
     assert len(findings) == 0
+
+
+def test_p90_schinzel_identities_and_certificates_generation():
+    from evobyte.algebraic import (
+        generate_schinzel_instance_certificates,
+        generate_schinzel_parametric_identities,
+    )
+
+    idents = generate_schinzel_parametric_identities([4, 5, 6, 7, 8], modulus=24, max_c=10)
+    assert len(idents) >= 80
+    for ident in idents:
+        assert ident.a in [4, 5, 6, 7, 8]
+        assert ident.verify_exact()
+
+    certs = generate_schinzel_instance_certificates([4, 5, 6, 7, 8])
+    assert len(certs) >= 40
+    for cert in certs:
+        assert cert["verified"] is True
+        assert len(cert["sol"]) == 3
+
+
+def test_p90_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p90_schinzel_generalization_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P90 configuration"):
+        run_p90_schinzel_generalization_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p90_schinzel_catalog_export():
+    from evobyte.formal_bridge import (
+        export_schinzel_theorems_catalog,
+        verify_schinzel_catalog_soundness,
+    )
+
+    catalog = export_schinzel_theorems_catalog()
+    assert catalog["accepted"] is True
+    assert catalog["total_theorems"] >= 100
+    assert catalog["has_sorry"] is False
+    assert len(catalog["sha256"]) == 64
+
+    sound, findings = verify_schinzel_catalog_soundness(catalog, min_theorems=100)
+    assert sound is True
+    assert len(findings) == 0

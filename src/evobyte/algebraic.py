@@ -2789,3 +2789,55 @@ def evaluate_multiterm_coprime_coverage(
         "all_verified": all_valid,
         "results": results,
     }
+
+
+def generate_schinzel_parametric_identities(
+    a_values: list[int] | None = None, modulus: int = 24, max_c: int = 10
+) -> list[AlgebraicIdentity]:
+    """Synthesize verified polynomial identities for Schinzel conjecture across numerators (P90).
+
+    For each numerator a in a_values (default: [4, 5, 6, 7, 8]) and residue r in [0, modulus),
+    synthesizes and algebraically verifies identities a/n = 1/X + 1/Y + 1/Z over Q[k].
+    """
+    targets = a_values or [4, 5, 6, 7, 8]
+    identities: list[AlgebraicIdentity] = []
+    for a in targets:
+        for r in range(modulus):
+            ident = synthesize_schinzel_identity(a, modulus, r, max_c=max_c)
+            if ident is not None and ident.verify_exact():
+                identities.append(ident)
+    return identities
+
+
+def generate_schinzel_instance_certificates(
+    a_values: list[int] | None = None,
+    test_denominators: list[int] | None = None,
+    max_x_steps: int = 500,
+) -> list[dict[str, Any]]:
+    """Generate exact integer solutions for Schinzel conjecture across numerators (P90).
+
+    Uses the deterministic rational divisor sieve to find exact (x, y, z) solutions
+    and verifies integer and unit-fraction correctness.
+    """
+    targets = a_values or [4, 5, 6, 7, 8]
+    denominators = test_denominators or [11, 13, 17, 19, 23, 29, 31, 37, 41, 43]
+    certificates: list[dict[str, Any]] = []
+
+    for a in targets:
+        for n in denominators:
+            sol, meta = schinzel_divisor_sieve(a, n, max_x_steps=max_x_steps)
+            if sol is not None:
+                x, y, z = sol
+                ok_int, _, _ = check_schinzel(a, n, x, y, z)
+                ok_frac, _, _ = check_schinzel_fractions(a, n, x, y, z)
+                if ok_int and ok_frac:
+                    certificates.append(
+                        {
+                            "a": a,
+                            "n": n,
+                            "sol": sol,
+                            "verified": True,
+                            "steps": meta.get("steps", 0),
+                        }
+                    )
+    return certificates

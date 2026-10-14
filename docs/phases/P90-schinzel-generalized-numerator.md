@@ -1,6 +1,6 @@
 # P90 — Formalização unificada da conjectura de Schinzel (a/n)
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P89 Proposed; branch a partir de `codex/p89-custom-tactic-metaprogramming`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P89 concluída com tática customizada compilada no Lean 4.

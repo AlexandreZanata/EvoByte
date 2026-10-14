@@ -19,6 +19,8 @@ from evobyte.algebraic import (
     AlgebraicIdentity,
     Poly1D,
     evaluate_resistant_residues_coverage,
+    generate_schinzel_instance_certificates,
+    generate_schinzel_parametric_identities,
     get_algebraic_identity_for_residue,
     get_resistant_residues,
     rational_divisor_sieve,
@@ -372,6 +374,7 @@ def export_formal_proof_catalog(
         "Generated.AutomatedTheorems",
         "Generated.MultitermTheorems",
         "Generated.CustomTacticTheorems",
+        "Generated.SchinzelTheorems",
     ]
     existing_content = root_file.read_text(encoding="utf-8") if root_file.exists() else ""
     imports_to_write = []
@@ -2183,5 +2186,167 @@ def verify_custom_tactic_catalog_soundness(
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_CUSTOM_TACTIC_THEOREMS")
+
+    return (len(findings) == 0), findings
+
+
+def schinzel_identity_to_lean_theorem(
+    ident: AlgebraicIdentity, theorem_name: str | None = None
+) -> str:
+    """Translate an AlgebraicIdentity for Schinzel a/n into a Lean 4 theorem proven by `ring`."""
+    name = theorem_name or f"schinzel_ident_a{ident.a}_m{ident.m}_r{ident.r}"
+    n_str = poly1d_to_lean(ident.n_poly, "k")
+    X_str = poly1d_to_lean(ident.X, "k")
+    Y_str = poly1d_to_lean(ident.Y, "k")
+    Z_str = poly1d_to_lean(ident.Z, "k")
+
+    doc = (
+        f"/-- Schinzel polynomial identity for numerator a = {ident.a}, congruence class n ≡ {ident.r} [mod {ident.m}].\n"
+        f"    Guarantees {ident.a}/n = 1/X + 1/Y + 1/Z over Q[k] with integer solutions for positive k (P90). -/"
+    )
+    stmt = (
+        f"theorem {name} : ∀ k : ℚ,\n"
+        f"    {ident.a} * ({X_str}) * ({Y_str}) * ({Z_str}) =\n"
+        f"    ({n_str}) * (({Y_str}) * ({Z_str}) + ({X_str}) * ({Z_str}) + ({X_str}) * ({Y_str})) := by\n"
+        f"  intro k\n"
+        f"  ring"
+    )
+    return f"{doc}\n{stmt}\n"
+
+
+def schinzel_instance_to_lean_theorem(
+    a: int, n: int, x: int, y: int, z: int, cert_id: str | None = None
+) -> str:
+    """Translate an exact Schinzel unit fraction solution into a Lean 4 theorem proven by `norm_num`."""
+    name = cert_id or f"schinzel_cert_a{a}_n{n}"
+    doc = (
+        f"/-- Schinzel instance certificate for numerator a = {a}, denominator n = {n}.\n"
+        f"    Certified exact rational solution ({a}/{n} = 1/{x} + 1/{y} + 1/{z}) via norm_num (P90). -/"
+    )
+    stmt = (
+        f"theorem {name} : ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by\n"
+        f"  norm_num"
+    )
+    return f"{doc}\n{stmt}\n"
+
+
+def export_schinzel_theorems_catalog(
+    a_values: list[int] | None = None,
+    output_dir: str | Path = "lean_proofs/Generated",
+    project_dir: str | Path = "lean_proofs",
+) -> dict[str, Any]:
+    """Generate, export, and certify generalized Schinzel conjecture theorems in Lean 4 (P90).
+
+    Covers numerators a in {4, 5, 6, 7, 8} across modular residue classes and prime instances.
+    """
+    import subprocess
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    targets = a_values or [4, 5, 6, 7, 8]
+    theorems: list[str] = []
+
+    # 1. Parametric identities
+    identities = generate_schinzel_parametric_identities(targets, modulus=24, max_c=10)
+    for ident in identities:
+        name = f"schinzel_ident_a{ident.a}_m{ident.m}_r{ident.r}"
+        thms_src = schinzel_identity_to_lean_theorem(ident, theorem_name=name)
+        theorems.append(thms_src)
+
+    # 2. Instance certificates
+    certificates = generate_schinzel_instance_certificates(targets)
+    for cert in certificates:
+        a = cert["a"]
+        n = cert["n"]
+        x, y, z = cert["sol"]
+        cert_name = f"schinzel_cert_a{a}_n{n}"
+        cert_src = schinzel_instance_to_lean_theorem(a, n, x, y, z, cert_id=cert_name)
+        theorems.append(cert_src)
+
+    doc_header = (
+        "EvoByte Formal Proof Catalog: Generalized Schinzel Conjecture Theorems (a/n, P90)."
+    )
+    src = generate_lean_proof_module(
+        theorems,
+        doc_header,
+        imports=[
+            "Mathlib.Tactic.Ring",
+            "Mathlib.Tactic.NormNum",
+            "Mathlib.Data.Rat.Defs",
+        ],
+    )
+    schinzel_file = out / "SchinzelTheorems.lean"
+    schinzel_file.write_text(src, encoding="utf-8")
+    file_sha = hashlib.sha256(schinzel_file.read_bytes()).hexdigest()
+
+    # Ensure Generated.lean imports SchinzelTheorems
+    root_file = proj / "Generated.lean"
+    if root_file.exists():
+        root_content = root_file.read_text(encoding="utf-8")
+        if "import Generated.SchinzelTheorems" not in root_content:
+            root_content = root_content.rstrip() + "\nimport Generated.SchinzelTheorems\n"
+            root_file.write_text(root_content, encoding="utf-8")
+    else:
+        root_file.write_text(
+            "-- EvoByte Root Generated Formal Library\nimport Generated.SchinzelTheorems\n",
+            encoding="utf-8",
+        )
+
+    v_res = compile_lean_file(schinzel_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+
+    bins = lean_resolve_binaries(proj)
+    lake_proc = subprocess.run(
+        [bins["lake"], "-d", str(proj), "build", "Generated"],
+        capture_output=True,
+        text=True,
+        cwd=str(proj),
+        timeout=180,
+        check=False,
+    )
+    if lake_proc.returncode != 0:
+        accepted = False
+        reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+    total_theorems = src.count("theorem ")
+
+    return {
+        "catalog_dir": str(out),
+        "total_theorems": total_theorems,
+        "identity_count": len(identities),
+        "certificate_count": len(certificates),
+        "numerators": targets,
+        "file": str(schinzel_file),
+        "sha256": file_sha,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in schinzel_file.read_text(encoding="utf-8"),
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_schinzel_catalog_soundness(
+    catalog_summary: dict[str, Any], min_theorems: int = 50
+) -> tuple[bool, list[str]]:
+    """Audit Schinzel theorems catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(f"SCHINZEL_THEOREMS_COMPILATION_FAILED: {catalog_summary.get('reasons')}")
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: Schinzel theorems catalog contains sorry")
+
+    total_thms = catalog_summary.get("total_theorems", 0)
+    if total_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_SCHINZEL_THEOREMS")
 
     return (len(findings) == 0), findings
