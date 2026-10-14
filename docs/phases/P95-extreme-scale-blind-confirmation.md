@@ -1,6 +1,6 @@
 # P95 — Confirmação cega em escala extrema (10^7 a 10^9) sob controle FWER
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P94 Proposed; branch a partir de `codex/p94-universal-multiterm-coprimality`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P94 concluída com generalização multitermo coprima verificada.
