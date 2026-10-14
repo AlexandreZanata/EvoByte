@@ -166,9 +166,10 @@ multiparameter quadratic identities, and automated Lean 4 tactic dispatch (`omeg
 - [P87 — Confirmação cega em grande escala com controle estatístico](P87-large-instance-blind-confirmation.md).
 - [P88 — Campanha formal de meta-teoremas e dossiê certificado](P88-meta-theorem-formal-campaign.md).
 
-Execute one micro-task at a time. All phases remain Proposed until their explicit
-gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
-conjecture resolution is claimed.
+P81–P88 are completed (Done, D023) with all measured gates passing, clean-tree
+verification, 406 Lean 4 kernel theorems with zero sorry across 10 modules, and PRs #110–#118.
+No worldwide novelty, quantum advantage, or unproven universal conjecture
+resolution is claimed.
 
 ## Historical execution and acceptance contract
 
