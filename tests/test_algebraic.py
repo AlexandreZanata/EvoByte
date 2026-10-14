@@ -962,3 +962,41 @@ def test_p86_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P86 configuration"):
         run_p86_multiterm_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p87_acceptance_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p87_large_instance_audit
+
+    cfg = {
+        "phase": "P87",
+        "split_path": "experiments/p87-blind-split.json",
+        "split_sha256": "26fc33e282ec611855fd26c4e33442d9c34d19d9e47e50d1da3985a486c33219",
+        "alpha": 0.05,
+        "min_decisive_instances": 15,
+        "max_baseline_y_steps": 500,
+        "max_coord": 1000000000000,
+        "seed": 42,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p87-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p87-out.json"
+
+    report = run_p87_large_instance_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P87"
+    assert report["verdict"] == "ACCEPTED"
+    assert len(report["tracks"]) == 2
+    for t_info in report["tracks"].values():
+        assert t_info["outcome"] == "CONFIRMED"
+        assert t_info["holm_adjusted_p_value"] < 0.05
+        assert t_info["all_verified"] is True
+
+
+def test_p87_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p87_large_instance_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P87 configuration"):
+        run_p87_large_instance_audit(cfg_p, tmp_path / "out.json")
