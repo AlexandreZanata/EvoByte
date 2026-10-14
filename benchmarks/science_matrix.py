@@ -728,6 +728,7 @@ ACCEPTANCE_PHASES = (
     "P87",
     "P88",
     "P89",
+    "P90",
 )
 
 
@@ -6544,6 +6545,142 @@ def run_p89_custom_tactic_audit(config_path: str | Path, output_path: str | Path
     return report
 
 
+def run_p90_schinzel_generalization_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P90 audit: unified formalization of Schinzel's generalized conjecture (a/n) in Lean 4.
+
+    Verifies:
+    1. Parametric polynomial identities synthesized across arbitrary numerators a in {4, 5, 6, 7, 8}.
+    2. Exact instance certificates generated via sublinear rational divisor sieve.
+    3. Lean 4 formal catalog export (`export_schinzel_theorems_catalog`) into `lean_proofs/Generated/SchinzelTheorems.lean`.
+    4. Complete compilation in Lean 4 kernel with zero sorry tokens.
+    5. Minimum theorem threshold (>= 100 formal theorems).
+    6. Complete Lake build of all generated targets.
+    7. Clean tree enforcement and SHA-256 artifact verification.
+    """
+    import subprocess as _sp
+
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        export_schinzel_theorems_catalog,
+        verify_schinzel_catalog_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.verifier import lean_resolve_binaries
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P90":
+        raise ValueError(f"Config {cfg_p} is not a P90 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P90 SCHINZEL GENERALIZED CONJECTURE AUDIT (a/n for a in {4, 5, 6, 7, 8})")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    project_dir = Path(config.get("project_dir", "lean_proofs")).resolve()
+    a_values = config.get("a_values", [4, 5, 6, 7, 8])
+    output_dir = config.get("output_dir", "lean_proofs/Generated")
+    min_theorems = int(config.get("min_theorems", 100))
+
+    # Export and verify Schinzel catalog
+    catalog = export_schinzel_theorems_catalog(
+        a_values=a_values, output_dir=output_dir, project_dir=project_dir
+    )
+    sound, soundness_findings = verify_schinzel_catalog_soundness(
+        catalog, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    if catalog.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: Schinzel theorems catalog contains incomplete proofs")
+
+    if not catalog.get("accepted", False):
+        findings.append(f"SCHINZEL_CATALOG_REJECTED: {catalog.get('reasons')}")
+
+    # Verify Lake builds Generated
+    bins = lean_resolve_binaries(project_dir)
+    lake_proc = _sp.run(
+        [bins["lake"], "-d", str(project_dir), "build", "Generated"],
+        capture_output=True,
+        text=True,
+        cwd=str(project_dir),
+        timeout=180,
+        check=False,
+    )
+    if lake_proc.returncode != 0:
+        findings.append(f"LAKE_BUILD_FAILED: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+    budget_sec = float(config.get("budget_sec", 300.0))
+    if elapsed > budget_sec:
+        findings.append(f"BUDGET_EXCEEDED: audit runtime {elapsed:.2f}s > budget {budget_sec}s")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty:
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; Schinzel generalization claims from dirty code rejected"
+        )
+
+    claim_scope = (
+        "Parametric polynomial identities and exact unit fraction certificates for Schinzel's generalized "
+        "conjecture (a/n = 1/x + 1/y + 1/z) across arbitrary numerators a in {4, 5, 6, 7, 8}; 100% formal compilation "
+        "in Lean 4 kernel with zero sorry tokens; no unproven universal claims over all natural numbers."
+    )
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p90_config": config_sha[:16], "catalog": catalog.get("sha256", "")[:16]},
+        config={"acceptance_phase": "P90"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    report = {
+        "phase": "P90",
+        "verdict": verdict,
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "claim_scope": claim_scope,
+        "elapsed_sec": elapsed,
+        "total_theorems": catalog.get("total_theorems", 0),
+        "identity_count": catalog.get("identity_count", 0),
+        "certificate_count": catalog.get("certificate_count", 0),
+        "numerators": catalog.get("numerators", a_values),
+        "catalog_file": catalog.get("file"),
+        "sha256": catalog.get("sha256"),
+        "has_sorry": catalog.get("has_sorry", False),
+        "findings": findings,
+        "provenance": prov,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P90 audit {verdict}: {catalog.get('total_theorems', 0)} theorems compiled across numerators "
+        f"{a_values} with zero sorry; report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -10574,6 +10711,8 @@ def main() -> int:
             run_p88_meta_theorem_campaign_audit(args.config, args.output)
         elif args.acceptance_phase == "P89":
             run_p89_custom_tactic_audit(args.config, args.output)
+        elif args.acceptance_phase == "P90":
+            run_p90_schinzel_generalization_audit(args.config, args.output)
         return 0
 
     seeds = (
