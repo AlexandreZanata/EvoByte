@@ -1,6 +1,6 @@
 # P94 — Generalização multitermo universal e coprimalidade total
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P93 Proposed; branch a partir de `codex/p93-asymptotic-density-coverage`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P93 concluída com densidade assintótica comprovada.

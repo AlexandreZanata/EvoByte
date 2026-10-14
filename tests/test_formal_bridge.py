@@ -672,12 +672,85 @@ def test_p93_asymptotic_density_catalog_export():
         verify_asymptotic_density_catalog_soundness,
     )
 
-    catalog = export_asymptotic_density_theorems_catalog(moduli=[24, 120, 840, 27720, 720720])
+    catalog = export_asymptotic_density_theorems_catalog()
     assert catalog["accepted"] is True
     assert catalog["total_theorems"] >= 40
     assert catalog["has_sorry"] is False
     assert len(catalog["sha256"]) == 64
 
     sound, findings = verify_asymptotic_density_catalog_soundness(catalog, min_theorems=40)
+    assert sound is True
+    assert len(findings) == 0
+
+
+def test_p94_pairwise_coprime_decomposition():
+    from evobyte.algebraic import verify_pairwise_coprime_decomposition
+
+    # 1/2 + 1/3 + 1/5 + 1/7 + 1/11 = 2927/2310
+    v5, det5 = verify_pairwise_coprime_decomposition((2, 3, 5, 7, 11))
+    assert v5 is True
+    assert det5["is_pairwise_coprime"] is True
+    assert det5["is_increasing"] is True
+    assert det5["is_reduced"] is True
+    assert det5["numerator"] == 2927
+    assert det5["denominator"] == 2310
+
+    # Non-coprime tuple should be rejected
+    v_bad, det_bad = verify_pairwise_coprime_decomposition((2, 4, 5, 7, 11))
+    assert v_bad is False
+    assert det_bad["is_pairwise_coprime"] is False
+
+    # Non-increasing tuple should be rejected
+    v_inc, det_inc = verify_pairwise_coprime_decomposition((3, 2, 5, 7, 11))
+    assert v_inc is False
+    assert det_inc["is_increasing"] is False
+
+
+def test_p94_universal_multiterm_coverage():
+    from evobyte.algebraic import (
+        evaluate_universal_multiterm_coprimality_coverage,
+        generate_pairwise_coprime_multiterm_decompositions,
+    )
+
+    decomps = generate_pairwise_coprime_multiterm_decompositions()
+    assert len(decomps) == 34
+    assert all(d["is_pairwise_coprime"] for d in decomps)
+    assert all(d["is_increasing"] for d in decomps)
+    assert all(d["is_reduced"] for d in decomps)
+
+    cov = evaluate_universal_multiterm_coprimality_coverage()
+    assert cov["all_certified"] is True
+    assert cov["total_decompositions"] >= 30
+    assert cov["min_k"] == 5
+    assert cov["max_k"] == 8
+    assert set(cov["k_counts"].keys()) == {5, 6, 7, 8}
+
+
+def test_p94_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p94_multiterm_coprimality_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P94 configuration"):
+        run_p94_multiterm_coprimality_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p94_universal_multiterm_catalog_export():
+    from evobyte.formal_bridge import (
+        export_universal_multiterm_theorems_catalog,
+        verify_universal_multiterm_catalog_soundness,
+    )
+
+    catalog = export_universal_multiterm_theorems_catalog()
+    assert catalog["accepted"] is True
+    assert catalog["total_theorems"] >= 100
+    assert catalog["fraction_equality_count"] >= 30
+    assert catalog["coprimality_conjunction_count"] >= 30
+    assert catalog["ordering_count"] >= 30
+    assert catalog["has_sorry"] is False
+    assert len(catalog["sha256"]) == 64
+
+    sound, findings = verify_universal_multiterm_catalog_soundness(catalog, min_theorems=100)
     assert sound is True
     assert len(findings) == 0

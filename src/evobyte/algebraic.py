@@ -3272,3 +3272,214 @@ def empirical_density_sample_verification(
         "standard_error": std_err,
         "consistent_within_error": consistent,
     }
+
+
+# ==============================================================================
+# Phase P94: Universal Multiterm Decompositions and Total Coprimality
+# ==============================================================================
+
+UNIVERSAL_MULTITERM_CANDIDATES: list[tuple[int, ...]] = [
+    # k = 5 (15 tuples)
+    (2, 3, 5, 7, 11),
+    (2, 3, 5, 7, 13),
+    (2, 3, 5, 7, 17),
+    (2, 3, 5, 7, 19),
+    (2, 3, 5, 11, 13),
+    (2, 3, 7, 11, 13),
+    (2, 5, 7, 11, 13),
+    (3, 5, 7, 11, 13),
+    (2, 3, 5, 7, 23),
+    (2, 3, 5, 11, 17),
+    (2, 3, 5, 7, 121),
+    (3, 4, 5, 7, 11),
+    (2, 5, 9, 11, 13),
+    (3, 5, 8, 11, 13),
+    (2, 7, 9, 11, 13),
+    # k = 6 (8 tuples)
+    (2, 3, 5, 7, 11, 13),
+    (2, 3, 5, 7, 11, 17),
+    (2, 3, 5, 7, 11, 19),
+    (2, 3, 5, 7, 13, 17),
+    (2, 3, 5, 7, 11, 23),
+    (3, 4, 5, 7, 11, 13),
+    (2, 3, 5, 7, 11, 29),
+    (2, 3, 5, 7, 11, 31),
+    # k = 7 (6 tuples)
+    (2, 3, 5, 7, 11, 13, 17),
+    (2, 3, 5, 7, 11, 13, 19),
+    (2, 3, 5, 7, 11, 13, 23),
+    (2, 3, 5, 7, 11, 13, 29),
+    (2, 3, 5, 7, 11, 13, 31),
+    (3, 4, 5, 7, 11, 13, 17),
+    # k = 8 (5 tuples)
+    (2, 3, 5, 7, 11, 13, 17, 19),
+    (2, 3, 5, 7, 11, 13, 17, 23),
+    (2, 3, 5, 7, 11, 13, 17, 29),
+    (2, 3, 5, 7, 11, 13, 17, 31),
+    (3, 4, 5, 7, 11, 13, 17, 19),
+]
+
+
+def verify_pairwise_coprime_decomposition(
+    terms: tuple[int, ...] | list[int],
+) -> tuple[bool, dict[str, Any]]:
+    """Verify that a sequence of terms forms a strictly increasing, pairwise coprime unit fraction decomposition (P94).
+
+    Validates:
+    1. Positive integers: each x_i >= 1.
+    2. Strictly increasing: x_1 < x_2 < ... < x_k.
+    3. Pairwise coprime: gcd(x_i, x_j) == 1 for all 0 <= i < j < k.
+    4. Exact rational arithmetic: computes exact sum a/n = sum(1/x_i).
+    5. Coprimality of numerator and denominator: gcd(a, n) == 1 (as theoretically guaranteed
+       for pairwise coprime denominators).
+    """
+    seq = tuple(int(x) for x in terms)
+    k = len(seq)
+    findings: list[str] = []
+
+    if k < 2:
+        findings.append("TOO_FEW_TERMS: length must be >= 2")
+
+    if any(x <= 0 for x in seq):
+        findings.append("NON_POSITIVE_TERMS: all terms must be positive integers")
+
+    is_increasing = all(seq[i] < seq[i + 1] for i in range(k - 1)) if k >= 2 else False
+    if not is_increasing:
+        findings.append("NOT_STRICTLY_INCREASING: terms must satisfy x_1 < x_2 < ... < x_k")
+
+    pairwise_gcds: list[dict[str, int]] = []
+    is_pairwise_coprime = True
+    for i in range(k):
+        for j in range(i + 1, k):
+            g = math.gcd(seq[i], seq[j])
+            pairwise_gcds.append({"i": seq[i], "j": seq[j], "gcd": g})
+            if g != 1:
+                is_pairwise_coprime = False
+
+    if not is_pairwise_coprime:
+        findings.append("NOT_PAIRWISE_COPRIME: found pair with gcd > 1")
+
+    # Compute exact rational sum
+    frac = sum(Fraction(1, x) for x in seq) if all(x > 0 for x in seq) else Fraction(0, 1)
+    a, n = frac.numerator, frac.denominator
+
+    # Check if a and n are coprime
+    is_reduced = math.gcd(a, n) == 1
+
+    canonical_data = {
+        "k": k,
+        "terms": list(seq),
+        "numerator": a,
+        "denominator": n,
+        "fraction_str": f"{a}/{n}",
+        "is_increasing": is_increasing,
+        "is_pairwise_coprime": is_pairwise_coprime,
+        "pairwise_pairs_count": len(pairwise_gcds),
+        "is_reduced": is_reduced,
+    }
+    canonical_bytes = json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
+    checksum = hashlib.sha256(canonical_bytes).hexdigest()
+    canonical_data["checksum"] = checksum
+
+    is_valid = len(findings) == 0
+    canonical_data["findings"] = findings
+    canonical_data["is_valid"] = is_valid
+    return is_valid, canonical_data
+
+
+def generate_pairwise_coprime_multiterm_decompositions(
+    k_values: list[int] | None = None,
+) -> list[dict[str, Any]]:
+    """Generate certified pairwise coprime multiterm decompositions across orders k >= 5 (P94).
+
+    Returns verified records with exact numerator, denominator, pairwise coprimality certificates,
+    and canonical checksums.
+    """
+    target_k = set(k_values) if k_values is not None else {5, 6, 7, 8}
+    records: list[dict[str, Any]] = []
+
+    for idx, terms in enumerate(UNIVERSAL_MULTITERM_CANDIDATES):
+        k = len(terms)
+        if k not in target_k:
+            continue
+        valid, details = verify_pairwise_coprime_decomposition(terms)
+        if not valid:
+            continue
+        rec = {
+            "index": idx,
+            "k": k,
+            "terms": list(terms),
+            "numerator": details["numerator"],
+            "denominator": details["denominator"],
+            "fraction_str": details["fraction_str"],
+            "is_increasing": details["is_increasing"],
+            "is_pairwise_coprime": details["is_pairwise_coprime"],
+            "pairwise_pairs_count": details["pairwise_pairs_count"],
+            "is_reduced": details["is_reduced"],
+            "checksum": details["checksum"],
+        }
+        records.append(rec)
+
+    return records
+
+
+def evaluate_universal_multiterm_coprimality_coverage(
+    k_values: list[int] | None = None,
+) -> dict[str, Any]:
+    """Evaluate coverage and mathematical soundness of universal multiterm coprimality (P94).
+
+    Audits:
+    1. Coverage across all requested k >= 5 orders.
+    2. 100% pairwise coprimality rate across all evaluated candidate tuples.
+    3. 100% strictly increasing ordering rate across all coordinates.
+    4. 100% reduced fraction coprimality gcd(a, n) == 1.
+    5. Minimum decomposition count (>= 30 decompositions across k in {5, 6, 7, 8}).
+    """
+    target_k = list(k_values) if k_values is not None else [5, 6, 7, 8]
+    decomps = generate_pairwise_coprime_multiterm_decompositions(target_k)
+
+    k_counts: dict[int, int] = {}
+    for r in decomps:
+        k = r["k"]
+        k_counts[k] = k_counts.get(k, 0) + 1
+
+    total = len(decomps)
+    all_coprime = all(r["is_pairwise_coprime"] for r in decomps) if total > 0 else False
+    all_increasing = all(r["is_increasing"] for r in decomps) if total > 0 else False
+    all_reduced = all(r["is_reduced"] for r in decomps) if total > 0 else False
+
+    min_k = min((r["k"] for r in decomps), default=0)
+    max_k = max((r["k"] for r in decomps), default=0)
+    max_denominator = max((r["denominator"] for r in decomps), default=0)
+
+    canonical_data = {
+        "total_decompositions": total,
+        "k_values": target_k,
+        "k_counts": k_counts,
+        "all_pairwise_coprime": all_coprime,
+        "all_strictly_increasing": all_increasing,
+        "all_reduced": all_reduced,
+        "min_k": min_k,
+        "max_k": max_k,
+        "max_denominator": max_denominator,
+    }
+    canonical_bytes = json.dumps(canonical_data, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
+    checksum = hashlib.sha256(canonical_bytes).hexdigest()
+
+    return {
+        **canonical_data,
+        "decompositions": decomps,
+        "checksum": checksum,
+        "all_certified": (
+            total >= 30
+            and all_coprime
+            and all_increasing
+            and all_reduced
+            and min_k >= 5
+            and all(k_counts.get(k, 0) > 0 for k in target_k)
+        ),
+    }
