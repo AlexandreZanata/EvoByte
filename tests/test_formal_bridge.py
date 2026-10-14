@@ -925,3 +925,58 @@ def test_p98_conic_parametrizations_audit_smoke(tmp_path: Path):
     assert report["total_formal_theorems"] >= 40
     assert report["has_sorry"] is False
     assert report["module"] == "ConicParametrizations"
+
+
+def test_p99_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p99_quaternion_sieve_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P99 configuration"):
+        run_p99_quaternion_sieve_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p99_quaternion_sieve_soundness_rejections():
+    from evobyte.formal_bridge import verify_quaternion_algebra_catalog_soundness
+
+    bad_cat_1 = {"accepted": False, "reasons": ["Error"]}
+    sound_1, f_1 = verify_quaternion_algebra_catalog_soundness(bad_cat_1)
+    assert not sound_1
+    assert any("QUATERNION_ALGEBRA_THEOREMS_COMPILATION_FAILED" in x for x in f_1)
+
+    bad_cat_2 = {"accepted": True, "has_sorry": True, "total_theorems": 50, "sha256": "a" * 64}
+    sound_2, f_2 = verify_quaternion_algebra_catalog_soundness(bad_cat_2)
+    assert not sound_2
+    assert any("SORRY_DETECTED" in x for x in f_2)
+
+    bad_cat_3 = {"accepted": True, "has_sorry": False, "total_theorems": 10, "sha256": "a" * 64}
+    sound_3, f_3 = verify_quaternion_algebra_catalog_soundness(bad_cat_3)
+    assert not sound_3
+    assert any("INSUFFICIENT_THEOREMS" in x for x in f_3)
+
+
+@needs_lean
+def test_p99_quaternion_sieve_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p99_quaternion_sieve_audit
+
+    cfg = {
+        "phase": "P99",
+        "min_theorems": 40,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "output_dir": "lean_proofs/Generated",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p99-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p99-out.json"
+
+    report = run_p99_quaternion_sieve_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P99"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 40
+    assert report["has_sorry"] is False
+    assert report["module"] == "QuaternionAlgebraTheorems"
