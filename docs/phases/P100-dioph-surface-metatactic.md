@@ -1,7 +1,7 @@
 # P100 — Meta-tática unificada dioph_surface com eliminação algébrica em Lean 4
 
-**Status:** Proposed.
-**Dependência:** P99 concluída; branch a partir de `codex/p97-p104-diophantine-geometry-program`.
+**Status:** Done.
+**Dependência:** P99 concluída; branch a partir de `codex/p99-quaternion-algebra-sieve`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P99 concluída com crivo quaternônico verificado; ambiente Lean 4 e Lake herméticos.
 **Branch:** `codex/p100-dioph-surface-metatactic`.
@@ -40,5 +40,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P100 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p100 dioph surface metatactic"
 git push -u origin HEAD
-gh pr create --base codex/p97-p104-diophantine-geometry-program --title "feat(formal): implement p100 dioph surface metatactic" --body-file /tmp/evobyte-p100-pr.md
+gh pr create --base codex/p99-quaternion-algebra-sieve --title "feat(formal): implement p100 dioph surface metatactic" --body-file /tmp/evobyte-p100-pr.md
 ```

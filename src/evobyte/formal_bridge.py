@@ -4100,3 +4100,232 @@ def verify_quaternion_algebra_catalog_soundness(
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_QUATERNION_ALGEBRA_THEOREMS")
     return (len(findings) == 0), findings
+
+
+def export_dioph_surface_theorems_catalog(
+    project_dir: str | Path = "lean_proofs",
+    output_dir: str | Path = "lean_proofs/Generated",
+    instances: list[int] | None = None,
+    a_values: list[int] | None = None,
+) -> dict[str, Any]:
+    """Generate and verify Diophantine surface theorems catalog proved via `dioph_surface` (P100)."""
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    from evobyte.algebraic import (
+        generate_cubic_surface_parametric_sections,
+        optimal_schinzel_divisor_sieve,
+    )
+    from evobyte.quaternion_sieve import decompose_four_squares
+
+    if instances is None:
+        instances = [
+            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
+            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+        ]
+    if a_values is None:
+        a_values = [4]
+
+    lines: list[str] = [
+        "/-",
+        "EvoByte Formal Proof Catalog: Unified Diophantine Surface Metatactic Theorems (P100).",
+        "Demonstrates automated variable elimination, algebraic normalization, and decision procedures via `dioph_surface`.",
+        "-/",
+        "",
+        "import Mathlib.Tactic.Ring",
+        "import Mathlib.Tactic.NormNum",
+        "import Mathlib.Data.Rat.Defs",
+        "import Tactic.DiophSurface",
+        "import Generated.CubicSurfaceFibrations",
+        "import Generated.ConicParametrizations",
+        "import Generated.QuaternionAlgebraTheorems",
+        "",
+        "/-- Automated proof of cubic surface and conic fiber equivalence via dioph_surface. -/",
+        "theorem meta_surface_fiber_equiv (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = conic_fiber_x a n x y z := by",
+        "  dioph_surface [cubic_surface_poly, conic_fiber_x]",
+        "",
+        "/-- Automated proof of bilinear hyperbolic factorization via dioph_surface. -/",
+        "theorem meta_surface_bilinear_factor (a n x y z : ℚ) :",
+        "  conic_bilinear_x a n x y z = (a * x - n) * conic_fiber_x a n x y z := by",
+        "  dioph_surface [conic_bilinear_x, conic_fiber_x]",
+        "",
+        "/-- Automated proof of central discriminant expansion via dioph_surface. -/",
+        "theorem meta_conic_fibration_discriminant_sq (n x : ℚ) :",
+        "  conic_discriminant n x = n^2 * x^2 := by",
+        "  dioph_surface [conic_discriminant]",
+        "",
+        "/-- Automated proof of translated hyperbolic expansion via dioph_surface. -/",
+        "theorem meta_conic_fiber_translation (a n x y z : ℚ) :",
+        "  ((a * x - n) * y - n * x) * ((a * x - n) * z - n * x) =",
+        "  (a * x - n)^2 * y * z - n * x * (a * x - n) * (y + z) + (n * x)^2 := by",
+        "  dioph_surface",
+        "",
+        "/-- Automated proof of cubic surface S_3 permutation invariance (x, y) via dioph_surface. -/",
+        "theorem meta_cubic_surface_symm_xy (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = cubic_surface_poly a n y x z := by",
+        "  dioph_surface [cubic_surface_poly]",
+        "",
+        "/-- Automated proof of cubic surface S_3 permutation invariance (y, z) via dioph_surface. -/",
+        "theorem meta_cubic_surface_symm_yz (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = cubic_surface_poly a n x z y := by",
+        "  dioph_surface [cubic_surface_poly]",
+        "",
+        "/-- Automated proof of cubic surface S_3 permutation invariance (x, z) via dioph_surface. -/",
+        "theorem meta_cubic_surface_symm_xz (a n x y z : ℚ) :",
+        "  cubic_surface_poly a n x y z = cubic_surface_poly a n z y x := by",
+        "  dioph_surface [cubic_surface_poly]",
+        "/-- Automated proof of Legendre ternary quadratic form equivalence via dioph_surface. -/",
+        "theorem meta_legendre_conic_equiv (a n x y z : ℚ) :",
+        "  legendre_conic_form (a * x - n) (n * x) y z 1 = 4 * (a * x - n) * conic_fiber_x a n x y z := by",
+        "  dioph_surface [legendre_conic_form, conic_fiber_x]",
+        "",
+        "/-- Automated proof of hyperbolic form factorization via dioph_surface. -/",
+        "theorem meta_conic_hyperbolic_equiv (a n x y z : ℚ) :",
+        "  conic_hyperbolic_form (a * x - n) (n * x) y z = (a * x - n) * conic_fiber_x a n x y z := by",
+        "  dioph_surface [conic_hyperbolic_form, conic_fiber_x]",
+        "",
+        "/-- Automated proof of Euler four-square norm multiplicativity via dioph_surface. -/",
+        "theorem meta_euler_four_square (x0 x1 x2 x3 y0 y1 y2 y3 : ℚ) :",
+        "  (x0^2 + x1^2 + x2^2 + x3^2) * (y0^2 + y1^2 + y2^2 + y3^2) =",
+        "  (x0 * y0 - x1 * y1 - x2 * y2 - x3 * y3)^2 +",
+        "  (x0 * y1 + x1 * y0 + x2 * y3 - x3 * y2)^2 +",
+        "  (x0 * y2 - x1 * y3 + x2 * y0 + x3 * y1)^2 +",
+        "  (x0 * y3 + x1 * y2 - x2 * y1 + x3 * y0)^2 := by",
+        "  dioph_surface",
+        "",
+        "/-- Automated proof of generalized quaternion reduced norm multiplicativity via dioph_surface. -/",
+        "theorem meta_quat_general_norm_mult (x0 x1 x2 x3 y0 y1 y2 y3 a b : ℚ) :",
+        "  quat_nrd x0 x1 x2 x3 a b * quat_nrd y0 y1 y2 y3 a b =",
+        "  quat_nrd (x0 * y0 + a * x1 * y1 + b * x2 * y2 - a * b * x3 * y3)",
+        "           (x0 * y1 + x1 * y0 - b * x2 * y3 + b * x3 * y2)",
+        "           (x0 * y2 + x2 * y0 + a * x1 * y3 - a * x3 * y1)",
+        "           (x0 * y3 + x3 * y0 + x1 * y2 - x2 * y1)",
+        "           a b := by",
+        "  dioph_surface [quat_nrd]",
+        "",
+        "/-- Automated proof of quaternion norm scaling under scalar multiplication via dioph_surface. -/",
+        "theorem meta_quat_norm_scale (x0 x1 x2 x3 a b s : ℚ) :",
+        "  quat_nrd (s * x0) (s * x1) (s * x2) (s * x3) a b = s^2 * quat_nrd x0 x1 x2 x3 a b := by",
+        "  dioph_surface [quat_nrd]",
+        "",
+        "/-- Automated proof of conjugate quaternion norm preservation via dioph_surface. -/",
+        "theorem meta_quat_norm_conj (x0 x1 x2 x3 a b : ℚ) :",
+        "  quat_nrd x0 (-x1) (-x2) (-x3) a b = quat_nrd x0 x1 x2 x3 a b := by",
+        "  dioph_surface [quat_nrd]",
+        "",
+        "/-- Automated proof of Bézout conic factor elimination via dioph_surface. -/",
+        "theorem meta_bezout_conic_elimination (nx u v : ℚ) (h : u * v = nx^2) :",
+        "  u * v - nx^2 = 0 := by",
+        "  dioph_surface",
+        "",
+    ]
+    total_theorems = 14
+
+    # Add parametric sections on conic fiber
+    sections = generate_cubic_surface_parametric_sections()
+    for s in sections:
+        s_name = s["name"]
+        a_val = s["a"]
+        ident = s["identity"]
+        n_str = poly1d_to_lean(ident.n_poly, "k")
+        x_str = poly1d_to_lean(ident.X, "k")
+        y_str = poly1d_to_lean(ident.Y, "k")
+        z_str = poly1d_to_lean(ident.Z, "k")
+
+        lines.extend([
+            f"/-- Automated conic fiber vanishing for parametric family {s_name} via dioph_surface. -/",
+            f"theorem meta_conic_section_{s_name} (k : ℚ) :",
+            f"  conic_fiber_x {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
+            "  dioph_surface [conic_fiber_x]",
+            "",
+        ])
+        total_theorems += 1
+
+    # Add exact four-square certificates and rational points for resistant primes
+    for a in a_values:
+        for n in instances:
+            sol, _meta = optimal_schinzel_divisor_sieve(a=a, n=n)
+            if sol:
+                x, y, z = sol
+                d_val = a * x - n
+                nx_val = n * x
+                u_val = d_val * y - nx_val
+                v_val = d_val * z - nx_val
+
+                if u_val > 0 and v_val > 0:
+                    u0, u1, u2, u3 = decompose_four_squares(u_val)
+                    v0, v1, v2, v3 = decompose_four_squares(v_val)
+                    lines.extend([
+                        f"/-- Automated four-square norm decomposition for u-factor at a = {a}, n = {n} via dioph_surface. -/",
+                        f"theorem meta_four_sq_u_a{a}_n{n} :",
+                        f"  quat_nrd_std {u0} {u1} {u2} {u3} = {u_val} := by",
+                        "  dioph_surface [quat_nrd_std]",
+                        "",
+                        f"/-- Automated four-square norm decomposition for v-factor at a = {a}, n = {n} via dioph_surface. -/",
+                        f"theorem meta_four_sq_v_a{a}_n{n} :",
+                        f"  quat_nrd_std {v0} {v1} {v2} {v3} = {v_val} := by",
+                        "  dioph_surface [quat_nrd_std]",
+                        "",
+                        f"/-- Automated certified unit fraction decomposition for a = {a}, n = {n} via dioph_surface. -/",
+                        f"theorem meta_conic_cert_a{a}_n{n} :",
+                        f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                        "  dioph_surface",
+                        "",
+                    ])
+                    total_theorems += 3
+                else:
+                    lines.extend([
+                        f"/-- Automated certified unit fraction decomposition for a = {a}, n = {n} via dioph_surface. -/",
+                        f"theorem meta_conic_cert_a{a}_n{n} :",
+                        f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                        "  dioph_surface",
+                        "",
+                    ])
+                    total_theorems += 1
+
+    dioph_file = out / "DiophSurfaceTheorems.lean"
+    dioph_content = "\n".join(lines)
+    dioph_file.write_text(dioph_content, encoding="utf-8")
+    file_sha = hashlib.sha256(dioph_file.read_bytes()).hexdigest()
+
+    v_res = compile_lean_file(dioph_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "module": "DiophSurfaceTheorems",
+        "file": str(dioph_file),
+        "sha256": file_sha,
+        "total_theorems": total_theorems,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in dioph_content,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_dioph_surface_catalog_soundness(
+    catalog_summary: dict[str, Any], min_theorems: int = 40
+) -> tuple[bool, list[str]]:
+    """Audit Diophantine surface metatactic theorems catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(
+            f"DIOPH_SURFACE_THEOREMS_COMPILATION_FAILED: {catalog_summary.get('reasons')}"
+        )
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: Diophantine surface theorems catalog contains sorry")
+
+    total_thms = catalog_summary.get("total_theorems", 0)
+    if total_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_DIOPH_SURFACE_THEOREMS")
+    return (len(findings) == 0), findings

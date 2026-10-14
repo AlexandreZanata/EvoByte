@@ -18,3 +18,4 @@ import Generated.UniversalMultitermTheorems
 import Generated.CubicSurfaceFibrations
 import Generated.ConicParametrizations
 import Generated.QuaternionAlgebraTheorems
+import Generated.DiophSurfaceTheorems
