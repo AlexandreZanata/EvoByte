@@ -207,6 +207,26 @@ P87 confirms performance on a sealed blind split of large instances ($n > 10^5$)
 P88 executes a bounded meta-theorem campaign and exports the certified formal dossier (Done).
 All phases P81–P88 are Done.
 
+## Generalized modular resolution, meta-tactics & extended Schinzel program (D025)
+
+[P89–P96](phases/README.md#generalized-modular-resolution-meta-tactics--extended-schinzel-program-p89p96)
+define the formal extension following the conclusion of P81–P88 under D024.
+P81–P88 established 406 certified theorems in the Lean 4 kernel, integer divisibility lemmas in $\mathbb{N}$,
+optimal divisor sieves, and blind large-instance confirmation up to $n = 10^7$.
+P89–P96 extend the formal engine to custom Lean 4 metaprogramming tactics, Schinzel's generalized conjecture
+for arbitrary numerators $a \ge 4$, quadratic ring factorizations, extremal coordinate bounds,
+asymptotic modular density, and ultra-large instances ($10^7 \le n \le 10^9$).
+
+P89 implements custom Lean 4 metaprogramming tactics and macro rules (`evobyte_solve`).
+P90 formalizes the generalized Schinzel conjecture for arbitrary numerators $a \ge 4$ across congruence classes.
+P91 develops quadratic ring factorization and de-obstruction sieves for resistant residue classes.
+P92 proves extremal coordinate bounds and minimal denominator asymptotics in Lean 4.
+P93 synthesizes closed inductive towers proving asymptotic unit modular density.
+P94 proves universal $k$-term Egyptian fraction decompositions under strict coprimality.
+P95 confirms performance on a sealed blind split of ultra-large instances ($10^7 \le n \le 10^9$) under Holm FWER control.
+P96 executes a grand formal campaign with 500+ Lean 4 kernel theorems and certifies the final dossier.
+All phases remain Proposed until measured and accepted.
+
 ## Quantum track (experimental, deferred expansion)
 
 Existing quantum artifacts are preserved. New quantum development is

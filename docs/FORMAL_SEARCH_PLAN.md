@@ -468,3 +468,41 @@ P81 baseline indutivo -> P82 lemas de divisibilidade -> P83 divisores ótimos
 3. **Lemas formais em $\mathbb{N}$ e $\mathbb{Z}$:** lemas matemáticos devem certificar positividade e divisibilidade exata no kernel do Lean 4.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P87):** partição selada de instâncias diofantinas de grande escala ($n > 10^5$) sem vazamento para o crivo.
+
+## Programa de resolução modular generalizada, meta-táticas e conjectura de Schinzel ampliada em Lean 4 (P89–P96)
+
+**Programa proposto em 2026-10-14 (D025).** Sucede a conclusão de P81–P88 sob D024.
+O programa P81–P88 consolidou 406 teoremas formais em 10 módulos em `lean_proofs/Generated/`,
+provando lemas de divisibilidade inteira em $\mathbb{N}$, identidades quadráticas multiparâmetro,
+seleção de divisores ótimos, generalização multitermo com frações egípcias coprimas ($\gcd=1$)
+e confirmação estatística em grande escala ($10^5 \le n \le 10^7$).
+
+O programa P89–P96 estende os horizontes formais e algorítmicos do EvoByte para:
+1. **Meta-programação e táticas customizadas em Lean 4:** Desenvolvimento de táticas nativas
+   (`macro_rules`, `syntax`, `elab`) unificando o provador de igualdades e restrições diofantinas (`evobyte_solve`).
+2. **Generalização de Schinzel para numeradores arbitrários $a \ge 4$:** Formalização da decomposição
+   $\frac{a}{n} = \frac{1}{x} + \frac{1}{y} + \frac{1}{z}$ para qualquer numerador fixo sobre classes modulares.
+3. **Crivo algébrico em anéis quadráticos:** Desobstrução das classes resistentes módulo 840 via
+   fatoração em $\mathbb{Z}[\sqrt{d}]$ e corpos de classes abelianos.
+4. **Limites extremais certificados:** Prova formal de cotas superiores para as coordenadas $x, y, z$.
+5. **Densidade assintótica modular:** Prova formal de que a densidade de inteiros cobertos por identidades tende a $1$.
+6. **Coprimalidade multitermo universal:** Generalização para $k \ge 5$ termos unitários coprimos.
+7. **Confirmação cega em escala extrema:** Avaliação cega em instâncias ultra-grandes ($10^7 \le n \le 10^9$) com controle FWER.
+8. **Campanha formal unificada:** Dossiê certificado e expansão para 500+ teoremas no kernel do Lean 4.
+
+### Ordem e dependências de P89–P96
+
+```text
+P89 meta-táticas Lean 4 -> P90 generalização Schinzel -> P91 crivo anéis quadráticos
+ -> P92 limites extremais de coordenadas -> P93 densidade assintótica modular
+ -> P94 coprimalidade multitermo universal -> P95 confirmação extrema (10^7-10^9)
+ -> P96 grande campanha e dossiê certificado
+```
+
+### Regras do programa P89–P96
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P95):** partição selada de instâncias diofantinas de escala extrema ($10^7 \le n \le 10^9$) sem vazamento para o crivo.
