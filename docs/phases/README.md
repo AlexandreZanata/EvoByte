@@ -216,6 +216,29 @@ Execute one micro-task at a time. All phases remain Proposed until their explici
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.
 
+## Open problems formal discovery & proof-guided model program (P105–P112)
+
+[The open problems discovery contract](../FORMAL_SEARCH_PLAN.md#programa-de-descoberta-formal-em-problemas-abertos-e-teoria-de-modelos-guiada-por-provas-em-lean-4-p105p112)
+defines the formal research extension adopted under D028 following the conclusion of
+P97–P104. It tests EvoByte's methodology (lightweight conditional models, hermetic data
+orchestration, algebraic sieves, and Lean 4 formal proofs) directly on real open mathematical
+problems from the 100-problem catalog (`docs/research/open-problems.json`), including Erdős–Graham
+dense unit fraction sums and Pillai–Catalan exponential Diophantine equations.
+
+- [P105 — Banco de dados hermético de problemas abertos e tipagem formal dependente em Lean 4](P105-open-problems-formal-database.md).
+- [P106 — Motor de grafos de obstruções e espaços negativos de busca diofantina](P106-obstruction-graphs-data-engine.md).
+- [P107 — Modelo neural condicional leve (<= 5M) para proposição estruturada sem alucinação](P107-lightweight-conditional-proposer.md).
+- [P108 — Busca em árvore Monte Carlo (MCTS) guiada pelo kernel do Lean 4 no espaço de táticas](P108-tactic-tree-formal-mcts.md).
+- [P109 — Alvo aberto Erdős-Graham: formalização e busca de frações unitárias com denominadores densos](P109-erdos-graham-unit-fractions.md).
+- [P110 — Alvo aberto Pillai-Catalan: formas lineares em logaritmos e crivo de expoentes diofantinos](P110-pillai-exponential-diophantine.md).
+- [P111 — Confirmação cega multiproblema com controle estatístico rigoroso FWER (Bonferroni-Holm)](P111-multiproblem-blind-confirmation.md).
+- [P112 — Grande campanha de resolução e progresso formal com dossiê de literatura e 1.500+ teoremas](P112-open-problems-grand-dossier.md).
+
+Execute one micro-task at a time. All phases remain Proposed until their explicit
+gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
+conjecture resolution is claimed.
+
+
 ## Historical execution and acceptance contract
 
 ```text

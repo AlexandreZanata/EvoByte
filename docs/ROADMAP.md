@@ -54,6 +54,10 @@ P61–P70 ten isolated speculative hypotheses
 P71 fresh independent confirmation with selection control
 P72 one precise novelty nomination and certified campaign
 P73–P80 algebraic discovery & Lean 4 formal verification program (D021)
+P81–P88 inductive proof, lemma synthesis & tactic automation (D023)
+P89–P96 generalized modular resolution, meta-tactics & extended Schinzel program (D025)
+P97–P104 Diophantine algebraic geometry, cubic surface fibrations & invariants program (D027)
+P105–P112 open problems formal discovery & proof-guided model program (D028)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -241,7 +245,26 @@ P103 confirms performance on a sealed blind split of hyper-scale instances ($10^
 P104 executes a grand Diophantine geometry campaign and certifies the final dossier in Lean 4.
 All phases remain Proposed until measured and accepted.
 
+## Open problems formal discovery & proof-guided model program (D028)
+
+[P105–P112](phases/README.md#open-problems-formal-discovery--proof-guided-model-program-p105p112)
+define the formal research extension targeting the catalog of 100 open mathematical problems
+under D028. Testing our methodology on real open problems requires disciplined model design,
+sound data organization with dependent types, and rigorous formal certification in Lean 4 without
+false positives.
+
+P105 establishes a hermetic open problems database in Lean 4 with dependent type signatures.
+P106 implements relational obstruction graphs and negative search space pruning.
+P107 trains a lightweight conditional proposer model (<= 5M params) in VRAM without natural language hallucination.
+P108 implements formal Monte Carlo Tree Search (MCTS) in Lean 4 tactic spaces guided by kernel rewards.
+P109 targets the Erdős–Graham open conjecture on dense unit fraction decompositions.
+P110 targets the Pillai–Catalan exponential Diophantine equations via linear forms in logarithms.
+P111 confirms multi-problem blind performance under strict family-wise error rate control (Holm alpha = 0.01).
+P112 executes a grand open problems campaign certifying 1,500+ Lean 4 theorems and the final research dossier.
+All phases remain Proposed until measured and accepted.
+
 ## Quantum track (experimental, deferred expansion)
+
 
 Existing quantum artifacts are preserved. New quantum development is
 scheduled only after P21; Q13 still requires its own rediscovery gates.
