@@ -1,0 +1,12 @@
+{
+  "alpha": 0.01,
+  "max_baseline_y_steps": 1000,
+  "max_coord": 1000000000000000000,
+  "min_decisive_instances": 15,
+  "note": "P95 extreme-scale blind confirmation and statistical selection control frozen configuration. Validates generalized algebraic search engine on a cryptographically sealed blind partition of 100 extreme-scale instances (10^7 <= n <= 10^9) across 5 tracks (a in {4, 5, 6, 7, 8}) under strict Bonferroni-Holm family-wise error rate control (alpha=0.01).",
+  "phase": "P95",
+  "require_clean_tree": true,
+  "seed": 42,
+  "split_path": "experiments/p95-blind-split.json",
+  "split_sha256": "8ab6c9bbdfee90e56e5627de6eb9c1d18d68551e0f902ed4ef1c22c15685ae6c"
+}

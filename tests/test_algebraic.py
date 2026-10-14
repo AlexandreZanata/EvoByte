@@ -1050,3 +1050,113 @@ def test_p88_acceptance_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P88 configuration"):
         run_p88_meta_theorem_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p95_extreme_scale_blind_partition_integrity():
+    split_p = Path("experiments/p95-blind-split.json")
+    assert split_p.exists()
+    data = json.loads(split_p.read_text(encoding="utf-8"))
+    assert data["split_id"] == "p95-extreme-scale-blind-partition-v1"
+    assert data["min_n"] == 10**7
+    assert data["max_n"] == 10**9
+    assert data["count_per_track"] == 20
+    assert data["alpha"] == 0.01
+
+    expected_tracks = ["H_A4", "H_A5", "H_A6", "H_A7", "H_A8"]
+    for t_key in expected_tracks:
+        assert t_key in data["tracks"]
+        t_info = data["tracks"][t_key]
+        assert len(t_info["instances"]) == 20
+        for inst in t_info["instances"]:
+            assert inst["a"] == t_info["a"]
+            assert 10**7 <= inst["n"] <= 10**9
+
+
+def test_p95_sign_test_and_soundness():
+    from evobyte.algebraic import (
+        compute_sign_test_pvalue,
+        verify_extreme_scale_confirmation_soundness,
+    )
+
+    p_20_0 = compute_sign_test_pvalue(20, 0)
+    assert p_20_0 < 2e-6
+    p_10_10 = compute_sign_test_pvalue(10, 10)
+    assert p_10_10 == 1.0
+
+    sound, findings = verify_extreme_scale_confirmation_soundness({}, alpha=0.01)
+    assert sound is False
+    assert any("NO_TRACKS" in f for f in findings)
+
+
+def test_p95_confirmation_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p95_extreme_scale_audit
+    from evobyte.algebraic import generate_extreme_scale_blind_partition
+
+    # Quick smoke partition with 8 instances per track (satisfying alpha=0.05 under Holm)
+    smoke_part = generate_extreme_scale_blind_partition(
+        seed=101,
+        count_per_track=8,
+        min_n=10**7,
+        max_n=10**8,
+        numerators=[4, 5],
+        max_coord=10**18,
+        alpha=0.05,
+    )
+    smoke_split_p = tmp_path / "p95-smoke-split.json"
+    smoke_bytes = json.dumps(smoke_part, indent=2, sort_keys=True).encode("utf-8")
+    smoke_split_p.write_bytes(smoke_bytes)
+    smoke_sha = hashlib.sha256(smoke_bytes).hexdigest()
+
+    cfg = {
+        "phase": "P95",
+        "split_path": str(smoke_split_p),
+        "split_sha256": smoke_sha,
+        "alpha": 0.05,
+        "min_decisive_instances": 8,
+        "max_baseline_y_steps": 500,
+        "max_coord": 10**18,
+        "allow_dirty": True,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p95-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p95-out.json"
+
+    report = run_p95_extreme_scale_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P95"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["fwer_controlled"] is True
+    assert len(report["tracks"]) == 2
+    for t_info in report["tracks"].values():
+        assert t_info["outcome"] == "CONFIRMED"
+        assert t_info["all_verified"] is True
+
+
+def test_p95_confirmation_rejects_corrupted_split(tmp_path: Path):
+    from benchmarks.science_matrix import run_p95_extreme_scale_audit
+
+    split_p = Path("experiments/p95-blind-split.json")
+    cfg = {
+        "phase": "P95",
+        "split_path": str(split_p),
+        "split_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p95-bad-sha.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p95-out.json"
+
+    report = run_p95_extreme_scale_audit(cfg_p, out_p)
+    assert report["verdict"] == "REJECTED"
+    assert any("SPLIT_DRIFT" in f for f in report["findings"])
+
+
+def test_p95_confirmation_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p95_extreme_scale_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P95 configuration"):
+        run_p95_extreme_scale_audit(cfg_p, tmp_path / "out.json")
