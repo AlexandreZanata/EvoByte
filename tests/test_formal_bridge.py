@@ -621,3 +621,63 @@ def test_p92_extremal_bounds_catalog_export():
     sound, findings = verify_extremal_bounds_catalog_soundness(catalog, min_theorems=60)
     assert sound is True
     assert len(findings) == 0
+
+
+def test_p93_modular_asymptotic_density():
+    from evobyte.algebraic import compute_modular_asymptotic_density
+
+    # M=24: 1 resistant residue (1), density 23/24
+    d24 = compute_modular_asymptotic_density(24)
+    assert d24["resistant_count"] == 1
+    assert d24["density_str"] == "23/24"
+    assert d24["is_high_density"] is True
+
+    # M=840: 6 resistant residues, density 139/140
+    d840 = compute_modular_asymptotic_density(840)
+    assert d840["resistant_count"] == 6
+    assert d840["density_str"] == "139/140"
+    assert d840["density"] > 0.99
+
+
+def test_p93_asymptotic_density_convergence():
+    from evobyte.algebraic import evaluate_asymptotic_density_convergence
+
+    conv = evaluate_asymptotic_density_convergence([24, 120, 840, 27720, 720720])
+    assert conv["is_monotone"] is True
+    assert conv["converges_to_one"] is True
+    assert conv["terminal_density"] > 0.998
+
+
+def test_p93_empirical_sample_verification():
+    from evobyte.algebraic import empirical_density_sample_verification
+
+    emp = empirical_density_sample_verification(modulus=840, sample_size=5000, seed=42)
+    assert emp["consistent_within_error"] is True
+    assert abs(emp["empirical_density"] - emp["theoretical_density"]) < 0.01
+
+
+def test_p93_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p93_asymptotic_density_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P93 configuration"):
+        run_p93_asymptotic_density_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p93_asymptotic_density_catalog_export():
+    from evobyte.formal_bridge import (
+        export_asymptotic_density_theorems_catalog,
+        verify_asymptotic_density_catalog_soundness,
+    )
+
+    catalog = export_asymptotic_density_theorems_catalog(moduli=[24, 120, 840, 27720, 720720])
+    assert catalog["accepted"] is True
+    assert catalog["total_theorems"] >= 40
+    assert catalog["has_sorry"] is False
+    assert len(catalog["sha256"]) == 64
+
+    sound, findings = verify_asymptotic_density_catalog_soundness(catalog, min_theorems=40)
+    assert sound is True
+    assert len(findings) == 0

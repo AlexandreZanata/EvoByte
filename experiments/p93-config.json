@@ -1,0 +1,12 @@
+{
+  "phase": "P93",
+  "budget_sec": 300.0,
+  "min_theorems": 40,
+  "min_density": 0.95,
+  "moduli": [24, 48, 120, 240, 840, 1680, 2520, 5040, 27720, 55440, 720720],
+  "empirical_samples": 10000,
+  "project_dir": "lean_proofs",
+  "output_dir": "lean_proofs/Generated",
+  "seed": 42,
+  "require_clean_tree": true
+}

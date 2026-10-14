@@ -3153,3 +3153,122 @@ def evaluate_extremal_coordinate_bounds_coverage(
         "all_quadratic_bounded": quadratic_rate == 1.0,
         "results": results,
     }
+
+
+def compute_modular_asymptotic_density(modulus: int) -> dict[str, Any]:
+    """Calculate exact modular asymptotic density and resistant residue ratio (P93).
+
+    For composite modulus M:
+    - Resistant residues R(M) are the coprime quadratic residues.
+    - Non-resistant residues are covered by polynomial identities (divisibility, Mordell, etc.).
+    - Asymptotic density delta(M) = 1 - |R(M)| / M = (M - |R(M)|) / M.
+    """
+    if modulus < 2:
+        raise ValueError("Modulus must be >= 2")
+
+    resistant = get_resistant_residues(modulus)
+    r_count = len(resistant)
+    covered_count = modulus - r_count
+    dens_frac = Fraction(covered_count, modulus)
+    uncovered_frac = Fraction(r_count, modulus)
+    dens_float = float(dens_frac)
+    uncovered_float = float(uncovered_frac)
+
+    # Euler totient
+    coprimes = [x for x in range(1, modulus) if math.gcd(x, modulus) == 1]
+    phi = len(coprimes)
+    subgroup_index = phi // r_count if r_count > 0 else 1
+
+    return {
+        "modulus": modulus,
+        "resistant_residues": resistant,
+        "resistant_count": r_count,
+        "covered_count": covered_count,
+        "phi": phi,
+        "subgroup_index": subgroup_index,
+        "density_fraction": dens_frac,
+        "uncovered_fraction": uncovered_frac,
+        "density": dens_float,
+        "uncovered_density": uncovered_float,
+        "density_str": f"{dens_frac.numerator}/{dens_frac.denominator}",
+        "uncovered_str": f"{uncovered_frac.numerator}/{uncovered_frac.denominator}",
+        "is_high_density": dens_float >= 0.95,
+    }
+
+
+def evaluate_asymptotic_density_convergence(
+    moduli: list[int] | None = None,
+) -> dict[str, Any]:
+    """Evaluate convergence of asymptotic density delta(M) -> 1 as composite moduli grow (P93).
+
+    Verifies:
+    1. Density is monotonically non-decreasing: delta(M_{i+1}) >= delta(M_i).
+    2. High density: delta(M) >= 0.95 for all test moduli M >= 24.
+    3. Peak density: delta(M) > 0.998 for M >= 720720.
+    4. Uncovered density decay: mu(M) -> 0.
+    """
+    targets = moduli or [24, 48, 120, 240, 840, 1680, 2520, 5040, 27720, 55440, 720720]
+    records: list[dict[str, Any]] = []
+    prev_density = 0.0
+    monotone = True
+
+    for m in targets:
+        rec = compute_modular_asymptotic_density(m)
+        cur_density = rec["density"]
+        if cur_density < prev_density - 1e-9:
+            monotone = False
+        prev_density = cur_density
+        records.append(rec)
+
+    first_density = records[0]["density"] if records else 0.0
+    last_density = records[-1]["density"] if records else 0.0
+    last_uncovered = records[-1]["uncovered_density"] if records else 1.0
+
+    return {
+        "moduli_count": len(records),
+        "moduli": targets,
+        "records": records,
+        "is_monotone": monotone,
+        "initial_density": first_density,
+        "terminal_density": last_density,
+        "terminal_uncovered": last_uncovered,
+        "all_high_density": all(r["is_high_density"] for r in records),
+        "converges_to_one": last_density > 0.998 and last_uncovered < 0.002,
+    }
+
+
+def empirical_density_sample_verification(
+    modulus: int = 840, sample_size: int = 10000, seed: int = 42
+) -> dict[str, Any]:
+    """Empirically verify natural density delta(S) by pseudo-random integer sampling (P93).
+
+    Compares theoretical density (1 - |R(M)|/M) against empirical frequency of covered integers.
+    """
+    import random
+
+    rng = random.Random(seed)
+    resistant_set = set(get_resistant_residues(modulus))
+    theoretical_density = 1.0 - (len(resistant_set) / modulus)
+
+    covered_count = 0
+    max_val = 100 * modulus
+    for _ in range(sample_size):
+        val = rng.randint(1, max_val)
+        if (val % modulus) not in resistant_set:
+            covered_count += 1
+
+    empirical_density = float(covered_count / sample_size)
+    error = abs(empirical_density - theoretical_density)
+    std_err = math.sqrt(theoretical_density * (1.0 - theoretical_density) / sample_size)
+    consistent = error <= 3.5 * std_err
+
+    return {
+        "modulus": modulus,
+        "sample_size": sample_size,
+        "covered_count": covered_count,
+        "theoretical_density": theoretical_density,
+        "empirical_density": empirical_density,
+        "absolute_error": error,
+        "standard_error": std_err,
+        "consistent_within_error": consistent,
+    }
