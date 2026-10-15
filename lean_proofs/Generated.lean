@@ -20,3 +20,4 @@ import Generated.ConicParametrizations
 import Generated.QuaternionAlgebraTheorems
 import Generated.DiophSurfaceTheorems
 import Generated.SolutionMomentsTheorems
+import Generated.HigherPowerTheorems

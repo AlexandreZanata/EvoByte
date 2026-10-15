@@ -1,7 +1,7 @@
 # P102 — Generalização para potências superiores e frações diofantinas de grau k
 
-**Status:** Proposed.
-**Dependência:** P101 concluída; branch a partir de `codex/p97-p104-diophantine-geometry-program`.
+**Status:** Done.
+**Dependência:** P101 concluída; branch a partir de `codex/p101-solution-moments-asymptotics`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P101 concluída com teoremas de momentos assintóticos verificados; ambiente Lean 4 e Lake herméticos.
 **Branch:** `codex/p102-higher-power-diophantine-fractions`.
@@ -40,5 +40,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P102 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p102 higher power diophantine fractions"
 git push -u origin HEAD
-gh pr create --base codex/p97-p104-diophantine-geometry-program --title "feat(formal): implement p102 higher power diophantine fractions" --body-file /tmp/evobyte-p102-pr.md
+gh pr create --base codex/p101-solution-moments-asymptotics --title "feat(formal): implement p102 higher power diophantine fractions" --body-file /tmp/evobyte-p102-pr.md
 ```

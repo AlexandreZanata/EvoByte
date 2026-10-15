@@ -4196,3 +4196,69 @@ def evaluate_solution_moments_coverage() -> dict[str, Any]:
         "a": 4,
         "records": res["records"],
     }
+
+
+def solve_higher_power_fractions(
+    a: int = 4, n: int = 5, k: int = 2
+) -> tuple[int, int, int] | None:
+    """Solve Diophantine unit fraction equation for higher powers a / n^k = 1/x + 1/y + 1/z (P102)."""
+    n_k = n**k
+    sol, _meta = optimal_schinzel_divisor_sieve(a=a, n=n_k)
+    if sol:
+        return sol
+    base_sol, _ = optimal_schinzel_divisor_sieve(a=a, n=n)
+    if base_sol:
+        scale = n ** (k - 1)
+        return (base_sol[0] * scale, base_sol[1] * scale, base_sol[2] * scale)
+    return None
+
+
+def evaluate_higher_power_fractions_coverage(
+    a: int = 4,
+    powers: list[int] | None = None,
+    base_instances: list[int] | None = None,
+) -> dict[str, Any]:
+    """Verify higher-power Diophantine fractions coverage across exponents k >= 2 (P102)."""
+    t0 = time.perf_counter()
+    if powers is None:
+        powers = [2, 3, 4]
+    if base_instances is None:
+        base_instances = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+
+    total_tested = 0
+    total_solved = 0
+    results: list[dict[str, Any]] = []
+
+    for k in powers:
+        for n in base_instances:
+            total_tested += 1
+            sol = solve_higher_power_fractions(a=a, n=n, k=k)
+            if sol:
+                x, y, z = sol
+                n_k = n**k
+                eq_valid = (
+                    Fraction(a, n_k) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
+                )
+                if eq_valid and x > 0 and y > 0 and z > 0:
+                    total_solved += 1
+                    results.append({
+                        "a": a,
+                        "n": n,
+                        "k": k,
+                        "n_k": n_k,
+                        "solution": (x, y, z),
+                        "valid": True,
+                    })
+
+    success_rate = total_solved / max(1, total_tested)
+    return {
+        "a": a,
+        "powers": powers,
+        "base_instances": base_instances,
+        "total_tested": total_tested,
+        "total_solved": total_solved,
+        "success_rate": success_rate,
+        "all_solved": (total_solved == total_tested and total_tested > 0),
+        "results": results,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
