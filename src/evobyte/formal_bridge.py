@@ -5135,3 +5135,286 @@ def verify_higher_power_catalog_soundness(
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_HIGHER_POWER_THEOREMS")
     return (len(findings) == 0), findings
+
+
+def generate_hyper_scale_blind_partition(
+    seed: int = 42,
+    count_per_track: int = 20,
+    min_n: int = 10**9,
+    max_n: int = 10**12,
+    numerators: list[int] | None = None,
+    max_coord: int = 10**24,
+    alpha: float = 0.01,
+) -> dict[str, Any]:
+    """Deterministically generate sealed blind partition of hyper-scale Diophantine instances (P103).
+
+    Generates non-overlapping pseudo-random hyper-scale integers n in [min_n, max_n]
+    for each numerator track a in {4, 5, 6, 7, 8}.
+    Tracks:
+    - H_A4: Erdős–Straus hyper scale (a=4).
+    - H_A5: Sierpiński hyper scale (a=5).
+    - H_A6: Schinzel hyper scale (a=6).
+    - H_A7: Schinzel hyper scale (a=7).
+    - H_A8: Schinzel hyper scale (a=8).
+    """
+    import hashlib
+    import json
+    import random
+
+    if numerators is None:
+        numerators = [4, 5, 6, 7, 8]
+
+    rng = random.Random(seed)
+    tracks: dict[str, Any] = {}
+
+    for a in numerators:
+        track_key = f"H_A{a}"
+        name = (
+            "Erdős-Straus hyper scale (a=4)"
+            if a == 4
+            else ("Sierpiński hyper scale (a=5)" if a == 5 else f"Schinzel hyper scale (a={a})")
+        )
+        instances: list[dict[str, Any]] = []
+        seen_n: set[int] = set()
+        idx = 1
+        while len(instances) < count_per_track:
+            n_val = rng.randint(min_n, max_n)
+            if n_val in seen_n:
+                continue
+            seen_n.add(n_val)
+            instances.append(
+                {
+                    "instance_id": f"P103_A{a}_{idx:02d}",
+                    "a": a,
+                    "n": n_val,
+                    "min_n": min_n,
+                    "max_n": max_n,
+                }
+            )
+            idx += 1
+
+        tracks[track_key] = {
+            "name": name,
+            "a": a,
+            "instances_count": len(instances),
+            "instances": instances,
+        }
+
+    data_to_hash = {
+        "split_id": "p103-hyper-scale-blind-partition-v1",
+        "description": (
+            "Sealed blind partition of hyper-scale Diophantine instances (10^9 <= n <= 10^12) "
+            "for P103 confirmation under Bonferroni-Holm family-wise error rate control (alpha=0.01)."
+        ),
+        "seed": seed,
+        "count_per_track": count_per_track,
+        "min_n": min_n,
+        "max_n": max_n,
+        "numerators": numerators,
+        "max_coord": max_coord,
+        "alpha": alpha,
+        "tracks": tracks,
+    }
+    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
+    checksum = hashlib.sha256(canonical_bytes).hexdigest()
+
+    return {
+        **data_to_hash,
+        "checksum": checksum,
+    }
+
+
+def evaluate_hyper_scale_blind_confirmation(
+    partition: dict[str, Any],
+    alpha: float = 0.01,
+    min_decisive_instances: int = 15,
+    max_baseline_y_steps: int = 1000,
+    max_coord: int | None = 10**24,
+) -> dict[str, Any]:
+    """Execute sealed blind confirmation of generalized Diophantine engine across hyper-scale instances (P103)."""
+    import time
+    from evobyte.algebraic import (
+        check_schinzel,
+        check_schinzel_fractions,
+        compute_sign_test_pvalue,
+        matched_baseline_schinzel_solve,
+        schinzel_divisor_sieve,
+    )
+
+    t0 = time.perf_counter()
+    tracks_input = partition.get("tracks", {})
+    tracks_summary: dict[str, Any] = {}
+    track_pvalues: dict[str, float] = {}
+    findings: list[str] = []
+
+    for track_key, track_info in tracks_input.items():
+        a_val = int(track_info.get("a", 4))
+        instances = track_info.get("instances", [])
+        if not instances:
+            findings.append(f"EMPTY_TRACK: no instances in track {track_key}")
+            continue
+
+        t_track_0 = time.perf_counter()
+        wins = 0
+        losses = 0
+        ties = 0
+        pairs: list[dict[str, Any]] = []
+        diffs: list[float] = []
+        total_engine_cands = 0
+        total_base_cands = 0
+        all_engine_verified = True
+
+        for inst in instances:
+            n_val = int(inst["n"])
+            sol_engine, det_engine = schinzel_divisor_sieve(a_val, n_val, max_coord=max_coord)
+            if sol_engine is None:
+                findings.append(f"ENGINE_FAILED: track={track_key} n={n_val}")
+                all_engine_verified = False
+                continue
+
+            x_e, y_e, z_e = sol_engine
+            ok_int, _, _ = check_schinzel(a_val, n_val, x_e, y_e, z_e)
+            ok_frac, _, _ = check_schinzel_fractions(a_val, n_val, x_e, y_e, z_e)
+            if not (ok_int and ok_frac):
+                findings.append(f"CHECKER_FAILED: track={track_key} n={n_val} sol={sol_engine}")
+                all_engine_verified = False
+
+            c_engine = det_engine.get("candidates_evaluated", 0)
+            total_engine_cands += c_engine
+
+            sol_base, c_base, _ = matched_baseline_schinzel_solve(
+                a_val, n_val, max_y_steps=max_baseline_y_steps, max_coord=max_coord
+            )
+            total_base_cands += c_base
+
+            diff = c_base - c_engine
+            diffs.append(float(diff))
+
+            if sol_base is None or c_engine < c_base:
+                wins += 1
+                outcome = "win"
+            elif c_engine > c_base:
+                losses += 1
+                outcome = "loss"
+            else:
+                ties += 1
+                outcome = "tie"
+
+            pairs.append(
+                {
+                    "instance_id": inst.get("instance_id", str(n_val)),
+                    "n": n_val,
+                    "engine_candidates": c_engine,
+                    "baseline_candidates": c_base,
+                    "baseline_found": sol_base is not None,
+                    "outcome": outcome,
+                    "reduction": (c_base / c_engine) if c_engine > 0 else 1.0,
+                }
+            )
+
+        sign_p = compute_sign_test_pvalue(wins, losses)
+        track_pvalues[track_key] = sign_p
+        elapsed_track = time.perf_counter() - t_track_0
+
+        tracks_summary[track_key] = {
+            "name": track_info.get("name", track_key),
+            "a": a_val,
+            "instances_count": len(instances),
+            "wins": wins,
+            "losses": losses,
+            "ties": ties,
+            "decisive_count": wins + losses,
+            "raw_p_value": sign_p,
+            "total_engine_candidates": total_engine_cands,
+            "total_baseline_candidates": total_base_cands,
+            "candidate_reduction": (total_base_cands / total_engine_cands)
+            if total_engine_cands > 0
+            else 1.0,
+            "all_verified": all_engine_verified,
+            "elapsed_sec": elapsed_track,
+            "pairs": pairs,
+        }
+
+    # Bonferroni-Holm step-down procedure across all tracks
+    ordered_tracks = sorted(track_pvalues.items(), key=lambda kv: kv[1])
+    m_hypotheses = len(ordered_tracks)
+    holm_adjusted: dict[str, float] = {}
+    prev_adj = 0.0
+    for rank, (t_key, raw_p) in enumerate(ordered_tracks):
+        factor = m_hypotheses - rank
+        adj = min(1.0, max(prev_adj, raw_p * factor))
+        prev_adj = adj
+        holm_adjusted[t_key] = adj
+
+    for t_key, t_summary in tracks_summary.items():
+        adj_p = holm_adjusted.get(t_key, 1.0)
+        bonf_p = min(1.0, t_summary["raw_p_value"] * m_hypotheses)
+        t_summary["holm_adjusted_p_value"] = adj_p
+        t_summary["bonferroni_p_value"] = bonf_p
+
+        if t_summary["decisive_count"] < min_decisive_instances:
+            t_summary["outcome"] = "INCONCLUSIVE"
+            t_summary["reason"] = f"fewer than {min_decisive_instances} decisive instances"
+        elif (
+            adj_p < alpha and t_summary["all_verified"] and t_summary["wins"] > t_summary["losses"]
+        ):
+            t_summary["outcome"] = "CONFIRMED"
+            t_summary["reason"] = (
+                f"statistically superior under Holm FWER control (Holm p={adj_p:.4e} < alpha={alpha})"
+            )
+        else:
+            t_summary["outcome"] = "NULL"
+            t_summary["reason"] = f"no significant superiority (Holm p={adj_p:.4e})"
+
+    for t_key, t_summary in tracks_summary.items():
+        if t_summary.get("outcome") != "CONFIRMED":
+            findings.append(f"TRACK_NOT_CONFIRMED: {t_key} outcome is {t_summary.get('outcome')}")
+
+    total_instances = sum(ts["instances_count"] for ts in tracks_summary.values())
+    total_wins = sum(ts["wins"] for ts in tracks_summary.values())
+    total_losses = sum(ts["losses"] for ts in tracks_summary.values())
+    max_holm_p = max((ts["holm_adjusted_p_value"] for ts in tracks_summary.values()), default=1.0)
+
+    soundness, soundness_findings = verify_hyper_scale_confirmation_soundness(
+        {"tracks": tracks_summary, "findings": findings}, alpha=alpha
+    )
+
+    return {
+        "phase": "P103",
+        "tracks": tracks_summary,
+        "findings": findings,
+        "total_instances": total_instances,
+        "total_wins": total_wins,
+        "total_losses": total_losses,
+        "max_holm_p_value": max_holm_p,
+        "alpha": alpha,
+        "fwer_controlled": max_holm_p < alpha,
+        "all_confirmed": soundness,
+        "soundness_findings": soundness_findings,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+
+def verify_hyper_scale_confirmation_soundness(
+    confirmation_summary: dict[str, Any], alpha: float = 0.01
+) -> tuple[bool, list[str]]:
+    """Verify soundness and FWER control of P103 hyper-scale confirmation."""
+    findings: list[str] = list(confirmation_summary.get("findings", []))
+    tracks = confirmation_summary.get("tracks", {})
+    if not tracks:
+        findings.append("NO_TRACKS: no tracks present in confirmation summary")
+        return False, findings
+
+    for t_key, t_info in tracks.items():
+        if t_info.get("outcome") != "CONFIRMED":
+            findings.append(f"UNCONFIRMED_TRACK: {t_key} has outcome {t_info.get('outcome')}")
+        if t_info.get("holm_adjusted_p_value", 1.0) >= alpha:
+            findings.append(
+                f"FWER_EXCEEDED: {t_key} Holm p-value {t_info.get('holm_adjusted_p_value')} >= alpha {alpha}"
+            )
+        if not t_info.get("all_verified", False):
+            findings.append(f"UNVERIFIED_SOLUTIONS: {t_key} has unverified solutions")
+
+    return len(findings) == 0, findings

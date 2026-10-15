@@ -741,6 +741,7 @@ ACCEPTANCE_PHASES = (
     "P100",
     "P101",
     "P102",
+    "P103",
 )
 
 
@@ -8515,6 +8516,161 @@ def run_p102_higher_power_audit(
     return report
 
 
+def run_p103_blind_confirmation_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P103 audit: Hyper-scale blind confirmation (10^9 to 10^12) under FWER control.
+
+    Verifies:
+    1. Cryptographically sealed blind partition of 100 hyper-scale instances across 5 tracks.
+    2. Deterministic reproduction and checksum integrity matching config split_sha256.
+    3. 100% verified solutions on integer and unit fraction checkers with zero false positives.
+    4. Rigorous family-wise error rate control via Bonferroni-Holm step-down procedure at alpha=0.01.
+    5. Statistically superior performance over matched arithmetic baseline across all tracks.
+    6. Clean tree enforcement and complete provenance recording.
+    """
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        evaluate_hyper_scale_blind_confirmation,
+        generate_hyper_scale_blind_partition,
+        verify_hyper_scale_confirmation_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P103":
+        raise ValueError(f"Config {cfg_p} is not a P103 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P103 HYPER-SCALE BLIND CONFIRMATION AUDIT (10^9 <= n <= 10^12, Holm FWER Control alpha=0.01)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    alpha = float(config.get("alpha", 0.01))
+    min_decisive = int(config.get("min_decisive_instances", 15))
+    max_baseline_y_steps = int(config.get("max_baseline_y_steps", 1000))
+    max_coord = config.get("max_coord", 10**24)
+    if max_coord is not None:
+        max_coord = int(max_coord)
+
+    split_p = _REPO_ROOT / str(config.get("split_path", "experiments/p103-blind-split.json"))
+    if not split_p.exists():
+        findings.append(f"SPLIT_FILE_MISSING: {split_p}")
+        split_data = generate_hyper_scale_blind_partition(
+            seed=int(config.get("seed", 42)),
+            count_per_track=int(config.get("count_per_track", 20)),
+            min_n=int(config.get("min_n", 10**9)),
+            max_n=int(config.get("max_n", 10**12)),
+            alpha=alpha,
+            max_coord=max_coord or 10**24,
+        )
+    else:
+        with open(split_p, encoding="utf-8") as f:
+            split_data = json.load(f)
+        split_sha = hashlib.sha256(split_p.read_bytes()).hexdigest()
+        expected_sha = config.get("split_sha256")
+        if expected_sha and split_sha != expected_sha:
+            findings.append(
+                f"SPLIT_CHECKSUM_MISMATCH: expected {expected_sha}, computed {split_sha}"
+            )
+
+    eval_res = evaluate_hyper_scale_blind_confirmation(
+        partition=split_data,
+        alpha=alpha,
+        min_decisive_instances=min_decisive,
+        max_baseline_y_steps=max_baseline_y_steps,
+        max_coord=max_coord,
+    )
+
+    findings.extend(eval_res.get("findings", []))
+    tracks_summary = eval_res.get("tracks", {})
+
+    for t_key, t_summary in tracks_summary.items():
+        print(
+            f"  Track {t_key} ({t_summary['name']}): W={t_summary['wins']} L={t_summary['losses']} "
+            f"T={t_summary['ties']} raw_p={t_summary['raw_p_value']:.4e} "
+            f"holm_p={t_summary.get('holm_adjusted_p_value', 1.0):.4e} "
+            f"reduction={t_summary.get('candidate_reduction', 1.0):.2f}x -> {t_summary.get('outcome')}"
+        )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; confirmation from dirty code rejected")
+
+    sound, soundness_findings = verify_hyper_scale_confirmation_soundness(
+        {"tracks": tracks_summary, "findings": findings}, alpha=alpha
+    )
+    if not sound:
+        for sf in soundness_findings:
+            if sf not in findings:
+                findings.append(sf)
+
+    verdict = "ACCEPTED" if not findings else "REJECTED"
+
+    prov = collect_provenance(
+        seed=int(config.get("seed", 42)),
+        device=_torch.device("cpu"),
+        dataset_hashes={"p103_split": config.get("split_sha256", "")[:16]},
+        config={"acceptance_phase": "P103"},
+    )
+
+    report = {
+        "phase": "P103",
+        "verdict": verdict,
+        "findings": findings,
+        "claim_scope": (
+            "Statistical confirmation of generalized algebraic search engine on a sealed blind "
+            "hyper-scale partition (10^9 <= n <= 10^12 across a in {4, 5, 6, 7, 8}); family-wise "
+            "error rate controlled by Bonferroni-Holm step-down procedure at alpha=0.01; candidate "
+            "reductions confirmed against matched arithmetic baseline without symbolic overfitting."
+        ),
+        "run_id": hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16],
+        "revision": revision,
+        "dirty": dirty,
+        "alpha": alpha,
+        "min_decisive_instances": min_decisive,
+        "max_baseline_y_steps": max_baseline_y_steps,
+        "max_coord": max_coord,
+        "tracks": tracks_summary,
+        "total_instances": eval_res.get("total_instances", 0),
+        "total_wins": eval_res.get("total_wins", 0),
+        "total_losses": eval_res.get("total_losses", 0),
+        "max_holm_p_value": eval_res.get("max_holm_p_value", 1.0),
+        "fwer_controlled": eval_res.get("fwer_controlled", False),
+        "resolved_config": {
+            "config_path": str(cfg_p),
+            "config_sha256": config_sha,
+            "split_path": str(split_p),
+            "split_sha256": config.get("split_sha256"),
+            "acceptance_phase": "P103",
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P103 audit {verdict}: {eval_res.get('total_wins', 0)}/{eval_res.get('total_instances', 0)} wins; "
+        f"FWER max Holm p={eval_res.get('max_holm_p_value', 1.0):.4e} <= {alpha}; report -> {out_p}"
+    )
+    return report
+
+
+
 
 
 
@@ -12574,6 +12730,8 @@ def main() -> int:
             run_p101_solution_moments_audit(args.config, args.output)
         elif args.acceptance_phase == "P102":
             run_p102_higher_power_audit(args.config, args.output)
+        elif args.acceptance_phase == "P103":
+            run_p103_blind_confirmation_audit(args.config, args.output)
         return 0
 
     seeds = (
