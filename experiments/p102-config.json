@@ -1,0 +1,13 @@
+{
+  "a_values": [4],
+  "base_instances": [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71],
+  "budget_sec": 3600.0,
+  "min_theorems": 40,
+  "note": "P102 higher power Diophantine fractions in Lean 4. Verifies varietal fibration symmetries, hyperbolic factorizations, homogeneous power scaling transfer identities, parametric sections in Q[k] for quadratic and cubic denominators, and exact unit fraction decompositions for exponents k in {2, 3, 4} with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "phase": "P102",
+  "powers": [2, 3, 4],
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42
+}

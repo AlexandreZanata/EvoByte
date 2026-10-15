@@ -381,6 +381,13 @@ def export_formal_proof_catalog(
         "Generated.QuadraticRingTheorems",
         "Generated.ExtremalBoundsTheorems",
         "Generated.AsymptoticDensityTheorems",
+        "Generated.UniversalMultitermTheorems",
+        "Generated.CubicSurfaceFibrations",
+        "Generated.ConicParametrizations",
+        "Generated.QuaternionAlgebraTheorems",
+        "Generated.DiophSurfaceTheorems",
+        "Generated.SolutionMomentsTheorems",
+        "Generated.HigherPowerTheorems",
     ]
     existing_content = root_file.read_text(encoding="utf-8") if root_file.exists() else ""
     imports_to_write = []
@@ -388,6 +395,10 @@ def export_formal_proof_catalog(
         file_name = mod.split(".")[-1] + ".lean"
         if f"import {mod}" in existing_content or (out / file_name).exists():
             imports_to_write.append(f"import {mod}")
+    for line in existing_content.splitlines():
+        line_s = line.strip()
+        if line_s.startswith("import ") and line_s not in imports_to_write:
+            imports_to_write.append(line_s)
     if not imports_to_write:
         imports_to_write = [f"import {mod}" for mod in base_imports[:4]]
     root_src = "-- EvoByte Root Generated Formal Library\n" + "\n".join(imports_to_write) + "\n"
@@ -4607,4 +4618,520 @@ def verify_solution_moments_catalog_soundness(
 
     if len(catalog_summary.get("sha256", "")) != 64:
         findings.append("INVALID_CHECKSUM_SOLUTION_MOMENTS_THEOREMS")
+    return (len(findings) == 0), findings
+
+
+def export_higher_power_theorems_catalog(
+    project_dir: str | Path = "lean_proofs",
+    output_dir: str | Path = "lean_proofs/Generated",
+    powers: list[int] | None = None,
+    base_instances: list[int] | None = None,
+    a_values: list[int] | None = None,
+) -> dict[str, Any]:
+    """Generate and verify the formal higher power Diophantine fractions catalog in Lean 4 (P102).
+
+    Covers:
+    1. Varietal Fibration Symmetries and Hyperbolic Factorizations for higher powers.
+    2. Homogeneous Power Scaling Transfer Identities and Polynomial Equivalences.
+    3. Parametric Rational Sections in Q[k] for n^2 and n^3.
+    4. Exact Rational Unit Fraction Certificates for k = 2 (n^2).
+    5. Exact Rational Unit Fraction Certificates for k = 3 (n^3).
+    6. Exact Rational Unit Fraction Certificates for k = 4 (n^4).
+    7. Monic Algebraic Factorizations for Exponents 2, 3, 4, 5, 6.
+    """
+    import hashlib
+    import time
+    from fractions import Fraction
+    from evobyte.algebraic import solve_higher_power_fractions
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    out = Path(output_dir).resolve()
+    out.mkdir(parents=True, exist_ok=True)
+
+    if powers is None:
+        powers = [2, 3, 4]
+    if base_instances is None:
+        base_instances = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
+    if a_values is None:
+        a_values = [4]
+
+    lines: list[str] = [
+        "/-",
+        "EvoByte Formal Proof Catalog: Higher Power Diophantine Fractions (P102).",
+        "Formalized algebraic varietal fibrations, homogeneous scaling identities,",
+        "and certified unit fraction decompositions for a / n^k = 1/x + 1/y + 1/z (k >= 2).",
+        "-/",
+        "",
+        "import Mathlib.Tactic.Ring",
+        "import Mathlib.Tactic.NormNum",
+        "import Mathlib.Data.Rat.Defs",
+        "import Tactic.DiophSurface",
+        "",
+        "def higher_power_surface (a n : ℚ) (k : ℕ) (x y z : ℚ) : ℚ :=",
+        "  a * x * y * z - (n^k) * (x * y + y * z + z * x)",
+        "",
+        "def higher_power_surface_sq (a n x y z : ℚ) : ℚ :=",
+        "  a * x * y * z - (n^2) * (x * y + y * z + z * x)",
+        "",
+        "def higher_power_surface_cube (a n x y z : ℚ) : ℚ :=",
+        "  a * x * y * z - (n^3) * (x * y + y * z + z * x)",
+        "",
+        "def higher_power_surface_quartic (a n x y z : ℚ) : ℚ :=",
+        "  a * x * y * z - (n^4) * (x * y + y * z + z * x)",
+        "",
+        "/- Section 1: Varietal Fibration Symmetries and Hyperbolic Factorizations. -/",
+        "",
+        "/-- Surface symmetry under (x, y) swap for k = 2. -/",
+        "theorem higher_power_surface_sq_symm_xy : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_sq a n x y z = higher_power_surface_sq a n y x z := by",
+        "  intro a n x y z; dsimp [higher_power_surface_sq]; ring",
+        "",
+        "/-- Surface symmetry under (y, z) swap for k = 2. -/",
+        "theorem higher_power_surface_sq_symm_yz : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_sq a n x y z = higher_power_surface_sq a n x z y := by",
+        "  intro a n x y z; dsimp [higher_power_surface_sq]; ring",
+        "",
+        "/-- Surface cyclic symmetry for k = 2. -/",
+        "theorem higher_power_surface_sq_cyclic : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_sq a n x y z = higher_power_surface_sq a n y z x := by",
+        "  intro a n x y z; dsimp [higher_power_surface_sq]; ring",
+        "",
+        "/-- Surface symmetry under (x, y) swap for k = 3. -/",
+        "theorem higher_power_surface_cube_symm_xy : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_cube a n x y z = higher_power_surface_cube a n y x z := by",
+        "  intro a n x y z; dsimp [higher_power_surface_cube]; ring",
+        "",
+        "/-- Surface symmetry under (y, z) swap for k = 3. -/",
+        "theorem higher_power_surface_cube_symm_yz : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_cube a n x y z = higher_power_surface_cube a n x z y := by",
+        "  intro a n x y z; dsimp [higher_power_surface_cube]; ring",
+        "",
+        "/-- Surface cyclic symmetry for k = 3. -/",
+        "theorem higher_power_surface_cube_cyclic : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_cube a n x y z = higher_power_surface_cube a n y z x := by",
+        "  intro a n x y z; dsimp [higher_power_surface_cube]; ring",
+        "",
+        "/-- Surface symmetry under (x, y) swap for k = 4. -/",
+        "theorem higher_power_surface_quartic_symm_xy : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_quartic a n x y z = higher_power_surface_quartic a n y x z := by",
+        "  intro a n x y z; dsimp [higher_power_surface_quartic]; ring",
+        "",
+        "/-- Surface symmetry under (y, z) swap for k = 4. -/",
+        "theorem higher_power_surface_quartic_symm_yz : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_quartic a n x y z = higher_power_surface_quartic a n x z y := by",
+        "  intro a n x y z; dsimp [higher_power_surface_quartic]; ring",
+        "",
+        "/-- Surface cyclic symmetry for k = 4. -/",
+        "theorem higher_power_surface_quartic_cyclic : ∀ a n x y z : ℚ,",
+        "    higher_power_surface_quartic a n x y z = higher_power_surface_quartic a n y z x := by",
+        "  intro a n x y z; dsimp [higher_power_surface_quartic]; ring",
+        "",
+        "/-- Hyperbolic factorization for quadratic denominator n^2. -/",
+        "theorem hyperbolic_factorization_power2 : ∀ n x y : ℚ,",
+        "    (4 * x - n^2) * (4 * y - n^2) - n^4 = 16 * x * y - 4 * n^2 * (x + y) := by",
+        "  intro n x y; ring",
+        "",
+        "/-- Hyperbolic factorization for cubic denominator n^3. -/",
+        "theorem hyperbolic_factorization_power3 : ∀ n x y : ℚ,",
+        "    (4 * x - n^3) * (4 * y - n^3) - n^6 = 16 * x * y - 4 * n^3 * (x + y) := by",
+        "  intro n x y; ring",
+        "",
+        "/-- Hyperbolic factorization for quartic denominator n^4. -/",
+        "theorem hyperbolic_factorization_power4 : ∀ n x y : ℚ,",
+        "    (4 * x - n^4) * (4 * y - n^4) - n^8 = 16 * x * y - 4 * n^4 * (x + y) := by",
+        "  intro n x y; ring",
+        "",
+        "/-- Higher power identity decomposition for n^2. -/",
+        "theorem higher_power_identity_sq : ∀ n x y z : ℚ,",
+        "    4 * (x * y * z) - n^2 * (y * z + x * z + x * y) = x * ((4 * y - n^2) * z - n^2 * y) - n^2 * y * z := by",
+        "  intro n x y z; ring",
+        "",
+        "/-- Higher power identity decomposition for n^3. -/",
+        "theorem higher_power_identity_cube : ∀ n x y z : ℚ,",
+        "    4 * (x * y * z) - n^3 * (y * z + x * z + x * y) = x * ((4 * y - n^3) * z - n^3 * y) - n^3 * y * z := by",
+        "  intro n x y z; ring",
+        "",
+        "/-- Higher power identity decomposition for n^4. -/",
+        "theorem higher_power_identity_quartic : ∀ n x y z : ℚ,",
+        "    4 * (x * y * z) - n^4 * (y * z + x * z + x * y) = x * ((4 * y - n^4) * z - n^4 * y) - n^4 * y * z := by",
+        "  intro n x y z; ring",
+        "",
+    ]
+    total_theorems = 15
+
+    # Section 2: Homogeneous Power Scaling Transfer Identities
+    lines.extend([
+        "/- Section 2: Homogeneous Power Scaling Transfer Identities. -/",
+        "",
+        "/-- Polynomial homogeneous scaling equivalence for k = 2. -/",
+        "theorem power_scaling_poly_identity_sq : ∀ a n x y z : ℚ,",
+        "    a * (n * x) * (n * y) * (n * z) - (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) =",
+        "    n^3 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+        "  intro a n x y z; ring",
+        "",
+        "/-- Polynomial homogeneous scaling equivalence for k = 3. -/",
+        "theorem power_scaling_poly_identity_cube : ∀ a n x y z : ℚ,",
+        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) - (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) =",
+        "    n^6 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+        "  intro a n x y z; ring",
+        "",
+        "/-- Polynomial homogeneous scaling equivalence for k = 4. -/",
+        "theorem power_scaling_poly_identity_quartic : ∀ a n x y z : ℚ,",
+        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) - (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) =",
+        "    n^9 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+        "  intro a n x y z; ring",
+        "",
+        "/-- Polynomial homogeneous scaling equivalence for k = 5. -/",
+        "theorem power_scaling_poly_identity_quintic : ∀ a n x y z : ℚ,",
+        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) - (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) =",
+        "    n^12 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+        "  intro a n x y z; ring",
+        "",
+        "/-- Polynomial homogeneous scaling equivalence for k = 6. -/",
+        "theorem power_scaling_poly_identity_sextic : ∀ a n x y z : ℚ,",
+        "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) - (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) =",
+        "    n^15 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+        "  intro a n x y z; ring",
+        "",
+        "/-- Transfer theorem from linear base solution to quadratic denominator n^2. -/",
+        "theorem power_scaling_transfer_sq : ∀ a n x y z : ℚ,",
+        "    a * x * y * z = n * (x * y + y * z + z * x) →",
+        "    a * (n * x) * (n * y) * (n * z) = (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) := by",
+        "  intro a n x y z h",
+        "  calc",
+        "    a * (n * x) * (n * y) * (n * z) = n^3 * (a * x * y * z) := by ring",
+        "    _ = n^3 * (n * (x * y + y * z + z * x)) := by rw [h]",
+        "    _ = (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) := by ring",
+        "",
+        "/-- Transfer theorem from linear base solution to cubic denominator n^3. -/",
+        "theorem power_scaling_transfer_cube : ∀ a n x y z : ℚ,",
+        "    a * x * y * z = n * (x * y + y * z + z * x) →",
+        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by",
+        "  intro a n x y z h",
+        "  calc",
+        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = n^6 * (a * x * y * z) := by ring",
+        "    _ = n^6 * (n * (x * y + y * z + z * x)) := by rw [h]",
+        "    _ = (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by ring",
+        "",
+        "/-- Transfer theorem from linear base solution to quartic denominator n^4. -/",
+        "theorem power_scaling_transfer_quartic : ∀ a n x y z : ℚ,",
+        "    a * x * y * z = n * (x * y + y * z + z * x) →",
+        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by",
+        "  intro a n x y z h",
+        "  calc",
+        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = n^9 * (a * x * y * z) := by ring",
+        "    _ = n^9 * (n * (x * y + y * z + z * x)) := by rw [h]",
+        "    _ = (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by ring",
+        "",
+        "/-- Transfer theorem from linear base solution to quintic denominator n^5. -/",
+        "theorem power_scaling_transfer_quintic : ∀ a n x y z : ℚ,",
+        "    a * x * y * z = n * (x * y + y * z + z * x) →",
+        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by",
+        "  intro a n x y z h",
+        "  calc",
+        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = n^12 * (a * x * y * z) := by ring",
+        "    _ = n^12 * (n * (x * y + y * z + z * x)) := by rw [h]",
+        "    _ = (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by ring",
+        "",
+        "/-- Transfer theorem from linear base solution to sextic denominator n^6. -/",
+        "theorem power_scaling_transfer_sextic : ∀ a n x y z : ℚ,",
+        "    a * x * y * z = n * (x * y + y * z + z * x) →",
+        "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) = (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) := by",
+        "  intro a n x y z h",
+        "  calc",
+        "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) = n^15 * (a * x * y * z) := by ring",
+        "    _ = n^15 * (n * (x * y + y * z + z * x)) := by rw [h]",
+        "    _ = (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) := by ring",
+        "",
+        "/-- Transfer theorem from quadratic solution to quartic denominator n^4. -/",
+        "theorem power_scaling_transfer_sq_to_quartic : ∀ a n x y z : ℚ,",
+        "    a * x * y * z = (n^2) * (x * y + y * z + z * x) →",
+        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = (n^4) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by",
+        "  intro a n x y z h",
+        "  calc",
+        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = n^6 * (a * x * y * z) := by ring",
+        "    _ = n^6 * ((n^2) * (x * y + y * z + z * x)) := by rw [h]",
+        "    _ = (n^4) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by ring",
+        "",
+        "/-- Transfer theorem from cubic solution to sextic denominator n^6. -/",
+        "theorem power_scaling_transfer_cube_to_sextic : ∀ a n x y z : ℚ,",
+        "    a * x * y * z = (n^3) * (x * y + y * z + z * x) →",
+        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = (n^6) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by",
+        "  intro a n x y z h",
+        "  calc",
+        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = n^9 * (a * x * y * z) := by ring",
+        "    _ = n^9 * ((n^3) * (x * y + y * z + z * x)) := by rw [h]",
+        "    _ = (n^6) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by ring",
+        "",
+        "/-- Transfer theorem from quadratic solution to sextic denominator n^6. -/",
+        "theorem power_scaling_transfer_sq_to_sextic : ∀ a n x y z : ℚ,",
+        "    a * x * y * z = (n^2) * (x * y + y * z + z * x) →",
+        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = (n^6) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by",
+        "  intro a n x y z h",
+        "  calc",
+        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = n^12 * (a * x * y * z) := by ring",
+        "    _ = n^12 * ((n^2) * (x * y + y * z + z * x)) := by rw [h]",
+        "    _ = (n^6) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by ring",
+        "",
+    ])
+    total_theorems += 13
+
+    # Section 3: Parametric Rational Sections in Q[k] for n^2 and n^3
+    parametric_families = [
+        {
+            "name": "es_even",
+            "a": 4,
+            "n": "((2 : ℚ) + (2 : ℚ) * k)",
+            "x": "((2 : ℚ) + (1 : ℚ) * k)",
+            "y": "((2 : ℚ) + (3 : ℚ) * k + (1 : ℚ) * k ^ 2)",
+            "z": "((1 : ℚ) + (1 : ℚ) * k)",
+        },
+        {
+            "name": "es_mod3_r2",
+            "a": 4,
+            "n": "((2 : ℚ) + (3 : ℚ) * k)",
+            "x": "((1 : ℚ) + (1 : ℚ) * k)",
+            "y": "((2 : ℚ) + (3 : ℚ) * k)",
+            "z": "((2 : ℚ) + (5 : ℚ) * k + (3 : ℚ) * k ^ 2)",
+        },
+        {
+            "name": "es_mod4_r2",
+            "a": 4,
+            "n": "((2 : ℚ) + (4 : ℚ) * k)",
+            "x": "((1 : ℚ) + (1 : ℚ) * k)",
+            "y": "((2 : ℚ) + (6 : ℚ) * k + (4 : ℚ) * k ^ 2)",
+            "z": "((2 : ℚ) + (6 : ℚ) * k + (4 : ℚ) * k ^ 2)",
+        },
+        {
+            "name": "es_mod4_r3",
+            "a": 4,
+            "n": "((3 : ℚ) + (4 : ℚ) * k)",
+            "x": "((1 : ℚ) + (1 : ℚ) * k)",
+            "y": "((6 : ℚ) + (14 : ℚ) * k + (8 : ℚ) * k ^ 2)",
+            "z": "((6 : ℚ) + (14 : ℚ) * k + (8 : ℚ) * k ^ 2)",
+        },
+        {
+            "name": "es_mod6_r2",
+            "a": 4,
+            "n": "((2 : ℚ) + (6 : ℚ) * k)",
+            "x": "((1 : ℚ) + (2 : ℚ) * k)",
+            "y": "((2 : ℚ) + (6 : ℚ) * k)",
+            "z": "((2 : ℚ) + (10 : ℚ) * k + (12 : ℚ) * k ^ 2)",
+        },
+        {
+            "name": "es_mod6_r3",
+            "a": 4,
+            "n": "((3 : ℚ) + (6 : ℚ) * k)",
+            "x": "((2 : ℚ) + (2 : ℚ) * k)",
+            "y": "((2 : ℚ) + (6 : ℚ) * k + (4 : ℚ) * k ^ 2)",
+            "z": "((3 : ℚ) + (6 : ℚ) * k)",
+        },
+        {
+            "name": "es_mod6_r4",
+            "a": 4,
+            "n": "((4 : ℚ) + (6 : ℚ) * k)",
+            "x": "((2 : ℚ) + (2 : ℚ) * k)",
+            "y": "((4 : ℚ) + (10 : ℚ) * k + (6 : ℚ) * k ^ 2)",
+            "z": "((4 : ℚ) + (6 : ℚ) * k)",
+        },
+        {
+            "name": "es_mod8_r4",
+            "a": 4,
+            "n": "((4 : ℚ) + (8 : ℚ) * k)",
+            "x": "((2 : ℚ) + (4 : ℚ) * k)",
+            "y": "((3 : ℚ) + (6 : ℚ) * k)",
+            "z": "((6 : ℚ) + (12 : ℚ) * k)",
+        },
+        {
+            "name": "es_mod12_r6",
+            "a": 4,
+            "n": "((6 : ℚ) + (12 : ℚ) * k)",
+            "x": "((2 : ℚ) + (3 : ℚ) * k)",
+            "y": "((12 : ℚ) + (42 : ℚ) * k + (36 : ℚ) * k ^ 2)",
+            "z": "((12 : ℚ) + (42 : ℚ) * k + (36 : ℚ) * k ^ 2)",
+        },
+        {
+            "name": "es_mod12_r8",
+            "a": 4,
+            "n": "((8 : ℚ) + (12 : ℚ) * k)",
+            "x": "((4 : ℚ) + (6 : ℚ) * k)",
+            "y": "((6 : ℚ) + (9 : ℚ) * k)",
+            "z": "((12 : ℚ) + (18 : ℚ) * k)",
+        },
+        {
+            "name": "sierpinski_mod4_r2",
+            "a": 5,
+            "n": "((2 : ℚ) + (4 : ℚ) * k)",
+            "x": "((1 : ℚ) + (1 : ℚ) * k)",
+            "y": "((1 : ℚ) + (3 : ℚ) * k + (2 : ℚ) * k ^ 2)",
+            "z": "((2 : ℚ) + (4 : ℚ) * k)",
+        },
+        {
+            "name": "sierpinski_mod5_r0",
+            "a": 5,
+            "n": "((5 : ℚ) + (5 : ℚ) * k)",
+            "x": "((2 : ℚ) + (2 : ℚ) * k)",
+            "y": "((3 : ℚ) + (3 : ℚ) * k)",
+            "z": "((6 : ℚ) + (6 : ℚ) * k)",
+        },
+    ]
+
+    lines.extend([
+        "/- Section 3: Parametric Rational Sections in Q[k] for n^2 and n^3. -/",
+        "",
+    ])
+    for fam in parametric_families:
+        name = fam["name"]
+        a_f = fam["a"]
+        n_f = fam["n"]
+        x_f = fam["x"]
+        y_f = fam["y"]
+        z_f = fam["z"]
+        lines.extend([
+            f"/-- Parametric quadratic section on higher power surface for family {name}. -/",
+            f"theorem higher_power_section_sq_{name} : ∀ k : ℚ,",
+            f"    higher_power_surface_sq {a_f} ({n_f}) (({n_f}) * ({x_f})) (({n_f}) * ({y_f})) (({n_f}) * ({z_f})) = 0 := by",
+            "  intro k",
+            "  dsimp [higher_power_surface_sq]",
+            "  ring",
+            "",
+            f"/-- Parametric cubic section on higher power surface for family {name}. -/",
+            f"theorem higher_power_section_cube_{name} : ∀ k : ℚ,",
+            f"    higher_power_surface_cube {a_f} ({n_f}) (({n_f})^2 * ({x_f})) (({n_f})^2 * ({y_f})) (({n_f})^2 * ({z_f})) = 0 := by",
+            "  intro k",
+            "  dsimp [higher_power_surface_cube]",
+            "  ring",
+            "",
+        ])
+        total_theorems += 2
+
+    # Section 4: Exact Rational Unit Fraction Certificates for k = 2 (n^2)
+    lines.extend([
+        "/- Section 4: Exact Rational Unit Fraction Certificates for k = 2 (n^2). -/",
+        "",
+    ])
+    for n_val in base_instances:
+        sol = solve_higher_power_fractions(a=4, n=n_val, k=2)
+        if sol is not None:
+            x_sol, y_sol, z_sol = sol
+            lines.extend([
+                f"/-- Certified unit fraction decomposition for 4 / {n_val}^2 (k = 2). -/",
+                f"theorem higher_power_cert_k2_n{n_val} :",
+                f"    (4 : ℚ) / {n_val * n_val} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
+                "  norm_num",
+                "",
+            ])
+            total_theorems += 1
+
+    # Section 5: Exact Rational Unit Fraction Certificates for k = 3 (n^3)
+    lines.extend([
+        "/- Section 5: Exact Rational Unit Fraction Certificates for k = 3 (n^3). -/",
+        "",
+    ])
+    for n_val in range(2, 17):
+        sol = solve_higher_power_fractions(a=4, n=n_val, k=3)
+        if sol is not None:
+            x_sol, y_sol, z_sol = sol
+            lines.extend([
+                f"/-- Certified unit fraction decomposition for 4 / {n_val}^3 (k = 3). -/",
+                f"theorem higher_power_cert_k3_n{n_val} :",
+                f"    (4 : ℚ) / {n_val**3} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
+                "  norm_num",
+                "",
+            ])
+            total_theorems += 1
+
+    # Section 6: Exact Rational Unit Fraction Certificates for k = 4 (n^4)
+    lines.extend([
+        "/- Section 6: Exact Rational Unit Fraction Certificates for k = 4 (n^4). -/",
+        "",
+    ])
+    for n_val in range(2, 16):
+        sol = solve_higher_power_fractions(a=4, n=n_val, k=4)
+        if sol is not None:
+            x_sol, y_sol, z_sol = sol
+            lines.extend([
+                f"/-- Certified unit fraction decomposition for 4 / {n_val}^4 (k = 4). -/",
+                f"theorem higher_power_cert_k4_n{n_val} :",
+                f"    (4 : ℚ) / {n_val**4} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
+                "  norm_num",
+                "",
+            ])
+            total_theorems += 1
+
+    # Section 7: Monic Algebraic Factorizations for Exponents 2, 3, 4, 5, 6
+    lines.extend([
+        "/- Section 7: Monic Algebraic Factorizations for Exponents 2, 3, 4, 5, 6. -/",
+        "",
+        "/-- Monic decomposition for quadratic denominator n^2. -/",
+        "theorem higher_power_monic_decomp_2 : ∀ n x y : ℚ,",
+        "    (x - n^2) * (y - n^2) = x * y - n^2 * (x + y) + n^4 := by",
+        "  intro n x y; ring",
+        "",
+        "/-- Monic decomposition for cubic denominator n^3. -/",
+        "theorem higher_power_monic_decomp_3 : ∀ n x y : ℚ,",
+        "    (x - n^3) * (y - n^3) = x * y - n^3 * (x + y) + n^6 := by",
+        "  intro n x y; ring",
+        "",
+        "/-- Monic decomposition for quartic denominator n^4. -/",
+        "theorem higher_power_monic_decomp_4 : ∀ n x y : ℚ,",
+        "    (x - n^4) * (y - n^4) = x * y - n^4 * (x + y) + n^8 := by",
+        "  intro n x y; ring",
+        "",
+        "/-- Monic decomposition for quintic denominator n^5. -/",
+        "theorem higher_power_monic_decomp_5 : ∀ n x y : ℚ,",
+        "    (x - n^5) * (y - n^5) = x * y - n^5 * (x + y) + n^10 := by",
+        "  intro n x y; ring",
+        "",
+        "/-- Monic decomposition for sextic denominator n^6. -/",
+        "theorem higher_power_monic_decomp_6 : ∀ n x y : ℚ,",
+        "    (x - n^6) * (y - n^6) = x * y - n^6 * (x + y) + n^12 := by",
+        "  intro n x y; ring",
+        "",
+    ])
+    total_theorems += 5
+
+    hp_file = out / "HigherPowerTheorems.lean"
+    hp_content = "\n".join(lines)
+    hp_file.write_text(hp_content, encoding="utf-8")
+    file_sha = hashlib.sha256(hp_file.read_bytes()).hexdigest()
+
+    v_res = compile_lean_file(hp_file, project_dir=proj)
+    accepted = v_res.get("accepted", False)
+    reasons = list(v_res.get("reasons", []))
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "module": "HigherPowerTheorems",
+        "file": str(hp_file),
+        "sha256": file_sha,
+        "total_theorems": total_theorems,
+        "accepted": accepted,
+        "reasons": reasons,
+        "has_sorry": "sorry" in reasons or "sorry" in hp_content,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_higher_power_catalog_soundness(
+    catalog_summary: dict[str, Any], min_theorems: int = 40
+) -> tuple[bool, list[str]]:
+    """Audit higher power Diophantine fractions theorems catalog for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if not catalog_summary.get("accepted", False):
+        findings.append(
+            f"HIGHER_POWER_THEOREMS_COMPILATION_FAILED: {catalog_summary.get('reasons')}"
+        )
+
+    if catalog_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: higher power theorems catalog contains sorry")
+
+    total_thms = catalog_summary.get("total_theorems", 0)
+    if total_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
+
+    if len(catalog_summary.get("sha256", "")) != 64:
+        findings.append("INVALID_CHECKSUM_HIGHER_POWER_THEOREMS")
     return (len(findings) == 0), findings
