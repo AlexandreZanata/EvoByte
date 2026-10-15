@@ -1243,3 +1243,104 @@ def test_p103_hyper_scale_audit_smoke(tmp_path: Path):
     assert report["total_instances"] == 20
     assert report["total_wins"] == 20
     assert report["fwer_controlled"] is True
+
+
+def test_p104_audit_diophantine_geometry_formal_campaign():
+    from evobyte.formal_bridge import (
+        audit_diophantine_geometry_formal_campaign,
+        verify_diophantine_geometry_formal_campaign_soundness,
+    )
+
+    res = audit_diophantine_geometry_formal_campaign(verify_lake=False)
+    assert res["total_modules"] == 22
+    assert res["total_theorems"] >= 1200
+    assert res["total_theorems"] == 1441
+    assert res["has_sorry"] is False
+    assert len(res["missing_modules"]) == 0
+    assert len(res["hash_chain"]) == 22
+    assert (
+        res["final_chain_hash"]
+        == "777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906"
+    )
+
+    # Soundness verification test with mocked lake pass
+    res_copy = dict(res, lake_passed=True)
+    sound, findings = verify_diophantine_geometry_formal_campaign_soundness(
+        res_copy, min_theorems=1200, min_modules=20
+    )
+    assert sound is True
+    assert len(findings) == 0
+
+
+def test_p104_dossier_integrity():
+    dossier_p = Path("docs/research/p104-diophantine-geometry-dossier.md")
+    assert dossier_p.exists()
+    content = dossier_p.read_text(encoding="utf-8")
+    assert "1.441" in content
+    assert "22" in content
+    assert "777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906" in content
+    assert "P104" in content
+
+
+def test_p104_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p104_grand_formal_campaign_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P104 configuration"):
+        run_p104_grand_formal_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p104_soundness_rejections():
+    from evobyte.formal_bridge import verify_diophantine_geometry_formal_campaign_soundness
+
+    bad_summary = {
+        "missing_modules": ["MissingModule.lean"],
+        "has_sorry": True,
+        "total_theorems": 100,
+        "lake_passed": False,
+        "lake_reasons": ["build error"],
+        "hash_chain": [{"module": "A"}],
+    }
+    sound, findings = verify_diophantine_geometry_formal_campaign_soundness(
+        bad_summary, min_theorems=1200, min_modules=20
+    )
+    assert sound is False
+    assert any("MISSING_MODULES" in f for f in findings)
+    assert any("SORRY_DETECTED" in f for f in findings)
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+    assert any("INCOMPLETE_HASH_CHAIN" in f for f in findings)
+
+
+@needs_lean
+def test_p104_grand_formal_campaign_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p104_grand_formal_campaign_audit
+
+    cfg = {
+        "phase": "P104",
+        "min_theorems": 1200,
+        "min_modules": 20,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "dossier_path": "docs/research/p104-diophantine-geometry-dossier.md",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p104-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p104-out.json"
+
+    report = run_p104_grand_formal_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P104"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_modules"] == 22
+    assert report["total_formal_theorems"] >= 1200
+    assert report["total_formal_theorems"] == 1441
+    assert report["has_sorry"] is False
+    assert (
+        report["final_chain_hash"]
+        == "777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906"
+    )
