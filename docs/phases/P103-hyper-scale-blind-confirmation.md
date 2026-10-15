@@ -1,7 +1,7 @@
 # P103 — Confirmação cega em hiper-escala (10^9 a 10^12) sob controle FWER
 
-**Status:** Proposed.
-**Dependência:** P102 concluída; branch a partir de `codex/p97-p104-diophantine-geometry-program`.
+**Status:** Done.
+**Dependência:** P102 concluída; branch a partir de `codex/p102-higher-power-diophantine-fractions`.
 **Owner:** agente executor; revisor estatístico/matemático nos gates indicados.
 **Pré-requisito:** P102 concluída com identidades de potências superiores verificadas; ambiente de teste estritamente cego e selado.
 **Branch:** `codex/p103-hyper-scale-blind-confirmation`.
@@ -39,5 +39,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P103 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p103 hyper scale blind confirmation"
 git push -u origin HEAD
-gh pr create --base codex/p97-p104-diophantine-geometry-program --title "feat(formal): implement p103 hyper scale blind confirmation" --body-file /tmp/evobyte-p103-pr.md
+gh pr create --base codex/p102-higher-power-diophantine-fractions --title "feat(formal): implement p103 hyper scale blind confirmation" --body-file /tmp/evobyte-p103-pr.md
 ```

@@ -1163,3 +1163,83 @@ def test_p102_higher_power_audit_smoke(tmp_path: Path):
     assert report["total_formal_theorems"] >= 40
     assert report["has_sorry"] is False
     assert report["module"] == "HigherPowerTheorems"
+
+
+def test_p103_hyper_scale_blind_partition_determinism():
+    from evobyte.formal_bridge import generate_hyper_scale_blind_partition
+
+    part1 = generate_hyper_scale_blind_partition(seed=42, count_per_track=5)
+    part2 = generate_hyper_scale_blind_partition(seed=42, count_per_track=5)
+    assert part1["checksum"] == part2["checksum"]
+    assert len(part1["tracks"]) == 5
+    for t_info in part1["tracks"].values():
+        assert len(t_info["instances"]) == 5
+        for inst in t_info["instances"]:
+            assert 10**9 <= inst["n"] <= 10**12
+
+
+def test_p103_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p103_blind_confirmation_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P103 configuration"):
+        run_p103_blind_confirmation_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p103_hyper_scale_soundness_rejections():
+    from evobyte.formal_bridge import verify_hyper_scale_confirmation_soundness
+
+    bad_1 = {"findings": ["SOME_ERROR"], "tracks": {}}
+    sound_1, f_1 = verify_hyper_scale_confirmation_soundness(bad_1)
+    assert not sound_1
+
+    bad_2 = {
+        "findings": [],
+        "tracks": {
+            "H_A4": {"outcome": "NULL", "holm_adjusted_p_value": 0.05, "all_verified": True}
+        },
+    }
+    sound_2, f_2 = verify_hyper_scale_confirmation_soundness(bad_2, alpha=0.01)
+    assert not sound_2
+    assert any("UNCONFIRMED_TRACK" in x for x in f_2)
+    assert any("FWER_EXCEEDED" in x for x in f_2)
+
+
+def test_p103_hyper_scale_audit_smoke(tmp_path: Path):
+    import hashlib
+
+    from benchmarks.science_matrix import run_p103_blind_confirmation_audit
+    from evobyte.formal_bridge import generate_hyper_scale_blind_partition
+
+    split = generate_hyper_scale_blind_partition(
+        seed=42, count_per_track=10, numerators=[4, 5], alpha=0.01
+    )
+    smoke_bytes = json.dumps(split, indent=2, sort_keys=True).encode("utf-8")
+    split_p = tmp_path / "smoke-split.json"
+    split_p.write_bytes(smoke_bytes)
+    split_sha = hashlib.sha256(smoke_bytes).hexdigest()
+
+    cfg = {
+        "phase": "P103",
+        "alpha": 0.01,
+        "min_decisive_instances": 8,
+        "max_baseline_y_steps": 100,
+        "max_coord": 10**24,
+        "split_path": str(split_p),
+        "split_sha256": split_sha,
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p103-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p103-out.json"
+
+    report = run_p103_blind_confirmation_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P103"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_instances"] == 20
+    assert report["total_wins"] == 20
+    assert report["fwer_controlled"] is True
