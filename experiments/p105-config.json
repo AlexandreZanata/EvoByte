@@ -1,0 +1,15 @@
+{
+  "acceptance_phase": "P105",
+  "blind_ratio": 0.30,
+  "budget_sec": 3600.0,
+  "database_path": "docs/research/open-problems.json",
+  "generated_path": "lean_proofs/Generated/OpenProblemSignatures.lean",
+  "min_problems": 100,
+  "min_theorems": 100,
+  "note": "P105 hermetic open problems database and Lean 4 dependent signatures audit. 100 problems partitioned (70 dev, 30 sealed blind), with 108 verified Lean 4 theorems and zero sorry.",
+  "phase": "P105",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42,
+  "verify_lake": true
+}

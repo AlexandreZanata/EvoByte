@@ -1,6 +1,6 @@
 # P105 — Banco de dados hermético de problemas abertos e tipagem formal dependente em Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P104 concluída; branch a partir de `codex/p105-p112-open-problems-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P104 concluída com campanha geométrica formal e consolidação na branch main; catálogo de 100 problemas abertos em `docs/research/open-problems.json` íntegro.
