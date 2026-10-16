@@ -1,0 +1,14 @@
+{
+  "a": 4,
+  "acceptance_phase": "P106",
+  "budget_sec": 3600.0,
+  "generated_path": "lean_proofs/Generated/ObstructionGraphTheorems.lean",
+  "min_pruning_ratio": 0.50,
+  "min_theorems": 60,
+  "note": "P106 Diophantine obstruction graphs and negative search space data engine audit. Relational indexing with > 50% candidate reduction, zero false negatives, and 92 verified Lean 4 theorems.",
+  "phase": "P106",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42,
+  "verify_lake": true
+}
