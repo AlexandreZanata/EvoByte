@@ -1,6 +1,6 @@
 # P98 — Síntese de parametrizações racionais via princípio local-global
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P97 concluída; branch a partir de `codex/p97-p104-diophantine-geometry-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P97 concluída com teoremas de superfícies cúbicas compilados sem sorry; ambiente Lean 4 e Lake herméticos.

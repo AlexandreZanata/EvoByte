@@ -866,3 +866,481 @@ def test_p97_cubic_surface_audit_smoke(tmp_path: Path):
     assert report["total_formal_theorems"] >= 40
     assert report["has_sorry"] is False
     assert report["module"] == "CubicSurfaceFibrations"
+
+
+def test_p98_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p98_conic_parametrizations_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P98 configuration"):
+        run_p98_conic_parametrizations_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p98_algebraic_coverage():
+    from fractions import Fraction
+    from evobyte.algebraic import (
+        evaluate_conic_legendre_parametrization,
+        evaluate_local_global_conic_solvability,
+        evaluate_conic_parametrizations_coverage,
+    )
+
+    pt = evaluate_conic_legendre_parametrization(4, 1009, 253, Fraction(1, 1))
+    assert pt["verified"] is True
+    assert pt["conic_valid"] is True
+    assert pt["legendre_valid"] is True
+
+    lg = evaluate_local_global_conic_solvability(4, 1009, 253)
+    assert lg["verified"] is True
+    assert lg["real_solvable"] is True
+    assert lg["padic_unobstructed"] is True
+
+    cov = evaluate_conic_parametrizations_coverage()
+    assert cov["all_verified"] is True
+    assert cov["success_rate"] == 1.0
+
+
+@needs_lean
+def test_p98_conic_parametrizations_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p98_conic_parametrizations_audit
+
+    cfg = {
+        "phase": "P98",
+        "min_theorems": 40,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "output_dir": "lean_proofs/Generated",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p98-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p98-out.json"
+
+    report = run_p98_conic_parametrizations_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P98"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 40
+    assert report["has_sorry"] is False
+    assert report["module"] == "ConicParametrizations"
+
+
+def test_p99_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p99_quaternion_sieve_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P99 configuration"):
+        run_p99_quaternion_sieve_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p99_quaternion_sieve_soundness_rejections():
+    from evobyte.formal_bridge import verify_quaternion_algebra_catalog_soundness
+
+    bad_cat_1 = {"accepted": False, "reasons": ["Error"]}
+    sound_1, f_1 = verify_quaternion_algebra_catalog_soundness(bad_cat_1)
+    assert not sound_1
+    assert any("QUATERNION_ALGEBRA_THEOREMS_COMPILATION_FAILED" in x for x in f_1)
+
+    bad_cat_2 = {"accepted": True, "has_sorry": True, "total_theorems": 50, "sha256": "a" * 64}
+    sound_2, f_2 = verify_quaternion_algebra_catalog_soundness(bad_cat_2)
+    assert not sound_2
+    assert any("SORRY_DETECTED" in x for x in f_2)
+
+    bad_cat_3 = {"accepted": True, "has_sorry": False, "total_theorems": 10, "sha256": "a" * 64}
+    sound_3, f_3 = verify_quaternion_algebra_catalog_soundness(bad_cat_3)
+    assert not sound_3
+    assert any("INSUFFICIENT_THEOREMS" in x for x in f_3)
+
+
+@needs_lean
+def test_p99_quaternion_sieve_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p99_quaternion_sieve_audit
+
+    cfg = {
+        "phase": "P99",
+        "min_theorems": 40,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "output_dir": "lean_proofs/Generated",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p99-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p99-out.json"
+
+    report = run_p99_quaternion_sieve_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P99"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 40
+    assert report["has_sorry"] is False
+    assert report["module"] == "QuaternionAlgebraTheorems"
+
+
+def test_p100_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p100_dioph_surface_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P100 configuration"):
+        run_p100_dioph_surface_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p100_dioph_surface_soundness_rejections():
+    from evobyte.formal_bridge import verify_dioph_surface_catalog_soundness
+
+    bad_cat_1 = {"accepted": False, "reasons": ["Error"]}
+    sound_1, f_1 = verify_dioph_surface_catalog_soundness(bad_cat_1)
+    assert not sound_1
+    assert any("DIOPH_SURFACE_THEOREMS_COMPILATION_FAILED" in x for x in f_1)
+
+    bad_cat_2 = {"accepted": True, "has_sorry": True, "total_theorems": 50, "sha256": "a" * 64}
+    sound_2, f_2 = verify_dioph_surface_catalog_soundness(bad_cat_2)
+    assert not sound_2
+    assert any("SORRY_DETECTED" in x for x in f_2)
+
+    bad_cat_3 = {"accepted": True, "has_sorry": False, "total_theorems": 10, "sha256": "a" * 64}
+    sound_3, f_3 = verify_dioph_surface_catalog_soundness(bad_cat_3)
+    assert not sound_3
+    assert any("INSUFFICIENT_THEOREMS" in x for x in f_3)
+
+
+@needs_lean
+def test_p100_dioph_surface_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p100_dioph_surface_audit
+
+    cfg = {
+        "phase": "P100",
+        "min_theorems": 40,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "output_dir": "lean_proofs/Generated",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p100-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p100-out.json"
+
+    report = run_p100_dioph_surface_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P100"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 40
+    assert report["has_sorry"] is False
+    assert report["module"] == "DiophSurfaceTheorems"
+
+
+def test_p101_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p101_solution_moments_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P101 configuration"):
+        run_p101_solution_moments_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p101_solution_moments_soundness_rejections():
+    from evobyte.formal_bridge import verify_solution_moments_catalog_soundness
+
+    bad_cat_1 = {"accepted": False, "reasons": ["Error"]}
+    sound_1, f_1 = verify_solution_moments_catalog_soundness(bad_cat_1)
+    assert not sound_1
+    assert any("SOLUTION_MOMENTS_THEOREMS_COMPILATION_FAILED" in x for x in f_1)
+
+    bad_cat_2 = {"accepted": True, "has_sorry": True, "total_theorems": 50, "sha256": "a" * 64}
+    sound_2, f_2 = verify_solution_moments_catalog_soundness(bad_cat_2)
+    assert not sound_2
+    assert any("SORRY_DETECTED" in x for x in f_2)
+
+    bad_cat_3 = {"accepted": True, "has_sorry": False, "total_theorems": 10, "sha256": "a" * 64}
+    sound_3, f_3 = verify_solution_moments_catalog_soundness(bad_cat_3)
+    assert not sound_3
+    assert any("INSUFFICIENT_THEOREMS" in x for x in f_3)
+
+
+def test_p101_algebraic_coverage():
+    from evobyte.algebraic import evaluate_solution_moments_coverage
+
+    cov = evaluate_solution_moments_coverage()
+    assert cov["verified"] is True
+    assert len(cov["records"]) == 4
+
+
+@needs_lean
+def test_p101_solution_moments_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p101_solution_moments_audit
+
+    cfg = {
+        "phase": "P101",
+        "min_theorems": 40,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "output_dir": "lean_proofs/Generated",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p101-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p101-out.json"
+
+    report = run_p101_solution_moments_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P101"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 40
+    assert report["has_sorry"] is False
+    assert report["module"] == "SolutionMomentsTheorems"
+
+
+def test_p102_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p102_higher_power_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P102 configuration"):
+        run_p102_higher_power_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p102_higher_power_soundness_rejections():
+    from evobyte.formal_bridge import verify_higher_power_catalog_soundness
+
+    bad_cat_1 = {"accepted": False, "reasons": ["Error"]}
+    sound_1, f_1 = verify_higher_power_catalog_soundness(bad_cat_1)
+    assert not sound_1
+    assert any("HIGHER_POWER_THEOREMS_COMPILATION_FAILED" in x for x in f_1)
+
+    bad_cat_2 = {"accepted": True, "has_sorry": True, "total_theorems": 50, "sha256": "a" * 64}
+    sound_2, f_2 = verify_higher_power_catalog_soundness(bad_cat_2)
+    assert not sound_2
+    assert any("SORRY_DETECTED" in x for x in f_2)
+
+    bad_cat_3 = {"accepted": True, "has_sorry": False, "total_theorems": 10, "sha256": "a" * 64}
+    sound_3, f_3 = verify_higher_power_catalog_soundness(bad_cat_3)
+    assert not sound_3
+    assert any("INSUFFICIENT_THEOREMS" in x for x in f_3)
+
+
+def test_p102_algebraic_coverage():
+    from evobyte.algebraic import evaluate_higher_power_fractions_coverage
+
+    cov = evaluate_higher_power_fractions_coverage(powers=[2, 3, 4], base_instances=[2, 3, 5, 7, 11])
+    assert cov["all_solved"] is True
+    assert cov["total_tested"] == 15
+    assert cov["total_solved"] == 15
+    assert cov["success_rate"] == 1.0
+
+
+@needs_lean
+def test_p102_higher_power_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p102_higher_power_audit
+
+    cfg = {
+        "phase": "P102",
+        "min_theorems": 40,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "output_dir": "lean_proofs/Generated",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p102-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p102-out.json"
+
+    report = run_p102_higher_power_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P102"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_formal_theorems"] >= 40
+    assert report["has_sorry"] is False
+    assert report["module"] == "HigherPowerTheorems"
+
+
+def test_p103_hyper_scale_blind_partition_determinism():
+    from evobyte.formal_bridge import generate_hyper_scale_blind_partition
+
+    part1 = generate_hyper_scale_blind_partition(seed=42, count_per_track=5)
+    part2 = generate_hyper_scale_blind_partition(seed=42, count_per_track=5)
+    assert part1["checksum"] == part2["checksum"]
+    assert len(part1["tracks"]) == 5
+    for t_info in part1["tracks"].values():
+        assert len(t_info["instances"]) == 5
+        for inst in t_info["instances"]:
+            assert 10**9 <= inst["n"] <= 10**12
+
+
+def test_p103_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p103_blind_confirmation_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P103 configuration"):
+        run_p103_blind_confirmation_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p103_hyper_scale_soundness_rejections():
+    from evobyte.formal_bridge import verify_hyper_scale_confirmation_soundness
+
+    bad_1 = {"findings": ["SOME_ERROR"], "tracks": {}}
+    sound_1, f_1 = verify_hyper_scale_confirmation_soundness(bad_1)
+    assert not sound_1
+
+    bad_2 = {
+        "findings": [],
+        "tracks": {
+            "H_A4": {"outcome": "NULL", "holm_adjusted_p_value": 0.05, "all_verified": True}
+        },
+    }
+    sound_2, f_2 = verify_hyper_scale_confirmation_soundness(bad_2, alpha=0.01)
+    assert not sound_2
+    assert any("UNCONFIRMED_TRACK" in x for x in f_2)
+    assert any("FWER_EXCEEDED" in x for x in f_2)
+
+
+def test_p103_hyper_scale_audit_smoke(tmp_path: Path):
+    import hashlib
+
+    from benchmarks.science_matrix import run_p103_blind_confirmation_audit
+    from evobyte.formal_bridge import generate_hyper_scale_blind_partition
+
+    split = generate_hyper_scale_blind_partition(
+        seed=42, count_per_track=10, numerators=[4, 5], alpha=0.01
+    )
+    smoke_bytes = json.dumps(split, indent=2, sort_keys=True).encode("utf-8")
+    split_p = tmp_path / "smoke-split.json"
+    split_p.write_bytes(smoke_bytes)
+    split_sha = hashlib.sha256(smoke_bytes).hexdigest()
+
+    cfg = {
+        "phase": "P103",
+        "alpha": 0.01,
+        "min_decisive_instances": 8,
+        "max_baseline_y_steps": 100,
+        "max_coord": 10**24,
+        "split_path": str(split_p),
+        "split_sha256": split_sha,
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p103-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p103-out.json"
+
+    report = run_p103_blind_confirmation_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P103"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_instances"] == 20
+    assert report["total_wins"] == 20
+    assert report["fwer_controlled"] is True
+
+
+def test_p104_audit_diophantine_geometry_formal_campaign():
+    from evobyte.formal_bridge import (
+        audit_diophantine_geometry_formal_campaign,
+        verify_diophantine_geometry_formal_campaign_soundness,
+    )
+
+    res = audit_diophantine_geometry_formal_campaign(verify_lake=False)
+    assert res["total_modules"] == 22
+    assert res["total_theorems"] >= 1200
+    assert res["total_theorems"] == 1441
+    assert res["has_sorry"] is False
+    assert len(res["missing_modules"]) == 0
+    assert len(res["hash_chain"]) == 22
+    assert (
+        res["final_chain_hash"]
+        == "777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906"
+    )
+
+    # Soundness verification test with mocked lake pass
+    res_copy = dict(res, lake_passed=True)
+    sound, findings = verify_diophantine_geometry_formal_campaign_soundness(
+        res_copy, min_theorems=1200, min_modules=20
+    )
+    assert sound is True
+    assert len(findings) == 0
+
+
+def test_p104_dossier_integrity():
+    dossier_p = Path("docs/research/p104-diophantine-geometry-dossier.md")
+    assert dossier_p.exists()
+    content = dossier_p.read_text(encoding="utf-8")
+    assert "1.441" in content
+    assert "22" in content
+    assert "777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906" in content
+    assert "P104" in content
+
+
+def test_p104_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p104_grand_formal_campaign_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P104 configuration"):
+        run_p104_grand_formal_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p104_soundness_rejections():
+    from evobyte.formal_bridge import verify_diophantine_geometry_formal_campaign_soundness
+
+    bad_summary = {
+        "missing_modules": ["MissingModule.lean"],
+        "has_sorry": True,
+        "total_theorems": 100,
+        "lake_passed": False,
+        "lake_reasons": ["build error"],
+        "hash_chain": [{"module": "A"}],
+    }
+    sound, findings = verify_diophantine_geometry_formal_campaign_soundness(
+        bad_summary, min_theorems=1200, min_modules=20
+    )
+    assert sound is False
+    assert any("MISSING_MODULES" in f for f in findings)
+    assert any("SORRY_DETECTED" in f for f in findings)
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+    assert any("INCOMPLETE_HASH_CHAIN" in f for f in findings)
+
+
+@needs_lean
+def test_p104_grand_formal_campaign_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p104_grand_formal_campaign_audit
+
+    cfg = {
+        "phase": "P104",
+        "min_theorems": 1200,
+        "min_modules": 20,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "dossier_path": "docs/research/p104-diophantine-geometry-dossier.md",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p104-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p104-out.json"
+
+    report = run_p104_grand_formal_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P104"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_modules"] == 22
+    assert report["total_formal_theorems"] >= 1200
+    assert report["total_formal_theorems"] == 1441
+    assert report["has_sorry"] is False
+    assert (
+        report["final_chain_hash"]
+        == "777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906"
+    )

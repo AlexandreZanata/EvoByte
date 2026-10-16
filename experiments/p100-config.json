@@ -1,0 +1,10 @@
+{
+  "budget_sec": 3600.0,
+  "min_theorems": 40,
+  "note": "P100 unified dioph_surface metatactic with algebraic elimination in Lean 4. Verifies native dioph_surface and dioph_surface_elim tactics, automated variable elimination, Bézout resultant normalization, cubic surface and conic fiber equivalence, bilinear hyperbolic factorization, S3 permutation invariance, Euler four-square multiplicativity, general quaternion reduced norm multiplicativity, parametric rational sections in Q[k], and exact certified unit fraction decompositions with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "phase": "P100",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42
+}

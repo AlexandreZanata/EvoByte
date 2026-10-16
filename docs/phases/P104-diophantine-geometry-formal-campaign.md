@@ -1,7 +1,7 @@
 # P104 — Grande campanha formal e dossiê de geometria diofantina em Lean 4
 
-**Status:** Proposed.
-**Dependência:** P103 concluída; branch a partir de `codex/p97-p104-diophantine-geometry-program`.
+**Status:** Done.
+**Dependência:** P103 concluída; branch a partir de `codex/p103-hyper-scale-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P103 concluída com confirmação estatística em hiper-escala aceita; ambiente Lean 4 e Lake herméticos.
 **Branch:** `codex/p104-diophantine-geometry-formal-campaign`.
@@ -41,5 +41,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P104 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p104 diophantine geometry formal campaign"
 git push -u origin HEAD
-gh pr create --base codex/p97-p104-diophantine-geometry-program --title "feat(formal): implement p104 diophantine geometry formal campaign" --body-file /tmp/evobyte-p104-pr.md
+gh pr create --base codex/p103-hyper-scale-blind-confirmation --title "feat(formal): implement p104 diophantine geometry formal campaign" --body-file /tmp/evobyte-p104-pr.md
 ```
