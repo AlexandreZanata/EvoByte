@@ -4262,3 +4262,198 @@ def evaluate_higher_power_fractions_coverage(
         "results": results,
         "elapsed_sec": time.perf_counter() - t0,
     }
+
+
+# ============================================================================
+# P106: Diophantine Obstruction Graphs and Negative Search Space Engine
+# ============================================================================
+
+
+@dataclass(frozen=True)
+class ObstructionNode:
+    """A node in the Diophantine obstruction graph representing a residue state."""
+
+    var: str  # "n", "d", "x", "y", "z"
+    mod: int
+    res: int
+
+
+@dataclass(frozen=True)
+class ObstructionEdge:
+    """An edge representing mutual incompatibility between two modular states."""
+
+    source: ObstructionNode
+    target: ObstructionNode
+    reason: str
+
+
+class DiophantineObstructionGraph:
+    """Relational graph of modular, parity, and divisibility obstructions (P106).
+
+    Models negative search spaces: if an edge connects state u and state v,
+    no integer solution can satisfy both conditions simultaneously.
+    Allows pruning impossible branches before arithmetic verification.
+    """
+
+    def __init__(
+        self,
+        a: int = 4,
+        moduli: list[int] | None = None,
+        primes: list[int] | None = None,
+    ):
+        self.a = a
+        self.moduli = moduli if moduli is not None else [2, 3, 4, 5, 6, 7, 8]
+        self.primes = primes if primes is not None else [2, 3, 5, 7]
+        self.nodes: set[ObstructionNode] = set()
+        self.adjacency: dict[ObstructionNode, set[ObstructionNode]] = {}
+        self.edges: list[ObstructionEdge] = []
+        self._build_graph()
+
+    def _build_graph(self) -> None:
+        # Add basic nodes for each modulus and remainder
+        for m in self.moduli:
+            for r in range(m):
+                for var in ["n", "d", "x"]:
+                    self.add_node(ObstructionNode(var=var, mod=m, res=r))
+            # Mutual exclusion: same variable cannot have distinct residues mod m
+            for r1 in range(m):
+                for r2 in range(r1 + 1, m):
+                    for var in ["n", "d", "x"]:
+                        self.add_edge(
+                            ObstructionNode(var=var, mod=m, res=r1),
+                            ObstructionNode(var=var, mod=m, res=r2),
+                            reason=f"distinct_residues_mod_{m}",
+                        )
+
+        # Prime coprimality obstruction: if p does not divide n, then p cannot divide d (where d | n^2)
+        for p in self.primes:
+            for r in range(1, p):
+                self.add_edge(
+                    ObstructionNode(var="n", mod=p, res=r),
+                    ObstructionNode(var="d", mod=p, res=0),
+                    reason=f"prime_{p}_not_dividing_n_excludes_multiple_of_{p}",
+                )
+
+        # Parity obstruction: if a is even and n is odd, then d = ax - n must be odd
+        if self.a % 2 == 0:
+            n_odd = ObstructionNode(var="n", mod=2, res=1)
+            d_even = ObstructionNode(var="d", mod=2, res=0)
+            self.add_edge(
+                n_odd,
+                d_even,
+                reason="even_a_odd_n_forces_odd_divisor",
+            )
+
+    def add_node(self, node: ObstructionNode) -> None:
+        self.nodes.add(node)
+        if node not in self.adjacency:
+            self.adjacency[node] = set()
+
+    def add_edge(
+        self, n1: ObstructionNode, n2: ObstructionNode, reason: str = ""
+    ) -> None:
+        self.add_node(n1)
+        self.add_node(n2)
+        self.adjacency[n1].add(n2)
+        self.adjacency[n2].add(n1)
+        self.edges.append(ObstructionEdge(source=n1, target=n2, reason=reason))
+
+    def is_incompatible(self, n1: ObstructionNode, n2: ObstructionNode) -> bool:
+        return n2 in self.adjacency.get(n1, set())
+
+    def is_candidate_obstructed(self, n: int, candidate_d: int) -> bool:
+        """Check if candidate divisor d is obstructed for given n."""
+        # Check against active moduli and primes in the graph
+        for m in self.moduli:
+            n_node = ObstructionNode(var="n", mod=m, res=n % m)
+            d_node = ObstructionNode(var="d", mod=m, res=candidate_d % m)
+            if self.is_incompatible(n_node, d_node):
+                return True
+        return False
+
+    def prune_divisor_candidates(
+        self, n: int, candidates: list[int]
+    ) -> tuple[list[int], int]:
+        """Filter a list of divisor candidates, returning surviving candidates and prune count."""
+        survived: list[int] = []
+        pruned_count = 0
+        for c in candidates:
+            if self.is_candidate_obstructed(n, c):
+                pruned_count += 1
+            else:
+                survived.append(c)
+        return survived, pruned_count
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "a": self.a,
+            "moduli": self.moduli,
+            "primes": self.primes,
+            "node_count": len(self.nodes),
+            "edge_count": len(self.edges),
+        }
+
+
+def build_diophantine_obstruction_graph(
+    a: int = 4,
+    moduli: list[int] | None = None,
+    primes: list[int] | None = None,
+) -> DiophantineObstructionGraph:
+    """Factory creating an initialized DiophantineObstructionGraph."""
+    return DiophantineObstructionGraph(a=a, moduli=moduli, primes=primes)
+
+
+def evaluate_obstruction_graph_pruning(
+    instances: list[int] | None = None,
+    a: int = 4,
+    primes: list[int] | None = None,
+) -> dict[str, Any]:
+    """Evaluate negative search space reduction and verify 0 false negatives on test instances."""
+    t0 = time.perf_counter()
+    if instances is None:
+        instances = [101, 103, 107, 109, 113, 127, 131, 137, 139, 149]
+
+    graph = build_diophantine_obstruction_graph(a=a, primes=primes)
+    total_candidates = 0
+    total_pruned = 0
+    false_negatives = 0
+
+    instance_details: list[dict[str, Any]] = []
+    for n in instances:
+        # Candidate search range up to 2 * n
+        raw_candidates = list(range(1, 2 * n + 1))
+        survived, pruned = graph.prune_divisor_candidates(n, raw_candidates)
+        total_candidates += len(raw_candidates)
+        total_pruned += pruned
+
+        # Soundness: test genuine divisors of n^2
+        actual_divisors: list[int] = []
+        for d in raw_candidates:
+            if (n * n) % d == 0:
+                actual_divisors.append(d)
+                if graph.is_candidate_obstructed(n, d):
+                    false_negatives += 1
+
+        instance_details.append({
+            "n": n,
+            "raw_count": len(raw_candidates),
+            "survived_count": len(survived),
+            "pruned_count": pruned,
+            "actual_divisors_tested": len(actual_divisors),
+        })
+
+    pruning_ratio = total_pruned / max(1, total_candidates)
+
+    return {
+        "a": a,
+        "instances_count": len(instances),
+        "total_candidates": total_candidates,
+        "total_pruned": total_pruned,
+        "pruning_ratio": pruning_ratio,
+        "false_negatives": false_negatives,
+        "is_sound": false_negatives == 0,
+        "graph_nodes": len(graph.nodes),
+        "graph_edges": len(graph.edges),
+        "instance_details": instance_details,
+        "elapsed_sec": time.perf_counter() - t0,
+    }

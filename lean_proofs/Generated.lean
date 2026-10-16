@@ -22,3 +22,4 @@ import Generated.DiophSurfaceTheorems
 import Generated.SolutionMomentsTheorems
 import Generated.HigherPowerTheorems
 import Generated.OpenProblemSignatures
+import Generated.ObstructionGraphTheorems

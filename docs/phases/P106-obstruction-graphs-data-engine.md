@@ -1,7 +1,7 @@
 # P106 — Motor de grafos de obstruções e espaços negativos de busca diofantina
 
-**Status:** Proposed.
-**Dependência:** P105 concluída; branch a partir de `codex/p105-p112-open-problems-program`.
+**Status:** Done.
+**Dependência:** P105 concluída; branch a partir de `codex/p105-open-problems-formal-database`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P105 concluída com assinaturas formais de problemas abertos compiladas no Lean 4.
 **Branch:** `codex/p106-obstruction-graphs-data-engine`.
@@ -40,5 +40,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P106 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p106 obstruction graphs data engine"
 git push -u origin HEAD
-gh pr create --base codex/p105-p112-open-problems-program --title "feat(formal): implement p106 obstruction graphs data engine" --body-file /tmp/evobyte-p106-pr.md
+gh pr create --base codex/p105-open-problems-formal-database --title "feat(formal): implement p106 obstruction graphs data engine" --body-file /tmp/evobyte-p106-pr.md
 ```
