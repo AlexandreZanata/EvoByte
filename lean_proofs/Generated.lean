@@ -23,3 +23,4 @@ import Generated.SolutionMomentsTheorems
 import Generated.HigherPowerTheorems
 import Generated.OpenProblemSignatures
 import Generated.ObstructionGraphTheorems
+import Generated.ErdosGrahamTheorems

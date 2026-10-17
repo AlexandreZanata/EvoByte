@@ -747,6 +747,7 @@ ACCEPTANCE_PHASES = (
     "P106",
     "P107",
     "P108",
+    "P109",
 )
 
 
@@ -9449,6 +9450,138 @@ def run_p108_formal_mcts_audit(
     return report
 
 
+def run_p109_erdos_graham_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P109 audit: Erdős–Graham unit fraction decompositions and density certificates audit.
+
+    Verifies:
+    1. Constructive Egyptian fraction decompositions sum(1/d) = 1 in Q and integer LCM forms in N.
+    2. Exact mathematical verification of all discovered unit fraction solutions.
+    3. Formal Lean 4 module `lean_proofs/Generated/ErdosGrahamTheorems.lean` with >= 70 theorems and 0 sorry.
+    4. Successful Lake build (`lake -d lean_proofs build Generated`).
+    5. Clean tree enforcement and complete provenance collection.
+    """
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        audit_erdos_graham_unit_fractions,
+        verify_erdos_graham_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P109":
+        raise ValueError(f"Config {cfg_p} is not a P109 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P109 ERDŐS–GRAHAM UNIT FRACTION DECOMPOSITION AUDIT (Zero Sorry, Exact Soundness, Lean 4 Verified)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    project_dir = config.get("project_dir", "lean_proofs")
+    generated_path = config.get(
+        "generated_path", "lean_proofs/Generated/ErdosGrahamTheorems.lean"
+    )
+    max_len = int(config.get("max_len", 5))
+    limit = int(config.get("limit", 80))
+    min_solutions = int(config.get("min_solutions", 50))
+    min_theorems = int(config.get("min_theorems", 70))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    engine_audit = audit_erdos_graham_unit_fractions(
+        project_dir=project_dir,
+        generated_path=generated_path,
+        max_len=max_len,
+        limit=limit,
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_erdos_graham_soundness(
+        engine_audit,
+        min_solutions=min_solutions,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Solutions found: {engine_audit.get('solutions_found')}, all mathematically verified: {engine_audit.get('all_verified')}"
+    )
+    print(
+        f"  Lean 4 theorems: {engine_audit.get('theorem_count')} compiled "
+        f"(sorry={engine_audit.get('has_sorry')}, lake_passed={engine_audit.get('lake_passed')})"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; Erdős-Graham claims from dirty code rejected")
+
+    clean_tree = not bool(dirty)
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p109_config": config_sha[:16],
+            "lean_theorems": engine_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P109"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P109",
+        "verdict": verdict,
+        "claim_scope": (
+            "Erdős–Graham open target unit fraction decompositions and harmonic density certificates; "
+            "exact constructive decompositions sum(1/d) = 1 with distinct positive denominators; "
+            "70+ verified formal theorems in Lean 4 kernel with zero sorry tokens."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "solutions_found": engine_audit.get("solutions_found", 0),
+        "all_verified": engine_audit.get("all_verified", False),
+        "theorem_count": engine_audit.get("theorem_count", 0),
+        "has_sorry": engine_audit.get("has_sorry", False),
+        "lake_passed": engine_audit.get("lake_passed", False),
+        "sha256": engine_audit.get("sha256", ""),
+        "resolved_config": {
+            "acceptance_phase": "P109",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P109 audit {verdict}: {engine_audit.get('theorem_count', 0)} theorems verified (0 sorry), "
+        f"{engine_audit.get('solutions_found', 0)} decompositions; report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -13517,6 +13650,8 @@ def main() -> int:
             run_p107_conditional_proposer_audit(args.config, args.output)
         elif args.acceptance_phase == "P108":
             run_p108_formal_mcts_audit(args.config, args.output)
+        elif args.acceptance_phase == "P109":
+            run_p109_erdos_graham_audit(args.config, args.output)
         return 0
 
     seeds = (

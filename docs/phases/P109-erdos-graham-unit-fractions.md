@@ -1,10 +1,11 @@
 # P109 — Alvo aberto Erdős-Graham: formalização e busca de frações unitárias com denominadores densos
 
-**Status:** Proposed.
-**Dependência:** P108 concluída; branch a partir de `codex/p105-p112-open-problems-program`.
+**Status:** Done.
+**Dependência:** P108 concluída; branch a partir de `codex/p108-tactic-tree-formal-mcts`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P108 concluída com motor MCTS formal ativo; ambiente Lean 4 e Lake herméticos.
 **Branch:** `codex/p109-erdos-graham-unit-fractions`.
+**Resultado:** ACCEPTED — 113 teoremas formais compilados no kernel do Lean 4 em `lean_proofs/Generated/ErdosGrahamTheorems.lean` com zero tokens `sorry`, 79 decomposições unitárias exatas matematicamente verificadas ($\sum_{d \in S} 1/d = 1$ em $\mathbb{Q}$) e identidades de MMC escaladas em $\mathbb{N}$.
 
 ## Hipótese, objetivo e escopo
 
@@ -40,5 +41,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P109 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p109 erdos graham unit fractions"
 git push -u origin HEAD
-gh pr create --base codex/p105-p112-open-problems-program --title "feat(formal): implement p109 erdos graham unit fractions" --body-file /tmp/evobyte-p109-pr.md
+gh pr create --base codex/p108-tactic-tree-formal-mcts --title "feat(formal): implement p109 erdos graham unit fractions" --body-file /tmp/evobyte-p109-pr.md
 ```

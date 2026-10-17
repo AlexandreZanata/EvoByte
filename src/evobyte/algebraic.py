@@ -4457,3 +4457,73 @@ def evaluate_obstruction_graph_pruning(
         "instance_details": instance_details,
         "elapsed_sec": time.perf_counter() - t0,
     }
+
+
+# ==============================================================================
+# P109 — ERDŐS–GRAHAM UNIT FRACTION DECOMPOSITIONS & DENSITY CERTIFICATES
+# ==============================================================================
+
+def find_erdos_graham_unit_fractions(
+    target_num: int = 1,
+    target_den: int = 1,
+    max_len: int = 5,
+    min_d: int = 2,
+    limit: int = 80,
+) -> list[list[int]]:
+    """Search for distinct Egyptian fraction decompositions sum(1/d) = target_num/target_den."""
+    import math
+
+    if target_num == 0:
+        return [[]]
+    if max_len == 0:
+        return []
+
+    results: list[list[int]] = []
+    # 1/d <= target_num / target_den  ==>  d >= ceil(target_den / target_num)
+    start_d = max(min_d, (target_den + target_num - 1) // target_num)
+    # max_len * (1/d) >= target_num / target_den  ==>  d <= floor(max_len * target_den / target_num)
+    end_d = min(5000, (max_len * target_den) // target_num + 1)
+
+    for d in range(start_d, end_d):
+        rem_num = target_num * d - target_den
+        rem_den = target_den * d
+        g = math.gcd(rem_num, rem_den)
+        rem_num //= g
+        rem_den //= g
+
+        sub_sols = find_erdos_graham_unit_fractions(
+            rem_num, rem_den, max_len - 1, min_d=d + 1, limit=limit - len(results)
+        )
+        for sub in sub_sols:
+            results.append([d] + sub)
+            if len(results) >= limit:
+                return results
+
+    return results
+
+
+def verify_unit_fraction_sum(denominators: list[int], target: tuple[int, int] = (1, 1)) -> bool:
+    """Verify that denominators are distinct, strictly positive, and sum exactly to target."""
+    from fractions import Fraction
+
+    if not denominators:
+        return False
+    if any(d <= 0 for d in denominators):
+        return False
+    if len(set(denominators)) != len(denominators):
+        return False
+
+    total = sum(Fraction(1, d) for d in denominators)
+    return total == Fraction(target[0], target[1])
+
+
+def compute_denominators_lcm(denominators: list[int]) -> int:
+    """Compute least common multiple of a list of positive integers."""
+    import math
+
+    if not denominators:
+        return 1
+    curr = denominators[0]
+    for d in denominators[1:]:
+        curr = (curr * d) // math.gcd(curr, d)
+    return curr
