@@ -1,7 +1,7 @@
 # P111 — Confirmação cega multiproblema com controle estatístico rigoroso FWER (Bonferroni-Holm)
 
-**Status:** Proposed.
-**Dependência:** P110 concluída; branch a partir de `codex/p105-p112-open-problems-program`.
+**Status:** In review.
+**Dependência:** P110 concluída; branch a partir de `codex/p110-pillai-exponential-diophantine`.
 **Owner:** agente executor; revisor estatístico/matemático nos gates indicados.
 **Pré-requisito:** P110 concluída com crivos algébricos e lemas de Baker; partição cega de 100 instâncias selada e intocada.
 **Branch:** `codex/p111-multiproblem-blind-confirmation`.
@@ -40,5 +40,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P111 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p111 multiproblem blind confirmation"
 git push -u origin HEAD
-gh pr create --base codex/p105-p112-open-problems-program --title "feat(formal): implement p111 multiproblem blind confirmation" --body-file /tmp/evobyte-p111-pr.md
+gh pr create --base codex/p110-pillai-exponential-diophantine --title "feat(formal): implement p111 multiproblem blind confirmation" --body-file /tmp/evobyte-p111-pr.md
 ```
