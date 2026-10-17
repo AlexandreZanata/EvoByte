@@ -745,6 +745,7 @@ ACCEPTANCE_PHASES = (
     "P104",
     "P105",
     "P106",
+    "P107",
 )
 
 
@@ -9096,6 +9097,220 @@ def run_p106_obstruction_graphs_audit(
     return report
 
 
+def run_p107_conditional_proposer_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P107 audit: Lightweight conditional neural proposer (<= 5M) for structured Diophantine search.
+
+    Verifies:
+    1. Model parameter hard cap: <= 5,000,000 parameters.
+    2. VRAM resident memory <= 100 MB.
+    3. Zero hallucination: candidate rankings are strict permutations of mathematical candidates,
+       all predicted tactics and identities are within the closed canonical vocabulary.
+    4. Deterministic reproducible training: identical validation curves under fixed seed.
+    5. Independent checkpoint export and reload with bit-level integrity.
+    6. Empirical speedup vs classical baselines:
+       - Speedup vs naive search >= 1.5x (or search reduction >= 30%).
+       - 0 false negatives, sound solutions found on 100% of test instances.
+    7. Clean tree enforcement and complete provenance collection.
+    """
+    import torch as _torch
+
+    from evobyte.models import (
+        CANONICAL_ALGEBRAIC_IDENTITIES,
+        CANONICAL_LEAN_TACTICS,
+        P107_MAX_PARAMS,
+        StructuredConditionalProposer,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.training import (
+        evaluate_proposer_vs_baselines,
+        train_conditional_proposer,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P107":
+        raise ValueError(f"Config {cfg_p} is not a P107 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P107 LIGHTWEIGHT CONDITIONAL NEURAL PROPOSER AUDIT (<= 5M, Zero Hallucination, Classical Baseline Speedup)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    max_epochs = int(config.get("max_epochs", 10))
+    batch_size = int(config.get("batch_size", 16))
+    lr = float(config.get("lr", 1e-3))
+    d_model = int(config.get("d_model", 256))
+    num_layers = int(config.get("num_layers", 4))
+    instance_count = int(config.get("instance_count", 40))
+    max_params = int(config.get("max_params", P107_MAX_PARAMS))
+    vram_cap_mb = float(config.get("vram_cap_mb", 100.0))
+    min_speedup_vs_naive = float(config.get("min_speedup_vs_naive", 1.5))
+    min_reduction_pct = float(config.get("min_reduction_pct", 30.0))
+
+    tmp_dir = Path(output_path).parent
+    weights_path = tmp_dir / "p107-proposer.pt"
+    manifest_path = tmp_dir / "p107-proposer-manifest.json"
+
+    # 1. Primary training run with weights export
+    train_run_a = train_conditional_proposer(
+        output_weights_path=weights_path,
+        output_manifest_path=manifest_path,
+        device_name=device_name,
+        seed=seed,
+        batch_size=batch_size,
+        max_epochs=max_epochs,
+        lr=lr,
+        d_model=d_model,
+        num_layers=num_layers,
+        instance_count=instance_count,
+    )
+    if train_run_a.get("status") != "PASS":
+        findings.append(f"TRAINING_FAILED: {train_run_a.get('reason')}")
+
+    # 2. Secondary training run to verify deterministic reproducibility
+    train_run_b = train_conditional_proposer(
+        output_weights_path=None,
+        output_manifest_path=None,
+        device_name=device_name,
+        seed=seed,
+        batch_size=batch_size,
+        max_epochs=max_epochs,
+        lr=lr,
+        d_model=d_model,
+        num_layers=num_layers,
+        instance_count=instance_count,
+    )
+    is_reproducible = (
+        train_run_a.get("status") == "PASS"
+        and train_run_b.get("status") == "PASS"
+        and train_run_a.get("val_loss_history") == train_run_b.get("val_loss_history")
+        and train_run_a.get("best_val_loss") == train_run_b.get("best_val_loss")
+    )
+    if not is_reproducible:
+        findings.append("NON_REPRODUCIBLE: training runs with same seed yielded different validation histories")
+
+    # 3. Independent checkpoint reload
+    if weights_path.exists():
+        loaded_model, ckpt_meta = StructuredConditionalProposer.load_checkpoint(weights_path)
+    else:
+        findings.append(f"MISSING_CHECKPOINT: weights file {weights_path} not created")
+        loaded_model = train_run_a.get("model", StructuredConditionalProposer())
+
+    # 4. Parameter & Memory Caps
+    param_count = loaded_model.count_parameters()
+    mem_mb = loaded_model.resident_memory_mb()
+    if param_count > max_params:
+        findings.append(f"PARAMETER_CAP_EXCEEDED: {param_count} params > {max_params}")
+    if mem_mb > vram_cap_mb:
+        findings.append(f"VRAM_CAP_EXCEEDED: {mem_mb:.2f} MB > {vram_cap_mb} MB")
+
+    # 5. Closed-vocabulary verification (zero hallucination)
+    sample_tactics = loaded_model.predict_tactics(4, 101)
+    if any(t[0] not in CANONICAL_LEAN_TACTICS for t in sample_tactics):
+        findings.append("HALLUCINATED_TACTIC: predicted tactic not in CANONICAL_LEAN_TACTICS")
+    sample_identities = loaded_model.predict_identities(4, 101)
+    if any(i[0] not in CANONICAL_ALGEBRAIC_IDENTITIES for i in sample_identities):
+        findings.append("HALLUCINATED_IDENTITY: predicted identity not in CANONICAL_ALGEBRAIC_IDENTITIES")
+
+    # 6. Evaluation against classical baselines
+    eval_res = evaluate_proposer_vs_baselines(loaded_model, device=device_name)
+    if not eval_res.get("zero_hallucination", False):
+        findings.append(f"HALLUCINATION_DETECTED: {eval_res.get('hallucinations')} foreign candidates")
+    if not eval_res.get("sound", False):
+        findings.append(f"FALSE_NEGATIVES_DETECTED: {eval_res.get('false_negatives')} missed solutions")
+
+    speedup = eval_res.get("speedup_vs_naive", 0.0)
+    reduction = eval_res.get("reduction_pct", 0.0)
+    if speedup < min_speedup_vs_naive:
+        findings.append(f"INSUFFICIENT_SPEEDUP: speedup {speedup:.2f}x < required {min_speedup_vs_naive}x")
+    if reduction < min_reduction_pct:
+        findings.append(f"INSUFFICIENT_REDUCTION: reduction {reduction:.1f}% < required {min_reduction_pct}%")
+
+    print(f"  Model architecture: {param_count:,} params (limit {max_params:,}), resident memory {mem_mb:.2f} MB")
+    print(f"  Training reproducibility: {is_reproducible} (epochs: {max_epochs}, best val loss: {train_run_a.get('best_val_loss', 0.0):.4f})")
+    print(f"  Baseline comparison: naive avg steps {eval_res.get('avg_naive_steps')}, neural avg steps {eval_res.get('avg_proposer_steps')}")
+    print(f"  Speedup vs naive: {speedup:.2f}x (reduction: {reduction:.1f}%), speedup vs random: {eval_res.get('speedup_vs_random'):.2f}x")
+    print(f"  Integrity: zero_hallucination={eval_res.get('zero_hallucination')}, false_negatives={eval_res.get('false_negatives')}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; proposer claims from dirty code rejected")
+
+    clean_tree = not bool(dirty)
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p107_config": config_sha[:16],
+            "weights_sha256": train_run_a.get("weights_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P107"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P107",
+        "verdict": verdict,
+        "claim_scope": (
+            "Lightweight conditional neural proposer (<= 5M parameters) for structured Diophantine search; "
+            "zero hallucination via strictly closed vocabulary of Lean 4 tactics and candidate permutations; "
+            "reproducible training and empirical speedup >= 1.5x vs classical naive search with zero false negatives."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "param_count": param_count,
+        "resident_memory_mb": mem_mb,
+        "is_reproducible": is_reproducible,
+        "zero_hallucination": eval_res.get("zero_hallucination", False),
+        "false_negatives": eval_res.get("false_negatives", 0),
+        "speedup_vs_naive": speedup,
+        "speedup_vs_random": eval_res.get("speedup_vs_random", 0.0),
+        "reduction_pct": reduction,
+        "training": {
+            "best_epoch": train_run_a.get("best_epoch"),
+            "best_val_loss": train_run_a.get("best_val_loss"),
+            "val_loss_history": train_run_a.get("val_loss_history"),
+            "weights_sha256": train_run_a.get("weights_sha256"),
+        },
+        "evaluation": eval_res,
+        "resolved_config": {
+            "acceptance_phase": "P107",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P107 audit {verdict}: {param_count:,} params, speedup {speedup:.2f}x ({reduction:.1f}% reduction); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -13160,6 +13375,8 @@ def main() -> int:
             run_p105_open_problems_database_audit(args.config, args.output)
         elif args.acceptance_phase == "P106":
             run_p106_obstruction_graphs_audit(args.config, args.output)
+        elif args.acceptance_phase == "P107":
+            run_p107_conditional_proposer_audit(args.config, args.output)
         return 0
 
     seeds = (

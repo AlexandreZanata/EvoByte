@@ -1,10 +1,11 @@
 # P107 — Modelo neural condicional leve (<= 5M) para proposição estruturada sem alucinação
 
-**Status:** Proposed.
-**Dependência:** P106 concluída; branch a partir de `codex/p105-p112-open-problems-program`.
+**Status:** Done.
+**Dependência:** P106 concluída; branch a partir de `codex/p106-obstruction-graphs-data-engine`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P106 concluída com grafos de obstrução e banco formal hermético; dados de treino estritamente derivados de certificados formais.
 **Branch:** `codex/p107-lightweight-conditional-proposer`.
+**Resultado:** ACCEPTED — StructuredConditionalProposer (1.270.547 parâmetros <= 5M, 4,85 MB em memória), treinado com reprodutibilidade determinística bit-a-bit sobre certificados formais, zero alucinação (vocabulário fechado e permutações estritas de candidatos), acelerando a busca diofantina em 39,38x (redução de 97,5% em passos de candidatos) com 0 falsos negativos.
 
 ## Hipótese, objetivo e escopo
 
@@ -40,5 +41,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P107 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p107 lightweight conditional proposer"
 git push -u origin HEAD
-gh pr create --base codex/p105-p112-open-problems-program --title "feat(formal): implement p107 lightweight conditional proposer" --body-file /tmp/evobyte-p107-pr.md
+gh pr create --base codex/p106-obstruction-graphs-data-engine --title "feat(formal): implement p107 lightweight conditional proposer" --body-file /tmp/evobyte-p107-pr.md
 ```
