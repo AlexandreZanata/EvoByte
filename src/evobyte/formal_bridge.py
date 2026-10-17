@@ -5799,3 +5799,161 @@ def verify_obstruction_graphs_soundness(
         )
 
     return len(findings) == 0, findings
+
+
+# ==============================================================================
+# P108 — TACTIC TREE FORMAL MCTS ENGINE & COMPILER REWARD ORACLE
+# ==============================================================================
+
+def evaluate_lean4_tactic_candidate(
+    theorem_decl: str,
+    tactic_chain: list[str],
+    imports: list[str] | None = None,
+    project_dir: str | Path = "lean_proofs",
+    timeout_sec: float = 15.0,
+) -> dict[str, Any]:
+    """Evaluate whether a candidate tactic chain compiles and closes the theorem in Lean 4.
+
+    Direct binary reward oracle coupled to the Lean 4 compiler kernel (`lake env lean --stdin`).
+    Zero sorry permitted.
+    """
+    import re
+    import subprocess
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+
+    # Reject unproven placeholder tokens
+    for token in [theorem_decl] + list(tactic_chain):
+        if re.search(r"\bsorry\b", token):
+            return {
+                "success": False,
+                "has_sorry": True,
+                "reason": "forbidden placeholder token detected",
+                "elapsed_sec": time.perf_counter() - t0,
+            }
+
+    import_lines = [
+        "import Mathlib.Tactic",
+    ]
+    if imports:
+        for imp in imports:
+            if imp not in import_lines:
+                import_lines.append(f"import {imp}")
+
+    tactics_body = "\n  ".join(tactic_chain)
+    lean_code = f"""{chr(10).join(import_lines)}
+
+{theorem_decl} := by
+  {tactics_body}
+"""
+
+    try:
+        proc = subprocess.run(
+            ["lake", "-d", str(proj), "env", "lean", "--stdin"],
+            input=lean_code,
+            capture_output=True,
+            text=True,
+            timeout=timeout_sec,
+            check=False,
+        )
+        elapsed = time.perf_counter() - t0
+        stdout = proc.stdout
+        stderr = proc.stderr
+        success = (
+            proc.returncode == 0
+            and "error:" not in stderr.lower()
+            and "error:" not in stdout.lower()
+            and "unsolved goals" not in stdout.lower()
+            and "unsolved goals" not in stderr.lower()
+        )
+        return {
+            "success": success,
+            "returncode": proc.returncode,
+            "stdout": stdout,
+            "stderr": stderr,
+            "has_sorry": False,
+            "elapsed_sec": elapsed,
+        }
+    except subprocess.TimeoutExpired:
+        return {
+            "success": False,
+            "has_sorry": False,
+            "reason": f"Lean 4 compilation timed out ({timeout_sec}s)",
+            "elapsed_sec": time.perf_counter() - t0,
+        }
+    except Exception as exc:
+        return {
+            "success": False,
+            "has_sorry": False,
+            "reason": str(exc),
+            "elapsed_sec": time.perf_counter() - t0,
+        }
+
+
+def audit_formal_mcts_engine(
+    project_dir: str | Path = "lean_proofs",
+    proposer_weights_path: str | Path | None = None,
+    max_iterations: int = 25,
+    max_depth: int = 3,
+    goals: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Audit formal MCTS engine performance and proof closure rate across mathematical goals."""
+    from evobyte.mcts_formal import (
+        FormalMCTSConfig,
+        FormalMCTSSearcher,
+        run_formal_mcts_benchmark,
+    )
+    from evobyte.models import StructuredConditionalProposer
+
+    proposer = None
+    if proposer_weights_path is not None and Path(proposer_weights_path).exists():
+        try:
+            proposer, _ = StructuredConditionalProposer.load_checkpoint(proposer_weights_path)
+        except Exception:
+            proposer = None
+
+    config = FormalMCTSConfig(
+        max_iterations=max_iterations,
+        max_depth=max_depth,
+        timeout_sec=20.0,
+    )
+    searcher = FormalMCTSSearcher(config=config, proposer=proposer)
+    benchmark_res = run_formal_mcts_benchmark(
+        searcher=searcher,
+        goals=goals,
+        project_dir=project_dir,
+    )
+
+    return {
+        "engine": "FormalMCTSSearcher",
+        "benchmark": benchmark_res,
+        "closure_rate": benchmark_res.get("closure_rate", 0.0),
+        "total_goals": benchmark_res.get("total_goals", 0),
+        "proved_goals": benchmark_res.get("proved_goals", 0),
+        "zero_sorry": benchmark_res.get("zero_sorry", True),
+        "has_sorry": False,
+        "elapsed_sec": benchmark_res.get("elapsed_sec", 0.0),
+    }
+
+
+def verify_formal_mcts_soundness(
+    audit_summary: dict[str, Any],
+    min_closure_rate: float = 0.75,
+    min_proved_goals: int = 6,
+) -> tuple[bool, list[str]]:
+    """Verify soundness of the formal MCTS engine audit."""
+    findings: list[str] = []
+
+    if audit_summary.get("has_sorry", False) or not audit_summary.get("zero_sorry", False):
+        findings.append("SORRY_DETECTED: unproven sorry tokens present in formal MCTS proofs")
+
+    rate = audit_summary.get("closure_rate", 0.0)
+    if rate < min_closure_rate:
+        findings.append(f"INSUFFICIENT_CLOSURE_RATE: expected >= {min_closure_rate:.2%}, got {rate:.2%}")
+
+    proved = audit_summary.get("proved_goals", 0)
+    if proved < min_proved_goals:
+        findings.append(f"INSUFFICIENT_PROVED_GOALS: expected >= {min_proved_goals}, got {proved}")
+
+    return len(findings) == 0, findings

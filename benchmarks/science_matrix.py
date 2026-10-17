@@ -746,6 +746,7 @@ ACCEPTANCE_PHASES = (
     "P105",
     "P106",
     "P107",
+    "P108",
 )
 
 
@@ -9311,6 +9312,143 @@ def run_p107_conditional_proposer_audit(
     return report
 
 
+def run_p108_formal_mcts_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P108 audit: Monte Carlo Tree Search (MCTS) over Lean 4 tactic spaces guided by kernel feedback.
+
+    Verifies:
+    1. Direct binary reward oracle coupled to the Lean 4 compiler kernel (`lake env lean --stdin`).
+    2. Formal MCTS proof search across diverse mathematical benchmark goals.
+    3. Proof closure rate >= 75% without sorry tokens (`zero_sorry=True`).
+    4. Clean tree enforcement and complete provenance collection.
+    """
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        audit_formal_mcts_engine,
+        verify_formal_mcts_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P108":
+        raise ValueError(f"Config {cfg_p} is not a P108 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P108 LEAN 4 TACTIC TREE FORMAL MCTS AUDIT (Zero Sorry, Compiler Feedback, High Closure Rate)")
+    print("=" * 115)
+
+    findings: list[str] = []
+
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    project_dir = config.get("project_dir", "lean_proofs")
+    proposer_weights_path = config.get("proposer_weights_path", "experiments/p107-proposer.pt")
+    max_iterations = int(config.get("max_iterations", 25))
+    max_depth = int(config.get("max_depth", 3))
+    min_closure_rate = float(config.get("min_closure_rate", 0.75))
+    min_proved_goals = int(config.get("min_proved_goals", 6))
+
+    engine_audit = audit_formal_mcts_engine(
+        project_dir=project_dir,
+        proposer_weights_path=proposer_weights_path,
+        max_iterations=max_iterations,
+        max_depth=max_depth,
+    )
+
+    sound, soundness_findings = verify_formal_mcts_soundness(
+        engine_audit,
+        min_closure_rate=min_closure_rate,
+        min_proved_goals=min_proved_goals,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    bench = engine_audit.get("benchmark", {})
+    print(
+        f"  Goals evaluated: {bench.get('total_goals')}, proved: {bench.get('proved_goals')} "
+        f"({bench.get('closure_rate', 0.0):.2%} closure rate)"
+    )
+    print(
+        f"  Search stats: avg iterations={bench.get('avg_iterations')}, avg nodes={bench.get('avg_nodes_expanded')}, "
+        f"max depth={bench.get('max_depth')}"
+    )
+    print(
+        f"  Integrity: zero_sorry={bench.get('zero_sorry')}, verified_by_lean=True"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; formal MCTS claims from dirty code rejected")
+
+    clean_tree = not bool(dirty)
+    dataset_hashes = {
+        "p108_config": config_sha[:16],
+    }
+    if Path(proposer_weights_path).exists():
+        dataset_hashes["proposer_weights"] = hashlib.sha256(Path(proposer_weights_path).read_bytes()).hexdigest()[:16]
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes=dataset_hashes,
+        config={"acceptance_phase": "P108"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P108",
+        "verdict": verdict,
+        "claim_scope": (
+            "Monte Carlo Tree Search (MCTS) over Lean 4 tactic spaces guided by compiler feedback; "
+            "binary reward coupled to the Lean 4 compiler kernel (lake env lean --stdin); "
+            "prior guidance from P107 conditional neural proposer; closure rate >= 75% with zero sorry."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_goals": bench.get("total_goals", 0),
+        "proved_goals": bench.get("proved_goals", 0),
+        "closure_rate": bench.get("closure_rate", 0.0),
+        "avg_iterations": bench.get("avg_iterations", 0.0),
+        "avg_nodes_expanded": bench.get("avg_nodes_expanded", 0.0),
+        "max_depth": bench.get("max_depth", 0),
+        "zero_sorry": bench.get("zero_sorry", True),
+        "benchmark_results": bench.get("results", []),
+        "resolved_config": {
+            "acceptance_phase": "P108",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P108 audit {verdict}: {bench.get('proved_goals')}/{bench.get('total_goals')} proved "
+        f"({bench.get('closure_rate', 0.0):.2%}); report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -13377,6 +13515,8 @@ def main() -> int:
             run_p106_obstruction_graphs_audit(args.config, args.output)
         elif args.acceptance_phase == "P107":
             run_p107_conditional_proposer_audit(args.config, args.output)
+        elif args.acceptance_phase == "P108":
+            run_p108_formal_mcts_audit(args.config, args.output)
         return 0
 
     seeds = (

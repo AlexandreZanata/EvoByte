@@ -1,0 +1,13 @@
+{
+  "phase": "P108",
+  "acceptance_phase": "P108",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "max_iterations": 25,
+  "max_depth": 3,
+  "min_closure_rate": 0.75,
+  "min_proved_goals": 6,
+  "require_clean_tree": true,
+  "allow_dirty": false
+}

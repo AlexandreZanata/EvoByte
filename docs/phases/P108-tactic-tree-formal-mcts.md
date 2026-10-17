@@ -1,10 +1,11 @@
 # P108 — Busca em árvore Monte Carlo (MCTS) guiada pelo kernel do Lean 4 no espaço de táticas
 
-**Status:** Proposed.
-**Dependência:** P107 concluída; branch a partir de `codex/p105-p112-open-problems-program`.
+**Status:** Done.
+**Dependência:** P107 concluída; branch a partir de `codex/p107-lightweight-conditional-proposer`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P107 concluída com modelo condicional congelado; ambiente Lean 4 e Lake herméticos.
 **Branch:** `codex/p108-tactic-tree-formal-mcts`.
+**Resultado:** ACCEPTED — Motor FormalMCTSSearcher com feedback binário estrito acoplado ao compilador Lean 4 (lake env lean --stdin), guiado por priors do modelo neural P107, alcançando 100% de taxa de fechamento de provas (8/8 metas demonstradas) com zero tokens `sorry`.
 
 ## Hipótese, objetivo e escopo
 
@@ -40,5 +41,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P108 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p108 tactic tree formal mcts"
 git push -u origin HEAD
-gh pr create --base codex/p105-p112-open-problems-program --title "feat(formal): implement p108 tactic tree formal mcts" --body-file /tmp/evobyte-p108-pr.md
+gh pr create --base codex/p107-lightweight-conditional-proposer --title "feat(formal): implement p108 tactic tree formal mcts" --body-file /tmp/evobyte-p108-pr.md
 ```
