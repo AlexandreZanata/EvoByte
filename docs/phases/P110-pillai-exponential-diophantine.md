@@ -1,7 +1,7 @@
 # P110 — Alvo aberto Pillai-Catalan: formas lineares em logaritmos e crivo de expoentes diofantinos
 
-**Status:** Proposed.
-**Dependência:** P109 concluída; branch a partir de `codex/p105-p112-open-problems-program`.
+**Status:** In review.
+**Dependência:** P109 concluída; branch a partir de `codex/p109-erdos-graham-unit-fractions`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P109 concluída com teoremas de frações unitárias no Lean 4.
 **Branch:** `codex/p110-pillai-exponential-diophantine`.
@@ -40,5 +40,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P110 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p110 pillai exponential diophantine"
 git push -u origin HEAD
-gh pr create --base codex/p105-p112-open-problems-program --title "feat(formal): implement p110 pillai exponential diophantine" --body-file /tmp/evobyte-p110-pr.md
+gh pr create --base codex/p109-erdos-graham-unit-fractions --title "feat(formal): implement p110 pillai exponential diophantine" --body-file /tmp/evobyte-p110-pr.md
 ```

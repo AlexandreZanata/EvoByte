@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 import pytest
 
 from evobyte.algebraic import (
@@ -55,8 +56,12 @@ def test_generate_erdos_graham_theorems_lean_code():
     assert "theorem erdos_graham_lcm_0" in code
 
 
-def test_audit_erdos_graham_unit_fractions():
-    audit_res = audit_erdos_graham_unit_fractions(limit=75, verify_lake=False)
+def test_audit_erdos_graham_unit_fractions(tmp_path: Path):
+    audit_res = audit_erdos_graham_unit_fractions(
+        generated_path=tmp_path / "TestErdosGrahamTheorems.lean",
+        limit=75,
+        verify_lake=False,
+    )
     assert audit_res["solutions_found"] >= 50
     assert audit_res["all_verified"] is True
     assert audit_res["theorem_count"] >= 70

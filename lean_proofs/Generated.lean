@@ -24,3 +24,4 @@ import Generated.HigherPowerTheorems
 import Generated.OpenProblemSignatures
 import Generated.ObstructionGraphTheorems
 import Generated.ErdosGrahamTheorems
+import Generated.PillaiCatalanTheorems

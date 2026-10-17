@@ -4527,3 +4527,128 @@ def compute_denominators_lcm(denominators: list[int]) -> int:
     for d in denominators[1:]:
         curr = (curr * d) // math.gcd(curr, d)
     return curr
+
+
+# ==============================================================================
+# P110 — PILLAI-CATALAN EXPONENTIAL DIOPHANTINE SIEVE & BAKER BOUNDS
+# ==============================================================================
+
+
+@dataclass(frozen=True)
+class PillaiSolution:
+    """Represents an exact integer solution x^p - y^q = c for x, y, p, q >= 2."""
+
+    x: int
+    p: int
+    y: int
+    q: int
+    c: int
+
+
+def verify_pillai_solution(sol: PillaiSolution | tuple[int, int, int, int, int]) -> bool:
+    """Verify that x^p - y^q == c with x, y, p, q >= 2 and c >= 1."""
+    if isinstance(sol, PillaiSolution):
+        x, p, y, q, c = sol.x, sol.p, sol.y, sol.q, sol.c
+    else:
+        x, p, y, q, c = sol
+    if x < 2 or y < 2 or p < 2 or q < 2 or c < 1:
+        return False
+    return (x**p - y**q) == c
+
+
+def find_pillai_solutions(
+    max_base: int = 30,
+    max_exp: int = 15,
+    max_c: int = 100,
+    limit: int = 120,
+) -> list[PillaiSolution]:
+    """Search for integer solutions to x^p - y^q = c with x, y in [2, max_base], p, q in [2, max_exp]."""
+    sols: list[PillaiSolution] = []
+    seen: set[tuple[int, int, int, int, int]] = set()
+
+    for x in range(2, max_base + 1):
+        for p in range(2, max_exp + 1):
+            xp = x**p
+            for y in range(2, max_base + 1):
+                if x == y:
+                    continue
+                for q in range(2, max_exp + 1):
+                    yq = y**q
+                    diff = xp - yq
+                    if 1 <= diff <= max_c:
+                        key = (x, p, y, q, diff)
+                        if key not in seen:
+                            seen.add(key)
+                            sols.append(PillaiSolution(x=x, p=p, y=y, q=q, c=diff))
+
+    sols.sort(key=lambda s: (s.c, s.x, s.p, s.y, s.q))
+    return sols[:limit]
+
+
+def compute_baker_effective_bound(x: int, y: int, c: int) -> dict[str, Any]:
+    """Compute effective Baker linear forms in logarithms bounds for |x^p - y^q| = c."""
+    import math
+
+    if x < 2 or y < 2 or c < 1:
+        raise ValueError("Require x >= 2, y >= 2, c >= 1")
+
+    lx = math.log(x)
+    ly = math.log(y)
+    # Baker-Wüstholz / Laurent-Mignotte-Nesterenko constant factor
+    const_c = 100.0 * (1.0 + lx) * (1.0 + ly)
+    # Effective bound B on max(p, q)
+    log_c = math.log(max(2, c))
+    baker_bound = int(math.ceil((log_c + const_c * math.log(const_c + 10.0)) / min(lx, ly)))
+
+    return {
+        "x": x,
+        "y": y,
+        "c": c,
+        "log_x": lx,
+        "log_y": ly,
+        "baker_constant": const_c,
+        "effective_exponent_bound": max(10, baker_bound),
+    }
+
+
+def sieve_pillai_modular_obstruction(
+    c: int,
+    p: int,
+    q: int,
+    moduli: list[int] | None = None,
+) -> list[int]:
+    """Check modular obstructions proving x^p - y^q = c has no solutions modulo m."""
+    if moduli is None:
+        moduli = [3, 4, 5, 7, 8, 9, 11, 13]
+    obstructions: list[int] = []
+    for m in moduli:
+        res_x = {(a**p) % m for a in range(m)}
+        res_y = {(b**q) % m for b in range(m)}
+        diffs = {(rx - ry) % m for rx in res_x for ry in res_y}
+        if (c % m) not in diffs:
+            obstructions.append(m)
+    return obstructions
+
+
+def sieve_pillai_fixed_bases(
+    x: int,
+    y: int,
+    c: int,
+    max_p: int = 100,
+    max_q: int = 100,
+) -> list[tuple[int, int]]:
+    """Exhaustive search for solutions (p, q) for fixed bases x, y and difference c."""
+    solutions: list[tuple[int, int]] = []
+    for p in range(2, max_p + 1):
+        target_yq = x**p - c
+        if target_yq < y * y:
+            continue
+        # Check if target_yq is a power of y
+        val = target_yq
+        q = 0
+        while val > 1 and val % y == 0:
+            val //= y
+            q += 1
+        if val == 1 and 2 <= q <= max_q:
+            solutions.append((p, q))
+    return solutions

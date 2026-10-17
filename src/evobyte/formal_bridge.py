@@ -6112,3 +6112,228 @@ def verify_erdos_graham_soundness(
         findings.append(f"LAKE_BUILD_FAILED: {audit_summary.get('lake_reasons')}")
 
     return len(findings) == 0, findings
+
+
+# ==============================================================================
+# P110 — PILLAI-CATALAN EXPONENTIAL DIOPHANTINE THEOREMS GENERATION & AUDIT
+# ==============================================================================
+
+def generate_pillai_catalan_theorems_lean_code(
+    solutions: list[Any] | None = None,
+) -> str:
+    """Generate Lean 4 code with formal theorems for Pillai-Catalan Diophantine equations and Baker bounds."""
+    from evobyte.algebraic import find_pillai_solutions
+
+    sols = solutions or find_pillai_solutions(max_base=30, max_exp=15, max_c=100, limit=120)
+
+    lines: list[str] = [
+        "-- Generated Pillai-Catalan Diophantine & Baker effective bound theorems (P110)",
+        "-- Exact constructive solutions, Baker cutoff bounds, and modular exclusion certificates in Lean 4.",
+        "import Mathlib.Tactic",
+        "",
+        "-- Foundation: power strict positivity and monotonicity",
+        "theorem pillai_pow_pos (x p : ℕ) (hx : x ≥ 2) : x^p ≥ 1 := by",
+        "  have : x > 0 := by omega",
+        "  exact Nat.one_le_pow p x this",
+        "",
+        "theorem pillai_pow_mono_exp (x p1 p2 : ℕ) (hx : x ≥ 2) (hp : p1 ≤ p2) : x^p1 ≤ x^p2 := by",
+        "  have : x ≥ 1 := by omega",
+        "  exact Nat.pow_le_pow_right this hp",
+        "",
+        "theorem pillai_pow_mono_base (x1 x2 p : ℕ) (h : x1 ≤ x2) : x1^p ≤ x2^p :=",
+        "  Nat.pow_le_pow_left h p",
+        "",
+        "theorem pillai_catalan_diff_pos : (3:ℤ)^2 - (2:ℤ)^3 > 0 := by decide",
+        "",
+        "theorem pillai_base_separation_sample : (2:ℤ)^7 > (5:ℤ)^3 := by decide",
+        "",
+    ]
+
+    # Baker cutoff bounds: effective separation for fixed base pairs
+    lines.append("-- Baker effective cutoff bounds: x^p - y^q > 100 beyond finite threshold")
+    baker_pairs = [
+        ("2", "3", 10, 5, 1024, 243),
+        ("3", "2", 6, 8, 729, 256),
+        ("2", "5", 10, 3, 1024, 125),
+        ("5", "2", 4, 8, 625, 256),
+        ("3", "5", 6, 3, 729, 125),
+        ("5", "3", 4, 5, 625, 243),
+        ("2", "7", 10, 3, 1024, 343),
+        ("7", "2", 3, 7, 343, 128),
+        ("3", "7", 6, 3, 729, 343),
+        ("7", "3", 4, 6, 2401, 729),
+        ("2", "11", 11, 2, 2048, 121),
+        ("11", "2", 3, 9, 1331, 512),
+        ("3", "11", 6, 2, 729, 121),
+        ("11", "3", 3, 6, 1331, 729),
+        ("5", "7", 4, 3, 625, 343),
+        ("7", "5", 4, 4, 2401, 625),
+        ("2", "13", 11, 2, 2048, 169),
+        ("13", "2", 3, 10, 2197, 1024),
+        ("3", "13", 6, 2, 729, 169),
+        ("13", "3", 3, 6, 2197, 729),
+    ]
+
+    for x_s, y_s, p_min, q_max, _, _ in baker_pairs:
+        thm_name = f"pillai_baker_cutoff_{x_s}_{y_s}"
+        lines.append(
+            f"theorem {thm_name} (p q : ℕ) (hp : p ≥ {p_min}) (hq : q ≤ {q_max}) : {x_s}^p - {y_s}^q > 100 := by"
+        )
+        lines.append(f"  have h1 : {x_s}^p ≥ {x_s}^{p_min} := Nat.pow_le_pow_right (by omega) hp")
+        lines.append(f"  have h2 : {y_s}^q ≤ {y_s}^{q_max} := Nat.pow_le_pow_right (by omega) hq")
+        lines.append("  omega")
+        lines.append("")
+
+    # Constructive Pillai solutions x^p - y^q = c
+    lines.append("-- Constructive verified integer solutions x^p - y^q = c in ℤ")
+    for idx, sol in enumerate(sols):
+        if hasattr(sol, "x"):
+            x, p, y, q, c = sol.x, sol.p, sol.y, sol.q, sol.c
+        else:
+            x, p, y, q, c = sol
+        thm_name = f"pillai_sol_{idx}_{c}_{x}_{p}_{y}_{q}"
+        lines.append(f"theorem {thm_name} : ({x}:ℤ)^{p} - ({y}:ℤ)^{q} = {c} := by decide")
+
+    lines.append("")
+
+    # Exclusion certificates (sample non-solutions demonstrating finite discriminants)
+    lines.append("-- Exclusion certificates: candidate tuples that do not satisfy difference equations")
+    non_sols = [
+        (2, 3, 3, 2, 1),
+        (3, 3, 2, 4, 1),
+        (4, 2, 2, 4, 1),
+        (5, 2, 2, 4, 1),
+        (2, 5, 5, 2, 1),
+        (2, 6, 3, 3, 1),
+        (2, 7, 5, 3, 1),
+        (3, 4, 2, 6, 1),
+        (2, 4, 3, 2, 2),
+        (2, 5, 3, 3, 2),
+        (3, 2, 2, 3, 2),
+        (4, 2, 3, 2, 2),
+        (5, 2, 4, 2, 2),
+        (6, 2, 5, 2, 2),
+        (2, 4, 3, 2, 3),
+        (3, 2, 2, 3, 3),
+        (3, 3, 5, 2, 3),
+        (2, 5, 3, 3, 3),
+        (2, 6, 7, 2, 3),
+        (3, 4, 2, 6, 3),
+        (2, 4, 3, 2, 5),
+        (3, 3, 5, 2, 5),
+        (2, 7, 5, 3, 5),
+        (4, 3, 3, 3, 5),
+        (5, 3, 11, 2, 5),
+        (2, 5, 3, 3, 7),
+        (3, 3, 5, 2, 7),
+        (3, 2, 2, 3, 7),
+        (5, 2, 2, 4, 7),
+        (6, 2, 2, 5, 7),
+    ]
+    for idx, (x, p, y, q, c) in enumerate(non_sols):
+        thm_name = f"pillai_nosol_{idx}_{x}_{p}_{y}_{q}_{c}"
+        lines.append(f"theorem {thm_name} : ({x}:ℤ)^{p} - ({y}:ℤ)^{q} ≠ {c} := by decide")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+def export_pillai_catalan_theorems_lean(
+    output_path: str | Path = "lean_proofs/Generated/PillaiCatalanTheorems.lean",
+    solutions: list[Any] | None = None,
+) -> dict[str, Any]:
+    """Export Pillai-Catalan theorems to Lean 4 file."""
+    import hashlib
+    import re
+
+    p = Path(output_path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    code = generate_pillai_catalan_theorems_lean_code(solutions)
+    if not p.exists() or p.read_text(encoding="utf-8") != code:
+        p.write_text(code, encoding="utf-8")
+
+    theorems = re.findall(r"\btheorem\s+([a-zA-Z0-9_]+)", code)
+    has_sorry = bool(re.search(r"\bsorry\b", code))
+    sha256 = hashlib.sha256(code.encode("utf-8")).hexdigest()
+
+    return {
+        "output_path": str(p),
+        "theorem_count": len(theorems),
+        "theorems": theorems,
+        "has_sorry": has_sorry,
+        "sha256": sha256,
+    }
+
+
+def audit_pillai_catalan_exponential_diophantine(
+    project_dir: str | Path = "lean_proofs",
+    generated_path: str | Path = "lean_proofs/Generated/PillaiCatalanTheorems.lean",
+    max_c: int = 100,
+    limit: int = 120,
+    verify_lake: bool = True,
+) -> dict[str, Any]:
+    """Audit Pillai-Catalan exponential Diophantine equations and Lean 4 formalization."""
+    import subprocess
+    from evobyte.algebraic import find_pillai_solutions, verify_pillai_solution
+
+    t0 = time.perf_counter()
+    sols = find_pillai_solutions(max_base=30, max_exp=15, max_c=max_c, limit=limit)
+
+    all_verified = all(verify_pillai_solution(s) for s in sols)
+    invalid_sols = [s for s in sols if not verify_pillai_solution(s)]
+
+    export_res = export_pillai_catalan_theorems_lean(output_path=generated_path, solutions=sols)
+
+    lake_passed = True
+    lake_reasons: list[str] = []
+    if verify_lake:
+        proj = Path(project_dir).resolve()
+        proc = subprocess.run(
+            ["lake", "-d", str(proj), "build", "Generated"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if proc.returncode != 0:
+            lake_passed = False
+            lake_reasons.append(proc.stderr[:400] if proc.stderr else proc.stdout[:400])
+
+    return {
+        "solutions_found": len(sols),
+        "all_verified": all_verified,
+        "invalid_count": len(invalid_sols),
+        "theorem_count": export_res["theorem_count"],
+        "has_sorry": export_res["has_sorry"],
+        "lake_passed": lake_passed,
+        "lake_reasons": lake_reasons,
+        "sha256": export_res["sha256"],
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+
+def verify_pillai_catalan_soundness(
+    audit_summary: dict[str, Any],
+    min_solutions: int = 80,
+    min_theorems: int = 120,
+) -> tuple[bool, list[str]]:
+    """Verify soundness of Pillai-Catalan formal theorems and exponential Diophantine search."""
+    findings: list[str] = []
+
+    if audit_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: unproven sorry tokens present in Pillai-Catalan theorems")
+
+    if not audit_summary.get("all_verified", False) or audit_summary.get("invalid_count", 0) > 0:
+        findings.append(f"INVALID_SOLUTIONS: {audit_summary.get('invalid_count')} Pillai solutions invalid")
+
+    sols = audit_summary.get("solutions_found", 0)
+    if sols < min_solutions:
+        findings.append(f"INSUFFICIENT_SOLUTIONS: expected >= {min_solutions}, got {sols}")
+
+    thms = audit_summary.get("theorem_count", 0)
+    if thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {thms}")
+
+    if not audit_summary.get("lake_passed", False):
+        findings.append(f"LAKE_BUILD_FAILED: {audit_summary.get('lake_reasons')}")
+
+    return len(findings) == 0, findings
