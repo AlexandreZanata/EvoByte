@@ -11,16 +11,22 @@ from evobyte.discrete_geometry import (
     are_points_colinear,
     audit_discrete_geometry_baseline,
     audit_erdos_distinct_distances_baseline,
+    audit_unit_distances_szemeredi_trotter_baseline,
     circular_points,
     convex_hull_2d,
+    count_point_line_incidences,
     cross_product_2d,
     distinct_distance_count,
     distinct_squared_distances,
     distance_quadruples_energy,
     erdos_elementary_distance_bound,
     erdos_szekeres_happy_ending_bound,
+    erdos_unit_distance_kst_bound,
+    erdos_unit_distance_lower_bound,
     generate_discrete_geometry_signatures_lean_code,
     generate_erdos_distinct_distances_lean_code,
+    generate_grid_lines,
+    generate_unit_distances_szemeredi_trotter_lean_code,
     grid_distinct_distance_count,
     grid_points,
     guth_katz_lower_estimate,
@@ -31,13 +37,18 @@ from evobyte.discrete_geometry import (
     linear_points,
     moser_spindle_points,
     pairwise_squared_distances,
+    point_line_incidence,
+    spencer_szemeredi_trotter_bound,
     sq_euclidean_distance,
     triangular_grid_points,
     unit_distance_count,
+    unit_distance_graph_degrees,
     verify_discrete_geometry_baseline_soundness,
     verify_discrete_geometry_properties,
     verify_erdos_distinct_distances_baseline_soundness,
     verify_erdos_distinct_distances_properties,
+    verify_unit_distance_properties,
+    verify_unit_distances_szemeredi_trotter_baseline_soundness,
 )
 
 
@@ -248,5 +259,94 @@ def test_verify_erdos_soundness_rejections() -> None:
 
     failing_audit = {"has_sorry": False, "total_theorems": 100, "lake_passed": False, "sha256": "a" * 64}
     sound, findings = verify_erdos_distinct_distances_baseline_soundness(failing_audit)
+    assert sound is False
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+
+
+def test_point_line_incidences_and_grid_lines() -> None:
+    """Test point-line incidence detector and grid line generation."""
+    # Line x - y = 0
+    line_diag = (1, -1, 0)
+    assert point_line_incidence((0, 0), line_diag) is True
+    assert point_line_incidence((2, 2), line_diag) is True
+    assert point_line_incidence((1, 2), line_diag) is False
+
+    pts = grid_points(3)  # 9 points
+    lines = generate_grid_lines(3)  # 3 horizontal + 3 vertical = 6 lines
+    assert len(lines) == 6
+    # Each point belongs to exactly 1 horizontal and 1 vertical line, so total incidences = 2 * 9 = 18
+    incidences = count_point_line_incidences(pts, lines)
+    assert incidences == 18
+
+
+def test_unit_distance_properties_and_handshaking() -> None:
+    """Test unit distance graph invariants and handshaking theorem sum deg(v) = 2*u."""
+    pts = grid_points(3)  # 9 points, 12 unit edges (4 horizontal pairs per row * 3? No: 2 per row * 3 + 2 per col * 3 = 12)
+    props = verify_unit_distance_properties(pts, unit_sq=1)
+    assert props["n_points"] == 9
+    assert props["unit_distances"] == 12
+    assert props["sum_degrees"] == 24
+    assert props["handshaking_holds"] is True
+    assert props["sst_cubic_holds"] is True
+
+    # Moser spindle: 7 vertices, 11 edges (with unit_sq=4)
+    spindle = moser_spindle_points()
+    s_props = verify_unit_distance_properties(spindle, unit_sq=4)
+    assert s_props["n_points"] == 7
+    assert s_props["handshaking_holds"] is True
+    assert s_props["sum_degrees"] == 2 * s_props["unit_distances"]
+
+
+def test_unit_distance_theoretical_bounds() -> None:
+    """Test Spencer-Szemerédi-Trotter and Erdős unit distance bounds."""
+    for n in (10, 50, 100):
+        sst = spencer_szemeredi_trotter_bound(n)
+        kst = erdos_unit_distance_kst_bound(n)
+        lower = erdos_unit_distance_lower_bound(n)
+        assert sst > 0
+        assert kst > 0
+        assert lower > 0
+        # SST exponent 4/3 is strictly lower than KST exponent 3/2 for large n
+        if n >= 100:
+            assert sst < kst * 8
+
+
+def test_generate_unit_distances_szemeredi_trotter_lean_code() -> None:
+    """Test generation of UnitDistancesSzemerediTrotterTheorems.lean module."""
+    code = generate_unit_distances_szemeredi_trotter_lean_code()
+    assert "namespace EvoByte.UnitDistances" in code
+    assert "sorry" not in code
+    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    assert len(thms) >= 75
+
+
+def test_audit_unit_distances_szemeredi_trotter_baseline() -> None:
+    """Test P131 baseline audit against Lean 4 kernel."""
+    audit = audit_unit_distances_szemeredi_trotter_baseline(verify_lake=True)
+    assert audit["module"] == "UnitDistancesSzemerediTrotterTheorems"
+    assert audit["has_sorry"] is False
+    assert audit["lake_passed"] is True
+    assert audit["total_theorems"] >= 75
+    assert len(audit["benchmarks"]) >= 4
+
+    sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(audit, min_theorems=75)
+    assert sound is True
+    assert findings == []
+
+
+def test_verify_unit_distances_soundness_rejections() -> None:
+    """Test that P131 soundness validator properly catches defects."""
+    bad_audit = {"has_sorry": True, "total_theorems": 100, "lake_passed": True, "sha256": "a" * 64}
+    sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    sparse_audit = {"has_sorry": False, "total_theorems": 10, "lake_passed": True, "sha256": "a" * 64}
+    sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(sparse_audit, min_theorems=75)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    failing_audit = {"has_sorry": False, "total_theorems": 100, "lake_passed": False, "sha256": "a" * 64}
+    sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(failing_audit)
     assert sound is False
     assert any("LAKE_BUILD_FAILED" in f for f in findings)

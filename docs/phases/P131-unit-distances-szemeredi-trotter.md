@@ -1,6 +1,6 @@
 # P131 — Problema das distâncias unitárias e teorema de incidência de Szemerédi-Trotter
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P130 concluída; branch a partir de `codex/p130-erdos-distinct-distances-guth-katz`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P130 concluída com teoremas de distâncias distintas provados e compilados no Lean 4.
