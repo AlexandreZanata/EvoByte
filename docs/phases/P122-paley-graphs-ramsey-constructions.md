@@ -1,6 +1,6 @@
 # P122 — Grafos de Paley e construções algébricas de cotas inferiores de Ramsey R(s,t)
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P121 concluída; branch a partir de `codex/p121-extremal-graph-ramsey-formal-database`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P121 concluída com assinaturas de grafos extremais e Mantel–Turán provadas em Lean 4.
