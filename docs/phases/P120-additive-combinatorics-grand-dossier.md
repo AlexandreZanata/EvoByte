@@ -1,6 +1,6 @@
 # P120 — Grande campanha de combinatória aditiva e dossiê certificado final em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P119 concluída; branch a partir de `codex/p119-additive-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P119 concluída com confirmação estatística cega aprovada; ambiente Lean 4 e Lake herméticos.

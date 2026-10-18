@@ -1,0 +1,14 @@
+{
+  "phase": "P120",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 2000,
+  "min_modules": 32,
+  "expected_chain_hash": "8013152a11ac6cf28559ea1067cba32bfb3c7319d66d27766f636e1bec39acc3",
+  "dossier_path": "docs/research/p120-additive-combinatorics-dossier.md",
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P120 Additive combinatorics grand formal campaign and certified literature dossier audit. Consolidates 32 formal modules in Lean 4 with 2,392 theorems, zero sorry, and SHA-256 cryptographic hash chain."
+}

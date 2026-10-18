@@ -6502,3 +6502,165 @@ def verify_open_problems_grand_campaign_soundness(
         findings.append(f"INVALID_CHAIN_HASH: {final_hash}")
 
     return len(findings) == 0, findings
+
+
+# ==============================================================================
+# P120 — ADDITIVE COMBINATORICS GRAND FORMAL CAMPAIGN AND CERTIFIED DOSSIER AUDIT
+# ==============================================================================
+
+
+def audit_additive_combinatorics_grand_campaign(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    expected_modules: list[str] | None = None,
+    verify_lake: bool = True,
+) -> dict[str, Any]:
+    """Audit the complete 32-module Lean 4 formal library and compute cryptographic hash chain for P120.
+
+    Inspects all 32 formal modules in `lean_proofs/Generated/` (including the 6 additive combinatorics
+    modules P113-P118), computes SHA-256 for each, verifies absence of `sorry` tokens, counts formal
+    `theorem` and `lemma` declarations (>= 2,000), computes an immutable cryptographic hash chain
+    rooted at `EvoByte Additive Combinatorics Grand Formal Campaign Root P120`, and validates Lake build.
+    """
+    import re
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+
+    if expected_modules is None:
+        expected_modules = [
+            "AdditiveCombinatoricsSignatures.lean",
+            "AdditiveEnergyTheorems.lean",
+            "AdditiveTacticTheorems.lean",
+            "AsymptoticDensityTheorems.lean",
+            "AutomatedTheorems.lean",
+            "BytecodeTheorems.lean",
+            "ConicParametrizations.lean",
+            "CubicSurfaceFibrations.lean",
+            "CustomTacticTheorems.lean",
+            "DiophSurfaceTheorems.lean",
+            "DivisibilityLemmas.lean",
+            "ErdosGrahamTheorems.lean",
+            "ErdosStrausCertificates.lean",
+            "ErdosStrausIdentities.lean",
+            "ErdosTuranBasesTheorems.lean",
+            "ExtremalBoundsTheorems.lean",
+            "HigherPowerTheorems.lean",
+            "InductiveLemmas.lean",
+            "MultitermTheorems.lean",
+            "ObstructionGraphTheorems.lean",
+            "OpenProblemSignatures.lean",
+            "OptimalCertificates.lean",
+            "PillaiCatalanTheorems.lean",
+            "QuadraticIdentities.lean",
+            "QuadraticRingTheorems.lean",
+            "QuaternionAlgebraTheorems.lean",
+            "SchinzelTheorems.lean",
+            "SidonSetsTheorems.lean",
+            "SierpinskiTheorems.lean",
+            "SolutionMomentsTheorems.lean",
+            "SumFreeTheorems.lean",
+            "UniversalMultitermTheorems.lean",
+        ]
+
+    additive_modules = {
+        "AdditiveCombinatoricsSignatures.lean",
+        "AdditiveEnergyTheorems.lean",
+        "AdditiveTacticTheorems.lean",
+        "ErdosTuranBasesTheorems.lean",
+        "SidonSetsTheorems.lean",
+        "SumFreeTheorems.lean",
+    }
+
+    chain_state = hashlib.sha256(
+        b"EvoByte Additive Combinatorics Grand Formal Campaign Root P120"
+    ).hexdigest()
+    hash_chain: list[dict[str, Any]] = []
+    modules_summary: dict[str, Any] = {}
+    total_theorems = 0
+    additive_theorems = 0
+    has_any_sorry = False
+    missing_modules: list[str] = []
+
+    for mod_name in sorted(expected_modules):
+        mod_p = gen / mod_name
+        if not mod_p.exists():
+            missing_modules.append(mod_name)
+            continue
+
+        mod_bytes = mod_p.read_bytes()
+        mod_text = mod_bytes.decode("utf-8")
+        mod_sha = hashlib.sha256(mod_bytes).hexdigest()
+
+        thms_count = len(re.findall(r"^(?:theorem|lemma)\s+", mod_text, flags=re.MULTILINE))
+        sorry_present = bool(re.search(r"\bsorry\b", mod_text))
+        if sorry_present:
+            has_any_sorry = True
+
+        total_theorems += thms_count
+        if mod_name in additive_modules:
+            additive_theorems += thms_count
+
+        step_payload = f"{chain_state}:{mod_name}:{mod_sha}:{thms_count}".encode()
+        chain_state = hashlib.sha256(step_payload).hexdigest()
+
+        entry = {
+            "module": mod_name,
+            "path": str(mod_p),
+            "sha256": mod_sha,
+            "theorem_count": thms_count,
+            "has_sorry": sorry_present,
+            "chain_hash": chain_state,
+        }
+        hash_chain.append(entry)
+        modules_summary[mod_name] = entry
+
+    lake_passed = True
+    lake_reasons: list[str] = []
+    if verify_lake:
+        bins = lean_resolve_binaries(proj)
+        lake_proc = subprocess.run(
+            [bins["lake"], "-d", str(proj), "build", "Generated"],
+            capture_output=True,
+            text=True,
+            cwd=str(proj),
+            timeout=180,
+            check=False,
+        )
+        if lake_proc.returncode != 0:
+            lake_passed = False
+            lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "project_dir": str(proj),
+        "generated_dir": str(gen),
+        "total_modules": len(hash_chain),
+        "total_theorems": total_theorems,
+        "additive_theorems": additive_theorems,
+        "has_sorry": has_any_sorry,
+        "missing_modules": missing_modules,
+        "hash_chain": hash_chain,
+        "final_chain_hash": chain_state,
+        "modules": modules_summary,
+        "lake_passed": lake_passed,
+        "lake_reasons": lake_reasons,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_additive_combinatorics_grand_campaign_soundness(
+    campaign_summary: dict[str, Any],
+    min_theorems: int = 2000,
+    min_modules: int = 32,
+) -> tuple[bool, list[str]]:
+    """Audit P120 additive combinatorics grand formal campaign summary for complete acceptance, zero sorry, and soundness."""
+    return verify_open_problems_grand_campaign_soundness(
+        campaign_summary,
+        min_theorems=min_theorems,
+        min_modules=min_modules,
+    )

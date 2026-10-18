@@ -15,6 +15,11 @@ from benchmarks.science_matrix import (
     run_p117_erdos_turan_bases_audit,
     run_p118_sum_free_density_audit,
     run_p119_additive_blind_confirmation_audit,
+    run_p120_additive_grand_campaign_audit,
+)
+from evobyte.formal_bridge import (
+    audit_additive_combinatorics_grand_campaign,
+    verify_additive_combinatorics_grand_campaign_soundness,
 )
 from evobyte.statistical import (
     evaluate_additive_blind_confirmation,
@@ -660,3 +665,63 @@ def test_p119_audit_smoke(tmp_path: Path):
     assert report["total_instances"] == 100
     assert report["total_wins"] == 100
     assert report["fwer_controlled"] is True
+
+
+# ==============================================================================
+# P120 TESTS: ADDITIVE COMBINATORICS GRAND CAMPAIGN & CERTIFIED DOSSIER
+# ==============================================================================
+
+
+def test_p120_additive_grand_campaign_and_hash_chain():
+    summary = audit_additive_combinatorics_grand_campaign(verify_lake=False)
+    assert summary["total_modules"] == 32
+    assert summary["total_theorems"] == 2392
+    assert summary["additive_theorems"] == 463
+    assert summary["has_sorry"] is False
+    assert (
+        summary["final_chain_hash"]
+        == "8013152a11ac6cf28559ea1067cba32bfb3c7319d66d27766f636e1bec39acc3"
+    )
+    ok, findings = verify_additive_combinatorics_grand_campaign_soundness(
+        dict(summary, lake_passed=True), min_theorems=2000, min_modules=32
+    )
+    assert ok is True
+    assert findings == []
+
+
+def test_p120_acceptance_rejects_wrong_phase(tmp_path: Path):
+    cfg_p = tmp_path / "bad-p120.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P120 configuration"):
+        run_p120_additive_grand_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p120_audit_smoke(tmp_path: Path):
+    cfg = {
+        "phase": "P120",
+        "seed": 42,
+        "device": "cpu",
+        "project_dir": "lean_proofs",
+        "generated_dir": "lean_proofs/Generated",
+        "min_theorems": 2000,
+        "min_modules": 32,
+        "expected_chain_hash": "8013152a11ac6cf28559ea1067cba32bfb3c7319d66d27766f636e1bec39acc3",
+        "dossier_path": "docs/research/p120-additive-combinatorics-dossier.md",
+        "verify_lake": True,
+        "allow_dirty": True,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p120-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p120-out.json"
+
+    report = run_p120_additive_grand_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P120"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_modules"] == 32
+    assert report["total_theorems"] == 2392
+    assert report["additive_theorems"] == 463
+    assert report["has_sorry"] is False
+    assert report["lake_passed"] is True
