@@ -30,3 +30,4 @@ import Generated.SidonSetsTheorems
 import Generated.AdditiveEnergyTheorems
 import Generated.AdditiveTacticTheorems
 import Generated.ErdosTuranBasesTheorems
+import Generated.SumFreeTheorems

@@ -1,6 +1,6 @@
 # P118 — Alvo aberto Erdős sobre conjuntos livres de soma e densidade de Schnirelmann
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P117 concluída; branch a partir de `codex/p117-erdos-turan-additive-bases`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P117 concluída com teoremas de bases aditivas no Lean 4.

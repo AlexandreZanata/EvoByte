@@ -13,6 +13,7 @@ from benchmarks.science_matrix import (
     run_p115_additive_energy_audit,
     run_p116_additive_norm_audit,
     run_p117_erdos_turan_bases_audit,
+    run_p118_sum_free_density_audit,
 )
 from evobyte.additive import (
     DEFAULT_ADDITIVE_ENERGY_LEAN_FILE,
@@ -20,12 +21,14 @@ from evobyte.additive import (
     DEFAULT_ERDOS_TURAN_BASES_LEAN_FILE,
     DEFAULT_LEAN_FILE,
     DEFAULT_SIDON_THEOREMS_LEAN_FILE,
+    DEFAULT_SUM_FREE_THEOREMS_LEAN_FILE,
     additive_energy,
     audit_additive_combinatorics_baseline,
     audit_additive_energy_balog_szemeredi,
     audit_additive_norm_metatactic,
     audit_erdos_turan_additive_bases,
     audit_sidon_sets_extremal_search,
+    audit_sum_free_schnirelmann_density,
     bose_chowla_sidon_set,
     doubling_constant,
     erdos_turan_sidon_upper_bound,
@@ -35,6 +38,7 @@ from evobyte.additive import (
     generate_additive_tactic_theorems_lean_code,
     generate_erdos_turan_bases_theorems_lean_code,
     generate_sidon_sets_theorems_lean_code,
+    generate_sum_free_theorems_lean_code,
     is_b2g_set,
     is_finite_additive_basis_of_order_2,
     is_sidon_set,
@@ -46,7 +50,9 @@ from evobyte.additive import (
     representation_count,
     representation_profile,
     ruzsa_sidon_construction,
+    schnirelmann_density,
     search_extremal_sidon_set,
+    search_extremal_sum_free_subset,
     search_minimal_additive_basis_order_2,
     singer_difference_set,
     verify_additive_combinatorics_baseline_soundness,
@@ -56,8 +62,10 @@ from evobyte.additive import (
     verify_erdos_turan_bases_soundness,
     verify_minkowski_monotonicity_and_algebra,
     verify_plunnecke_ruzsa_bound,
+    verify_schnirelmann_mann_inequality,
     verify_sidon_difference_property,
     verify_sidon_sets_soundness,
+    verify_sum_free_density_soundness,
 )
 from evobyte.verifier import is_lean_available
 
@@ -508,6 +516,73 @@ def test_p117_audit_smoke(tmp_path: Path):
     report = run_p117_erdos_turan_bases_audit(cfg_p, out_p)
     assert out_p.exists()
     assert report["phase"] == "P117"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
+    assert report["has_sorry"] is False
+    assert report["lake_passed"] is True
+
+
+# ==============================================================================
+# P118 TESTS: SUM-FREE SETS & SCHNIRELMANN-MANN DENSITY
+# ==============================================================================
+
+
+def test_sum_free_extremal_and_schnirelmann_mann_density():
+    for n_val in (9, 15, 24):
+        sf = search_extremal_sum_free_subset(n_val, dilation=4)
+        assert sf["is_sum_free"] is True
+        assert sf["dilation_invariant"] is True
+        assert sf["erdos_third_bound_holds"] is True
+        assert sf["cardinality"] == (n_val + 1) // 2
+
+    assert schnirelmann_density([1, 3, 5, 7, 9], 10) == pytest.approx(0.5)
+    mann = verify_schnirelmann_mann_inequality([1, 3, 5, 7, 9], [1, 3, 5, 7, 9], 10)
+    assert mann["schnirelmann_holds"] is True
+    assert mann["mann_holds"] is True
+    assert mann["sigma_sum"] == pytest.approx(1.0)
+
+
+def test_p118_sum_free_theorems_generation_and_soundness():
+    assert DEFAULT_SUM_FREE_THEOREMS_LEAN_FILE.name == "SumFreeTheorems.lean"
+    code = generate_sum_free_theorems_lean_code()
+    assert "import Generated.ErdosTuranBasesTheorems" in code
+    assert "theorem sum_free_dilation_invariance" in code
+    assert "sorry" not in code
+
+    summary = audit_sum_free_schnirelmann_density(verify_lake=False)
+    assert summary["module"] == "SumFreeTheorems"
+    assert summary["total_theorems"] >= 60
+    assert summary["has_sorry"] is False
+    ok, findings = verify_sum_free_density_soundness(dict(summary, lake_passed=True), min_theorems=60)
+    assert ok is True
+    assert findings == []
+
+
+def test_p118_acceptance_rejects_wrong_phase(tmp_path: Path):
+    cfg_p = tmp_path / "bad-p118.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P118 configuration"):
+        run_p118_sum_free_density_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p118_audit_smoke(tmp_path: Path):
+    cfg = {
+        "phase": "P118",
+        "min_theorems": 60,
+        "project_dir": "lean_proofs",
+        "lean_file": "lean_proofs/Generated/SumFreeTheorems.lean",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p118-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p118-out.json"
+
+    report = run_p118_sum_free_density_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P118"
     assert report["verdict"] == "ACCEPTED"
     assert report["total_theorems"] >= 60
     assert report["has_sorry"] is False
