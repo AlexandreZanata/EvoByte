@@ -10,21 +10,27 @@ import pytest
 from benchmarks.science_matrix import (
     run_p113_additive_combinatorics_baseline_audit,
     run_p114_sidon_sets_audit,
+    run_p115_additive_energy_audit,
 )
 from evobyte.additive import (
+    DEFAULT_ADDITIVE_ENERGY_LEAN_FILE,
     DEFAULT_LEAN_FILE,
     DEFAULT_SIDON_THEOREMS_LEAN_FILE,
     additive_energy,
     audit_additive_combinatorics_baseline,
+    audit_additive_energy_balog_szemeredi,
     audit_sidon_sets_extremal_search,
     bose_chowla_sidon_set,
     doubling_constant,
     erdos_turan_sidon_upper_bound,
+    extract_bsg_popular_difference_subset,
     generate_additive_combinatorics_lean_code,
+    generate_additive_energy_theorems_lean_code,
     generate_sidon_sets_theorems_lean_code,
     is_b2g_set,
     is_sidon_set,
     is_sum_free,
+    iterated_sum_diff_set,
     mian_chowla_sequence,
     minkowski_diff,
     minkowski_sum,
@@ -33,6 +39,9 @@ from evobyte.additive import (
     search_extremal_sidon_set,
     singer_difference_set,
     verify_additive_combinatorics_baseline_soundness,
+    verify_additive_energy_soundness,
+    verify_cauchy_schwarz_additive_bound,
+    verify_plunnecke_ruzsa_bound,
     verify_sidon_difference_property,
     verify_sidon_sets_soundness,
 )
@@ -283,6 +292,78 @@ def test_p114_audit_smoke(tmp_path: Path):
     report = run_p114_sidon_sets_audit(cfg_p, out_p)
     assert out_p.exists()
     assert report["phase"] == "P114"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
+    assert report["has_sorry"] is False
+    assert report["lake_passed"] is True
+
+
+# ==============================================================================
+# P115 TESTS: ADDITIVE ENERGY, PLÜNNECKE-RUZSA & BALOG-SZEMERÉDI-GOWERS
+# ==============================================================================
+
+
+def test_cauchy_schwarz_and_plunnecke_ruzsa_bounds():
+    for sample in ([1, 2, 3, 4], [1, 2, 5, 7], [1, 2, 4, 8], [1, 2, 3, 7, 8, 9]):
+        cs = verify_cauchy_schwarz_additive_bound(sample)
+        assert cs["cauchy_schwarz_holds"] is True
+        assert cs["lhs_sum"] >= cs["rhs"]
+        assert cs["lhs_diff"] >= cs["rhs"]
+
+        pr = verify_plunnecke_ruzsa_bound(sample, k_plus=2, l_minus=1)
+        assert pr["plunnecke_ruzsa_holds"] is True
+        assert pr["lhs_cleared"] <= pr["rhs_cleared"]
+
+        bsg = extract_bsg_popular_difference_subset(sample)
+        assert bsg["energy_upper_bound_holds"] is True
+        assert 1 <= bsg["subset_size"] <= len(sample)
+
+    iter_ap = iterated_sum_diff_set([1, 2, 3], k_plus=2, l_minus=1)
+    assert min(iter_ap) == 1 + 1 - 3
+    assert max(iter_ap) == 3 + 3 - 1
+
+
+def test_p115_additive_energy_theorems_generation_and_soundness():
+    assert DEFAULT_ADDITIVE_ENERGY_LEAN_FILE.name == "AdditiveEnergyTheorems.lean"
+    code = generate_additive_energy_theorems_lean_code()
+    assert "import Generated.SidonSetsTheorems" in code
+    assert "theorem additive_cauchy_schwarz_mono" in code
+    assert "sorry" not in code
+
+    summary = audit_additive_energy_balog_szemeredi(verify_lake=False)
+    assert summary["module"] == "AdditiveEnergyTheorems"
+    assert summary["total_theorems"] >= 60
+    assert summary["has_sorry"] is False
+    ok, findings = verify_additive_energy_soundness(dict(summary, lake_passed=True), min_theorems=60)
+    assert ok is True
+    assert findings == []
+
+
+def test_p115_acceptance_rejects_wrong_phase(tmp_path: Path):
+    cfg_p = tmp_path / "bad-p115.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P115 configuration"):
+        run_p115_additive_energy_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p115_audit_smoke(tmp_path: Path):
+    cfg = {
+        "phase": "P115",
+        "min_theorems": 60,
+        "project_dir": "lean_proofs",
+        "lean_file": "lean_proofs/Generated/AdditiveEnergyTheorems.lean",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p115-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p115-out.json"
+
+    report = run_p115_additive_energy_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P115"
     assert report["verdict"] == "ACCEPTED"
     assert report["total_theorems"] >= 60
     assert report["has_sorry"] is False

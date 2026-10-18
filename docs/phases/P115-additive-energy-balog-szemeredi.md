@@ -1,6 +1,6 @@
 # P115 — Teoremas de energia aditiva e limitantes de Balog-Szemerédi-Gowers
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P114 concluída; branch a partir de `codex/p114-sidon-sets-extremal-search`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P114 concluída com construções de Sidon provadas em Lean 4.

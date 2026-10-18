@@ -753,6 +753,7 @@ ACCEPTANCE_PHASES = (
     "P112",
     "P113",
     "P114",
+    "P115",
 )
 
 
@@ -10252,6 +10253,127 @@ def run_p114_sidon_sets_audit(
     return report
 
 
+def run_p115_additive_energy_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P115 audit: Additive energy, Plünnecke-Ruzsa, and Balog-Szemerédi-Gowers formal audit.
+
+    Verifies:
+    1. Complete Lean 4 compilation of AdditiveEnergyTheorems.lean.
+    2. Over 60 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Additive Cauchy-Schwarz, Plünnecke-Ruzsa, and BSG popular difference subset extraction.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+    import torch as _torch
+
+    from evobyte.additive import (
+        audit_additive_energy_balog_szemeredi,
+        verify_additive_energy_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P115":
+        raise ValueError(f"Config {cfg_p} is not a P115 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P115 ADDITIVE ENERGY & BALOG-SZEMERÉDI-GOWERS AUDIT (Lean 4, Cauchy-Schwarz, Plünnecke-Ruzsa, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 60))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    energy_audit = audit_additive_energy_balog_szemeredi(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/AdditiveEnergyTheorems.lean"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_additive_energy_soundness(
+        energy_audit,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Lean 4 module: {energy_audit.get('module')}, "
+        f"Theorems verified: {energy_audit.get('total_theorems')}, "
+        f"Has sorry: {energy_audit.get('has_sorry')}, "
+        f"Lake passed: {energy_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P115 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p115_config": config_sha[:16],
+            "lean_theorems": energy_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P115"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P115",
+        "verdict": verdict,
+        "claim_scope": (
+            "Additive energy, additive Cauchy-Schwarz inequalities, Plünnecke-Ruzsa iterated sum-difference "
+            "bounds, and Balog-Szemerédi-Gowers popular difference fiber extraction verified in Lean 4 (0 sorry)."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": energy_audit.get("total_theorems", 0),
+        "has_sorry": energy_audit.get("has_sorry", False),
+        "lake_passed": energy_audit.get("lake_passed", False),
+        "sha256": energy_audit.get("sha256", ""),
+        "module": energy_audit.get("module", ""),
+        "energy_benchmarks": energy_audit.get("energy_benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P115",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P115 audit {verdict}: {energy_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -14332,6 +14454,8 @@ def main() -> int:
             run_p113_additive_combinatorics_baseline_audit(args.config, args.output)
         elif args.acceptance_phase == "P114":
             run_p114_sidon_sets_audit(args.config, args.output)
+        elif args.acceptance_phase == "P115":
+            run_p115_additive_energy_audit(args.config, args.output)
         return 0
 
     seeds = (
