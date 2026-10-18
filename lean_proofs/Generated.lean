@@ -37,3 +37,4 @@ import Generated.ZarankiewiczKovariSosTuranTheorems
 import Generated.GraphRamseyTacticTheorems
 import Generated.RothSalemSpencerTheorems
 import Generated.ErdosGyarfasChromaticTheorems
+import Generated.DiscreteGeometrySignatures

@@ -1,6 +1,6 @@
 # P129 — Banco formal de geometria discreta, métricas e distâncias distintas de Erdős em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P128 concluída; branch a partir de `codex/p129-p136-discrete-geometry-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P128 concluída com grande campanha de grafos e Ramsey consolidada documentalmente sob D034.
