@@ -1,6 +1,6 @@
 # P116 — Meta-tática customizada additive_norm e automação em Lean 4
 
-**Status:** In review.
+**Status:** Done (2026-10-18; meta-táticas additive_norm e additive_norm_intro com 140 invocações certificadas e 71 teoremas sem sorry em AdditiveTacticTheorems.lean, PR #152; lake build e pytest verdes).
 **Dependência:** P115 concluída; branch a partir de `codex/p115-additive-energy-balog-szemeredi`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P115 concluída com teoremas de energia aditiva provados em Lean 4.

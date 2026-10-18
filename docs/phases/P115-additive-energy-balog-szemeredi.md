@@ -1,6 +1,6 @@
 # P115 — Teoremas de energia aditiva e limitantes de Balog-Szemerédi-Gowers
 
-**Status:** In review.
+**Status:** Done (2026-10-18; teoremas de energia aditiva, Cauchy–Schwarz, Plünnecke–Ruzsa e fibras de Balog–Szemerédi–Gowers, 79 teoremas sem sorry em AdditiveEnergyTheorems.lean, PR #151; lake build e pytest verdes).
 **Dependência:** P114 concluída; branch a partir de `codex/p114-sidon-sets-extremal-search`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P114 concluída com construções de Sidon provadas em Lean 4.

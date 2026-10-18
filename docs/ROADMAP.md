@@ -265,24 +265,25 @@ P111 confirmed multi-problem blind performance under strict family-wise error ra
 P112 executed a grand open problems campaign certifying 1,929 Lean 4 theorems across 26 modules with zero `sorry`, SHA-256 hash chain head `0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268`, and the final research dossier.
 All phases P105–P112 are Done.
 
-## Additive combinatorics, Sidon sets & density program (D031)
+## Additive combinatorics, Sidon sets & density program (D031, completed under D032)
 
 [P113–P120](phases/README.md#additive-combinatorics-sidon-sets--density-program-p113p120)
-define the formal research extension targeting additive combinatorics and Sidon sets under D031.
-Following the conclusion of P105–P112 under D030, this program targets $B_2[g]$ Sidon sets,
+define the formal research extension targeting additive combinatorics and Sidon sets under D031,
+now completed (Done, D032).
+Following the conclusion of P105–P112 under D030, this program targeted $B_2[g]$ Sidon sets,
 additive energy $E(A, B)$, Plünnecke–Ruzsa sum-difference inequalities, the Erdős–Turán conjecture
 on additive bases, sum-free subsets, blind confirmation with Holm FWER control, and expansion to
-2,000+ certified theorems in Lean 4.
+2,392 certified theorems across 32 modules in Lean 4.
 
-P113 formalizes additive combinatorics and Sidon signatures in Lean 4 with dependent types.
-P114 implements structured search and extremal construction of finite $B_2[1]$ Sidon sets.
-P115 formalizes additive energy theorems and Balog–Szemerédi–Gowers sumset bounds.
-P116 implements the custom `additive_norm` metaprogramming tactic in Lean 4.
-P117 formalizes Erdős–Turán additive basis representation bounds.
-P118 proves density bounds for sum-free subsets and 3-term progression restrictions.
-P119 confirms performance on a sealed blind split of 100 additive instances under Holm FWER control.
-P120 executes a grand additive combinatorics campaign certifying 2,000+ Lean 4 theorems and the final dossier.
-All phases remain Proposed until measured and accepted.
+P113 formalized additive combinatorics and Sidon signatures in Lean 4 with dependent types (103 theorems).
+P114 implemented structured search and extremal construction of finite $B_2[1]$ Sidon sets (70 theorems).
+P115 formalized additive energy theorems, Plünnecke–Ruzsa, and Balog–Szemerédi–Gowers fiber bounds (79 theorems).
+P116 implemented the custom `additive_norm` and `additive_norm_intro` metaprogramming tactics in Lean 4 (71 theorems).
+P117 formalized Erdős–Turán additive basis representation and Rohrbach capacity bounds (70 theorems).
+P118 proved density bounds for sum-free subsets and Schnirelmann–Mann density inequalities (70 theorems).
+P119 confirmed performance on a sealed blind split of 100 additive instances under Holm FWER control (100/100 wins, $p = 2.38 \times 10^{-7} \le 0.01$).
+P120 executed a grand additive combinatorics campaign certifying 2,392 Lean 4 theorems across 32 modules with zero `sorry`, SHA-256 hash chain head `8013152a11ac6cf28559ea1067cba32bfb3c7319d66d27766f636e1bec39acc3`, and the final dossier.
+All phases P113–P120 are Done.
 
 ## Quantum track (experimental, deferred expansion)
 

@@ -1,6 +1,6 @@
 # P120 — Grande campanha de combinatória aditiva e dossiê certificado final em Lean 4
 
-**Status:** In review.
+**Status:** Done (2026-10-18; grande campanha formal com 2.392 teoremas no kernel do Lean 4 em 32 módulos sem sorry, hash chain SHA-256 final 8013152a11ac6cf28559ea1067cba32bfb3c7319d66d27766f636e1bec39acc3, dossiê docs/research/p120-additive-combinatorics-dossier.md, PR #156; lake build e pytest verdes).
 **Dependência:** P119 concluída; branch a partir de `codex/p119-additive-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P119 concluída com confirmação estatística cega aprovada; ambiente Lean 4 e Lake herméticos.

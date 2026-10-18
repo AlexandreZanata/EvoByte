@@ -1,6 +1,6 @@
 # P117 — Alvo aberto Erdős-Turán em bases aditivas e representações
 
-**Status:** In review.
+**Status:** Done (2026-10-18; bases aditivas de ordem 2, capacidade de Rohrbach e multiplicidade de Erdős–Turán com 70 teoremas sem sorry em ErdosTuranBasesTheorems.lean, PR #153; lake build e pytest verdes).
 **Dependência:** P116 concluída; branch a partir de `codex/p116-additive-norm-metatactic`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P116 concluída com meta-tática `additive_norm` provada em Lean 4.

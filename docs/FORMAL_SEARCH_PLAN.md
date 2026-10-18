@@ -598,12 +598,15 @@ P105 banco formal de problemas abertos -> P106 grafos de obstrução
 
 ## Programa de combinatória aditiva, conjuntos de Sidon e teoria de densidade em Lean 4 (P113–P120)
 
-**Programa proposto em 2026-10-18 (D031).** Sucede a conclusão de P105–P112 sob D030.
-O programa P105–P112 consolidou 1.929 teoremas formais em 26 módulos em `lean_proofs/Generated/`,
-estabelecendo uma taxonomia hermética de problemas abertos, proposição neural leve sem alucinação,
-MCTS guiado pelo kernel e confirmação estatística cega com controle FWER.
+**Programa concluído em 2026-10-18 (D032).** Sucedeu a conclusão de P105–P112 sob D030 e a proposta D031.
+Todas as 8 fases P113–P120 foram concluídas com êxito (`Done`), expandindo a biblioteca formal do
+EvoByte de 1.929 para **2.392 teoremas formais certificados** no kernel do Lean 4 em **32 módulos**
+(`463` novos teoremas de combinatória aditiva em `P113–P118`) com zero tokens `sorry`, meta-táticas
+`additive_norm` e `additive_norm_intro`, confirmação cega de 100/100 vitórias sob controle FWER
+(Bonferroni-Holm, $p = 2{,}38 \times 10^{-7} \le 0{,}01$) e dossiê de literatura com hash chain
+criptográfica SHA-256 (head `8013152a11ac6cf28559ea1067cba32bfb3c7319d66d27766f636e1bec39acc3`).
 
-O programa P113–P120 estende o motor formal do EvoByte para a combinatória aditiva moderna,
+O programa P113–P120 estendeu o motor formal do EvoByte para a combinatória aditiva moderna,
 visando os alvos de conjuntos de Sidon $B_2[g]$, energia aditiva, desigualdades de soma-diferença
 de Plünnecke–Ruzsa, e as célebres conjecturas de Erdős–Turán e densidade de Schnirelmann:
 1. **Banco formal de combinatória aditiva:** Tipagem dependente e invariantes de conjuntos $B_2[g]$,

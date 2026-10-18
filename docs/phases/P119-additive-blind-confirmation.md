@@ -1,6 +1,6 @@
 # P119 — Confirmação cega em larga escala com controle estatístico FWER (Bonferroni-Holm)
 
-**Status:** In review.
+**Status:** Done (2026-10-18; partição cega selada de 100 instâncias em 4 trilhas com 100/100 vitórias sob controle estrito FWER via Bonferroni-Holm p = 2.38e-07 <= 0.01, PR #155; lake build e pytest verdes).
 **Dependência:** P118 concluída; branch a partir de `codex/p118-sum-free-schnirelmann-density`.
 **Owner:** agente executor; revisor estatístico/matemático nos gates indicados.
 **Pré-requisito:** P118 concluída com teoremas de densidade provados; partição cega selada de 100 instâncias combinatórias intocada.

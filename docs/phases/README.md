@@ -255,9 +255,9 @@ inequalities, Erdős–Turán additive bases, sum-free subsets, and 2,000+ Lean 
 - [P119 — Confirmação cega em larga escala com controle estatístico FWER (Bonferroni-Holm)](P119-additive-blind-confirmation.md).
 - [P120 — Grande campanha de combinatória aditiva e dossiê certificado final em Lean 4](P120-additive-combinatorics-grand-dossier.md).
 
-Execute one micro-task at a time. All phases remain Proposed until their explicit
-gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
-conjecture resolution is claimed.
+P113–P120 are completed (Done, D032) with all measured gates passing, clean-tree
+verification, 2,392 Lean 4 kernel theorems with zero sorry across 32 modules (463 additive combinatorics theorems), and PRs #149–#156.
+No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
 
 
 ## Historical execution and acceptance contract
