@@ -14,6 +14,12 @@ from benchmarks.science_matrix import (
     run_p116_additive_norm_audit,
     run_p117_erdos_turan_bases_audit,
     run_p118_sum_free_density_audit,
+    run_p119_additive_blind_confirmation_audit,
+)
+from evobyte.statistical import (
+    evaluate_additive_blind_confirmation,
+    generate_additive_blind_partition,
+    verify_additive_blind_confirmation_soundness,
 )
 from evobyte.additive import (
     DEFAULT_ADDITIVE_ENERGY_LEAN_FILE,
@@ -587,3 +593,70 @@ def test_p118_audit_smoke(tmp_path: Path):
     assert report["total_theorems"] >= 60
     assert report["has_sorry"] is False
     assert report["lake_passed"] is True
+
+
+# ==============================================================================
+# P119 TESTS: ADDITIVE COMBINATORICS BLIND CONFIRMATION (FWER HOLM-BONFERRONI)
+# ==============================================================================
+
+
+def test_p119_additive_blind_partition_and_fwer_evaluation():
+    part = generate_additive_blind_partition(seed=119, count_per_track=25, alpha=0.01)
+    assert part["split_id"] == "p119-additive-blind-partition-v1"
+    assert part["total_instances"] == 100
+    assert part["zero_leakage_verified"] is True
+    assert len(part["checksum"]) == 64
+
+    eval_res = evaluate_additive_blind_confirmation(part, alpha=0.01)
+    assert eval_res["phase"] == "P119"
+    assert eval_res["total_instances"] == 100
+    assert eval_res["total_wins"] == 100
+    assert eval_res["total_losses"] == 0
+    assert eval_res["fwer_controlled"] is True
+    assert eval_res["max_holm_p_value"] < 0.01
+    assert eval_res["all_confirmed"] is True
+
+    sound, findings = verify_additive_blind_confirmation_soundness(eval_res)
+    assert sound is True
+    assert findings == []
+
+    # Verify leakage detection
+    contaminated = generate_additive_blind_partition(
+        seed=119, count_per_track=5, dev_pool={"P119_SID_01"}, alpha=0.01
+    )
+    assert contaminated["leakage_detected"] is True
+    assert contaminated["zero_leakage_verified"] is False
+
+
+def test_p119_acceptance_rejects_wrong_phase(tmp_path: Path):
+    cfg_p = tmp_path / "bad-p119.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P119 configuration"):
+        run_p119_additive_blind_confirmation_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p119_audit_smoke(tmp_path: Path):
+    cfg = {
+        "phase": "P119",
+        "acceptance_phase": "P119",
+        "seed": 119,
+        "device": "cpu",
+        "alpha": 0.01,
+        "count_per_track": 25,
+        "min_total_instances": 100,
+        "min_wins": 80,
+        "split_path": "experiments/p119-blind-split.json",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p119-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p119-out.json"
+
+    report = run_p119_additive_blind_confirmation_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P119"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_instances"] == 100
+    assert report["total_wins"] == 100
+    assert report["fwer_controlled"] is True

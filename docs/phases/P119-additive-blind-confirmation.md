@@ -1,6 +1,6 @@
 # P119 — Confirmação cega em larga escala com controle estatístico FWER (Bonferroni-Holm)
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P118 concluída; branch a partir de `codex/p118-sum-free-schnirelmann-density`.
 **Owner:** agente executor; revisor estatístico/matemático nos gates indicados.
 **Pré-requisito:** P118 concluída com teoremas de densidade provados; partição cega selada de 100 instâncias combinatórias intocada.

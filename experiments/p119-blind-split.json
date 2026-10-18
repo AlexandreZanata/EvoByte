@@ -1,0 +1,935 @@
+{
+  "alpha": 0.01,
+  "checksum": "07955a5dd04da13e220fc4ad7d3692bfbeb964f988f1b04b49f424fb0a99794c",
+  "count_per_track": 25,
+  "description": "Sealed blind partition of 100 additive combinatorics instances (Sidon extremal, Additive Energy/BSG, Erd\u0151s-Tur\u00e1n bases, Sum-Free/Schnirelmann) for P119 confirmation under Bonferroni-Holm family-wise error rate control (alpha=0.01).",
+  "leakage_detected": false,
+  "seed": 119,
+  "split_id": "p119-additive-blind-partition-v1",
+  "total_instances": 100,
+  "tracks": {
+    "additive_energy_bsg": {
+      "instances": [
+        {
+          "elements": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            20,
+            25,
+            30,
+            35
+          ],
+          "instance_id": "P119_BSG_01",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            4,
+            7,
+            10,
+            13,
+            16,
+            21,
+            27,
+            33,
+            39
+          ],
+          "instance_id": "P119_BSG_02",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            5,
+            9,
+            13,
+            17,
+            21,
+            22,
+            25,
+            29,
+            36,
+            43
+          ],
+          "instance_id": "P119_BSG_03",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            6,
+            11,
+            16,
+            21,
+            23,
+            31,
+            39,
+            47
+          ],
+          "instance_id": "P119_BSG_04",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            24,
+            33,
+            42,
+            51
+          ],
+          "instance_id": "P119_BSG_05",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            4,
+            7,
+            10,
+            13,
+            16,
+            19,
+            25,
+            30,
+            35,
+            40
+          ],
+          "instance_id": "P119_BSG_06",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            5,
+            9,
+            13,
+            17,
+            26,
+            32,
+            38,
+            44
+          ],
+          "instance_id": "P119_BSG_07",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            6,
+            11,
+            16,
+            21,
+            26,
+            27,
+            34,
+            41,
+            48
+          ],
+          "instance_id": "P119_BSG_08",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            28,
+            36,
+            44,
+            52
+          ],
+          "instance_id": "P119_BSG_09",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            4,
+            7,
+            10,
+            13,
+            29,
+            38,
+            47,
+            56
+          ],
+          "instance_id": "P119_BSG_10",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            5,
+            9,
+            13,
+            17,
+            21,
+            30,
+            35,
+            40,
+            45
+          ],
+          "instance_id": "P119_BSG_11",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            6,
+            11,
+            16,
+            21,
+            26,
+            31,
+            37,
+            43,
+            49
+          ],
+          "instance_id": "P119_BSG_12",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            32,
+            39,
+            46,
+            53
+          ],
+          "instance_id": "P119_BSG_13",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            4,
+            7,
+            10,
+            13,
+            16,
+            33,
+            41,
+            49,
+            57
+          ],
+          "instance_id": "P119_BSG_14",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            5,
+            9,
+            13,
+            17,
+            21,
+            25,
+            34,
+            43,
+            52,
+            61
+          ],
+          "instance_id": "P119_BSG_15",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            6,
+            11,
+            16,
+            21,
+            35,
+            40,
+            45,
+            50
+          ],
+          "instance_id": "P119_BSG_16",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            36,
+            42,
+            48,
+            54
+          ],
+          "instance_id": "P119_BSG_17",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            4,
+            7,
+            10,
+            13,
+            16,
+            19,
+            37,
+            44,
+            51,
+            58
+          ],
+          "instance_id": "P119_BSG_18",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            5,
+            9,
+            13,
+            17,
+            38,
+            46,
+            54,
+            62
+          ],
+          "instance_id": "P119_BSG_19",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            6,
+            11,
+            16,
+            21,
+            26,
+            39,
+            48,
+            57,
+            66
+          ],
+          "instance_id": "P119_BSG_20",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            40,
+            45,
+            50,
+            55
+          ],
+          "instance_id": "P119_BSG_21",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            4,
+            7,
+            10,
+            13,
+            41,
+            47,
+            53,
+            59
+          ],
+          "instance_id": "P119_BSG_22",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            5,
+            9,
+            13,
+            17,
+            21,
+            42,
+            49,
+            56,
+            63
+          ],
+          "instance_id": "P119_BSG_23",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            6,
+            11,
+            16,
+            21,
+            26,
+            31,
+            43,
+            51,
+            59,
+            67
+          ],
+          "instance_id": "P119_BSG_24",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        },
+        {
+          "elements": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            44,
+            53,
+            62,
+            71
+          ],
+          "instance_id": "P119_BSG_25",
+          "k_plus": 2,
+          "l_minus": 1,
+          "track": "additive_energy_bsg"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Additive energy Cauchy-Schwarz, Pl\u00fcnnecke-Ruzsa, and BSG fiber extraction"
+    },
+    "erdos_turan_basis": {
+      "instances": [
+        {
+          "instance_id": "P119_BAS_01",
+          "n_target": 13,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_02",
+          "n_target": 17,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_03",
+          "n_target": 21,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_04",
+          "n_target": 25,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_05",
+          "n_target": 29,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_06",
+          "n_target": 33,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_07",
+          "n_target": 37,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_08",
+          "n_target": 41,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_09",
+          "n_target": 45,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_10",
+          "n_target": 49,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_11",
+          "n_target": 53,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_12",
+          "n_target": 57,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_13",
+          "n_target": 61,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_14",
+          "n_target": 65,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_15",
+          "n_target": 69,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_16",
+          "n_target": 73,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_17",
+          "n_target": 77,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_18",
+          "n_target": 81,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_19",
+          "n_target": 85,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_20",
+          "n_target": 89,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_21",
+          "n_target": 93,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_22",
+          "n_target": 97,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_23",
+          "n_target": 101,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_24",
+          "n_target": 105,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        },
+        {
+          "instance_id": "P119_BAS_25",
+          "n_target": 109,
+          "time_budget_sec": 0.04,
+          "track": "erdos_turan_basis"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Erd\u0151s-Tur\u00e1n minimal order-2 additive basis and Rohrbach multiplicity sieve"
+    },
+    "sidon_extremal": {
+      "instances": [
+        {
+          "instance_id": "P119_SID_01",
+          "n_max": 11,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_02",
+          "n_max": 16,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_03",
+          "n_max": 21,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_04",
+          "n_max": 26,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_05",
+          "n_max": 31,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_06",
+          "n_max": 36,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_07",
+          "n_max": 41,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_08",
+          "n_max": 46,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_09",
+          "n_max": 51,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_10",
+          "n_max": 56,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_11",
+          "n_max": 61,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_12",
+          "n_max": 66,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_13",
+          "n_max": 71,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_14",
+          "n_max": 76,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_15",
+          "n_max": 81,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_16",
+          "n_max": 86,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_17",
+          "n_max": 91,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_18",
+          "n_max": 96,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_19",
+          "n_max": 101,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_20",
+          "n_max": 106,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_21",
+          "n_max": 111,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_22",
+          "n_max": 116,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_23",
+          "n_max": 121,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_24",
+          "n_max": 126,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        },
+        {
+          "instance_id": "P119_SID_25",
+          "n_max": 131,
+          "time_budget_sec": 0.05,
+          "track": "sidon_extremal"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Extremal Sidon B_2[1] set synthesis and difference capacity verification"
+    },
+    "sum_free_schnirelmann": {
+      "instances": [
+        {
+          "dilation": 2,
+          "instance_id": "P119_SFS_01",
+          "n_max": 17,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 3,
+          "instance_id": "P119_SFS_02",
+          "n_max": 20,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 4,
+          "instance_id": "P119_SFS_03",
+          "n_max": 23,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 5,
+          "instance_id": "P119_SFS_04",
+          "n_max": 26,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 6,
+          "instance_id": "P119_SFS_05",
+          "n_max": 29,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 2,
+          "instance_id": "P119_SFS_06",
+          "n_max": 32,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 3,
+          "instance_id": "P119_SFS_07",
+          "n_max": 35,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 4,
+          "instance_id": "P119_SFS_08",
+          "n_max": 38,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 5,
+          "instance_id": "P119_SFS_09",
+          "n_max": 41,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 6,
+          "instance_id": "P119_SFS_10",
+          "n_max": 44,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 2,
+          "instance_id": "P119_SFS_11",
+          "n_max": 47,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 3,
+          "instance_id": "P119_SFS_12",
+          "n_max": 50,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 4,
+          "instance_id": "P119_SFS_13",
+          "n_max": 53,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 5,
+          "instance_id": "P119_SFS_14",
+          "n_max": 56,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 6,
+          "instance_id": "P119_SFS_15",
+          "n_max": 59,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 2,
+          "instance_id": "P119_SFS_16",
+          "n_max": 62,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 3,
+          "instance_id": "P119_SFS_17",
+          "n_max": 65,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 4,
+          "instance_id": "P119_SFS_18",
+          "n_max": 68,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 5,
+          "instance_id": "P119_SFS_19",
+          "n_max": 71,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 6,
+          "instance_id": "P119_SFS_20",
+          "n_max": 74,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 2,
+          "instance_id": "P119_SFS_21",
+          "n_max": 77,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 3,
+          "instance_id": "P119_SFS_22",
+          "n_max": 80,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 4,
+          "instance_id": "P119_SFS_23",
+          "n_max": 83,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 5,
+          "instance_id": "P119_SFS_24",
+          "n_max": 86,
+          "track": "sum_free_schnirelmann"
+        },
+        {
+          "dilation": 6,
+          "instance_id": "P119_SFS_25",
+          "n_max": 89,
+          "track": "sum_free_schnirelmann"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Extremal sum-free subset synthesis and Schnirelmann-Mann density verification"
+    }
+  },
+  "zero_leakage_verified": true
+}
