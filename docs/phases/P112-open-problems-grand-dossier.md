@@ -1,7 +1,7 @@
 # P112 — Grande campanha de resolução e progresso formal com dossiê de literatura e 1.500+ teoremas
 
-**Status:** Proposed.
-**Dependência:** P111 concluída; branch a partir de `codex/p105-p112-open-problems-program`.
+**Status:** In review.
+**Dependência:** P111 concluída; branch a partir de `codex/p111-multiproblem-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P111 concluída com confirmação estatística cega multiproblema aprovada; ambiente Lean 4 e Lake herméticos.
 **Branch:** `codex/p112-open-problems-grand-dossier`.
@@ -41,5 +41,5 @@ python3 benchmarks/science_matrix.py --acceptance-phase P112 --config experiment
 git diff --cached --check
 git commit -m "feat(formal): implement p112 open problems grand dossier"
 git push -u origin HEAD
-gh pr create --base codex/p105-p112-open-problems-program --title "feat(formal): implement p112 open problems grand dossier" --body-file /tmp/evobyte-p112-pr.md
+gh pr create --base codex/p111-multiproblem-blind-confirmation --title "feat(formal): implement p112 open problems grand dossier" --body-file /tmp/evobyte-p112-pr.md
 ```

@@ -1344,3 +1344,107 @@ def test_p104_grand_formal_campaign_audit_smoke(tmp_path: Path):
         report["final_chain_hash"]
         == "777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906"
     )
+
+
+def test_p112_open_problems_grand_campaign_audit_structure():
+    from evobyte.formal_bridge import (
+        audit_open_problems_grand_campaign,
+        verify_open_problems_grand_campaign_soundness,
+    )
+
+    res = audit_open_problems_grand_campaign(verify_lake=False)
+    assert res["total_modules"] == 26
+    assert res["total_theorems"] >= 1500
+    assert res["total_theorems"] == 1929
+    assert res["has_sorry"] is False
+    assert len(res["missing_modules"]) == 0
+    assert len(res["hash_chain"]) == 26
+    assert (
+        res["final_chain_hash"]
+        == "0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268"
+    )
+
+    # Soundness verification test with mocked lake pass
+    res_copy = dict(res, lake_passed=True)
+    sound, findings = verify_open_problems_grand_campaign_soundness(
+        res_copy, min_theorems=1500, min_modules=24
+    )
+    assert sound is True
+    assert len(findings) == 0
+
+
+def test_p112_dossier_integrity():
+    dossier_p = Path("docs/research/p112-open-problems-dossier.md")
+    assert dossier_p.exists()
+    content = dossier_p.read_text(encoding="utf-8")
+    assert "1.929" in content
+    assert "26" in content
+    assert "0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268" in content
+    assert "P112" in content
+
+
+def test_p112_acceptance_rejects_wrong_phase(tmp_path: Path):
+    from benchmarks.science_matrix import run_p112_open_problems_grand_campaign_audit
+
+    cfg_p = tmp_path / "bad.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P112 configuration"):
+        run_p112_open_problems_grand_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p112_soundness_rejections():
+    from evobyte.formal_bridge import verify_open_problems_grand_campaign_soundness
+
+    bad_summary = {
+        "missing_modules": ["MissingModule.lean"],
+        "has_sorry": True,
+        "total_theorems": 100,
+        "total_modules": 5,
+        "lake_passed": False,
+        "lake_reasons": ["build error"],
+        "final_chain_hash": "short",
+    }
+    sound, findings = verify_open_problems_grand_campaign_soundness(
+        bad_summary, min_theorems=1500, min_modules=24
+    )
+    assert sound is False
+    assert any("MISSING_MODULES" in f for f in findings)
+    assert any("SORRY_DETECTED" in f for f in findings)
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+    assert any("INSUFFICIENT_MODULES" in f for f in findings)
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+    assert any("INVALID_CHAIN_HASH" in f for f in findings)
+
+
+@needs_lean
+def test_p112_grand_campaign_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p112_open_problems_grand_campaign_audit
+
+    cfg = {
+        "phase": "P112",
+        "min_theorems": 1500,
+        "min_modules": 24,
+        "budget_sec": 3600.0,
+        "project_dir": "lean_proofs",
+        "generated_dir": "lean_proofs/Generated",
+        "dossier_path": "docs/research/p112-open-problems-dossier.md",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p112-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p112-out.json"
+
+    report = run_p112_open_problems_grand_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P112"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_modules"] == 26
+    assert report["total_theorems"] >= 1500
+    assert report["total_theorems"] == 1929
+    assert report["has_sorry"] is False
+    assert (
+        report["final_chain_hash"]
+        == "0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268"
+    )
