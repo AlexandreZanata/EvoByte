@@ -276,6 +276,27 @@ Zarankiewicz $K_{s,t}$-free bipartite bounds, the `graph_ramsey_norm` metatactic
 - [P127 — Confirmação cega em larga escala em grafos e Ramsey sob controle FWER (Bonferroni-Holm)](P127-graph-ramsey-blind-confirmation.md).
 - [P128 — Grande campanha formal de grafos e Ramsey com dossiê certificado em Lean 4](P128-extremal-graph-ramsey-grand-dossier.md).
 
+P121–P128 are completed (Done, D034) with all measured gates passing, clean-tree
+verification, 2,873 Lean 4 kernel theorems with zero sorry across 38 modules (481 extremal graph and Ramsey theorems), and PRs #159–#166.
+No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
+
+## Discrete geometry, Erdős distinct distances & point configurations program (P129–P136)
+
+[The discrete geometry contract](../FORMAL_SEARCH_PLAN.md#programa-de-geometria-discreta-distâncias-distintas-de-erdős-e-configurações-de-pontos-em-lean-4-p129p136)
+defines the formal research extension adopted under D035 following the conclusion of
+P121–P128. It targets Euclidean point configurations, Erdős distinct distances, Guth–Katz
+partitioning, unit distances, Szemerédi–Trotter incidence theorems, the `geom_distance_norm`
+metatactic, Happy Ending convex polygons, Hadwiger–Nelson plane colorings, blind FWER confirmation, and 3,300+ Lean 4 theorems.
+
+- [P129 — Banco formal de geometria discreta, métricas e distâncias distintas de Erdős em Lean 4](P129-discrete-geometry-formal-database.md).
+- [P130 — Cota inferior de Guth-Katz e configurações extremais de distâncias distintas](P130-erdos-distinct-distances-guth-katz.md).
+- [P131 — Problema das distâncias unitárias e teorema de incidência de Szemerédi-Trotter](P131-unit-distances-szemeredi-trotter.md).
+- [P132 — Meta-tática customizada geom_distance_norm e automação geométrica em Lean 4](P132-geom-distance-norm-metatactic.md).
+- [P133 — Problema do Final Feliz e polígonos convexos de Erdős-Szekeres](P133-convex-polygons-happy-ending.md).
+- [P134 — Colorações de distâncias unitárias no plano e problema de Hadwiger-Nelson](P134-hadwiger-nelson-plane-coloring.md).
+- [P135 — Confirmação cega em larga escala em geometria discreta sob controle FWER (Bonferroni-Holm)](P135-discrete-geometry-blind-confirmation.md).
+- [P136 — Grande campanha formal de geometria discreta com dossiê certificado em Lean 4](P136-discrete-geometry-grand-dossier.md).
+
 Execute one micro-task at a time. All phases remain Proposed until their explicit
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.

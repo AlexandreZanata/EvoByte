@@ -691,3 +691,47 @@ P121 banco formal grafos e Mantel-Turán -> P122 grafos de Paley e Ramsey R(s,t)
 3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P127):** partição selada de 100 instâncias sem vazamento para o crivo.
+
+## Programa de geometria discreta, distâncias distintas de Erdős e configurações de pontos em Lean 4 (P129–P136)
+
+**Programa proposto em 2026-10-18 (D035).** Sucede a conclusão de P121–P128 sob D034.
+O programa P121–P128 consolidou 2.873 teoremas formais em 38 módulos em `lean_proofs/Generated/`,
+cobrindo teoremas extremais de Mantel–Turán, grafos de Paley e cotas de Ramsey, problema de Zarankiewicz,
+meta-tática `graph_ramsey_norm`, conjuntos 3-AP-free de Salem–Spencer e ciclos de Erdős–Gyárfás sob controle FWER.
+
+O programa P129–P136 estende o motor formal do EvoByte para os 15 problemas de geometria discreta, distâncias
+distintas, configurações de pontos e colorações geométricas do catálogo curado (`docs/research/open-problems.json`):
+1. **Banco formal de geometria discreta e distâncias distintas (P129):** Tipagem dependente de configurações
+   de pontos em $\mathbb{R}^2$, métrica euclidiana, lema das distâncias distintas e assinaturas canônicas (`DiscreteGeometrySignatures.lean`).
+2. **Cota inferior de Guth–Katz e configurações extremais (P130):** Formalização da cota de Guth–Katz $\Omega(n/\log n)$
+   para distâncias distintas, construções de redes quadradas $\sqrt{n} \times \sqrt{n}$ com $O(n/\sqrt{\log n})$ distâncias
+   e invariantes métricos (`ErdosDistinctDistancesTheorems.lean`).
+3. **Problema das distâncias unitárias e teorema de Szemerédi–Trotter (P131):** Formalização da cota superior de
+   incidências ponto-reta $I(P, L) = O(m^{2/3}n^{2/3} + m + n)$ e cotas de distâncias unitárias de Erdős $u(n) = O(n^{4/3})$ (`UnitDistancesSzemerediTrotterTheorems.lean`).
+4. **Meta-tática de normalização de distâncias geométricas (P132):** Implementação da meta-tática `geom_distance_norm`
+   para resolução e simplificação automática de desigualdades triangulares, convexidade e métricas euclidianas (`DiscreteGeometryTacticTheorems.lean`).
+5. **Problema do Final Feliz e polígonos convexos de Erdős–Szekeres (P133):** Formalização do teorema $ES(k) \le \binom{2k-4}{k-2} + 1$,
+   posições gerais sem 3 pontos colineares e configurações livres de buracos convexos (`ConvexPolygonsHappyEndingTheorems.lean`).
+6. **Colorações de distâncias unitárias e problema de Hadwiger–Nelson (P134):** Formalização de grafos de distâncias
+   unitárias no plano, fuso de Moser ($\chi \ge 4$), grafo de de Grey ($\chi \ge 5$) e cotas superiores $\chi(\mathbb{R}^2) \le 7$ (`HadwigerNelsonColoringTheorems.lean`).
+7. **Confirmação cega multiproblema em geometria discreta (P135):** Partição selada de 100 instâncias de geometria
+   discreta e distâncias sob controle estrito FWER via Bonferroni–Holm ($\alpha = 0{,}01$).
+8. **Grande campanha formal de geometria discreta e dossiê (P136):** Expansão para mais de 3.300 teoremas certificados no
+   kernel do Lean 4 em 44 módulos com zero tokens `sorry` e cadeia criptográfica SHA-256 de custódia.
+
+### Ordem e dependências de P129–P136
+
+```text
+P129 banco formal geometria discreta -> P130 distâncias distintas Guth-Katz
+ -> P131 distâncias unitárias e Szemerédi-Trotter -> P132 meta-tática geom_distance_norm
+ -> P133 polígonos convexos Happy Ending -> P134 colorações Hadwiger-Nelson
+ -> P135 confirmação cega FWER -> P136 grande campanha e dossiê final
+```
+
+### Regras do programa P129–P136
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P135):** partição selada de 100 instâncias sem vazamento para o crivo.

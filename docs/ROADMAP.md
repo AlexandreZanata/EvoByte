@@ -290,20 +290,40 @@ All phases P113–P120 are Done.
 
 [P121–P128](phases/README.md#extremal-graph-theory-ramsey-numbers--arithmetic-progressions-program-p121p128)
 define the formal research extension targeting extremal graph theory, Ramsey numbers, and
-arithmetic progressions under D033.
-Following the conclusion of P113–P120 under D032, this program targets Mantel–Turán extremal bounds,
+arithmetic progressions under D033, now completed (Done, D034).
+Following the conclusion of P113–P120 under D032, this program targeted Mantel–Turán extremal bounds,
 Paley quadratic residue graphs, Zarankiewicz $K_{s,t}$-free bipartite bounds, the `graph_ramsey_norm`
 metatactic, Roth/Salem–Spencer 3-AP-free sets, Erdős–Gyárfás cycle/chromatic bounds, blind confirmation
-with Holm FWER control, and expansion to 2,800+ certified theorems in Lean 4.
+with Holm FWER control, and expansion to 2,873 certified theorems across 38 modules in Lean 4.
 
-P121 formalizes extremal graph, Mantel–Turán, and Ramsey signatures in Lean 4 with dependent types.
-P122 implements Paley quadratic residue graphs and Ramsey $R(s, t)$ constructive lower bounds.
-P123 formalizes Zarankiewicz and Kővári–Sós–Turán $K_{s,t}$-free bipartite graph bounds.
-P124 implements the custom `graph_ramsey_norm` metaprogramming tactic in Lean 4.
-P125 formalizes Roth and Salem–Spencer 3-AP-free set constructions and density bounds.
-P126 proves Erdős–Gyárfás cycle length and chromatic/girth bounds.
-P127 confirms performance on a sealed blind split of 100 graph/Ramsey instances under Holm FWER control.
-P128 executes a grand extremal graph and Ramsey campaign certifying 2,800+ Lean 4 theorems and the final dossier.
+P121 formalized extremal graph, Mantel–Turán, and Ramsey signatures in Lean 4 with dependent types (81 theorems).
+P122 implemented Paley quadratic residue graphs and Ramsey $R(s, t)$ constructive lower bounds (80 theorems).
+P123 formalized Zarankiewicz and Kővári–Sós–Turán $K_{s,t}$-free bipartite graph bounds (80 theorems).
+P124 implemented the custom `graph_ramsey_norm` metaprogramming tactic in Lean 4 (80 theorems).
+P125 formalized Roth and Salem–Spencer 3-AP-free set constructions and density bounds (81 theorems).
+P126 proved Erdős–Gyárfás cycle length and chromatic/girth bounds (79 theorems).
+P127 confirmed performance on a sealed blind split of 100 graph/Ramsey instances under Holm FWER control (100/100 wins, $p = 2.38 \times 10^{-7} \le 0.01$).
+P128 executed a grand extremal graph and Ramsey campaign certifying 2,873 Lean 4 theorems across 38 modules with zero `sorry`, SHA-256 hash chain head `92823694570fab90bb1887be8741188b683d43a3011e795eb183e67e30e3e0ef`, and the final dossier.
+All phases P121–P128 are Done.
+
+## Discrete geometry, Erdős distinct distances & point configurations program (D035)
+
+[P129–P136](phases/README.md#discrete-geometry-erdos-distinct-distances--point-configurations-program-p129p136)
+define the formal research extension targeting discrete geometry, Erdős distinct distances, and
+point configurations under D035.
+Following the conclusion of P121–P128 under D034, this program targets the Erdős distinct distance problem,
+Guth–Katz polynomial partitioning bounds, unit distances, Szemerédi–Trotter incidence theorems, the `geom_distance_norm`
+metatactic, Erdős–Szekeres Happy Ending convex polygons, Hadwiger–Nelson unit distance graph chromatic number bounds,
+blind confirmation with Holm FWER control, and expansion to 3,300+ certified theorems in Lean 4.
+
+P129 formalizes discrete geometry, Euclidean metric space, and Erdős distinct distance signatures in Lean 4 with dependent types.
+P130 formalizes Guth–Katz lower bounds, $\sqrt{n} \times \sqrt{n}$ integer grid constructions, and extremal distance sets.
+P131 formalizes unit distance bounds and the Szemerédi–Trotter point-line incidence theorem.
+P132 implements the custom `geom_distance_norm` metaprogramming tactic in Lean 4.
+P133 formalizes the Happy Ending Problem, Erdős–Szekeres convex polygon bounds $ES(k)$, and empty polygon invariants.
+P134 proves Hadwiger–Nelson unit distance plane graph coloring bounds ($\chi(\mathbb{R}^2) \ge 5$) and Moser spindle certificates.
+P135 confirms performance on a sealed blind split of 100 discrete geometry instances under Holm FWER control.
+P136 executes a grand discrete geometry campaign certifying 3,300+ Lean 4 theorems and the final dossier.
 All phases remain Proposed until measured and accepted.
 
 ## Quantum track (experimental, deferred expansion)
