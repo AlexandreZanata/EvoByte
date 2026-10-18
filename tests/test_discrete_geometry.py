@@ -53,6 +53,15 @@ from evobyte.discrete_geometry import (
     generate_discrete_geometry_tactic_lean_code,
     normalize_squared_distance_expression,
     verify_discrete_geometry_tactic_baseline_soundness,
+    DEFAULT_CONVEX_POLYGONS_LEAN_FILE,
+    audit_convex_polygons_happy_ending_baseline,
+    erdos_szekeres_cup_cap_bound,
+    find_convex_k_gons,
+    find_empty_convex_holes,
+    generate_convex_polygons_happy_ending_lean_code,
+    is_empty_convex_hole,
+    verify_convex_polygons_happy_ending_baseline_soundness,
+    verify_happy_ending_properties,
     verify_unit_distance_properties,
     verify_unit_distances_szemeredi_trotter_baseline_soundness,
 )
@@ -471,5 +480,143 @@ def test_verify_discrete_geometry_tactic_soundness_rejections() -> None:
         "benchmarks": [{"all_properties_hold": True}],
     }
     sound, findings = verify_discrete_geometry_tactic_baseline_soundness(failing_audit)
+    assert sound is False
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+
+
+# ==============================================================================
+# P133 TESTS: CONVEX POLYGONS & ERDŐS-SZEKERES HAPPY ENDING PROBLEM
+# ==============================================================================
+
+
+def test_erdos_szekeres_cup_cap_bound() -> None:
+    """Test Erdős-Szekeres cup-cap combinatorial bounds and recurrence."""
+    assert erdos_szekeres_cup_cap_bound(3, 3) == 3
+    assert erdos_szekeres_cup_cap_bound(3, 4) == 4
+    assert erdos_szekeres_cup_cap_bound(4, 3) == 4
+    assert erdos_szekeres_cup_cap_bound(4, 4) == 7
+    assert erdos_szekeres_cup_cap_bound(3, 5) == 5
+    assert erdos_szekeres_cup_cap_bound(5, 3) == 5
+    assert erdos_szekeres_cup_cap_bound(4, 5) == 11
+    assert erdos_szekeres_cup_cap_bound(5, 4) == 11
+    assert erdos_szekeres_cup_cap_bound(5, 5) == 21
+
+    # Recurrence: f(a, b) = f(a-1, b) + f(a, b-1) - 1
+    assert erdos_szekeres_cup_cap_bound(4, 4) == (
+        erdos_szekeres_cup_cap_bound(3, 4) + erdos_szekeres_cup_cap_bound(4, 3) - 1
+    )
+    assert erdos_szekeres_cup_cap_bound(4, 5) == (
+        erdos_szekeres_cup_cap_bound(3, 5) + erdos_szekeres_cup_cap_bound(4, 4) - 1
+    )
+    assert erdos_szekeres_cup_cap_bound(5, 5) == (
+        erdos_szekeres_cup_cap_bound(4, 5) + erdos_szekeres_cup_cap_bound(5, 4) - 1
+    )
+
+
+def test_find_convex_k_gons_and_klein_theorem() -> None:
+    """Test finding convex k-gons and verification of Klein's theorem on 5 points."""
+    # 5 points in general position (4 on hull, 1 inside)
+    pts1 = [(0, 0), (4, 0), (4, 4), (0, 4), (2, 1)]
+    quads1 = find_convex_k_gons(pts1, 4)
+    assert len(quads1) >= 1
+
+    # 5 points forming a strictly convex pentagon
+    pts2 = [(0, 0), (4, 0), (5, 3), (2, 4), (0, 3)]
+    quads2 = find_convex_k_gons(pts2, 4)
+    assert len(quads2) == 5
+
+    # Degenerate cases
+    assert find_convex_k_gons([(0, 0), (1, 1)], 4) == []
+
+
+def test_is_empty_convex_hole_and_search() -> None:
+    """Test empty convex hole detection and search algorithms."""
+    pts = [(0, 0), (4, 0), (4, 4), (0, 4), (2, 2)]
+    quad_with_interior = [(0, 0), (4, 0), (4, 4), (0, 4)]
+    # Has (2, 2) inside, so cannot be empty
+    assert is_empty_convex_hole(pts, quad_with_interior) is False
+
+    # Strictly convex 5-gon has exactly 5 empty convex 4-holes
+    pentagon = [(0, 0), (4, 0), (5, 3), (2, 4), (0, 3)]
+    holes4 = find_empty_convex_holes(pentagon, 4)
+    assert len(holes4) == 5
+
+    # 3-holes
+    holes3 = find_empty_convex_holes(pentagon, 3)
+    assert len(holes3) >= 1
+
+
+def test_verify_happy_ending_properties() -> None:
+    """Test Happy Ending properties verification on benchmark point configurations."""
+    configs = [
+        [(0, 0), (4, 0), (4, 4), (0, 4), (2, 1)],
+        [(0, 0), (4, 0), (5, 3), (2, 4), (0, 3)],
+        [(0, 0), (6, 0), (8, 4), (5, 7), (1, 6), (3, 3)],
+        [(0, 0), (5, 0), (7, 3), (6, 6), (2, 7), (-1, 4), (2, 3)],
+    ]
+    for pts in configs:
+        res = verify_happy_ending_properties(pts)
+        assert res["n_points"] >= 5
+        assert res["is_general_position"] is True
+        assert res["klein_holds"] is True
+        assert res["happy_ending_property_holds"] is True
+        assert res["convex_4_gons_count"] >= 1
+
+
+def test_generate_convex_polygons_happy_ending_lean_code() -> None:
+    """Test generation of ConvexPolygonsHappyEndingTheorems.lean module."""
+    code = generate_convex_polygons_happy_ending_lean_code()
+    assert "namespace EvoByte.HappyEnding" in code
+    assert "sorry" not in code
+    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    assert len(thms) >= 75
+
+
+def test_audit_convex_polygons_happy_ending_baseline() -> None:
+    """Test P133 baseline audit against Lean 4 kernel."""
+    audit = audit_convex_polygons_happy_ending_baseline(verify_lake=True)
+    assert audit["module"] == "ConvexPolygonsHappyEndingTheorems"
+    assert audit["has_sorry"] is False
+    assert audit["lake_passed"] is True
+    assert audit["total_theorems"] >= 75
+    assert len(audit["benchmarks"]) >= 4
+
+    sound, findings = verify_convex_polygons_happy_ending_baseline_soundness(audit, min_theorems=75)
+    assert sound is True
+    assert findings == []
+
+
+def test_verify_convex_polygons_soundness_rejections() -> None:
+    """Test that P133 soundness validator properly catches defects."""
+    bad_audit = {
+        "has_sorry": True,
+        "total_theorems": 100,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": [{"happy_ending_property_holds": True, "klein_holds": True, "n_points": 5}],
+    }
+    sound, findings = verify_convex_polygons_happy_ending_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    sparse_audit = {
+        "has_sorry": False,
+        "total_theorems": 10,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": [{"happy_ending_property_holds": True, "klein_holds": True, "n_points": 5}],
+    }
+    sound, findings = verify_convex_polygons_happy_ending_baseline_soundness(sparse_audit, min_theorems=75)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    failing_audit = {
+        "has_sorry": False,
+        "total_theorems": 100,
+        "lake_passed": False,
+        "sha256": "a" * 64,
+        "benchmarks": [{"happy_ending_property_holds": True, "klein_holds": True, "n_points": 5}],
+    }
+    sound, findings = verify_convex_polygons_happy_ending_baseline_soundness(failing_audit)
     assert sound is False
     assert any("LAKE_BUILD_FAILED" in f for f in findings)

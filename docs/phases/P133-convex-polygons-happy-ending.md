@@ -1,6 +1,6 @@
 # P133 — Problema do Final Feliz e polígonos convexos de Erdős-Szekeres
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P132 concluída; branch a partir de `codex/p132-geom-distance-norm-metatactic`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P132 concluída com meta-tática geométrica e teoremas provados no Lean 4.
