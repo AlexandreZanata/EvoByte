@@ -1,6 +1,6 @@
 # P121 — Banco formal de grafos extremais, Mantel-Turán e invariantes de Ramsey em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P120 concluída; branch a partir de `codex/p121-p128-extremal-graph-ramsey-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P120 concluída com campanha formal de combinatória aditiva e consolidação documental sob D032.

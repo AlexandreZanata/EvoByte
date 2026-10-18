@@ -31,3 +31,4 @@ import Generated.AdditiveEnergyTheorems
 import Generated.AdditiveTacticTheorems
 import Generated.ErdosTuranBasesTheorems
 import Generated.SumFreeTheorems
+import Generated.ExtremalGraphRamseySignatures
