@@ -58,6 +58,7 @@ P81–P88 inductive proof, lemma synthesis & tactic automation (D023)
 P89–P96 generalized modular resolution, meta-tactics & extended Schinzel program (D025)
 P97–P104 Diophantine algebraic geometry, cubic surface fibrations & invariants program (D027)
 P105–P112 open problems formal discovery & proof-guided model program (D028)
+P113–P120 additive combinatorics, Sidon sets & density program (D031)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -263,6 +264,25 @@ P110 targeted the Pillai–Catalan exponential Diophantine equations via linear 
 P111 confirmed multi-problem blind performance under strict family-wise error rate control (Holm alpha = 0.01, 100/100 wins).
 P112 executed a grand open problems campaign certifying 1,929 Lean 4 theorems across 26 modules with zero `sorry`, SHA-256 hash chain head `0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268`, and the final research dossier.
 All phases P105–P112 are Done.
+
+## Additive combinatorics, Sidon sets & density program (D031)
+
+[P113–P120](phases/README.md#additive-combinatorics-sidon-sets--density-program-p113p120)
+define the formal research extension targeting additive combinatorics and Sidon sets under D031.
+Following the conclusion of P105–P112 under D030, this program targets $B_2[g]$ Sidon sets,
+additive energy $E(A, B)$, Plünnecke–Ruzsa sum-difference inequalities, the Erdős–Turán conjecture
+on additive bases, sum-free subsets, blind confirmation with Holm FWER control, and expansion to
+2,000+ certified theorems in Lean 4.
+
+P113 formalizes additive combinatorics and Sidon signatures in Lean 4 with dependent types.
+P114 implements structured search and extremal construction of finite $B_2[1]$ Sidon sets.
+P115 formalizes additive energy theorems and Balog–Szemerédi–Gowers sumset bounds.
+P116 implements the custom `additive_norm` metaprogramming tactic in Lean 4.
+P117 formalizes Erdős–Turán additive basis representation bounds.
+P118 proves density bounds for sum-free subsets and 3-term progression restrictions.
+P119 confirms performance on a sealed blind split of 100 additive instances under Holm FWER control.
+P120 executes a grand additive combinatorics campaign certifying 2,000+ Lean 4 theorems and the final dossier.
+All phases remain Proposed until measured and accepted.
 
 ## Quantum track (experimental, deferred expansion)
 

@@ -595,3 +595,47 @@ P105 banco formal de problemas abertos -> P106 grafos de obstrução
 3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P111):** partição selada de 100 instâncias extremas sem vazamento para o crivo.
+
+## Programa de combinatória aditiva, conjuntos de Sidon e teoria de densidade em Lean 4 (P113–P120)
+
+**Programa proposto em 2026-10-18 (D031).** Sucede a conclusão de P105–P112 sob D030.
+O programa P105–P112 consolidou 1.929 teoremas formais em 26 módulos em `lean_proofs/Generated/`,
+estabelecendo uma taxonomia hermética de problemas abertos, proposição neural leve sem alucinação,
+MCTS guiado pelo kernel e confirmação estatística cega com controle FWER.
+
+O programa P113–P120 estende o motor formal do EvoByte para a combinatória aditiva moderna,
+visando os alvos de conjuntos de Sidon $B_2[g]$, energia aditiva, desigualdades de soma-diferença
+de Plünnecke–Ruzsa, e as célebres conjecturas de Erdős–Turán e densidade de Schnirelmann:
+1. **Banco formal de combinatória aditiva:** Tipagem dependente e invariantes de conjuntos $B_2[g]$,
+   energia aditiva $E(A, B)$ e conjuntos livres de soma em Lean 4.
+2. **Síntese de conjuntos de Sidon extremais:** Busca estruturada e construção de sequências finitas
+   com densidade ótima aproximando o limite superior de Erdős–Turán ($|A| \le \sqrt{N} + O(N^{1/4})$).
+3. **Formalização de energia aditiva:** Provas mecanizadas das relações entre energia $E(A)$ e cardinalidade
+   do conjunto soma $|A+A|$, integrando teoremas de tipo Balog–Szemerédi–Gowers.
+4. **Meta-tática customizada `additive_norm`:** Meta-programação em Lean 4 para normalização automática
+   e cancelamento de desigualdades aditivas sobre conjuntos finitos.
+5. **Alvo aberto Erdős–Turán:** Investigação de representações em bases aditivas de ordem 2 ($r_{A+A}(n) \ge 1$),
+   provando limitantes inferiores de representabilidade para classes finitas.
+6. **Alvo aberto conjuntos livres de soma:** Provas formais de densidade máxima para subconjuntos livres
+   de soma em $\mathbb{N}$ e restrições de Roth sobre progressões aritméticas de 3 termos.
+7. **Confirmação cega multiproblema:** Partição selada de 100 instâncias de combinatória aditiva
+   sob controle de taxa de erro por família (FWER via Bonferroni-Holm em $\alpha = 0{,}01$).
+8. **Grande campanha formal e dossiê:** Expansão para mais de 2.000 teoremas certificados no kernel
+   do Lean 4 com zero tokens `sorry` e cadeia criptográfica SHA-256 de custódia.
+
+### Ordem e dependências de P113–P120
+
+```text
+P113 banco formal combinatória aditiva -> P114 conjuntos de Sidon extremais
+ -> P115 energia aditiva e Plünnecke-Ruzsa -> P116 meta-tática additive_norm
+ -> P117 bases aditivas Erdős-Turán -> P118 conjuntos livres de soma
+ -> P119 confirmação cega FWER -> P120 grande campanha e dossiê final
+```
+
+### Regras do programa P113–P120
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P119):** partição selada de 100 instâncias combinatórias sem vazamento para o crivo.

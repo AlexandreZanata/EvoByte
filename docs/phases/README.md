@@ -239,6 +239,26 @@ P105–P112 are completed (Done, D030) with all measured gates passing, clean-tr
 verification, 1,929 Lean 4 kernel theorems with zero sorry across 26 modules, and PRs #138–#145.
 No worldwide novelty, quantum advantage, or unproven universal conjecture resolution is claimed.
 
+## Additive combinatorics, Sidon sets & density program (P113–P120)
+
+[The additive combinatorics contract](../FORMAL_SEARCH_PLAN.md#programa-de-combinatória-aditiva-conjuntos-de-sidon-e-teoria-de-densidade-em-lean-4-p113p120)
+defines the formal research extension adopted under D031 following the conclusion of
+P105–P112. It targets $B_2[g]$ Sidon sets, additive energy $E(A, B)$, Plünnecke–Ruzsa
+inequalities, Erdős–Turán additive bases, sum-free subsets, and 2,000+ Lean 4 theorems.
+
+- [P113 — Banco formal de combinatória aditiva e conjuntos de Sidon em Lean 4](P113-additive-combinatorics-formal-database.md).
+- [P114 — Algoritmo de busca estruturada de conjuntos de Sidon extremais e B_2[1]](P114-sidon-sets-extremal-search.md).
+- [P115 — Teoremas de energia aditiva e limitantes de Balog-Szemerédi-Gowers](P115-additive-energy-balog-szemeredi.md).
+- [P116 — Meta-tática customizada additive_norm e automação em Lean 4](P116-additive-norm-metatactic.md).
+- [P117 — Alvo aberto Erdős-Turán em bases aditivas e representações](P117-erdos-turan-additive-bases.md).
+- [P118 — Alvo aberto Erdős sobre conjuntos livres de soma e densidade de Schnirelmann](P118-sum-free-schnirelmann-density.md).
+- [P119 — Confirmação cega em larga escala com controle estatístico FWER (Bonferroni-Holm)](P119-additive-blind-confirmation.md).
+- [P120 — Grande campanha de combinatória aditiva e dossiê certificado final em Lean 4](P120-additive-combinatorics-grand-dossier.md).
+
+Execute one micro-task at a time. All phases remain Proposed until their explicit
+gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
+conjecture resolution is claimed.
+
 
 ## Historical execution and acceptance contract
 
