@@ -1,0 +1,12 @@
+{
+  "phase": "P114",
+  "acceptance_phase": "P114",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "lean_file": "lean_proofs/Generated/SidonSetsTheorems.lean",
+  "min_theorems": 60,
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P114 extremal Sidon sets B_2[1] search (Singer, Bose-Chowla, Ruzsa, branch-and-bound) and Lean 4 difference non-collision theorems with zero sorry."
+}

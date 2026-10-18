@@ -7,13 +7,21 @@ from pathlib import Path
 
 import pytest
 
-from benchmarks.science_matrix import run_p113_additive_combinatorics_baseline_audit
+from benchmarks.science_matrix import (
+    run_p113_additive_combinatorics_baseline_audit,
+    run_p114_sidon_sets_audit,
+)
 from evobyte.additive import (
     DEFAULT_LEAN_FILE,
+    DEFAULT_SIDON_THEOREMS_LEAN_FILE,
     additive_energy,
     audit_additive_combinatorics_baseline,
+    audit_sidon_sets_extremal_search,
+    bose_chowla_sidon_set,
     doubling_constant,
+    erdos_turan_sidon_upper_bound,
     generate_additive_combinatorics_lean_code,
+    generate_sidon_sets_theorems_lean_code,
     is_b2g_set,
     is_sidon_set,
     is_sum_free,
@@ -22,8 +30,11 @@ from evobyte.additive import (
     minkowski_sum,
     representation_count,
     ruzsa_sidon_construction,
+    search_extremal_sidon_set,
     singer_difference_set,
     verify_additive_combinatorics_baseline_soundness,
+    verify_sidon_difference_property,
+    verify_sidon_sets_soundness,
 )
 from evobyte.verifier import is_lean_available
 
@@ -196,3 +207,83 @@ def test_code_generation():
     assert "namespace EvoByte.AdditiveCombinatorics" in code
     assert "def PairwiseNonCollision" in code
     assert "sorry" not in code
+
+
+# ==============================================================================
+# P114 TESTS: SIDON SETS EXTREMAL SEARCH & DIFFERENCE NON-COLLISION
+# ==============================================================================
+
+
+def test_verify_sidon_difference_property():
+    assert verify_sidon_difference_property([]) is True
+    assert verify_sidon_difference_property([1]) is True
+    assert verify_sidon_difference_property([1, 2, 5, 7]) is True
+    assert verify_sidon_difference_property([1, 2, 5, 10, 12]) is True
+    assert verify_sidon_difference_property([1, 2, 3, 4]) is False
+
+
+def test_bose_chowla_and_extremal_sidon_search():
+    for q in (2, 3, 5, 7):
+        bc = bose_chowla_sidon_set(q)
+        assert len(bc) == q
+        assert is_sidon_set(bc) is True
+        assert verify_sidon_difference_property(bc) is True
+
+    res7 = search_extremal_sidon_set(7, time_budget_sec=0.1)
+    assert res7["cardinality"] == 4
+    assert res7["is_sidon"] is True
+    assert res7["diff_property_holds"] is True
+    assert res7["cardinality"] <= erdos_turan_sidon_upper_bound(7)
+
+    res12 = search_extremal_sidon_set(12, time_budget_sec=0.1)
+    assert res12["cardinality"] == 5
+    assert res12["is_sidon"] is True
+    assert res12["diff_property_holds"] is True
+    assert res12["additive_energy"] == 2 * 25 - 5
+
+
+def test_p114_sidon_sets_theorems_generation_and_soundness():
+    assert DEFAULT_SIDON_THEOREMS_LEAN_FILE.name == "SidonSetsTheorems.lean"
+    code = generate_sidon_sets_theorems_lean_code()
+    assert "import Generated.AdditiveCombinatoricsSignatures" in code
+    assert "theorem sidon_diff_to_sum_eq" in code
+    assert "sorry" not in code
+
+    summary = audit_sidon_sets_extremal_search(verify_lake=False)
+    assert summary["module"] == "SidonSetsTheorems"
+    assert summary["total_theorems"] >= 60
+    assert summary["has_sorry"] is False
+    ok, findings = verify_sidon_sets_soundness(dict(summary, lake_passed=True), min_theorems=60)
+    assert ok is True
+    assert findings == []
+
+
+def test_p114_acceptance_rejects_wrong_phase(tmp_path: Path):
+    cfg_p = tmp_path / "bad-p114.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P114 configuration"):
+        run_p114_sidon_sets_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p114_audit_smoke(tmp_path: Path):
+    cfg = {
+        "phase": "P114",
+        "min_theorems": 60,
+        "project_dir": "lean_proofs",
+        "lean_file": "lean_proofs/Generated/SidonSetsTheorems.lean",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p114-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p114-out.json"
+
+    report = run_p114_sidon_sets_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P114"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
+    assert report["has_sorry"] is False
+    assert report["lake_passed"] is True

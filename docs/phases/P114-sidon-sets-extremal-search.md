@@ -1,6 +1,6 @@
 # P114 — Algoritmo de busca estruturada de conjuntos de Sidon extremais e B_2[1]
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P113 concluída; branch a partir de `codex/p113-additive-combinatorics-formal-database`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P113 concluída com tipagem de assinaturas de combinatória aditiva no Lean 4.

@@ -26,3 +26,4 @@ import Generated.ObstructionGraphTheorems
 import Generated.ErdosGrahamTheorems
 import Generated.PillaiCatalanTheorems
 import Generated.AdditiveCombinatoricsSignatures
+import Generated.SidonSetsTheorems
