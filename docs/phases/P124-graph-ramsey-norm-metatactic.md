@@ -1,6 +1,6 @@
 # P124 — Meta-tática customizada graph_ramsey_norm e automação combinatória em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P123 concluída; branch a partir de `codex/p123-zarankiewicz-kovari-sos-turan`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P123 concluída com teoremas de Zarankiewicz e Kővári–Sós–Turán provados em Lean 4.

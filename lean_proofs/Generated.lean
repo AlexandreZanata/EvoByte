@@ -34,3 +34,4 @@ import Generated.SumFreeTheorems
 import Generated.ExtremalGraphRamseySignatures
 import Generated.RamseyPaleyTheorems
 import Generated.ZarankiewiczKovariSosTuranTheorems
+import Generated.GraphRamseyTacticTheorems

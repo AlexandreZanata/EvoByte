@@ -267,3 +267,72 @@ def test_p123_zarankiewicz_kst_and_pg2q(tmp_path: Path):
     assert report["total_theorems"] >= 60
     assert report["has_sorry"] is False
     assert out_path.exists()
+
+
+def test_p124_graph_ramsey_norm_and_goodman(tmp_path: Path):
+    from evobyte.graph_ramsey import (
+        audit_graph_ramsey_norm_metatactic,
+        generate_graph_ramsey_tactic_lean_code,
+        goodman_monochromatic_triangles,
+        paley_graph_adjacency,
+        turan_graph_adjacency,
+        verify_graph_ramsey_norm_soundness,
+    )
+
+    g5 = goodman_monochromatic_triangles(paley_graph_adjacency(5))
+    assert g5["monochromatic_triangles"] == 0
+    assert g5["goodman_identity_holds"] is True
+    assert g5["goodman_lower_bound"] == 0
+
+    g6 = goodman_monochromatic_triangles(turan_graph_adjacency(6, 2))
+    assert g6["monochromatic_triangles"] >= 2
+    assert g6["goodman_lower_bound"] == 2
+    assert g6["goodman_identity_holds"] is True
+    assert g6["goodman_lower_bound_holds"] is True
+    assert g6["cauchy_schwarz_degree_holds"] is True
+
+    code = generate_graph_ramsey_tactic_lean_code()
+    assert 'syntax "graph_ramsey_norm" : tactic' in code
+    assert "namespace EvoByte.GraphRamseyTactic" in code
+    assert "sorry" not in code
+    assert code.count("theorem ") >= 60
+
+    audit = audit_graph_ramsey_norm_metatactic(
+        project_dir="lean_proofs",
+        lean_file="lean_proofs/Generated/GraphRamseyTacticTheorems.lean",
+        verify_lake=False,
+    )
+    sound, findings = verify_graph_ramsey_norm_soundness(audit, min_theorems=60)
+    assert sound is True, f"Unexpected P124 soundness findings: {findings}"
+    assert audit["total_theorems"] >= 60
+    assert audit["tactic_uses"] >= 60
+    assert audit["has_sorry"] is False
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p124_graph_ramsey_norm_audit
+
+    cfg_path = tmp_path / "p124-test-config.json"
+    out_path = tmp_path / "p124-test-out.json"
+    cfg_path.write_text(
+        json.dumps(
+            {
+                "phase": "P124",
+                "seed": 42,
+                "device": "cpu",
+                "project_dir": "lean_proofs",
+                "lean_file": "lean_proofs/Generated/GraphRamseyTacticTheorems.lean",
+                "min_theorems": 60,
+                "verify_lake": False,
+                "require_clean_tree": False,
+                "allow_dirty": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    report = run_p124_graph_ramsey_norm_audit(cfg_path, out_path)
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
+    assert report["has_sorry"] is False
+    assert out_path.exists()
