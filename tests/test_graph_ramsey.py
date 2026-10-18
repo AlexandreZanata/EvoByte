@@ -336,3 +336,79 @@ def test_p124_graph_ramsey_norm_and_goodman(tmp_path: Path):
     assert report["total_theorems"] >= 60
     assert report["has_sorry"] is False
     assert out_path.exists()
+
+
+def test_p125_roth_salem_spencer_ap_free(tmp_path: Path):
+    from evobyte.graph_ramsey import (
+        audit_roth_salem_spencer_search,
+        exact_r3_search,
+        generate_roth_salem_spencer_lean_code,
+        is_3ap_free,
+        salem_spencer_base3_set,
+        stanley_greedy_3ap_free,
+        verify_roth_salem_spencer_soundness,
+    )
+
+    assert is_3ap_free([1, 2, 4, 5]) is True
+    assert is_3ap_free([1, 3, 5]) is False
+    assert is_3ap_free([0, 1, 3, 4, 9, 10, 12, 13]) is True
+
+    for k in (2, 3, 4):
+        s_set = salem_spencer_base3_set(k)
+        assert len(s_set) == 2**k
+        assert is_3ap_free(s_set) is True
+
+    st27 = stanley_greedy_3ap_free(27)
+    assert is_3ap_free(st27) is True
+
+    r5 = exact_r3_search(5)
+    assert r5["r3"] == 4
+    assert r5["is_3ap_free"] is True
+
+    r9 = exact_r3_search(9)
+    assert r9["r3"] == 5
+    assert r9["is_3ap_free"] is True
+
+    code = generate_roth_salem_spencer_lean_code()
+    assert "namespace EvoByte.RothSalemSpencer" in code
+    assert "sorry" not in code
+    assert code.count("theorem ") >= 60
+
+    audit = audit_roth_salem_spencer_search(
+        project_dir="lean_proofs",
+        lean_file="lean_proofs/Generated/RothSalemSpencerTheorems.lean",
+        verify_lake=False,
+    )
+    sound, findings = verify_roth_salem_spencer_soundness(audit, min_theorems=60)
+    assert sound is True, f"Unexpected P125 soundness findings: {findings}"
+    assert audit["total_theorems"] >= 60
+    assert audit["has_sorry"] is False
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p125_roth_salem_spencer_audit
+
+    cfg_path = tmp_path / "p125-test-config.json"
+    out_path = tmp_path / "p125-test-out.json"
+    cfg_path.write_text(
+        json.dumps(
+            {
+                "phase": "P125",
+                "seed": 42,
+                "device": "cpu",
+                "project_dir": "lean_proofs",
+                "lean_file": "lean_proofs/Generated/RothSalemSpencerTheorems.lean",
+                "min_theorems": 60,
+                "verify_lake": False,
+                "require_clean_tree": False,
+                "allow_dirty": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    report = run_p125_roth_salem_spencer_audit(cfg_path, out_path)
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
+    assert report["has_sorry"] is False
+    assert out_path.exists()

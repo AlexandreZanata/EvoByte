@@ -1,6 +1,6 @@
 # P125 — Alvo aberto de Roth e Salem-Spencer sobre conjuntos livres de progressões de 3 termos
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P124 concluída; branch a partir de `codex/p124-graph-ramsey-norm-metatactic`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P124 concluída com meta-tática `graph_ramsey_norm` provada em Lean 4.
