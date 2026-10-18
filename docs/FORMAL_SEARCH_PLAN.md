@@ -639,3 +639,79 @@ P113 banco formal combinatória aditiva -> P114 conjuntos de Sidon extremais
 3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P119):** partição selada de 100 instâncias combinatórias sem vazamento para o crivo.
+
+## Programa de teoremas estruturais em ℕ e descoberta em problemas de domínio finito aberto (P121–P128)
+
+**Programa proposto em 2026-10-18 (D032).** Sucede a definição de P113–P120 sob D031.
+A auditoria crítica sobre os 1.929 teoremas compilados até P112 revelou uma distinção fundamental
+entre **volume de teoremas formais** e **avanço científico genuíno**:
+1. Nos módulos diofantinos anteriores, as identidades polinomiais foram provadas como igualdades de anel
+   expandidas sobre $\mathbb{Q}[k]$ (`4 * X * Y * Z = n * (Y*Z + X*Z + X*Y)` via `ring`), sem conectar
+   formalmente os polinômios $X(k), Y(k), Z(k)$ ao predicado real `IsUnitFractionSol` em $\mathbb{N}^+$
+   (`∃ x y z : ℕ, x > 0 ∧ y > 0 ∧ z > 0 ∧ 4 / n = 1 / x + 1 / y + 1 / z`) e sem provar um teorema
+   estrutural quantificado sobre `Fin 840` que reduza a conjectura aos 6 resíduos quadráticos resistentes.
+2. Grande parte da contagem de teoremas em P89–P112 provinha de instâncias numéricas constantes (`norm_num`,
+   `decide`) ou reflexividade sobre metadados (`rfl`), que não constituem novidade matemática na literatura.
+3. No catálogo curado `docs/research/open-problems.json`, existe o bucket `finite_search_candidates`
+   (34 problemas classificados na fonte primária `erdosproblems.com` como `verifiable`, `falsifiable` ou
+   `decidable` — *"Open, but could be proved/disproved with a finite example/check"*), onde um certificado
+   finito ou uma cota exaustiva nova demonstrada no Lean 4 constitui uma **descoberta científica real**.
+
+### Eixo 1 — Teoremas Estruturais Reais em $\mathbb{N}$ no Lean 4 (P121–P124)
+
+1. **Levantamento $\mathbb{Q}[k] \to \mathbb{N}^+$ conectado a `IsUnitFractionSol` (P121):**
+   - Provar o lema ponte fundamental que converte a igualdade polinomial inteira não-nula e estritamente
+     positiva em uma solução certificada `IsUnitFractionSol a (m * k + r) x y z` sobre $\mathbb{N}$.
+   - Elevar as famílias paramétricas mod 24 e mod 840 para teoremas existenciais universais em $\mathbb{N}$:
+     `∀ k : ℕ, ∃ x y z : ℕ, IsUnitFractionSol 4 (m * k + r) x y z`.
+2. **Teorema de Redução Modular de Mordell em `Fin 840` (P122):**
+   - Substituir igualdades de frações constantes (`1 - 6/840 = 139/140`) pelo teorema estrutural real em
+     Lean 4: para todo $n > 1$ tal que $n \bmod 840 \notin \{1, 121, 169, 289, 361, 529\}$, existe
+     solução `IsUnitFractionSol 4 n x y z`.
+3. **Teorema de Obstrução Polinomial de Schinzel–Yamamoto (P123):**
+   - Formalizar em Lean 4 por que nenhuma identidade linear de 1 parâmetro sobre $\mathbb{Z}[k]$ pode cobrir
+     resíduos que são quadrados perfeitos módulo o condutor da família, demonstrando a barreira teórica real.
+4. **Fechamento Estrutural Multiparamétrico por Divisores Primos $p \equiv 3 \pmod 4$ (P124):**
+   - Provar em $\mathbb{N}$ que subfamílias infinitas de 2 parâmetros $(k, m)$ dentro da classe resistente
+     $n \equiv 1 \pmod{24}$ admitem solução `IsUnitFractionSol 4 n x y z` quando possuem fator na classe
+     de desobstrução.
+
+### Eixo 2 — Ataque a Problemas de Domínio Finito Aberto (`open-problems.json`, P125–P128)
+
+5. **Alvo Finito Aberto `erdos-307` — Produto Unitário de Somas de Recíprocos de Primos (P125):**
+   - Problema #307 (`verifiable`): Existem conjuntos finitos de primos $P, Q$ com
+     $\left(\sum_{p \in P} \frac{1}{p}\right)\left(\sum_{q \in Q} \frac{1}{q}\right) = 1$?
+   - Provar formalmente em Lean 4 a obstrução $p$-ádica de disjunção ($P \cap Q = \emptyset$), cotas de
+     cardinalidade mínima $|P| + |Q|$, e executar busca exata guiada por divisibilidade modular visando
+     certificado construtivo inédito ou nova cota inferior certificada.
+6. **Alvo Finito Aberto `erdos-287` — Cota Extremal de Gaps em Frações Egípcias (P126):**
+   - Problema #287 (`falsifiable`): Para toda decomposição $1 = \sum_{i=1}^k \frac{1}{n_i}$ com
+     $1 < n_1 < \dots < n_k$, vale $\max(n_{i+1} - n_i) \ge 3$?
+   - Executar poda *branch-and-bound* exata sobre sequências com gaps $\in \{1, 2\}$ e certificar em Lean 4
+     teoremas de impossibilidade exaustiva (`exhaustive-null`) para janelas crescentes de $n_1, k$ (ou
+     contraexemplo finito caso exista).
+7. **Alvos Finitos Abertos `erdos-647` ($\max_{m<n}(m + \tau(m)) \le n + 2$) e `erdos-475` (Somas Parciais em $\mathbb{F}_p$) (P127):**
+   - Problema #647 (`verifiable`, £25) e Problema #475 (`decidable`, Conjectura de Graham em $\mathbb{F}_p$).
+   - Provar lemas locais de obstrução de divisores para `erdos-647` + busca vetorizada em intervalos abertos,
+     e certificar construtivamente ordenações de somas parciais distintas em $\mathbb{F}_p \setminus \{0\}$
+     para primos $p$ no regime finito de `erdos-475`.
+8. **Auditoria Anti-Inflação e Dossiê de Descoberta Científica Real (P128):**
+   - Implementar classificador rigoroso de teoremas (`structural_universal`, `exhaustive_finite_bound`,
+     `instance_certificate`, `trivial_metadata`) proibindo que teoremas triviais inflem a métrica científica,
+     seguido de confirmação cega e dossiê de descoberta científica auditável.
+
+### Ordem e dependências de P121–P128
+
+```text
+P121 ponte Q[k] -> N^+ (IsUnitFractionSol) -> P122 redução modular de Mordell (Fin 840)
+ -> P123 obstrução quadrática Schinzel-Yamamoto -> P124 fechamento 2-parâmetros por divisor
+ -> P125 alvo aberto erdos-307 (recíprocos de primos) -> P126 alvo aberto erdos-287 (gaps <= 2)
+ -> P127 alvos abertos erdos-647 e erdos-475 -> P128 auditoria anti-inflação e dossiê científico
+```
+
+### Regras do programa P121–P128
+
+1. **Proibição de inflação superficial:** teoremas que apenas avaliam constantes triviais por `rfl` ou `norm_num` sem conexão com um predicado estrutural em $\mathbb{N}$ ou com um certificado de problema aberto finito não contam para os gates de teoremas estruturais de P121–P128.
+2. **Enunciados reais em $\mathbb{N}$:** todo teorema de cobertura diofantina em P121–P124 deve concluir `IsUnitFractionSol` (ou obstrução formal sobre `ZMod M` / `ℕ`) com variáveis quantificadas em $\mathbb{N}$.
+3. **Distinção rigorosa de desfecho nos problemas finitos (P125–P127):** cada busca registra exatamente `novel-construction-or-counterexample` (se resolver o problema aberto finito) ou `certified-exhaustive-bound` (se provar formalmente a inexistência/validade até um novo limite explícito $B$ com cobertura integral demonstrada).
+4. **Lean 4 hermético e árvore limpa:** compilação integral via `lake -d lean_proofs build` com zero `sorry` e zero axiomas não padrão.

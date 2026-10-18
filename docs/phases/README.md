@@ -259,6 +259,27 @@ Execute one micro-task at a time. All phases remain Proposed until their explici
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.
 
+## Structural N-theorems & finite open-problem scientific discovery program (P121–P128)
+
+[The scientific discovery contract](../FORMAL_SEARCH_PLAN.md#programa-de-teoremas-estruturais-em--e-descoberta-em-problemas-de-domínio-finito-aberto-p121p128)
+defines the formal research extension adopted under D032 following P113–P120. It replaces superficial
+theorem-count inflation with (1) genuine structural theorems in $\mathbb{N}$ proving `IsUnitFractionSol`
+and Mordell's modular reduction over `Fin 840`, and (2) certified attacks on finitely settleable open
+problems from the `finite_search_candidates` bucket of `docs/research/open-problems.json` (`erdos-307`,
+`erdos-287`, `erdos-647`, `erdos-475`).
+
+- [P121 — Levantamento formal Q[k] -> N^+ e provas de divisibilidade conectadas a IsUnitFractionSol](P121-nat-positivity-divisibility-lifting.md).
+- [P122 — Teorema estrutural de redução modular de Mordell sobre Fin 840 em N](P122-mordell-modular-reduction-theorem.md).
+- [P123 — Formalização da obstrução quadrática de Schinzel-Yamamoto contra identidades lineares universais](P123-quadratic-residue-polynomial-obstruction.md).
+- [P124 — Fechamento estrutural multiparamétrico em N por divisores em classes de desobstrução](P124-prime-divisor-structural-closure.md).
+- [P125 — Alvo finito aberto erdos-307: produto unitário de somas de recíprocos de primos e obstrução p-ádica](P125-erdos-307-prime-reciprocal-products.md).
+- [P126 — Alvo finito aberto erdos-287: poda exata branch-and-bound e cotas formais para gaps <= 2 em frações unitárias](P126-erdos-287-unit-fraction-max-gap.md).
+- [P127 — Alvos finitos abertos erdos-647 (m + tau(m) <= n + 2) e erdos-475 (somas parciais distintas em F_p)](P127-erdos-647-475-finite-certificates.md).
+- [P128 — Auditoria anti-inflação de teoremas estruturais, confirmação cega e dossiê de descoberta científica](P128-scientific-discovery-audit-dossier.md).
+
+Execute one micro-task at a time. All phases remain Proposed until their explicit
+gates and measurements pass. No trivial `rfl`/`norm_num` inflation is counted toward structural theorem gates.
+
 
 ## Historical execution and acceptance contract
 

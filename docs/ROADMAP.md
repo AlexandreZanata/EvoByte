@@ -59,6 +59,7 @@ P89–P96 generalized modular resolution, meta-tactics & extended Schinzel progr
 P97–P104 Diophantine algebraic geometry, cubic surface fibrations & invariants program (D027)
 P105–P112 open problems formal discovery & proof-guided model program (D028)
 P113–P120 additive combinatorics, Sidon sets & density program (D031)
+P121–P128 structural N-theorems & finite open-problem scientific discovery program (D032)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -282,6 +283,31 @@ P117 formalizes Erdős–Turán additive basis representation bounds.
 P118 proves density bounds for sum-free subsets and 3-term progression restrictions.
 P119 confirms performance on a sealed blind split of 100 additive instances under Holm FWER control.
 P120 executes a grand additive combinatorics campaign certifying 2,000+ Lean 4 theorems and the final dossier.
+All phases remain Proposed until measured and accepted.
+
+## Structural N-theorems & finite open-problem scientific discovery program (D032)
+
+[P121–P128](phases/README.md#structural-n-theorems--finite-open-problem-scientific-discovery-program-p121p128)
+define the scientific discovery extension under D032, shifting from metric theorem-count expansion
+to genuine mathematical depth along two complementary axes:
+1. **Structural $\mathbb{N}$-theorems connected to real problem predicates (`P121–P124`):** lifting polynomial
+   identities in $\mathbb{Q}[k]$ via integer divisibility and strict positivity into universally quantified
+   existential theorems `∀ k : ℕ, ∃ x y z : ℕ, IsUnitFractionSol a (m * k + r) x y z` in Lean 4, proving
+   Mordell's modular reduction theorem over `Fin 840`, formalizing the Schinzel–Yamamoto quadratic residue
+   polynomial obstruction, and proving two-parameter prime-divisor closure for resistant classes.
+2. **Finitely settleable open problems from `docs/research/open-problems.json` (`P125–P128`):** attacking
+   problems in the `finite_search_candidates` bucket (`verifiable`, `falsifiable`, `decidable`) where a
+   finite construction, counterexample, or new certified exhaustive bound constitutes a genuine mathematical
+   advance (`erdos-307`, `erdos-287`, `erdos-647`, `erdos-475`), enforced by an anti-inflation theorem audit.
+
+P121 proves the $\mathbb{Q}[k] \to \mathbb{N}^+$ positivity and divisibility lifting bridge for `IsUnitFractionSol`.
+P122 proves the structural Mordell modular reduction theorem over `Fin 840` in Lean 4.
+P123 formalizes the Schinzel–Yamamoto quadratic residue obstruction against universal 1-parameter identities.
+P124 proves two-parameter prime-divisor structural closure theorems for resistant classes $n \equiv 1 \pmod{24}$.
+P125 targets open problem `erdos-307` (unit product of prime reciprocal sums) with $p$-adic obstructions and exact search.
+P126 targets open problem `erdos-287` (maximum gap $\ge 3$ in unit fraction decompositions of 1) via branch-and-bound pruning.
+P127 targets open problems `erdos-647` ($m + \tau(m) \le n + 2$) and `erdos-475` (distinct partial sums in $\mathbb{F}_p$).
+P128 executes the anti-inflation structural theorem audit, blind confirmation, and scientific discovery dossier.
 All phases remain Proposed until measured and accepted.
 
 ## Quantum track (experimental, deferred expansion)
