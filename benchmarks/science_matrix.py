@@ -765,6 +765,7 @@ ACCEPTANCE_PHASES = (
     "P124",
     "P125",
     "P126",
+    "P127",
 )
 
 
@@ -11769,6 +11770,151 @@ def run_p126_erdos_gyarfas_chromatic_audit(
     return report
 
 
+def run_p127_graph_ramsey_blind_confirmation_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P127 audit: Sealed multi-track blind confirmation of graph and Ramsey extremal engine.
+
+    Verifies:
+    1. Cryptographic seal and zero leakage of 100 graph/Ramsey/AP instances across 4 tracks.
+    2. Mathematical verification of every candidate certificate (Turán/Paley SRG, Zarankiewicz K_{s,t}/PG(2,q), Roth/Salem-Spencer 3-AP, Erdős-Gyárfás cycles/chromatic).
+    3. Step-down Bonferroni-Holm FWER control at alpha = 0.01 across all 4 tracks.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.statistical import (
+        evaluate_graph_ramsey_blind_confirmation,
+        generate_p127_graph_ramsey_blind_split,
+        verify_graph_ramsey_blind_confirmation_soundness,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P127":
+        raise ValueError(f"Config {cfg_p} is not a P127 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P127 GRAPH & RAMSEY BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 127))
+    device_name = config.get("device", "cpu")
+    alpha = float(config.get("alpha", 0.01))
+    min_total = int(config.get("min_total_instances", 100))
+    min_wins = int(config.get("min_wins", 80))
+
+    split_p = _REPO_ROOT / str(config.get("split_path", "experiments/p127-blind-split.json"))
+    if not split_p.exists():
+        findings.append(f"SPLIT_FILE_MISSING: {split_p}")
+        split_data = generate_p127_graph_ramsey_blind_split(
+            seed=seed,
+            count_per_track=int(config.get("count_per_track", 25)),
+            alpha=alpha,
+        )
+    else:
+        with open(split_p, encoding="utf-8") as f:
+            split_data = json.load(f)
+        split_sha = hashlib.sha256(split_p.read_bytes()).hexdigest()
+        expected_sha = config.get("split_sha256")
+        if expected_sha and split_sha != expected_sha:
+            findings.append(
+                f"SPLIT_CHECKSUM_MISMATCH: expected {expected_sha}, computed {split_sha}"
+            )
+
+    eval_res = evaluate_graph_ramsey_blind_confirmation(
+        partition=split_data,
+        alpha=alpha,
+    )
+
+    sound, soundness_findings = verify_graph_ramsey_blind_confirmation_soundness(
+        eval_res,
+        min_total_instances=min_total,
+        min_wins=min_wins,
+        alpha=alpha,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    for t_key, t_info in eval_res.get("tracks", {}).items():
+        print(
+            f"  Track {t_key} ({t_info.get('name')}): "
+            f"W={t_info.get('wins')} L={t_info.get('losses')} T={t_info.get('ties')} "
+            f"raw_p={t_info.get('raw_p_value'):.4e} holm_p={t_info.get('holm_adjusted_p_value'):.4e} "
+            f"reduction={t_info.get('candidate_reduction'):.2f}x -> {t_info.get('outcome')}"
+        )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P127 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p127_config": config_sha[:16],
+            "p127_split": split_data.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P127"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P127",
+        "verdict": verdict,
+        "claim_scope": (
+            "Sealed blind confirmation of extremal graph and Ramsey engine across 100 held-out instances "
+            "(Turán/Paley SRG, Zarankiewicz K_{s,t}/PG(2,q), Roth/Salem-Spencer 3-AP, Erdős-Gyárfás cycles/chromatic) "
+            "with strict Bonferroni-Holm family-wise error rate control (alpha=0.01)."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_instances": eval_res.get("total_instances", 0),
+        "total_wins": eval_res.get("total_wins", 0),
+        "total_losses": eval_res.get("total_losses", 0),
+        "fwer_controlled": eval_res.get("fwer_controlled", False),
+        "max_holm_p_value": eval_res.get("max_holm_p_value", 1.0),
+        "adjusted_p_values": eval_res.get("adjusted_p_values", {}),
+        "tracks": eval_res.get("tracks", {}),
+        "resolved_config": {
+            "acceptance_phase": "P127",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P127 audit {verdict}: {eval_res.get('total_wins', 0)}/{eval_res.get('total_instances', 0)} wins; "
+        f"FWER max Holm p={eval_res.get('max_holm_p_value', 1.0):.4e} <= {alpha}; report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -15873,6 +16019,8 @@ def main() -> int:
             run_p125_roth_salem_spencer_audit(args.config, args.output)
         elif args.acceptance_phase == "P126":
             run_p126_erdos_gyarfas_chromatic_audit(args.config, args.output)
+        elif args.acceptance_phase == "P127":
+            run_p127_graph_ramsey_blind_confirmation_audit(args.config, args.output)
         return 0
 
     seeds = (

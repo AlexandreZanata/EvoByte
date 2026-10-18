@@ -1,0 +1,14 @@
+{
+  "phase": "P127",
+  "acceptance_phase": "P127",
+  "seed": 127,
+  "device": "cpu",
+  "alpha": 0.01,
+  "count_per_track": 25,
+  "min_total_instances": 100,
+  "min_wins": 80,
+  "split_path": "experiments/p127-blind-split.json",
+  "split_sha256": "2bb61028745db5da20a5c424247005b638235dcc8279ddd8d4a7bebf2c42cf71",
+  "require_clean_tree": true,
+  "allow_dirty": false
+}

@@ -240,6 +240,7 @@ def test_p40_acceptance_registry_rejects_unknown_phases():
         "P124",
         "P125",
         "P126",
+        "P127",
     )
     import subprocess as _sp
 

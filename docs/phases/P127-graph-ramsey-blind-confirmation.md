@@ -1,6 +1,6 @@
 # P127 — Confirmação cega em larga escala em grafos e Ramsey sob controle FWER (Bonferroni-Holm)
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P126 concluída; branch a partir de `codex/p126-erdos-gyarfas-cycles-chromatic`.
 **Owner:** agente executor; revisor estatístico/matemático nos gates indicados.
 **Pré-requisito:** P126 concluída com teoremas de ciclos e número cromático provados; partição cega selada de 100 instâncias intocada.
