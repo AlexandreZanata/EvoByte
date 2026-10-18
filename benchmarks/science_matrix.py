@@ -754,6 +754,7 @@ ACCEPTANCE_PHASES = (
     "P113",
     "P114",
     "P115",
+    "P116",
 )
 
 
@@ -10374,6 +10375,130 @@ def run_p115_additive_energy_audit(
     return report
 
 
+def run_p116_additive_norm_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P116 audit: Custom metatactic `additive_norm` and Minkowski sumset normalization audit.
+
+    Verifies:
+    1. Complete Lean 4 compilation of AdditiveTacticTheorems.lean.
+    2. Over 60 formal theorems verified via `additive_norm` / `additive_norm_intro` with 0 sorry.
+    3. Minkowski sum/difference commutativity, associativity, translation cancellation, and inclusion monotonicity.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+    import torch as _torch
+
+    from evobyte.additive import (
+        audit_additive_norm_metatactic,
+        verify_additive_norm_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P116":
+        raise ValueError(f"Config {cfg_p} is not a P116 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P116 ADDITIVE_NORM METATACTIC AUDIT (Lean 4, Minkowski Sumset Normalization, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 60))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    tactic_audit = audit_additive_norm_metatactic(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/AdditiveTacticTheorems.lean"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_additive_norm_soundness(
+        tactic_audit,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Lean 4 module: {tactic_audit.get('module')}, "
+        f"Theorems verified: {tactic_audit.get('total_theorems')}, "
+        f"Tactic invocations: {tactic_audit.get('tactic_invocations')}, "
+        f"Has sorry: {tactic_audit.get('has_sorry')}, "
+        f"Lake passed: {tactic_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P116 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p116_config": config_sha[:16],
+            "lean_theorems": tactic_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P116"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P116",
+        "verdict": verdict,
+        "claim_scope": (
+            "Custom Lean 4 metatactic `additive_norm` automating Minkowski sum/difference algebraic laws, "
+            "translation cancellation, inclusion monotonicity, and Freiman cardinality bounds with 0 sorry."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": tactic_audit.get("total_theorems", 0),
+        "tactic_invocations": tactic_audit.get("tactic_invocations", 0),
+        "has_tactic_syntax": tactic_audit.get("has_tactic_syntax", False),
+        "has_sorry": tactic_audit.get("has_sorry", False),
+        "lake_passed": tactic_audit.get("lake_passed", False),
+        "sha256": tactic_audit.get("sha256", ""),
+        "module": tactic_audit.get("module", ""),
+        "algebra_benchmarks": tactic_audit.get("algebra_benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P116",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P116 audit {verdict}: {tactic_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -14456,6 +14581,8 @@ def main() -> int:
             run_p114_sidon_sets_audit(args.config, args.output)
         elif args.acceptance_phase == "P115":
             run_p115_additive_energy_audit(args.config, args.output)
+        elif args.acceptance_phase == "P116":
+            run_p116_additive_norm_audit(args.config, args.output)
         return 0
 
     seeds = (

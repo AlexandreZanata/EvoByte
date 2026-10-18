@@ -1,0 +1,12 @@
+{
+  "phase": "P116",
+  "acceptance_phase": "P116",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "lean_file": "lean_proofs/Generated/AdditiveTacticTheorems.lean",
+  "min_theorems": 60,
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P116 custom metatactic additive_norm and Minkowski sumset normalization in Lean 4 with zero sorry."
+}

@@ -28,3 +28,4 @@ import Generated.PillaiCatalanTheorems
 import Generated.AdditiveCombinatoricsSignatures
 import Generated.SidonSetsTheorems
 import Generated.AdditiveEnergyTheorems
+import Generated.AdditiveTacticTheorems

@@ -11,14 +11,17 @@ from benchmarks.science_matrix import (
     run_p113_additive_combinatorics_baseline_audit,
     run_p114_sidon_sets_audit,
     run_p115_additive_energy_audit,
+    run_p116_additive_norm_audit,
 )
 from evobyte.additive import (
     DEFAULT_ADDITIVE_ENERGY_LEAN_FILE,
+    DEFAULT_ADDITIVE_TACTIC_LEAN_FILE,
     DEFAULT_LEAN_FILE,
     DEFAULT_SIDON_THEOREMS_LEAN_FILE,
     additive_energy,
     audit_additive_combinatorics_baseline,
     audit_additive_energy_balog_szemeredi,
+    audit_additive_norm_metatactic,
     audit_sidon_sets_extremal_search,
     bose_chowla_sidon_set,
     doubling_constant,
@@ -26,6 +29,7 @@ from evobyte.additive import (
     extract_bsg_popular_difference_subset,
     generate_additive_combinatorics_lean_code,
     generate_additive_energy_theorems_lean_code,
+    generate_additive_tactic_theorems_lean_code,
     generate_sidon_sets_theorems_lean_code,
     is_b2g_set,
     is_sidon_set,
@@ -40,7 +44,9 @@ from evobyte.additive import (
     singer_difference_set,
     verify_additive_combinatorics_baseline_soundness,
     verify_additive_energy_soundness,
+    verify_additive_norm_soundness,
     verify_cauchy_schwarz_additive_bound,
+    verify_minkowski_monotonicity_and_algebra,
     verify_plunnecke_ruzsa_bound,
     verify_sidon_difference_property,
     verify_sidon_sets_soundness,
@@ -366,5 +372,70 @@ def test_p115_audit_smoke(tmp_path: Path):
     assert report["phase"] == "P115"
     assert report["verdict"] == "ACCEPTED"
     assert report["total_theorems"] >= 60
+    assert report["has_sorry"] is False
+    assert report["lake_passed"] is True
+
+
+# ==============================================================================
+# P116 TESTS: CUSTOM METATACTIC `additive_norm` & MINKOWSKI NORMALIZATION
+# ==============================================================================
+
+
+def test_verify_minkowski_monotonicity_and_algebra():
+    ver = verify_minkowski_monotonicity_and_algebra([1, 2, 5, 7], [1, 2, 5, 7, 11], [2, 4])
+    assert ver["commutativity_holds"] is True
+    assert ver["associativity_holds"] is True
+    assert ver["inclusion_monotonicity_holds"] is True
+    assert ver["translation_cancellation_holds"] is True
+    assert ver["freiman_bounds_hold"] is True
+    assert ver["all_laws_hold"] is True
+
+
+def test_p116_additive_norm_generation_and_soundness():
+    assert DEFAULT_ADDITIVE_TACTIC_LEAN_FILE.name == "AdditiveTacticTheorems.lean"
+    code = generate_additive_tactic_theorems_lean_code()
+    assert 'syntax "additive_norm" : tactic' in code
+    assert "theorem minkowski_elem_comm" in code
+    assert "sorry" not in code
+
+    summary = audit_additive_norm_metatactic(verify_lake=False)
+    assert summary["module"] == "AdditiveTacticTheorems"
+    assert summary["total_theorems"] >= 60
+    assert summary["has_tactic_syntax"] is True
+    assert summary["tactic_invocations"] >= 60
+    assert summary["has_sorry"] is False
+    ok, findings = verify_additive_norm_soundness(dict(summary, lake_passed=True), min_theorems=60)
+    assert ok is True
+    assert findings == []
+
+
+def test_p116_acceptance_rejects_wrong_phase(tmp_path: Path):
+    cfg_p = tmp_path / "bad-p116.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P116 configuration"):
+        run_p116_additive_norm_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p116_audit_smoke(tmp_path: Path):
+    cfg = {
+        "phase": "P116",
+        "min_theorems": 60,
+        "project_dir": "lean_proofs",
+        "lean_file": "lean_proofs/Generated/AdditiveTacticTheorems.lean",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p116-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p116-out.json"
+
+    report = run_p116_additive_norm_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P116"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
+    assert report["has_tactic_syntax"] is True
     assert report["has_sorry"] is False
     assert report["lake_passed"] is True
