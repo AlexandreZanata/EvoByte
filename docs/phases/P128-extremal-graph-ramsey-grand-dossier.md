@@ -1,6 +1,6 @@
 # P128 — Grande campanha formal de grafos e Ramsey com dossiê certificado em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P127 concluída; branch a partir de `codex/p127-graph-ramsey-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P127 concluída com confirmação estatística cega aprovada; ambiente Lean 4 e Lake herméticos.

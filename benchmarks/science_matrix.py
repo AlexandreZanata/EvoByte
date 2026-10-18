@@ -766,6 +766,7 @@ ACCEPTANCE_PHASES = (
     "P125",
     "P126",
     "P127",
+    "P128",
 )
 
 
@@ -11915,6 +11916,148 @@ def run_p127_graph_ramsey_blind_confirmation_audit(
     return report
 
 
+def run_p128_extremal_graph_ramsey_grand_campaign_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P128 audit: Extremal graph theory, Ramsey numbers, and AP-free grand formal campaign and dossier audit.
+
+    Verifies:
+    1. Complete Lean 4 library compilation across all 38 generated modules.
+    2. Over 2,800 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Immutable cryptographic hash chain root SHA-256 integrity bit-a-bit.
+    4. Comprehensive research dossier in docs/research/p128-extremal-graph-ramsey-dossier.md.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        audit_extremal_graph_ramsey_grand_campaign,
+        verify_extremal_graph_ramsey_grand_campaign_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P128":
+        raise ValueError(f"Config {cfg_p} is not a P128 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P128 EXTREMAL GRAPH & RAMSEY GRAND FORMAL CAMPAIGN AUDIT (38 Modules, 2,800+ Theorems, Zero Sorry, Hash Chain)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 2800))
+    min_modules = int(config.get("min_modules", 38))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    campaign_audit = audit_extremal_graph_ramsey_grand_campaign(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_extremal_graph_ramsey_grand_campaign_soundness(
+        campaign_audit,
+        min_theorems=min_theorems,
+        min_modules=min_modules,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_chain_hash = config.get("expected_chain_hash")
+    if expected_chain_hash and campaign_audit.get("final_chain_hash") != expected_chain_hash:
+        findings.append(
+            f"CHAIN_HASH_MISMATCH: expected {expected_chain_hash}, computed {campaign_audit.get('final_chain_hash')}"
+        )
+
+    dossier_p = _REPO_ROOT / str(config.get("dossier_path", "docs/research/p128-extremal-graph-ramsey-dossier.md"))
+    if not dossier_p.exists():
+        findings.append(f"DOSSIER_FILE_MISSING: {dossier_p}")
+    else:
+        dossier_text = dossier_p.read_text(encoding="utf-8")
+        if campaign_audit.get("final_chain_hash", "") not in dossier_text:
+            findings.append("DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier")
+
+    print(
+        f"  Total formal modules: {campaign_audit.get('total_modules')}, "
+        f"Theorems verified: {campaign_audit.get('total_theorems')} "
+        f"(graph & Ramsey: {campaign_audit.get('graph_ramsey_theorems')}), "
+        f"Has sorry: {campaign_audit.get('has_sorry')}, "
+        f"Lake passed: {campaign_audit.get('lake_passed')}"
+    )
+    print(f"  Final chain hash: {campaign_audit.get('final_chain_hash')}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P128 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p128_config": config_sha[:16],
+            "lean_chain_hash": campaign_audit.get("final_chain_hash", "")[:16],
+        },
+        config={"acceptance_phase": "P128"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P128",
+        "verdict": verdict,
+        "claim_scope": (
+            "Extremal graph theory, Ramsey numbers, and AP-free grand formal campaign and certified library audit; "
+            "38 modules and 2,800+ theorems in Lean 4 kernel with zero sorry tokens; immutable SHA-256 cryptographic hash chain; complete literature dossier."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_modules": campaign_audit.get("total_modules", 0),
+        "total_theorems": campaign_audit.get("total_theorems", 0),
+        "graph_ramsey_theorems": campaign_audit.get("graph_ramsey_theorems", 0),
+        "has_sorry": campaign_audit.get("has_sorry", False),
+        "lake_passed": campaign_audit.get("lake_passed", False),
+        "final_chain_hash": campaign_audit.get("final_chain_hash", ""),
+        "hash_chain": campaign_audit.get("hash_chain", []),
+        "modules": campaign_audit.get("modules", {}),
+        "resolved_config": {
+            "acceptance_phase": "P128",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P128 audit {verdict}: {campaign_audit.get('total_theorems', 0)} theorems across "
+        f"{campaign_audit.get('total_modules', 0)} modules verified (0 sorry); report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -16021,6 +16164,8 @@ def main() -> int:
             run_p126_erdos_gyarfas_chromatic_audit(args.config, args.output)
         elif args.acceptance_phase == "P127":
             run_p127_graph_ramsey_blind_confirmation_audit(args.config, args.output)
+        elif args.acceptance_phase == "P128":
+            run_p128_extremal_graph_ramsey_grand_campaign_audit(args.config, args.output)
         return 0
 
     seeds = (

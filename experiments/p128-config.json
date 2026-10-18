@@ -1,0 +1,14 @@
+{
+  "phase": "P128",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 2800,
+  "min_modules": 38,
+  "expected_chain_hash": "92823694570fab90bb1887be8741188b683d43a3011e795eb183e67e30e3e0ef",
+  "dossier_path": "docs/research/p128-extremal-graph-ramsey-dossier.md",
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P128 Extremal graph theory, Ramsey numbers, and AP-free grand formal campaign and certified literature dossier audit. Consolidates 38 formal modules in Lean 4 with 2,873 theorems, zero sorry, and SHA-256 cryptographic hash chain."
+}

@@ -569,3 +569,77 @@ def test_p127_audit_smoke(tmp_path: Path):
     assert report["total_instances"] == 100
     assert report["total_wins"] == 100
     assert report["fwer_controlled"] is True
+
+
+def test_p128_extremal_graph_ramsey_grand_campaign_and_hash_chain():
+    from evobyte.formal_bridge import (
+        audit_extremal_graph_ramsey_grand_campaign,
+        verify_extremal_graph_ramsey_grand_campaign_soundness,
+    )
+
+    summary = audit_extremal_graph_ramsey_grand_campaign(verify_lake=False)
+    assert summary["total_modules"] == 38
+    assert summary["total_theorems"] == 2873
+    assert summary["graph_ramsey_theorems"] == 481
+    assert summary["has_sorry"] is False
+    assert (
+        summary["final_chain_hash"]
+        == "92823694570fab90bb1887be8741188b683d43a3011e795eb183e67e30e3e0ef"
+    )
+    ok, findings = verify_extremal_graph_ramsey_grand_campaign_soundness(
+        dict(summary, lake_passed=True), min_theorems=2800, min_modules=38
+    )
+    assert ok is True
+    assert findings == []
+
+
+def test_p128_acceptance_rejects_wrong_phase(tmp_path: Path):
+    import pytest
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p128_extremal_graph_ramsey_grand_campaign_audit
+
+    cfg_p = tmp_path / "bad-p128.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P128 configuration"):
+        run_p128_extremal_graph_ramsey_grand_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p128_audit_smoke(tmp_path: Path):
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p128_extremal_graph_ramsey_grand_campaign_audit
+
+    cfg = {
+        "phase": "P128",
+        "seed": 42,
+        "device": "cpu",
+        "project_dir": "lean_proofs",
+        "generated_dir": "lean_proofs/Generated",
+        "min_theorems": 2800,
+        "min_modules": 38,
+        "expected_chain_hash": "92823694570fab90bb1887be8741188b683d43a3011e795eb183e67e30e3e0ef",
+        "dossier_path": "docs/research/p128-extremal-graph-ramsey-dossier.md",
+        "verify_lake": False,
+        "allow_dirty": True,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p128-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p128-out.json"
+
+    report = run_p128_extremal_graph_ramsey_grand_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P128"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_modules"] == 38
+    assert report["total_theorems"] == 2873
+    assert report["graph_ramsey_theorems"] == 481
+    assert report["has_sorry"] is False
+    assert (
+        report["final_chain_hash"]
+        == "92823694570fab90bb1887be8741188b683d43a3011e795eb183e67e30e3e0ef"
+    )
