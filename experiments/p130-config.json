@@ -1,0 +1,10 @@
+{
+  "phase": "P130",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "lean_file": "lean_proofs/Generated/ErdosDistinctDistancesTheorems.lean",
+  "min_theorems": 75,
+  "verify_lake": true,
+  "require_clean_tree": true
+}

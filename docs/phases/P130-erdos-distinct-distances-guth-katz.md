@@ -1,6 +1,6 @@
 # P130 — Cota inferior de Guth-Katz e configurações extremais de distâncias distintas
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P129 concluída; branch a partir de `codex/p129-discrete-geometry-formal-database`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P129 concluída com tipos de geometria discreta provados e compilados no Lean 4.

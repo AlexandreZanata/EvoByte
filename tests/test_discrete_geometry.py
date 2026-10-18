@@ -10,24 +10,34 @@ import pytest
 from evobyte.discrete_geometry import (
     are_points_colinear,
     audit_discrete_geometry_baseline,
+    audit_erdos_distinct_distances_baseline,
+    circular_points,
     convex_hull_2d,
     cross_product_2d,
     distinct_distance_count,
     distinct_squared_distances,
+    distance_quadruples_energy,
     erdos_elementary_distance_bound,
     erdos_szekeres_happy_ending_bound,
     generate_discrete_geometry_signatures_lean_code,
+    generate_erdos_distinct_distances_lean_code,
     grid_distinct_distance_count,
     grid_points,
+    guth_katz_lower_estimate,
+    historical_distinct_distance_bounds,
     is_convex_polygon,
     is_in_general_position,
+    landau_ramanujan_grid_estimate,
     linear_points,
     moser_spindle_points,
     pairwise_squared_distances,
     sq_euclidean_distance,
+    triangular_grid_points,
     unit_distance_count,
     verify_discrete_geometry_baseline_soundness,
     verify_discrete_geometry_properties,
+    verify_erdos_distinct_distances_baseline_soundness,
+    verify_erdos_distinct_distances_properties,
 )
 
 
@@ -156,5 +166,87 @@ def test_verify_soundness_rejections() -> None:
     # Lake failure
     failing_audit = {"has_sorry": False, "total_theorems": 100, "lake_passed": False, "sha256": "a" * 64}
     sound, findings = verify_discrete_geometry_baseline_soundness(failing_audit)
+    assert sound is False
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+
+
+def test_triangular_and_circular_point_generators() -> None:
+    """Test triangular Eisenstein lattice and circular point set generation."""
+    tri3 = triangular_grid_points(3)
+    assert len(tri3) == 9
+    circ8 = circular_points(8, radius=500)
+    assert len(circ8) == 8
+    # All points lie within roughly radius distance from origin
+    for x, y in circ8:
+        dist_sq = x * x + y * y
+        assert abs(math.sqrt(dist_sq) - 500) <= 2.0
+
+
+def test_distance_energy_and_cauchy_schwarz() -> None:
+    """Test distance energy E(P) calculation and Cauchy-Schwarz inequality D * E >= pairs^2."""
+    pts = grid_points(3)  # 3x3 grid, 9 points, 36 pairs
+    props = verify_erdos_distinct_distances_properties(pts)
+    assert props["n_points"] == 9
+    assert props["total_pairs"] == 36
+    assert props["distinct_distances"] == 5
+    assert props["distance_energy"] > 0
+    assert props["cs_inequality_holds"] is True
+    # D * E >= pairs^2
+    assert props["product_d_e"] >= props["pairs_squared"]
+
+
+def test_theoretical_bounds_estimates() -> None:
+    """Test Landau-Ramanujan and Guth-Katz theoretical estimates and historical chain."""
+    n = 100
+    lr = landau_ramanujan_grid_estimate(n)
+    gk = guth_katz_lower_estimate(n)
+    assert lr > 0
+    assert gk > 0
+
+    hist = historical_distinct_distance_bounds(n)
+    # Check monotonicity of historical bounds: 1946 <= 1952 <= 1984 <= 1997 <= 2001
+    assert hist["erdos_1946"] <= hist["moser_1952"]
+    assert hist["moser_1952"] <= hist["chung_1984"]
+    assert hist["chung_1984"] <= hist["szekely_1997"]
+    assert hist["szekely_1997"] <= hist["solymosi_toth_2001"]
+
+
+def test_generate_erdos_distinct_distances_lean_code() -> None:
+    """Test generation of ErdosDistinctDistancesTheorems.lean module."""
+    code = generate_erdos_distinct_distances_lean_code()
+    assert "namespace EvoByte.ErdosDistinctDistances" in code
+    assert "sorry" not in code
+    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    assert len(thms) >= 75
+
+
+def test_audit_erdos_distinct_distances_baseline() -> None:
+    """Test P130 baseline audit against Lean 4 kernel."""
+    audit = audit_erdos_distinct_distances_baseline(verify_lake=True)
+    assert audit["module"] == "ErdosDistinctDistancesTheorems"
+    assert audit["has_sorry"] is False
+    assert audit["lake_passed"] is True
+    assert audit["total_theorems"] >= 75
+    assert len(audit["benchmarks"]) >= 5
+
+    sound, findings = verify_erdos_distinct_distances_baseline_soundness(audit, min_theorems=75)
+    assert sound is True
+    assert findings == []
+
+
+def test_verify_erdos_soundness_rejections() -> None:
+    """Test that P130 soundness validator properly catches defects."""
+    bad_audit = {"has_sorry": True, "total_theorems": 100, "lake_passed": True, "sha256": "a" * 64}
+    sound, findings = verify_erdos_distinct_distances_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    sparse_audit = {"has_sorry": False, "total_theorems": 10, "lake_passed": True, "sha256": "a" * 64}
+    sound, findings = verify_erdos_distinct_distances_baseline_soundness(sparse_audit, min_theorems=75)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    failing_audit = {"has_sorry": False, "total_theorems": 100, "lake_passed": False, "sha256": "a" * 64}
+    sound, findings = verify_erdos_distinct_distances_baseline_soundness(failing_audit)
     assert sound is False
     assert any("LAKE_BUILD_FAILED" in f for f in findings)
