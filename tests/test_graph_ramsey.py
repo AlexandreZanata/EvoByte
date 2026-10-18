@@ -200,3 +200,70 @@ def test_p122_paley_srg_and_ramsey_witnesses(tmp_path: Path):
     assert report["total_theorems"] >= 60
     assert report["has_sorry"] is False
     assert out_path.exists()
+
+
+def test_p123_zarankiewicz_kst_and_pg2q(tmp_path: Path):
+    from evobyte.graph_ramsey import (
+        audit_zarankiewicz_kovari_sos_turan,
+        bipartite_cherry_count,
+        generate_zarankiewicz_kst_lean_code,
+        has_bipartite_kst,
+        projective_plane_pg2q_biadjacency,
+        reiman_zarankiewicz_bound,
+        verify_zarankiewicz_kst_soundness,
+    )
+
+    for q in (2, 3, 5):
+        biadj = projective_plane_pg2q_biadjacency(q)
+        n_v = q * q + q + 1
+        assert len(biadj) == n_v
+        assert has_bipartite_kst(biadj, 2, 2) is False
+        stats = bipartite_cherry_count(biadj)
+        assert stats["is_k22_free"] is True
+        assert stats["edges"] == (q + 1) * n_v
+        assert stats["saturates_reiman"] is True
+        assert reiman_zarankiewicz_bound(n_v, n_v) == (q + 1) * n_v
+
+    code = generate_zarankiewicz_kst_lean_code()
+    assert "namespace EvoByte.ZarankiewiczKST" in code
+    assert "sorry" not in code
+    assert code.count("theorem ") >= 60
+
+    audit = audit_zarankiewicz_kovari_sos_turan(
+        project_dir="lean_proofs",
+        lean_file="lean_proofs/Generated/ZarankiewiczKovariSosTuranTheorems.lean",
+        verify_lake=False,
+    )
+    sound, findings = verify_zarankiewicz_kst_soundness(audit, min_theorems=60)
+    assert sound is True, f"Unexpected P123 soundness findings: {findings}"
+    assert audit["total_theorems"] >= 60
+    assert audit["has_sorry"] is False
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p123_zarankiewicz_kst_audit
+
+    cfg_path = tmp_path / "p123-test-config.json"
+    out_path = tmp_path / "p123-test-out.json"
+    cfg_path.write_text(
+        json.dumps(
+            {
+                "phase": "P123",
+                "seed": 42,
+                "device": "cpu",
+                "project_dir": "lean_proofs",
+                "lean_file": "lean_proofs/Generated/ZarankiewiczKovariSosTuranTheorems.lean",
+                "min_theorems": 60,
+                "verify_lake": False,
+                "require_clean_tree": False,
+                "allow_dirty": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    report = run_p123_zarankiewicz_kst_audit(cfg_path, out_path)
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
+    assert report["has_sorry"] is False
+    assert out_path.exists()

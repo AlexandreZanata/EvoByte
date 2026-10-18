@@ -33,3 +33,4 @@ import Generated.ErdosTuranBasesTheorems
 import Generated.SumFreeTheorems
 import Generated.ExtremalGraphRamseySignatures
 import Generated.RamseyPaleyTheorems
+import Generated.ZarankiewiczKovariSosTuranTheorems

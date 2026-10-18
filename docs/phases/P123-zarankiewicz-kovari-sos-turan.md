@@ -1,6 +1,6 @@
 # P123 — Problema de Zarankiewicz e desigualdade de Kővári-Sós-Turán para grafos K_{s,t}-free
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P122 concluída; branch a partir de `codex/p122-paley-graphs-ramsey-constructions`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P122 concluída com grafos de Paley e construções de Ramsey provadas em Lean 4.
