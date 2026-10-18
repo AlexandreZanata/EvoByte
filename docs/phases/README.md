@@ -212,9 +212,9 @@ and a consolidated grand formal campaign expanding to 1,200+ Lean 4 kernel theor
 - [P103 — Confirmação cega em hiper-escala (10^9 a 10^12) sob controle FWER](P103-hyper-scale-blind-confirmation.md).
 - [P104 — Grande campanha formal e dossiê de geometria diofantina em Lean 4](P104-diophantine-geometry-formal-campaign.md).
 
-Execute one micro-task at a time. All phases remain Proposed until their explicit
-gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
-conjecture resolution is claimed.
+P97–P104 are completed (Done, D029) with all measured gates passing, clean-tree
+verification, 1,441 Lean 4 kernel theorems with zero sorry across 22 modules, and PRs #129–#137.
+No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
 
 ## Open problems formal discovery & proof-guided model program (P105–P112)
 
@@ -224,6 +224,7 @@ P97–P104. It tests EvoByte's methodology (lightweight conditional models, herm
 orchestration, algebraic sieves, and Lean 4 formal proofs) directly on real open mathematical
 problems from the 100-problem catalog (`docs/research/open-problems.json`), including Erdős–Graham
 dense unit fraction sums and Pillai–Catalan exponential Diophantine equations.
+The program is completed (Done, D030).
 
 - [P105 — Banco de dados hermético de problemas abertos e tipagem formal dependente em Lean 4](P105-open-problems-formal-database.md).
 - [P106 — Motor de grafos de obstruções e espaços negativos de busca diofantina](P106-obstruction-graphs-data-engine.md).
@@ -234,9 +235,9 @@ dense unit fraction sums and Pillai–Catalan exponential Diophantine equations.
 - [P111 — Confirmação cega multiproblema com controle estatístico rigoroso FWER (Bonferroni-Holm)](P111-multiproblem-blind-confirmation.md).
 - [P112 — Grande campanha de resolução e progresso formal com dossiê de literatura e 1.500+ teoremas](P112-open-problems-grand-dossier.md).
 
-Execute one micro-task at a time. All phases remain Proposed until their explicit
-gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
-conjecture resolution is claimed.
+P105–P112 are completed (Done, D030) with all measured gates passing, clean-tree
+verification, 1,929 Lean 4 kernel theorems with zero sorry across 26 modules, and PRs #138–#145.
+No worldwide novelty, quantum advantage, or unproven universal conjecture resolution is claimed.
 
 
 ## Historical execution and acceptance contract

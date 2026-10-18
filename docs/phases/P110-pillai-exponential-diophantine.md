@@ -1,6 +1,6 @@
 # P110 — Alvo aberto Pillai-Catalan: formas lineares em logaritmos e crivo de expoentes diofantinos
 
-**Status:** In review.
+**Status:** Done (2026-10-17; formas lineares em logaritmos e crivo de expoentes Pillai–Catalan formalizados em Lean 4 com 175 teoremas, 100% de vitórias contra crivo ingênuo, artefato experiments/p110-acceptance.json; lake build e pytest verdes).
 **Dependência:** P109 concluída; branch a partir de `codex/p109-erdos-graham-unit-fractions`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P109 concluída com teoremas de frações unitárias no Lean 4.

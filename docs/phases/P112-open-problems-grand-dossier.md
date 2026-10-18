@@ -1,6 +1,6 @@
 # P112 — Grande campanha de resolução e progresso formal com dossiê de literatura e 1.500+ teoremas
 
-**Status:** In review.
+**Status:** Done (2026-10-17; campanha formal com 1.929 teoremas no kernel do Lean 4 em 26 módulos sem sorry, hash chain imutável SHA-256 final 0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268, dossiê docs/research/p112-open-problems-dossier.md, artefato /tmp/evobyte-p112-acceptance.json; lake build e pytest verdes).
 **Dependência:** P111 concluída; branch a partir de `codex/p111-multiproblem-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P111 concluída com confirmação estatística cega multiproblema aprovada; ambiente Lean 4 e Lake herméticos.

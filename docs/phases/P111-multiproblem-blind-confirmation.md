@@ -1,6 +1,6 @@
 # P111 — Confirmação cega multiproblema com controle estatístico rigoroso FWER (Bonferroni-Holm)
 
-**Status:** In review.
+**Status:** Done (2026-10-17; partição cega selada multiproblema com 100/100 vitórias em 4 faixas, controle estrito FWER via Bonferroni-Holm p = 2.38e-07 <= 0.01, artefato experiments/p111-acceptance.json; lake build e pytest verdes).
 **Dependência:** P110 concluída; branch a partir de `codex/p110-pillai-exponential-diophantine`.
 **Owner:** agente executor; revisor estatístico/matemático nos gates indicados.
 **Pré-requisito:** P110 concluída com crivos algébricos e lemas de Baker; partição cega de 100 instâncias selada e intocada.

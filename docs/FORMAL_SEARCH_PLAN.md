@@ -500,13 +500,16 @@ P89 meta-táticas Lean 4 -> P90 generalização Schinzel -> P91 crivo anéis qua
 
 ## Programa de geometria algébrica diofantina, fibrados de superfícies cúbicas e invariantes em Lean 4 (P97–P104)
 
-**Programa proposto em 2026-10-14 (D027).** Sucede a conclusão de P89–P96 sob D026.
-O programa P89–P96 consolidou 965 teoremas formais em 16 módulos em `lean_proofs/Generated/`,
-provando meta-táticas customizadas em Lean 4, identidades diofantinas para a conjectura de Schinzel
-ampliada ($a \ge 4$), crivos em anéis quadráticos $\mathbb{Z}[\sqrt{d}]$, cotas extremais de coordenadas,
-densidade assintótica modular, coprimalidade universal multitermo ($k \ge 5$) e confirmação cega em grande escala ($10^7 \le n \le 10^9$).
+**Programa concluído em 2026-10-15 (D029).** Sucedeu a conclusão de P89–P96 sob D026.
+Todas as 8 fases P97–P104 foram concluídas com êxito (`Done`), consolidando 1.441 teoremas
+formais certificados no kernel do Lean 4 em 22 módulos em `lean_proofs/Generated/` com zero
+tokens `sorry`, parametrizações racionais via princípio local-global, meta-tática `dioph_surface`,
+provas dos momentos assintóticos $\bar{f}_a(n) \gg \log^2 n$, frações diofantinas de potências
+superiores $a/n^k$, confirmação cega em hiper-escala ($10^9 \le n \le 10^{12}$) sob controle
+Holm FWER ($\alpha = 0{,}01$, 100/100 vitórias) e grande dossiê formal certificado com cadeia
+criptográfica SHA-256 (head `777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906`).
 
-O programa P97–P104 estende o horizonte do EvoByte para a geometria algébrica diofantina:
+O programa P97–P104 estendeu o horizonte do EvoByte para a geometria algébrica diofantina:
 1. **Fibrados de curvas e superfícies cúbicas:** Modelagem da variedade $a x y z = n(yz + xz + xy)$
    como uma superfície afim cúbica fibrada em cônicas $C_x(y, z)$ sobre $\mathbb{Q}(x)$ em Lean 4.
 2. **Síntese de parametrizações racionais via princípio local-global:** Análise de obstruções de
@@ -520,7 +523,7 @@ O programa P97–P104 estende o horizonte do EvoByte para a geometria algébrica
    $\frac{a}{n^k} = \frac{1}{x} + \frac{1}{y} + \frac{1}{z}$ para expoentes $k \ge 2$.
 7. **Confirmação cega em hiper-escala ($10^9 \le n \le 10^{12}$):** Testes em partição cega selada
    sob controle de taxa de erro familiar (FWER) via Bonferroni-Holm ($\alpha = 0{,}01$).
-8. **Campanha formal e grande dossiê geométrico:** Expansão para 1.200+ teoremas formais certificados
+8. **Campanha formal e grande dossiê geométrico:** Expansão para 1.441 teoremas formais certificados
    no kernel do Lean 4 com zero tokens `sorry`.
 
 ### Ordem e dependências de P97–P104
@@ -542,12 +545,20 @@ P97 fibrados cônicos superfícies cúbicas -> P98 parametrizações locais-glob
 
 ## Programa de descoberta formal em problemas abertos e teoria de modelos guiada por provas em Lean 4 (P105–P112)
 
-**Programa proposto em 2026-10-14 (D028).** Sucede a conclusão de P97–P104 sob D027.
-O programa P105–P112 tem por objetivo testar sistematicamente a metodologia do EvoByte
+**Programa concluído em 2026-10-17 (D030).** Sucedeu a conclusão de P97–P104 sob D029.
+Todas as 8 fases P105–P112 foram concluídas com êxito (`Done`), atingindo 1.929 teoremas formais
+certificados no kernel do Lean 4 em 26 módulos com zero tokens `sorry`, unificando a taxonomia formal
+de problemas abertos com grafos de obstruções modulares, modelo de proposição neural leve ($\le 5\text{M}$ parâmetros),
+MCTS formal guiado por recompensas de compilação, busca e certificação para alvos de Erdős–Graham e
+Pillai–Catalan, confirmação cega multiproblema com 100/100 vitórias sob controle estrito FWER
+(Bonferroni-Holm, $p = 2{,}38 \times 10^{-7} \le 0{,}01$) e dossiê formal de literatura com cadeia
+criptográfica SHA-256 (head `0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268`).
+
+O programa P105–P112 testou sistematicamente a metodologia do EvoByte
 (arquitetura de modelos compactos, orquestração hermética de dados, crivos algébricos e
 provas interativas no Lean 4) diretamente sobre problemas matemáticos abertos do catálogo
-curado (`docs/research/open-problems.json`), validando empiricamente se há progresso verificável,
-redução de classes de obstrução ou resolução formal de subconjecturas.
+curado (`docs/research/open-problems.json`), validando empiricamente o progresso verificável,
+redução de classes de obstrução e resolução formal de subconjecturas.
 
 ### Pilares metodológicos e de arquitetura
 

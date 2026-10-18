@@ -224,44 +224,45 @@ P94 proved universal $k$-term Egyptian fraction decompositions under strict copr
 P95 confirmed performance on a sealed blind split of ultra-large instances ($10^7 \le n \le 10^9$) under Holm FWER control (100/100 wins, $p < 10^{-5}$).
 P96 executed a grand formal campaign with 965 Lean 4 kernel theorems across 16 modules with zero `sorry` and certified the final dossier with SHA-256 hash chain head `5de47dc7b3987ef724e685d2bac5a944ee1cd4ade4a8178f2d74ae0c9471878c`. All phases P89–P96 are Done.
 
-## Diophantine algebraic geometry, cubic surface fibrations & invariants program (D027)
+## Diophantine algebraic geometry, cubic surface fibrations & invariants program (D027, completed under D029)
 
 [P97–P104](phases/README.md#diophantine-algebraic-geometry-cubic-surface-fibrations--invariants-program-p97p104)
-define the formal extension following the conclusion of P89–P96 under D026.
+define the formal extension following the conclusion of P89–P96 under D026, now completed (Done, D029).
 P89–P96 established 965 certified theorems in the Lean 4 kernel, custom tactic automation,
 quadratic ring sieves, and blind confirmation up to $n = 10^9$.
-P97–P104 treat the Diophantine solution manifold $a x y z = n(yz + xz + xy)$ as an affine cubic surface,
+P97–P104 treated the Diophantine solution manifold $a x y z = n(yz + xz + xy)$ as an affine cubic surface,
 formalizing conic fibrations over $\mathbb{Q}(x)$, rational points via Legendre local-global principle,
 quaternion order sieves, custom algebraic elimination tactic `dioph_surface`, solution density moments $f_a(n)$,
-higher-power fractions $a/n^k$, ultra-scale verification ($10^9 \le n \le 10^{12}$), and expansion to 1,200+ Lean 4 theorems.
+higher-power fractions $a/n^k$, ultra-scale verification ($10^9 \le n \le 10^{12}$), and expansion to 1,441 Lean 4 theorems.
 
-P97 formalizes cubic surface Diophantine conic fibrations and sections in Lean 4.
-P98 synthesizes rational conic parameterizations via the local-global principle.
-P99 develops quaternion algebra and division order sieves for global obstruction classes.
-P100 implements the unified `dioph_surface` metaprogramming tactic in Lean 4.
-P101 proves asymptotic moment bounds and solution abundance theorems for $f_a(n)$.
-P102 generalizes formal Diophantine identities to higher-power denominators $a/n^k$.
-P103 confirms performance on a sealed blind split of hyper-scale instances ($10^9 \le n \le 10^{12}$) under Holm FWER control.
-P104 executes a grand Diophantine geometry campaign and certifies the final dossier in Lean 4.
-All phases remain Proposed until measured and accepted.
+P97 formalized cubic surface Diophantine conic fibrations and sections in Lean 4.
+P98 synthesized rational conic parameterizations via the local-global principle.
+P99 developed quaternion algebra and division order sieves for global obstruction classes.
+P100 implemented the unified `dioph_surface` metaprogramming tactic in Lean 4.
+P101 proved asymptotic moment bounds and solution abundance theorems for $f_a(n)$.
+P102 generalized formal Diophantine identities to higher-power denominators $a/n^k$.
+P103 confirmed performance on a sealed blind split of hyper-scale instances ($10^9 \le n \le 10^{12}$) under Holm FWER control (100/100 wins).
+P104 executed a grand Diophantine geometry campaign, certifying 1,441 Lean 4 theorems across 22 modules with zero `sorry` and hash chain head `777384bb9a427dc357c2668b83baf5738af445f2265124afe3c31bdd997a5906`.
+All phases P97–P104 are Done.
 
-## Open problems formal discovery & proof-guided model program (D028)
+## Open problems formal discovery & proof-guided model program (D028, completed under D030)
 
 [P105–P112](phases/README.md#open-problems-formal-discovery--proof-guided-model-program-p105p112)
 define the formal research extension targeting the catalog of 100 open mathematical problems
-under D028. Testing our methodology on real open problems requires disciplined model design,
+under D028, now completed (Done, D030).
+EvoByte's methodology was tested on real open problems with disciplined model design,
 sound data organization with dependent types, and rigorous formal certification in Lean 4 without
 false positives.
 
-P105 establishes a hermetic open problems database in Lean 4 with dependent type signatures.
-P106 implements relational obstruction graphs and negative search space pruning.
-P107 trains a lightweight conditional proposer model (<= 5M params) in VRAM without natural language hallucination.
-P108 implements formal Monte Carlo Tree Search (MCTS) in Lean 4 tactic spaces guided by kernel rewards.
-P109 targets the Erdős–Graham open conjecture on dense unit fraction decompositions.
-P110 targets the Pillai–Catalan exponential Diophantine equations via linear forms in logarithms.
-P111 confirms multi-problem blind performance under strict family-wise error rate control (Holm alpha = 0.01).
-P112 executes a grand open problems campaign certifying 1,500+ Lean 4 theorems and the final research dossier.
-All phases remain Proposed until measured and accepted.
+P105 established a hermetic open problems database in Lean 4 with dependent type signatures.
+P106 implemented relational obstruction graphs and negative search space pruning.
+P107 trained a lightweight conditional proposer model (<= 5M params) in VRAM without natural language hallucination.
+P108 implemented formal Monte Carlo Tree Search (MCTS) in Lean 4 tactic spaces guided by kernel rewards.
+P109 targeted the Erdős–Graham open conjecture on dense unit fraction decompositions.
+P110 targeted the Pillai–Catalan exponential Diophantine equations via linear forms in logarithms.
+P111 confirmed multi-problem blind performance under strict family-wise error rate control (Holm alpha = 0.01, 100/100 wins).
+P112 executed a grand open problems campaign certifying 1,929 Lean 4 theorems across 26 modules with zero `sorry`, SHA-256 hash chain head `0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268`, and the final research dossier.
+All phases P105–P112 are Done.
 
 ## Quantum track (experimental, deferred expansion)
 
