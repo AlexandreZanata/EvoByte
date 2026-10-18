@@ -1,6 +1,6 @@
 # P132 — Meta-tática customizada geom_distance_norm e automação geométrica em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P131 concluída; branch a partir de `codex/p131-unit-distances-szemeredi-trotter`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P131 concluída com teoremas de distâncias unitárias provados e compilados no Lean 4.

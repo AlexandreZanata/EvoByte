@@ -47,6 +47,12 @@ from evobyte.discrete_geometry import (
     verify_discrete_geometry_properties,
     verify_erdos_distinct_distances_baseline_soundness,
     verify_erdos_distinct_distances_properties,
+    DEFAULT_DISCRETE_GEOMETRY_TACTIC_LEAN_FILE,
+    audit_discrete_geometry_tactic_baseline,
+    discrete_geometry_tactic_benchmarks,
+    generate_discrete_geometry_tactic_lean_code,
+    normalize_squared_distance_expression,
+    verify_discrete_geometry_tactic_baseline_soundness,
     verify_unit_distance_properties,
     verify_unit_distances_szemeredi_trotter_baseline_soundness,
 )
@@ -348,5 +354,122 @@ def test_verify_unit_distances_soundness_rejections() -> None:
 
     failing_audit = {"has_sorry": False, "total_theorems": 100, "lake_passed": False, "sha256": "a" * 64}
     sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(failing_audit)
+    assert sound is False
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+
+
+# ==============================================================================
+# P132 TESTS: GEOM_DISTANCE_NORM METATACTIC & GEOMETRIC AUTOMATION
+# ==============================================================================
+
+
+def test_normalize_squared_distance_expression() -> None:
+    """Test algebraic normalization of squared distance expression."""
+    res = normalize_squared_distance_expression((1, 2), (4, 6))
+    assert res["dx"] == 3
+    assert res["dy"] == 4
+    assert res["dx_sq"] == 9
+    assert res["dy_sq"] == 16
+    assert res["total_sq"] == 25
+    assert res["is_zero"] is False
+    assert res["is_axial"] is False
+    assert res["is_diagonal"] is False
+
+    diag = normalize_squared_distance_expression((0, 0), (5, 5))
+    assert diag["is_diagonal"] is True
+    assert diag["total_sq"] == 50
+
+
+def test_discrete_geometry_tactic_benchmarks() -> None:
+    """Test algebraic Euclidean metric and tactic property benchmarks."""
+    benchmarks = discrete_geometry_tactic_benchmarks()
+    assert len(benchmarks) >= 1
+    for b in benchmarks:
+        assert b["parallelogram_holds"] is True
+        assert b["apollonius_holds"] is True
+        assert b["leibniz_holds"] is True
+        assert b["lagrange_holds"] is True
+        assert b["eisenstein_holds"] is True
+        assert b["all_properties_hold"] is True
+
+
+def test_generate_discrete_geometry_tactic_lean_code() -> None:
+    """Test generation of DiscreteGeometryTacticTheorems.lean module."""
+    code = generate_discrete_geometry_tactic_lean_code()
+    assert "namespace EvoByte.DiscreteGeometryTactic" in code
+    assert 'syntax "geom_distance_norm" : tactic' in code
+    assert 'syntax "geom_distance_intro" : tactic' in code
+    assert "sorry" not in code
+    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    assert len(thms) >= 80
+
+
+def test_audit_discrete_geometry_tactic_baseline() -> None:
+    """Test P132 baseline audit against Lean 4 kernel."""
+    audit = audit_discrete_geometry_tactic_baseline(verify_lake=True)
+    assert audit["module"] == "DiscreteGeometryTacticTheorems"
+    assert audit["has_sorry"] is False
+    assert audit["lake_passed"] is True
+    assert audit["has_syntax_def"] is True
+    assert audit["total_theorems"] >= 80
+    assert audit["tactic_uses"] >= 80
+    assert len(audit["benchmarks"]) >= 1
+
+    sound, findings = verify_discrete_geometry_tactic_baseline_soundness(audit, min_theorems=80)
+    assert sound is True
+    assert findings == []
+
+
+def test_verify_discrete_geometry_tactic_soundness_rejections() -> None:
+    """Test that P132 soundness validator properly catches defects."""
+    bad_audit = {
+        "has_sorry": True,
+        "has_syntax_def": True,
+        "total_theorems": 100,
+        "tactic_uses": 100,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": [{"all_properties_hold": True}],
+    }
+    sound, findings = verify_discrete_geometry_tactic_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    no_syntax = {
+        "has_sorry": False,
+        "has_syntax_def": False,
+        "total_theorems": 100,
+        "tactic_uses": 100,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": [{"all_properties_hold": True}],
+    }
+    sound, findings = verify_discrete_geometry_tactic_baseline_soundness(no_syntax)
+    assert sound is False
+    assert any("MISSING_SYNTAX_DEF" in f for f in findings)
+
+    sparse_audit = {
+        "has_sorry": False,
+        "has_syntax_def": True,
+        "total_theorems": 10,
+        "tactic_uses": 10,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": [{"all_properties_hold": True}],
+    }
+    sound, findings = verify_discrete_geometry_tactic_baseline_soundness(sparse_audit, min_theorems=80)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    failing_audit = {
+        "has_sorry": False,
+        "has_syntax_def": True,
+        "total_theorems": 100,
+        "tactic_uses": 100,
+        "lake_passed": False,
+        "sha256": "a" * 64,
+        "benchmarks": [{"all_properties_hold": True}],
+    }
+    sound, findings = verify_discrete_geometry_tactic_baseline_soundness(failing_audit)
     assert sound is False
     assert any("LAKE_BUILD_FAILED" in f for f in findings)

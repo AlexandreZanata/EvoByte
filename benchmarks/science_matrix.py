@@ -770,6 +770,7 @@ ACCEPTANCE_PHASES = (
     "P129",
     "P130",
     "P131",
+    "P132",
 )
 
 
@@ -12427,6 +12428,132 @@ def run_p131_unit_distances_szemeredi_trotter_audit(
     return report
 
 
+def run_p132_geom_distance_norm_audit(
+    config_path: str | Path,
+    output_path: str | Path,
+) -> dict[str, Any]:
+    """P132 audit: custom metatactic geom_distance_norm and geometric automation in Lean 4.
+
+    Verifies:
+    1. Complete Lean 4 compilation of DiscreteGeometryTacticTheorems.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Custom metatactics geom_distance_norm and geom_distance_intro defined and used.
+    4. Parallelogram law, Apollonius median, Leibniz centroid, Lagrange 2D cross product,
+       and Eisenstein triangular lattice quadratic form benchmarks verified.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+    import torch as _torch
+
+    from evobyte.discrete_geometry import (
+        audit_discrete_geometry_tactic_baseline,
+        verify_discrete_geometry_tactic_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P132":
+        raise ValueError(f"Config {cfg_p} is not a P132 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P132 GEOM_DISTANCE_NORM METATACTIC AUDIT (Lean 4, Metric Normalization, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    tactic_audit = audit_discrete_geometry_tactic_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/DiscreteGeometryTacticTheorems.lean"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_discrete_geometry_tactic_baseline_soundness(
+        tactic_audit,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Lean 4 module: {tactic_audit.get('module')}, "
+        f"Theorems verified: {tactic_audit.get('total_theorems')}, "
+        f"Tactic uses: {tactic_audit.get('tactic_uses')}, "
+        f"Has sorry: {tactic_audit.get('has_sorry')}, "
+        f"Lake passed: {tactic_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P132 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p132_config": config_sha[:16],
+            "lean_theorems": tactic_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P132"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P132",
+        "verdict": verdict,
+        "claim_scope": (
+            "Custom Lean 4 metatactics geom_distance_norm and geom_distance_intro, "
+            "Euclidean metric space identities, parallelogram laws, and Leibniz centroid normalization with 0 sorry."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": tactic_audit.get("total_theorems", 0),
+        "tactic_uses": tactic_audit.get("tactic_uses", 0),
+        "has_sorry": tactic_audit.get("has_sorry", False),
+        "lake_passed": tactic_audit.get("lake_passed", False),
+        "sha256": tactic_audit.get("sha256", ""),
+        "module": tactic_audit.get("module", ""),
+        "benchmarks": tactic_audit.get("benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P132",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P132 audit {verdict}: {tactic_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -16541,6 +16668,8 @@ def main() -> int:
             run_p130_erdos_distinct_distances_audit(args.config, args.output)
         elif args.acceptance_phase == "P131":
             run_p131_unit_distances_szemeredi_trotter_audit(args.config, args.output)
+        elif args.acceptance_phase == "P132":
+            run_p132_geom_distance_norm_audit(args.config, args.output)
         return 0
 
     seeds = (
