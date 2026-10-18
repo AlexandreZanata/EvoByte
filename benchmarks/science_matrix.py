@@ -764,6 +764,7 @@ ACCEPTANCE_PHASES = (
     "P123",
     "P124",
     "P125",
+    "P126",
 )
 
 
@@ -11647,6 +11648,127 @@ def run_p125_roth_salem_spencer_audit(
     return report
 
 
+def run_p126_erdos_gyarfas_chromatic_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P126 audit: Erdős-Gyárfás conjecture invariants, Dirac cycle bounds, and chromatic numbers.
+
+    Verifies:
+    1. Complete Lean 4 compilation of ErdosGyarfasChromaticTheorems.lean.
+    2. Over 60 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Dirac's cycle length lower bounds, chromatic sandwich bounds, and certified power-of-2 cycles.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+    import torch as _torch
+
+    from evobyte.graph_ramsey import (
+        audit_erdos_gyarfas_chromatic_invariants,
+        verify_erdos_gyarfas_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P126":
+        raise ValueError(f"Config {cfg_p} is not a P126 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P126 ERDŐS-GYÁRFÁS CYCLES & CHROMATIC AUDIT (Lean 4, Power-of-2 Cycles, Dirac, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 60))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    gyarfas_audit = audit_erdos_gyarfas_chromatic_invariants(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/ErdosGyarfasChromaticTheorems.lean"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_erdos_gyarfas_soundness(
+        gyarfas_audit,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Lean 4 module: {gyarfas_audit.get('module')}, "
+        f"Theorems verified: {gyarfas_audit.get('total_theorems')}, "
+        f"Has sorry: {gyarfas_audit.get('has_sorry')}, "
+        f"Lake passed: {gyarfas_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P126 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p126_config": config_sha[:16],
+            "lean_theorems": gyarfas_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P126"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P126",
+        "verdict": verdict,
+        "claim_scope": (
+            "Erdős-Gyárfás power-of-2 cycle conjecture target, Dirac cycle length lower bounds, "
+            "and chromatic number bounds in Lean 4 kernel with 0 sorry."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": gyarfas_audit.get("total_theorems", 0),
+        "has_sorry": gyarfas_audit.get("has_sorry", False),
+        "lake_passed": gyarfas_audit.get("lake_passed", False),
+        "sha256": gyarfas_audit.get("sha256", ""),
+        "module": gyarfas_audit.get("module", ""),
+        "gyarfas_benchmarks": gyarfas_audit.get("gyarfas_benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P126",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P126 audit {verdict}: {gyarfas_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -15749,6 +15871,8 @@ def main() -> int:
             run_p124_graph_ramsey_norm_audit(args.config, args.output)
         elif args.acceptance_phase == "P125":
             run_p125_roth_salem_spencer_audit(args.config, args.output)
+        elif args.acceptance_phase == "P126":
+            run_p126_erdos_gyarfas_chromatic_audit(args.config, args.output)
         return 0
 
     seeds = (

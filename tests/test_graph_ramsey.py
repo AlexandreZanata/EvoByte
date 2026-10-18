@@ -412,3 +412,81 @@ def test_p125_roth_salem_spencer_ap_free(tmp_path: Path):
     assert report["total_theorems"] >= 60
     assert report["has_sorry"] is False
     assert out_path.exists()
+
+
+def test_p126_erdos_gyarfas_and_chromatic(tmp_path: Path):
+    from evobyte.graph_ramsey import (
+        audit_erdos_gyarfas_chromatic_invariants,
+        generate_erdos_gyarfas_chromatic_lean_code,
+        has_cycle_of_length,
+        hypercube_q3_adjacency,
+        petersen_graph_adjacency,
+        turan_graph_adjacency,
+        verify_erdos_gyarfas_property,
+        verify_erdos_gyarfas_soundness,
+    )
+
+    q3 = hypercube_q3_adjacency()
+    assert has_cycle_of_length(q3, 4) is True
+    assert has_cycle_of_length(q3, 8) is True
+    res_q3 = verify_erdos_gyarfas_property(q3)
+    assert res_q3["has_min_degree_3"] is True
+    assert res_q3["has_power_2_cycle"] is True
+    assert res_q3["erdos_gyarfas_holds"] is True
+
+    pet = petersen_graph_adjacency()
+    res_pet = verify_erdos_gyarfas_property(pet)
+    assert res_pet["has_min_degree_3"] is True
+    assert res_pet["clique_number"] == 2
+    assert res_pet["independence_number"] == 4
+    assert res_pet["chromatic_lower_bound"] == 3
+    assert res_pet["chromatic_upper_bound"] == 4
+
+    t6 = turan_graph_adjacency(6, 2)
+    res_t6 = verify_erdos_gyarfas_property(t6)
+    assert res_t6["has_power_2_cycle"] is True
+    assert 4 in res_t6["found_power_2_cycles"]
+
+    code = generate_erdos_gyarfas_chromatic_lean_code()
+    assert "namespace EvoByte.ErdosGyarfasChromatic" in code
+    assert "sorry" not in code
+    assert code.count("theorem ") >= 60
+
+    audit = audit_erdos_gyarfas_chromatic_invariants(
+        project_dir="lean_proofs",
+        lean_file="lean_proofs/Generated/ErdosGyarfasChromaticTheorems.lean",
+        verify_lake=False,
+    )
+    sound, findings = verify_erdos_gyarfas_soundness(audit, min_theorems=60)
+    assert sound is True, f"Unexpected P126 soundness findings: {findings}"
+    assert audit["total_theorems"] >= 60
+    assert audit["has_sorry"] is False
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p126_erdos_gyarfas_chromatic_audit
+
+    cfg_path = tmp_path / "p126-test-config.json"
+    out_path = tmp_path / "p126-test-out.json"
+    cfg_path.write_text(
+        json.dumps(
+            {
+                "phase": "P126",
+                "seed": 42,
+                "device": "cpu",
+                "project_dir": "lean_proofs",
+                "lean_file": "lean_proofs/Generated/ErdosGyarfasChromaticTheorems.lean",
+                "min_theorems": 60,
+                "verify_lake": False,
+                "require_clean_tree": False,
+                "allow_dirty": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+    report = run_p126_erdos_gyarfas_chromatic_audit(cfg_path, out_path)
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
+    assert report["has_sorry"] is False
+    assert out_path.exists()

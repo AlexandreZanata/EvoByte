@@ -1,6 +1,6 @@
 # P126 — Alvo aberto de Erdős-Gyárfás sobre ciclos de potências de 2 e número cromático
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P125 concluída; branch a partir de `codex/p125-roth-salem-spencer-ap-free`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P125 concluída com teoremas de conjuntos livres de 3-AP provados em Lean 4.
