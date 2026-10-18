@@ -642,3 +642,52 @@ P113 banco formal combinatória aditiva -> P114 conjuntos de Sidon extremais
 3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P119):** partição selada de 100 instâncias combinatórias sem vazamento para o crivo.
+
+## Programa de teoria extremal de grafos, números de Ramsey e progressões aritméticas em Lean 4 (P121–P128)
+
+**Programa proposto em 2026-10-18 (D033).** Sucede a conclusão de P113–P120 sob D032.
+O programa P113–P120 consolidou 2.392 teoremas formais em 32 módulos em `lean_proofs/Generated/`,
+cobrindo conjuntos de Sidon, energia aditiva, Plünnecke–Ruzsa, bases de Erdős–Turán e conjuntos
+livres de soma com confirmação estatística cega FWER ($\alpha = 0{,}01$).
+
+O programa P121–P128 estende o motor formal do EvoByte para os 26 problemas de teoria de grafos,
+18 de teoria de Ramsey e 13 de progressões aritméticas do catálogo curado (`docs/research/open-problems.json`):
+1. **Banco formal de grafos extremais e Ramsey (P121):** Tipagem formal e teoremas de Mantel–Turán
+   ($\text{ex}(n, K_{r+1}) \le \frac{r-1}{2r} n^2$), grafos de Turán $T(n, r)$, subgrafos livres de cliques
+   e invariantes de Ramsey em Lean 4 (`ExtremalGraphRamseySignatures.lean`).
+2. **Construções algébricas de Ramsey e grafos de Paley (P122):** Síntese de grafos de resíduos quadráticos
+   de Paley $P(q)$ ($q \equiv 1 \pmod 4$) e colorações cíclicas para cotas inferiores construtivas de
+   números de Ramsey $R(s, t)$ (`RamseyPaleyTheorems.lean`).
+3. **Problema de Zarankiewicz e grafos bipartidos $K_{s,t}$-free (P123):** Formalização da desigualdade
+   de Kővári–Sós–Turán ($z(n; s, t) \le \frac{1}{2}(t-1)^{1/s} n^{2-1/s} + \frac{s-1}{2}n$) e matrizes de
+   incidência projetivas livres de $C_4$ (`ZarankiewiczKovariSosTuranTheorems.lean`).
+4. **Meta-tática customizada `graph_ramsey_norm` (P124):** Meta-programação em Lean 4 para normalização
+   automática de contagens de graus, lema do aperto de mãos ($\sum d(v) = 2|E|$), Cauchy–Schwarz de
+   pares de vizinhos comuns e desigualdades de Turán (`GraphRamseyTacticTheorems.lean`).
+5. **Alvo aberto de Roth e conjuntos livres de 3-AP (P125):** Construções de Salem–Spencer (base 3 sem dígito 2)
+   e Behrend, busca extremal de conjuntos $3\text{-AP}$-free ($x + z \ne 2y$) em $\{1, \dots, N\}$ e cotas
+   de densidade (`RothSalemSpencerTheorems.lean`).
+6. **Alvo aberto de Erdős–Gyárfás, ciclos de potências de 2 e número cromático (P126):** Formalização de
+   cotas de grau mínimo $\delta(G) \ge 3$ para ciclos de comprimento $2^k$, teorema de Brooks–greedy
+   ($\chi(G) \le \Delta(G) + 1$) e cintura vs número cromático (`ErdosGyarfasChromaticTheorems.lean`).
+7. **Confirmação cega multiproblema (P127):** Partição selada de 100 instâncias de grafos extremais,
+   Ramsey, Zarankiewicz e 3-AP-free sob controle FWER via Bonferroni–Holm ($\alpha = 0{,}01$).
+8. **Grande campanha formal e dossiê (P128):** Expansão para mais de 2.800 teoremas certificados no kernel
+   do Lean 4 em 38 módulos com zero tokens `sorry` e cadeia criptográfica SHA-256 de custódia.
+
+### Ordem e dependências de P121–P128
+
+```text
+P121 banco formal grafos e Mantel-Turán -> P122 grafos de Paley e Ramsey R(s,t)
+ -> P123 Zarankiewicz e Kővári-Sós-Turán -> P124 meta-tática graph_ramsey_norm
+ -> P125 conjuntos 3-AP-free (Roth/Salem-Spencer) -> P126 ciclos Erdős-Gyárfás e cromático
+ -> P127 confirmação cega FWER -> P128 grande campanha e dossiê final
+```
+
+### Regras do programa P121–P128
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P127):** partição selada de 100 instâncias sem vazamento para o crivo.

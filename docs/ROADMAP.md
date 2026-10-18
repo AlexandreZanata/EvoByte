@@ -59,6 +59,7 @@ P89–P96 generalized modular resolution, meta-tactics & extended Schinzel progr
 P97–P104 Diophantine algebraic geometry, cubic surface fibrations & invariants program (D027)
 P105–P112 open problems formal discovery & proof-guided model program (D028)
 P113–P120 additive combinatorics, Sidon sets & density program (D031)
+P121–P128 extremal graph theory, Ramsey numbers & arithmetic progressions program (D033)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -284,6 +285,26 @@ P118 proved density bounds for sum-free subsets and Schnirelmann–Mann density 
 P119 confirmed performance on a sealed blind split of 100 additive instances under Holm FWER control (100/100 wins, $p = 2.38 \times 10^{-7} \le 0.01$).
 P120 executed a grand additive combinatorics campaign certifying 2,392 Lean 4 theorems across 32 modules with zero `sorry`, SHA-256 hash chain head `8013152a11ac6cf28559ea1067cba32bfb3c7319d66d27766f636e1bec39acc3`, and the final dossier.
 All phases P113–P120 are Done.
+
+## Extremal graph theory, Ramsey numbers & arithmetic progressions program (D033)
+
+[P121–P128](phases/README.md#extremal-graph-theory-ramsey-numbers--arithmetic-progressions-program-p121p128)
+define the formal research extension targeting extremal graph theory, Ramsey numbers, and
+arithmetic progressions under D033.
+Following the conclusion of P113–P120 under D032, this program targets Mantel–Turán extremal bounds,
+Paley quadratic residue graphs, Zarankiewicz $K_{s,t}$-free bipartite bounds, the `graph_ramsey_norm`
+metatactic, Roth/Salem–Spencer 3-AP-free sets, Erdős–Gyárfás cycle/chromatic bounds, blind confirmation
+with Holm FWER control, and expansion to 2,800+ certified theorems in Lean 4.
+
+P121 formalizes extremal graph, Mantel–Turán, and Ramsey signatures in Lean 4 with dependent types.
+P122 implements Paley quadratic residue graphs and Ramsey $R(s, t)$ constructive lower bounds.
+P123 formalizes Zarankiewicz and Kővári–Sós–Turán $K_{s,t}$-free bipartite graph bounds.
+P124 implements the custom `graph_ramsey_norm` metaprogramming tactic in Lean 4.
+P125 formalizes Roth and Salem–Spencer 3-AP-free set constructions and density bounds.
+P126 proves Erdős–Gyárfás cycle length and chromatic/girth bounds.
+P127 confirms performance on a sealed blind split of 100 graph/Ramsey instances under Holm FWER control.
+P128 executes a grand extremal graph and Ramsey campaign certifying 2,800+ Lean 4 theorems and the final dossier.
+All phases remain Proposed until measured and accepted.
 
 ## Quantum track (experimental, deferred expansion)
 

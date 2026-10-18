@@ -259,6 +259,27 @@ P113–P120 are completed (Done, D032) with all measured gates passing, clean-tr
 verification, 2,392 Lean 4 kernel theorems with zero sorry across 32 modules (463 additive combinatorics theorems), and PRs #149–#156.
 No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
 
+## Extremal graph theory, Ramsey numbers & arithmetic progressions program (P121–P128)
+
+[The extremal graph and Ramsey contract](../FORMAL_SEARCH_PLAN.md#programa-de-teoria-extremal-de-grafos-números-de-ramsey-e-progressões-aritméticas-em-lean-4-p121p128)
+defines the formal research extension adopted under D033 following the conclusion of
+P113–P120. It targets Mantel–Turán extremal bounds, Paley graphs and Ramsey numbers $R(s, t)$,
+Zarankiewicz $K_{s,t}$-free bipartite bounds, the `graph_ramsey_norm` metatactic, Roth/Salem–Spencer
+3-AP-free sets, Erdős–Gyárfás cycle/chromatic bounds, blind FWER confirmation, and 2,800+ Lean 4 theorems.
+
+- [P121 — Banco formal de grafos extremais, Mantel-Turán e invariantes de Ramsey em Lean 4](P121-extremal-graph-ramsey-formal-database.md).
+- [P122 — Grafos de Paley e construções algébricas de cotas inferiores de Ramsey R(s,t)](P122-paley-graphs-ramsey-constructions.md).
+- [P123 — Problema de Zarankiewicz e desigualdade de Kővári-Sós-Turán para grafos K_{s,t}-free](P123-zarankiewicz-kovari-sos-turan.md).
+- [P124 — Meta-tática customizada graph_ramsey_norm e automação combinatória em Lean 4](P124-graph-ramsey-norm-metatactic.md).
+- [P125 — Alvo aberto de Roth e Salem-Spencer sobre conjuntos livres de progressões de 3 termos](P125-roth-salem-spencer-ap-free.md).
+- [P126 — Alvo aberto de Erdős-Gyárfás sobre ciclos de potências de 2 e número cromático](P126-erdos-gyarfas-cycles-chromatic.md).
+- [P127 — Confirmação cega em larga escala em grafos e Ramsey sob controle FWER (Bonferroni-Holm)](P127-graph-ramsey-blind-confirmation.md).
+- [P128 — Grande campanha formal de grafos e Ramsey com dossiê certificado em Lean 4](P128-extremal-graph-ramsey-grand-dossier.md).
+
+Execute one micro-task at a time. All phases remain Proposed until their explicit
+gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
+conjecture resolution is claimed.
+
 
 ## Historical execution and acceptance contract
 
