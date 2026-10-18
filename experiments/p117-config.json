@@ -1,0 +1,12 @@
+{
+  "phase": "P117",
+  "acceptance_phase": "P117",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "lean_file": "lean_proofs/Generated/ErdosTuranBasesTheorems.lean",
+  "min_theorems": 60,
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P117 Erdos-Turan additive bases of order 2, Rohrbach capacity bounds, and representation multiplicity theorems in Lean 4 with zero sorry."
+}

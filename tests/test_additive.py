@@ -12,16 +12,19 @@ from benchmarks.science_matrix import (
     run_p114_sidon_sets_audit,
     run_p115_additive_energy_audit,
     run_p116_additive_norm_audit,
+    run_p117_erdos_turan_bases_audit,
 )
 from evobyte.additive import (
     DEFAULT_ADDITIVE_ENERGY_LEAN_FILE,
     DEFAULT_ADDITIVE_TACTIC_LEAN_FILE,
+    DEFAULT_ERDOS_TURAN_BASES_LEAN_FILE,
     DEFAULT_LEAN_FILE,
     DEFAULT_SIDON_THEOREMS_LEAN_FILE,
     additive_energy,
     audit_additive_combinatorics_baseline,
     audit_additive_energy_balog_szemeredi,
     audit_additive_norm_metatactic,
+    audit_erdos_turan_additive_bases,
     audit_sidon_sets_extremal_search,
     bose_chowla_sidon_set,
     doubling_constant,
@@ -30,8 +33,10 @@ from evobyte.additive import (
     generate_additive_combinatorics_lean_code,
     generate_additive_energy_theorems_lean_code,
     generate_additive_tactic_theorems_lean_code,
+    generate_erdos_turan_bases_theorems_lean_code,
     generate_sidon_sets_theorems_lean_code,
     is_b2g_set,
+    is_finite_additive_basis_of_order_2,
     is_sidon_set,
     is_sum_free,
     iterated_sum_diff_set,
@@ -39,13 +44,16 @@ from evobyte.additive import (
     minkowski_diff,
     minkowski_sum,
     representation_count,
+    representation_profile,
     ruzsa_sidon_construction,
     search_extremal_sidon_set,
+    search_minimal_additive_basis_order_2,
     singer_difference_set,
     verify_additive_combinatorics_baseline_soundness,
     verify_additive_energy_soundness,
     verify_additive_norm_soundness,
     verify_cauchy_schwarz_additive_bound,
+    verify_erdos_turan_bases_soundness,
     verify_minkowski_monotonicity_and_algebra,
     verify_plunnecke_ruzsa_bound,
     verify_sidon_difference_property,
@@ -437,5 +445,70 @@ def test_p116_audit_smoke(tmp_path: Path):
     assert report["verdict"] == "ACCEPTED"
     assert report["total_theorems"] >= 60
     assert report["has_tactic_syntax"] is True
+    assert report["has_sorry"] is False
+    assert report["lake_passed"] is True
+
+
+# ==============================================================================
+# P117 TESTS: ERDŐS-TURÁN ADDITIVE BASES & REPRESENTATION MULTIPLICITY
+# ==============================================================================
+
+
+def test_erdos_turan_additive_bases_and_profile():
+    assert is_finite_additive_basis_of_order_2([0, 1, 3, 4], 6) is True
+    assert is_finite_additive_basis_of_order_2([0, 1, 4], 6) is False
+
+    for n_val in (6, 10, 16):
+        res = search_minimal_additive_basis_order_2(n_val, time_budget_sec=0.05)
+        prof = res["profile"]
+        assert prof["is_basis"] is True
+        assert prof["rohrbach_bound_holds"] is True
+        assert prof["pigeonhole_multiplicity_holds"] is True
+        assert representation_profile(res["best_basis"], n_val)["is_basis"] is True
+
+
+def test_p117_erdos_turan_bases_generation_and_soundness():
+    assert DEFAULT_ERDOS_TURAN_BASES_LEAN_FILE.name == "ErdosTuranBasesTheorems.lean"
+    code = generate_erdos_turan_bases_theorems_lean_code()
+    assert "import Generated.AdditiveTacticTheorems" in code
+    assert "theorem rohrbach_pair_capacity" in code
+    assert "sorry" not in code
+
+    summary = audit_erdos_turan_additive_bases(verify_lake=False)
+    assert summary["module"] == "ErdosTuranBasesTheorems"
+    assert summary["total_theorems"] >= 60
+    assert summary["has_sorry"] is False
+    ok, findings = verify_erdos_turan_bases_soundness(dict(summary, lake_passed=True), min_theorems=60)
+    assert ok is True
+    assert findings == []
+
+
+def test_p117_acceptance_rejects_wrong_phase(tmp_path: Path):
+    cfg_p = tmp_path / "bad-p117.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P117 configuration"):
+        run_p117_erdos_turan_bases_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p117_audit_smoke(tmp_path: Path):
+    cfg = {
+        "phase": "P117",
+        "min_theorems": 60,
+        "project_dir": "lean_proofs",
+        "lean_file": "lean_proofs/Generated/ErdosTuranBasesTheorems.lean",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p117-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p117-out.json"
+
+    report = run_p117_erdos_turan_bases_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P117"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] >= 60
     assert report["has_sorry"] is False
     assert report["lake_passed"] is True
