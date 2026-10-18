@@ -1,6 +1,6 @@
 # P113 — Banco formal de combinatória aditiva e conjuntos de Sidon em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P112 concluída; branch a partir de `codex/p113-p120-additive-combinatorics-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P112 concluída com campanha formal de problemas abertos e consolidação documental sob D030.

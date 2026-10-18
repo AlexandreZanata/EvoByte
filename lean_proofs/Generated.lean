@@ -25,3 +25,4 @@ import Generated.OpenProblemSignatures
 import Generated.ObstructionGraphTheorems
 import Generated.ErdosGrahamTheorems
 import Generated.PillaiCatalanTheorems
+import Generated.AdditiveCombinatoricsSignatures
