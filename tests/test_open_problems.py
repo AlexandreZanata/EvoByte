@@ -25,9 +25,9 @@ def test_load_open_problems_success():
     problems = load_open_problems(DEFAULT_DB_PATH)
     assert len(problems) == 100
     for p in problems:
-        assert "id" in p and p["id"]
-        assert "statement_sha256" in p and p["statement_sha256"]
-        assert "certificate_type" in p and p["certificate_type"]
+        assert p.get("id")
+        assert p.get("statement_sha256")
+        assert p.get("certificate_type")
         assert "area" in p
 
 

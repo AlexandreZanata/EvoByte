@@ -14,7 +14,7 @@ import random
 import re
 import subprocess
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -48,9 +48,7 @@ def load_open_problems(db_path: Path | str = DEFAULT_DB_PATH) -> list[dict[str, 
 
     raw_problems = data.get("open_confirmed", [])
     if len(raw_problems) != 100:
-        raise ValueError(
-            f"Expected exactly 100 open_confirmed problems, found {len(raw_problems)}"
-        )
+        raise ValueError(f"Expected exactly 100 open_confirmed problems, found {len(raw_problems)}")
 
     # Validate essential fields for each problem
     for idx, prob in enumerate(raw_problems):
@@ -78,7 +76,7 @@ def partition_open_problems(
         raise ValueError("Cannot partition empty problems list")
 
     n_blind = int(total * blind_ratio)
-    n_dev = total - n_blind
+    total - n_blind
 
     rng = random.Random(seed)
     indices = list(range(total))
@@ -106,9 +104,7 @@ def partition_open_problems(
         all_assigned.append(p_copy)
 
     # Compute commitment hashes
-    dev_hash = hashlib.sha256(
-        ",".join(sorted(p["id"] for p in dev_problems)).encode()
-    ).hexdigest()
+    dev_hash = hashlib.sha256(",".join(sorted(p["id"] for p in dev_problems)).encode()).hexdigest()
     blind_hash = hashlib.sha256(
         ",".join(sorted(p["id"] for p in blind_problems)).encode()
     ).hexdigest()
@@ -174,10 +170,12 @@ def safe_id_name(problem_id: str) -> str:
 def generate_open_problems_lean_code(partition_summary: dict[str, Any]) -> str:
     """Generate complete Lean 4 module containing dependent types, signatures, and theorems."""
     lines = [
-        "/-\nEvoByte Formal Open Problem Signatures and Dependent Typing (P105).\n\n"
-        "Defines dependent types, problem signatures, and formal validation theorems\n"
-        "for the 100 open problems curated from the Erdős Problems dataset under\n"
-        "hermetic partitioning (dev vs. sealed blind).\n-/",
+        (
+            "/-\nEvoByte Formal Open Problem Signatures and Dependent Typing (P105).\n\n"
+            "Defines dependent types, problem signatures, and formal validation theorems\n"
+            "for the 100 open problems curated from the Erdős Problems dataset under\n"
+            "hermetic partitioning (dev vs. sealed blind).\n-/"
+        ),
         "",
         "import Mathlib.Data.Nat.Basic",
         "import Mathlib.Data.Rat.Defs",
@@ -299,9 +297,7 @@ def generate_open_problems_lean_code(partition_summary: dict[str, Any]) -> str:
         lines.append(
             f"/-- Formal proof that signature for {p['id']} possesses designated partition. -/"
         )
-        lines.append(
-            f"theorem sig_{s_id}_partition : sig_{s_id}.partition = {part_lean} := by"
-        )
+        lines.append(f"theorem sig_{s_id}_partition : sig_{s_id}.partition = {part_lean} := by")
         lines.append("  rfl")
         lines.append("")
 

@@ -61,10 +61,7 @@ def turan_graph_adjacency(n: int, r: int) -> list[list[int]]:
         return []
     if r <= 1:
         return [[0] * n for _ in range(n)]
-    return [
-        [0 if (i == j or (i % r) == (j % r)) else 1 for j in range(n)]
-        for i in range(n)
-    ]
+    return [[0 if (i == j or (i % r) == (j % r)) else 1 for j in range(n)] for i in range(n)]
 
 
 def verify_handshaking_lemma(adj: list[list[int]]) -> dict[str, Any]:
@@ -72,12 +69,8 @@ def verify_handshaking_lemma(adj: list[list[int]]) -> dict[str, Any]:
     n = len(adj)
     degrees = [sum(row) for row in adj]
     sum_degrees = sum(degrees)
-    edges = sum(
-        1 for i in range(n) for j in range(i + 1, n) if adj[i][j] != 0
-    )
-    comp_edges = sum(
-        1 for i in range(n) for j in range(i + 1, n) if adj[i][j] == 0
-    )
+    edges = sum(1 for i in range(n) for j in range(i + 1, n) if adj[i][j] != 0)
+    comp_edges = sum(1 for i in range(n) for j in range(i + 1, n) if adj[i][j] == 0)
     total_pairs = n * (n - 1) // 2
     return {
         "n_vertices": n,
@@ -143,10 +136,7 @@ def independence_number(adj: list[list[int]]) -> int:
     n = len(adj)
     if n == 0:
         return 0
-    comp = [
-        [0 if (i == j or adj[i][j] != 0) else 1 for j in range(n)]
-        for i in range(n)
-    ]
+    comp = [[0 if (i == j or adj[i][j] != 0) else 1 for j in range(n)] for i in range(n)]
     return clique_number(comp)
 
 
@@ -406,7 +396,9 @@ def verify_extremal_graph_ramsey_baseline_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append("SORRY_DETECTED: ExtremalGraphRamseySignatures contains unproven sorry tokens")
+        findings.append(
+            "SORRY_DETECTED: ExtremalGraphRamseySignatures contains unproven sorry tokens"
+        )
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
@@ -595,9 +587,36 @@ def generate_ramsey_paley_lean_code() -> str:
     ]
 
     paley_primes = [
-        5, 13, 17, 29, 37, 41, 53, 61, 73, 89,
-        97, 101, 109, 113, 137, 149, 157, 173, 181, 193,
-        197, 229, 233, 241, 257, 269, 277, 281, 293, 313,
+        5,
+        13,
+        17,
+        29,
+        37,
+        41,
+        53,
+        61,
+        73,
+        89,
+        97,
+        101,
+        109,
+        113,
+        137,
+        149,
+        157,
+        173,
+        181,
+        193,
+        197,
+        229,
+        233,
+        241,
+        257,
+        269,
+        277,
+        281,
+        293,
+        313,
     ]
     for q in paley_primes:
         k = (q - 1) // 2
@@ -609,8 +628,10 @@ def generate_ramsey_paley_lean_code() -> str:
             [
                 f"/-- Paley graph P({q}) strongly regular parameters srg({q}, {k}, {lam}, {mu}) and feasibility. -/",
                 f"theorem paley_srg_params_q{q} :",
-                f"    paleyDegree {q} = {k} ∧ paleyLambda {q} = {lam} ∧ paleyMu {q} = {mu} ∧ "
-                f"{k} * ({k} - {lam} - 1) = ({q} - {k} - 1) * {mu} := by",
+                (
+                    f"    paleyDegree {q} = {k} ∧ paleyLambda {q} = {lam} ∧ paleyMu {q} = {mu} ∧ "
+                    f"{k} * ({k} - {lam} - 1) = ({q} - {k} - 1) * {mu} := by"
+                ),
                 "  unfold paleyDegree paleyLambda paleyMu",
                 "  omega",
                 "",
@@ -790,10 +811,7 @@ def has_bipartite_kst(biadj: list[list[int]], s: int, t: int) -> bool:
 
     from itertools import combinations
 
-    row_masks = [
-        sum((1 << j) for j in range(n) if biadj[i][j] != 0)
-        for i in range(m)
-    ]
+    row_masks = [sum((1 << j) for j in range(n) if biadj[i][j] != 0) for i in range(m)]
     for rows in combinations(range(m), s):
         common = row_masks[rows[0]]
         for r in rows[1:]:
@@ -823,9 +841,7 @@ def bipartite_cherry_count(biadj: list[list[int]]) -> dict[str, Any]:
 
     # Reiman cleared bound for K_{2,2}-free graphs: E * (E - m) <= m * n * (n - 1)
     reiman_rhs = m * n * (n - 1)
-    reiman_holds = (not is_k22_free) or (
-        cherries <= max_pairs_v and rhs_cs <= reiman_rhs
-    )
+    reiman_holds = (not is_k22_free) or (cherries <= max_pairs_v and rhs_cs <= reiman_rhs)
 
     return {
         "m": m,
@@ -857,7 +873,7 @@ def projective_plane_pg2q_biadjacency(q: int) -> list[list[int]]:
     """Construct the point-line incidence matrix of PG(2, q) for prime q."""
     if q < 2:
         raise ValueError(f"Prime q must be >= 2, got {q}")
-    for d in range(2, int(math.isqrt(q)) + 1):
+    for d in range(2, math.isqrt(q) + 1):
         if q % d == 0:
             raise ValueError(f"projective_plane_pg2q_biadjacency requires prime q, got {q}")
 
@@ -937,9 +953,36 @@ def generate_zarankiewicz_kst_lean_code() -> str:
     ]
 
     prime_powers = [
-        2, 3, 4, 5, 7, 8, 9, 11, 13, 16,
-        17, 19, 23, 25, 27, 29, 31, 32, 37, 41,
-        43, 47, 49, 53, 59, 61, 64, 67, 71, 73,
+        2,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        11,
+        13,
+        16,
+        17,
+        19,
+        23,
+        25,
+        27,
+        29,
+        31,
+        32,
+        37,
+        41,
+        43,
+        47,
+        49,
+        53,
+        59,
+        61,
+        64,
+        67,
+        71,
+        73,
     ]
     for q in prime_powers:
         n_v = q * q + q + 1
@@ -951,8 +994,10 @@ def generate_zarankiewicz_kst_lean_code() -> str:
             [
                 f"/-- PG(2, {q}) incidence graph parameters: N={n_v}, d={d_v}, E={e_v}, cherries={cherries}=C({n_v},2). -/",
                 f"theorem pg2_extremal_saturation_q{q} :",
-                f"    pg2Vertices {q} = {n_v} ∧ pg2Degree {q} = {d_v} ∧ pg2Incidences {q} = {e_v} ∧ "
-                f"{cherries} = {pairs_n} ∧ {e_v} * ({e_v} - {n_v}) = {n_v} * {n_v} * ({n_v} - 1) := by",
+                (
+                    f"    pg2Vertices {q} = {n_v} ∧ pg2Degree {q} = {d_v} ∧ pg2Incidences {q} = {e_v} ∧ "
+                    f"{cherries} = {pairs_n} ∧ {e_v} * ({e_v} - {n_v}) = {n_v} * {n_v} * ({n_v} - 1) := by"
+                ),
                 "  unfold pg2Vertices pg2Degree pg2Incidences",
                 "  omega",
                 "",
@@ -1066,7 +1111,9 @@ def verify_zarankiewicz_kst_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append("SORRY_DETECTED: ZarankiewiczKovariSosTuranTheorems contains unproven sorry tokens")
+        findings.append(
+            "SORRY_DETECTED: ZarankiewiczKovariSosTuranTheorems contains unproven sorry tokens"
+        )
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
@@ -1124,9 +1171,7 @@ def goodman_monochromatic_triangles(adj: list[list[int]]) -> dict[str, Any]:
         "monochromatic_triangles": total_mono,
         "total_triples": total_triples,
         "bichromatic_angles": bichromatic_angles,
-        "goodman_identity_holds": (
-            bichromatic_angles % 2 == 0 and total_mono == goodman_rhs
-        ),
+        "goodman_identity_holds": (bichromatic_angles % 2 == 0 and total_mono == goodman_rhs),
         "goodman_lower_bound": goodman_lower_bound,
         "goodman_lower_bound_holds": total_mono >= goodman_lower_bound,
         "cauchy_schwarz_degree_holds": cs_degree_holds,
@@ -1442,9 +1487,36 @@ def stanley_greedy_3ap_free(limit: int) -> list[int]:
 def exact_r3_search(n: int) -> dict[str, Any]:
     """Compute exact r3(N) or proven bounds for maximum size of 3-AP-free subset of {1, ..., N}."""
     known_r3 = {
-        1: 1, 2: 2, 3: 2, 4: 3, 5: 4, 6: 4, 7: 4, 8: 4, 9: 5, 10: 5,
-        11: 6, 12: 6, 13: 7, 14: 8, 15: 8, 16: 8, 17: 8, 18: 8, 19: 8, 20: 9,
-        21: 9, 22: 9, 23: 10, 24: 10, 25: 11, 26: 11, 27: 12, 28: 12, 29: 12, 30: 13,
+        1: 1,
+        2: 2,
+        3: 2,
+        4: 3,
+        5: 4,
+        6: 4,
+        7: 4,
+        8: 4,
+        9: 5,
+        10: 5,
+        11: 6,
+        12: 6,
+        13: 7,
+        14: 8,
+        15: 8,
+        16: 8,
+        17: 8,
+        18: 8,
+        19: 8,
+        20: 9,
+        21: 9,
+        22: 9,
+        23: 10,
+        24: 10,
+        25: 11,
+        26: 11,
+        27: 12,
+        28: 12,
+        29: 12,
+        30: 13,
     }
     stanley_in_n = [x for x in stanley_greedy_3ap_free(n) if 1 <= x <= n]
     val_stanley = len(stanley_in_n)
@@ -1517,12 +1589,66 @@ def generate_roth_salem_spencer_lean_code() -> str:
     ]
 
     known_r3_vals = [
-        1, 2, 2, 3, 4, 4, 4, 4, 5, 5,
-        6, 6, 7, 8, 8, 8, 8, 8, 8, 9,
-        9, 9, 10, 10, 11, 11, 12, 12, 12, 13,
-        14, 14, 14, 15, 16, 16, 16, 16, 16, 17,
-        18, 18, 18, 18, 18, 19, 20, 20, 20, 20,
-        20, 21, 22, 22, 22, 23, 24, 24, 24, 24,
+        1,
+        2,
+        2,
+        3,
+        4,
+        4,
+        4,
+        4,
+        5,
+        5,
+        6,
+        6,
+        7,
+        8,
+        8,
+        8,
+        8,
+        8,
+        8,
+        9,
+        9,
+        9,
+        10,
+        10,
+        11,
+        11,
+        12,
+        12,
+        12,
+        13,
+        14,
+        14,
+        14,
+        15,
+        16,
+        16,
+        16,
+        16,
+        16,
+        17,
+        18,
+        18,
+        18,
+        18,
+        18,
+        19,
+        20,
+        20,
+        20,
+        20,
+        20,
+        21,
+        22,
+        22,
+        22,
+        23,
+        24,
+        24,
+        24,
+        24,
     ]
     known_r3 = list(enumerate(known_r3_vals, 1))
 
@@ -1866,8 +1992,10 @@ def generate_erdos_gyarfas_chromatic_lean_code() -> str:
             [
                 f"/-- Structural chromatic and cycle parameters for {name}: n={n_v}, delta={min_d}, Delta={max_d}, omega={om_v}, alpha={al_v}, chi={chi_v}, power-2 cycle={cyc_v}. -/",
                 f"theorem instance_params_{name} :",
-                f"    {om_v} ≤ {chi_v} ∧ {chi_v} ≤ {bro_v} ∧ {n_v} ≤ {chi_v} * {al_v} ∧ "
-                f"({cyc_v} = 4 ∨ {cyc_v} = 8 ∨ {cyc_v} = 16) := by omega",
+                (
+                    f"    {om_v} ≤ {chi_v} ∧ {chi_v} ≤ {bro_v} ∧ {n_v} ≤ {chi_v} * {al_v} ∧ "
+                    f"({cyc_v} = 4 ∨ {cyc_v} = 8 ∨ {cyc_v} = 16) := by omega"
+                ),
                 "",
             ]
         )
@@ -1973,7 +2101,9 @@ def verify_erdos_gyarfas_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append("SORRY_DETECTED: ErdosGyarfasChromaticTheorems contains unproven sorry tokens")
+        findings.append(
+            "SORRY_DETECTED: ErdosGyarfasChromaticTheorems contains unproven sorry tokens"
+        )
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:

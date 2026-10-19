@@ -9,70 +9,65 @@ import pytest
 
 from evobyte.discrete_geometry import (
     are_points_colinear,
+    audit_convex_polygons_happy_ending_baseline,
     audit_discrete_geometry_baseline,
+    audit_discrete_geometry_tactic_baseline,
     audit_erdos_distinct_distances_baseline,
+    audit_hadwiger_nelson_coloring_baseline,
     audit_unit_distances_szemeredi_trotter_baseline,
     circular_points,
     convex_hull_2d,
     count_point_line_incidences,
     cross_product_2d,
+    discrete_geometry_tactic_benchmarks,
     distinct_distance_count,
     distinct_squared_distances,
-    distance_quadruples_energy,
     erdos_elementary_distance_bound,
+    erdos_szekeres_cup_cap_bound,
     erdos_szekeres_happy_ending_bound,
     erdos_unit_distance_kst_bound,
     erdos_unit_distance_lower_bound,
+    find_convex_k_gons,
+    find_empty_convex_holes,
+    generate_convex_polygons_happy_ending_lean_code,
     generate_discrete_geometry_signatures_lean_code,
+    generate_discrete_geometry_tactic_lean_code,
     generate_erdos_distinct_distances_lean_code,
     generate_grid_lines,
+    generate_hadwiger_nelson_coloring_lean_code,
     generate_unit_distances_szemeredi_trotter_lean_code,
     grid_distinct_distance_count,
     grid_points,
     guth_katz_lower_estimate,
+    hadwiger_nelson_chromatic_interval,
+    hexagonal_tiling_coloring_bounds,
     historical_distinct_distance_bounds,
     is_convex_polygon,
+    is_empty_convex_hole,
     is_in_general_position,
+    is_valid_unit_distance_coloring,
     landau_ramanujan_grid_estimate,
     linear_points,
+    moser_spindle_graph,
     moser_spindle_points,
+    normalize_squared_distance_expression,
     pairwise_squared_distances,
     point_line_incidence,
     spencer_szemeredi_trotter_bound,
     sq_euclidean_distance,
     triangular_grid_points,
     unit_distance_count,
-    unit_distance_graph_degrees,
+    verify_convex_polygons_happy_ending_baseline_soundness,
     verify_discrete_geometry_baseline_soundness,
     verify_discrete_geometry_properties,
+    verify_discrete_geometry_tactic_baseline_soundness,
     verify_erdos_distinct_distances_baseline_soundness,
     verify_erdos_distinct_distances_properties,
-    DEFAULT_DISCRETE_GEOMETRY_TACTIC_LEAN_FILE,
-    audit_discrete_geometry_tactic_baseline,
-    discrete_geometry_tactic_benchmarks,
-    generate_discrete_geometry_tactic_lean_code,
-    normalize_squared_distance_expression,
-    verify_discrete_geometry_tactic_baseline_soundness,
-    DEFAULT_CONVEX_POLYGONS_LEAN_FILE,
-    audit_convex_polygons_happy_ending_baseline,
-    erdos_szekeres_cup_cap_bound,
-    find_convex_k_gons,
-    find_empty_convex_holes,
-    generate_convex_polygons_happy_ending_lean_code,
-    is_empty_convex_hole,
-    verify_convex_polygons_happy_ending_baseline_soundness,
+    verify_hadwiger_nelson_coloring_baseline_soundness,
     verify_happy_ending_properties,
+    verify_moser_spindle_chromatic_number,
     verify_unit_distance_properties,
     verify_unit_distances_szemeredi_trotter_baseline_soundness,
-    DEFAULT_HADWIGER_NELSON_LEAN_FILE,
-    audit_hadwiger_nelson_coloring_baseline,
-    generate_hadwiger_nelson_coloring_lean_code,
-    hadwiger_nelson_chromatic_interval,
-    hexagonal_tiling_coloring_bounds,
-    is_valid_unit_distance_coloring,
-    moser_spindle_graph,
-    verify_hadwiger_nelson_coloring_baseline_soundness,
-    verify_moser_spindle_chromatic_number,
 )
 
 
@@ -84,7 +79,9 @@ def test_sq_euclidean_distance_and_identities() -> None:
     # Symmetry
     assert sq_euclidean_distance((1, 2), (4, 6)) == sq_euclidean_distance((4, 6), (1, 2))
     # Translation invariance
-    assert sq_euclidean_distance((1 + 10, 2 - 5), (4 + 10, 6 - 5)) == sq_euclidean_distance((1, 2), (4, 6))
+    assert sq_euclidean_distance((1 + 10, 2 - 5), (4 + 10, 6 - 5)) == sq_euclidean_distance(
+        (1, 2), (4, 6)
+    )
 
 
 def test_pairwise_and_distinct_distances() -> None:
@@ -166,7 +163,7 @@ def test_generate_discrete_geometry_signatures_lean_code() -> None:
     code = generate_discrete_geometry_signatures_lean_code()
     assert "namespace EvoByte.DiscreteGeometry" in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 75
 
 
@@ -193,13 +190,23 @@ def test_verify_soundness_rejections() -> None:
     assert any("SORRY_DETECTED" in f for f in findings)
 
     # Insufficient theorems
-    sparse_audit = {"has_sorry": False, "total_theorems": 10, "lake_passed": True, "sha256": "a" * 64}
+    sparse_audit = {
+        "has_sorry": False,
+        "total_theorems": 10,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+    }
     sound, findings = verify_discrete_geometry_baseline_soundness(sparse_audit, min_theorems=75)
     assert sound is False
     assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
 
     # Lake failure
-    failing_audit = {"has_sorry": False, "total_theorems": 100, "lake_passed": False, "sha256": "a" * 64}
+    failing_audit = {
+        "has_sorry": False,
+        "total_theorems": 100,
+        "lake_passed": False,
+        "sha256": "a" * 64,
+    }
     sound, findings = verify_discrete_geometry_baseline_soundness(failing_audit)
     assert sound is False
     assert any("LAKE_BUILD_FAILED" in f for f in findings)
@@ -251,7 +258,7 @@ def test_generate_erdos_distinct_distances_lean_code() -> None:
     code = generate_erdos_distinct_distances_lean_code()
     assert "namespace EvoByte.ErdosDistinctDistances" in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 75
 
 
@@ -276,12 +283,24 @@ def test_verify_erdos_soundness_rejections() -> None:
     assert sound is False
     assert any("SORRY_DETECTED" in f for f in findings)
 
-    sparse_audit = {"has_sorry": False, "total_theorems": 10, "lake_passed": True, "sha256": "a" * 64}
-    sound, findings = verify_erdos_distinct_distances_baseline_soundness(sparse_audit, min_theorems=75)
+    sparse_audit = {
+        "has_sorry": False,
+        "total_theorems": 10,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+    }
+    sound, findings = verify_erdos_distinct_distances_baseline_soundness(
+        sparse_audit, min_theorems=75
+    )
     assert sound is False
     assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
 
-    failing_audit = {"has_sorry": False, "total_theorems": 100, "lake_passed": False, "sha256": "a" * 64}
+    failing_audit = {
+        "has_sorry": False,
+        "total_theorems": 100,
+        "lake_passed": False,
+        "sha256": "a" * 64,
+    }
     sound, findings = verify_erdos_distinct_distances_baseline_soundness(failing_audit)
     assert sound is False
     assert any("LAKE_BUILD_FAILED" in f for f in findings)
@@ -305,7 +324,9 @@ def test_point_line_incidences_and_grid_lines() -> None:
 
 def test_unit_distance_properties_and_handshaking() -> None:
     """Test unit distance graph invariants and handshaking theorem sum deg(v) = 2*u."""
-    pts = grid_points(3)  # 9 points, 12 unit edges (4 horizontal pairs per row * 3? No: 2 per row * 3 + 2 per col * 3 = 12)
+    pts = grid_points(
+        3
+    )  # 9 points, 12 unit edges (4 horizontal pairs per row * 3? No: 2 per row * 3 + 2 per col * 3 = 12)
     props = verify_unit_distance_properties(pts, unit_sq=1)
     assert props["n_points"] == 9
     assert props["unit_distances"] == 12
@@ -340,7 +361,7 @@ def test_generate_unit_distances_szemeredi_trotter_lean_code() -> None:
     code = generate_unit_distances_szemeredi_trotter_lean_code()
     assert "namespace EvoByte.UnitDistances" in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 75
 
 
@@ -353,7 +374,9 @@ def test_audit_unit_distances_szemeredi_trotter_baseline() -> None:
     assert audit["total_theorems"] >= 75
     assert len(audit["benchmarks"]) >= 4
 
-    sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(audit, min_theorems=75)
+    sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(
+        audit, min_theorems=75
+    )
     assert sound is True
     assert findings == []
 
@@ -365,12 +388,24 @@ def test_verify_unit_distances_soundness_rejections() -> None:
     assert sound is False
     assert any("SORRY_DETECTED" in f for f in findings)
 
-    sparse_audit = {"has_sorry": False, "total_theorems": 10, "lake_passed": True, "sha256": "a" * 64}
-    sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(sparse_audit, min_theorems=75)
+    sparse_audit = {
+        "has_sorry": False,
+        "total_theorems": 10,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+    }
+    sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(
+        sparse_audit, min_theorems=75
+    )
     assert sound is False
     assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
 
-    failing_audit = {"has_sorry": False, "total_theorems": 100, "lake_passed": False, "sha256": "a" * 64}
+    failing_audit = {
+        "has_sorry": False,
+        "total_theorems": 100,
+        "lake_passed": False,
+        "sha256": "a" * 64,
+    }
     sound, findings = verify_unit_distances_szemeredi_trotter_baseline_soundness(failing_audit)
     assert sound is False
     assert any("LAKE_BUILD_FAILED" in f for f in findings)
@@ -418,7 +453,7 @@ def test_generate_discrete_geometry_tactic_lean_code() -> None:
     assert 'syntax "geom_distance_norm" : tactic' in code
     assert 'syntax "geom_distance_intro" : tactic' in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 80
 
 
@@ -475,7 +510,9 @@ def test_verify_discrete_geometry_tactic_soundness_rejections() -> None:
         "sha256": "a" * 64,
         "benchmarks": [{"all_properties_hold": True}],
     }
-    sound, findings = verify_discrete_geometry_tactic_baseline_soundness(sparse_audit, min_theorems=80)
+    sound, findings = verify_discrete_geometry_tactic_baseline_soundness(
+        sparse_audit, min_theorems=80
+    )
     assert sound is False
     assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
 
@@ -577,7 +614,7 @@ def test_generate_convex_polygons_happy_ending_lean_code() -> None:
     code = generate_convex_polygons_happy_ending_lean_code()
     assert "namespace EvoByte.HappyEnding" in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 75
 
 
@@ -615,7 +652,9 @@ def test_verify_convex_polygons_soundness_rejections() -> None:
         "sha256": "a" * 64,
         "benchmarks": [{"happy_ending_property_holds": True, "klein_holds": True, "n_points": 5}],
     }
-    sound, findings = verify_convex_polygons_happy_ending_baseline_soundness(sparse_audit, min_theorems=75)
+    sound, findings = verify_convex_polygons_happy_ending_baseline_soundness(
+        sparse_audit, min_theorems=75
+    )
     assert sound is False
     assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
 
@@ -721,7 +760,7 @@ def test_generate_hadwiger_nelson_coloring_lean_code() -> None:
     code = generate_hadwiger_nelson_coloring_lean_code()
     assert "namespace EvoByte.HadwigerNelson" in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 75
 
 
@@ -769,7 +808,9 @@ def test_verify_hadwiger_nelson_coloring_soundness_rejections() -> None:
             "interval_bounds": {"all_bounds_consistent": True},
         },
     }
-    sound, findings = verify_hadwiger_nelson_coloring_baseline_soundness(sparse_audit, min_theorems=75)
+    sound, findings = verify_hadwiger_nelson_coloring_baseline_soundness(
+        sparse_audit, min_theorems=75
+    )
     assert sound is False
     assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
 
@@ -897,10 +938,15 @@ def test_p136_discrete_geometry_grand_campaign_audit() -> None:
     assert audit["discrete_geometry_theorems"] >= 500
     assert audit["has_sorry"] is False
     assert audit["missing_modules"] == []
-    assert audit["final_chain_hash"] == "4b8a2fb678e5b08bcf8130631a401474877f51ee96d8ee9a911f2cc33247605f"
+    assert (
+        audit["final_chain_hash"]
+        == "4b8a2fb678e5b08bcf8130631a401474877f51ee96d8ee9a911f2cc33247605f"
+    )
     assert len(audit["hash_chain"]) == 44
 
-    sound, findings = verify_discrete_geometry_grand_campaign_soundness(audit, min_theorems=3300, min_modules=44)
+    sound, findings = verify_discrete_geometry_grand_campaign_soundness(
+        audit, min_theorems=3300, min_modules=44
+    )
     assert sound is True
     assert findings == []
 
@@ -963,5 +1009,8 @@ def test_p136_audit_smoke(tmp_path: Path) -> None:
     assert report["total_modules"] == 44
     assert report["total_theorems"] >= 3300
     assert report["discrete_geometry_theorems"] >= 500
-    assert report["final_chain_hash"] == "4b8a2fb678e5b08bcf8130631a401474877f51ee96d8ee9a911f2cc33247605f"
+    assert (
+        report["final_chain_hash"]
+        == "4b8a2fb678e5b08bcf8130631a401474877f51ee96d8ee9a911f2cc33247605f"
+    )
     assert out_file.exists()

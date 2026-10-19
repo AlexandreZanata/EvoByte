@@ -9,7 +9,6 @@ import pytest
 
 from benchmarks.science_matrix import run_p106_obstruction_graphs_audit
 from evobyte.algebraic import (
-    DiophantineObstructionGraph,
     ObstructionNode,
     build_diophantine_obstruction_graph,
     evaluate_obstruction_graph_pruning,

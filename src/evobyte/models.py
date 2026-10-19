@@ -13,8 +13,8 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 P107_MAX_PARAMS = 5_000_000
 DEFAULT_VRAM_CAP_MB = 100.0

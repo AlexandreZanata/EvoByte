@@ -202,7 +202,7 @@ def test_generate_discrepancy_covering_signatures_lean_code() -> None:
     assert "theorem spencer_bound_sq" in code
     assert "theorem erdos_1950_covering_reciprocal_cleared" in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 80
 
 
@@ -347,7 +347,7 @@ def test_generate_erdos_discrepancy_lean_code() -> None:
     assert "theorem discrepancy_energy_preservation" in code
     assert "theorem polymath_c1_threshold" in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 80
 
 
@@ -499,7 +499,7 @@ def test_generate_roth_spencer_lean_code() -> None:
     assert "theorem spencer_bound_squared" in code
     assert "theorem odd_progression_discrepancy_len_3_nonzero" in code
     assert "sorry" not in code
-    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    thms = [line for line in code.splitlines() if line.startswith(("theorem ", "lemma "))]
     assert len(thms) >= 80
 
 

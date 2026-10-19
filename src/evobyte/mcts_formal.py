@@ -10,11 +10,12 @@ from __future__ import annotations
 
 import math
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
-from evobyte.models import CANONICAL_LEAN_TACTICS, StructuredConditionalProposer
+from evobyte.models import StructuredConditionalProposer
 
 
 @dataclass
@@ -72,7 +73,9 @@ class MCTSNode:
 
     def puct_score(self, c_puct: float, parent_visits: int) -> float:
         """Compute Polynomial Upper Confidence Trees (PUCT) score."""
-        exploration = c_puct * self.prior * (math.sqrt(max(1, parent_visits)) / (1 + self.visit_count))
+        exploration = (
+            c_puct * self.prior * (math.sqrt(max(1, parent_visits)) / (1 + self.visit_count))
+        )
         return self.q_value + exploration
 
     def select_child(self, c_puct: float) -> tuple[str, MCTSNode]:
@@ -130,7 +133,7 @@ class FormalMCTSSearcher:
                     total += p
                 if total > 0:
                     return {k: v / total for k, v in priors.items()}
-            except Exception:
+            except (RuntimeError, ValueError, KeyError, AttributeError):
                 pass
 
         # Uniform fallback
@@ -186,8 +189,7 @@ class FormalMCTSSearcher:
                 _, node = node.select_child(self.config.c_puct)
 
             current_chain = list(node.tactic_chain)
-            if node.depth > max_depth_reached:
-                max_depth_reached = node.depth
+            max_depth_reached = max(max_depth_reached, node.depth)
 
             # 2. Evaluation with Lean 4 Kernel
             eval_result = oracle_fn(theorem_decl, current_chain)
@@ -335,21 +337,22 @@ def run_formal_mcts_benchmark(
 
         total_iterations += res.iterations_executed
         total_nodes += res.nodes_expanded
-        if res.max_depth_reached > max_depth_all:
-            max_depth_all = res.max_depth_reached
+        max_depth_all = max(max_depth_all, res.max_depth_reached)
 
-        results.append({
-            "id": g["id"],
-            "name": g["name"],
-            "decl": g["decl"],
-            "is_proved": res.is_proved,
-            "proof_script": res.proof_script,
-            "best_tactic_chain": res.best_tactic_chain,
-            "iterations": res.iterations_executed,
-            "nodes_expanded": res.nodes_expanded,
-            "elapsed_sec": res.elapsed_sec,
-            "verified_by_lean": res.verified_by_lean,
-        })
+        results.append(
+            {
+                "id": g["id"],
+                "name": g["name"],
+                "decl": g["decl"],
+                "is_proved": res.is_proved,
+                "proof_script": res.proof_script,
+                "best_tactic_chain": res.best_tactic_chain,
+                "iterations": res.iterations_executed,
+                "nodes_expanded": res.nodes_expanded,
+                "elapsed_sec": res.elapsed_sec,
+                "verified_by_lean": res.verified_by_lean,
+            }
+        )
 
     elapsed = time.perf_counter() - t0
     N = len(test_goals)

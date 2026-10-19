@@ -10,7 +10,6 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
-import math
 import random
 import time
 from pathlib import Path
@@ -18,7 +17,6 @@ from typing import Any
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 
@@ -60,16 +58,83 @@ def generate_diophantine_training_instances(
 
     Uses genuine Erdős–Straus (a=4) and Sierpiński (a=5) instances across challenging residue classes.
     """
-    rng = random.Random(seed)
+    random.Random(seed)
     instances: list[dict[str, Any]] = []
 
     # Curated prime bases across key residue classes (e.g. 1 mod 24, 1 mod 4, 3 mod 4)
     base_primes = [
-        17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109, 113, 137, 149, 157, 173,
-        181, 193, 197, 229, 233, 241, 257, 269, 277, 281, 293, 313, 317, 337,
-        349, 353, 373, 389, 397, 401, 409, 421, 433, 449, 457, 461, 509, 521,
-        541, 557, 569, 577, 593, 601, 613, 617, 641, 653, 661, 673, 677, 701,
-        709, 733, 757, 761, 769, 773, 797, 809, 821, 829, 853, 857, 877, 881,
+        17,
+        29,
+        37,
+        41,
+        53,
+        61,
+        73,
+        89,
+        97,
+        101,
+        109,
+        113,
+        137,
+        149,
+        157,
+        173,
+        181,
+        193,
+        197,
+        229,
+        233,
+        241,
+        257,
+        269,
+        277,
+        281,
+        293,
+        313,
+        317,
+        337,
+        349,
+        353,
+        373,
+        389,
+        397,
+        401,
+        409,
+        421,
+        433,
+        449,
+        457,
+        461,
+        509,
+        521,
+        541,
+        557,
+        569,
+        577,
+        593,
+        601,
+        613,
+        617,
+        641,
+        653,
+        661,
+        673,
+        677,
+        701,
+        709,
+        733,
+        757,
+        761,
+        769,
+        773,
+        797,
+        809,
+        821,
+        829,
+        853,
+        857,
+        877,
+        881,
     ]
 
     for p in base_primes[:count]:
@@ -87,23 +152,25 @@ def generate_diophantine_training_instances(
                         tac_label = "ring" if p < 200 else "linarith"
 
                     # Get candidates from obstruction graph
-                    graph = build_diophantine_obstruction_graph(a=a)
+                    build_diophantine_obstruction_graph(a=a)
                     # Simple candidate divisors around d
                     cand_set = {opt_d, 1, 2, 3, 4, p, 2 * p}
                     for k in [5, 6, 7, 8, 9, 10, 12, 16, 20]:
                         if k * k <= p * p:
                             cand_set.add(k)
-                    candidates = sorted(list(cand_set))
+                    candidates = sorted(cand_set)
 
-                    instances.append({
-                        "a": a,
-                        "n": p,
-                        "optimal_divisor": opt_d,
-                        "candidates": candidates,
-                        "tactic_label": tac_label,
-                        "identity_label": id_label,
-                        "solution": sol,
-                    })
+                    instances.append(
+                        {
+                            "a": a,
+                            "n": p,
+                            "optimal_divisor": opt_d,
+                            "candidates": candidates,
+                            "tactic_label": tac_label,
+                            "identity_label": id_label,
+                            "solution": sol,
+                        }
+                    )
 
     return instances
 
@@ -197,7 +264,9 @@ def train_conditional_proposer(
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-    device = torch.device(device_name if torch.cuda.is_available() and device_name.startswith("cuda") else "cpu")
+    device = torch.device(
+        device_name if torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
 
     # Generate data from verified certificates
     records = generate_diophantine_training_instances(count=instance_count, seed=seed)
@@ -384,13 +453,15 @@ def evaluate_proposer_vs_baselines(
                 for k in range(5, 40):
                     if k * k <= p * p:
                         cand_set.add(k)
-                candidates = sorted(list(cand_set))
-                test_instances.append({
-                    "a": 4,
-                    "n": p,
-                    "optimal_divisor": opt_d,
-                    "candidates": candidates,
-                })
+                candidates = sorted(cand_set)
+                test_instances.append(
+                    {
+                        "a": 4,
+                        "n": p,
+                        "optimal_divisor": opt_d,
+                        "candidates": candidates,
+                    }
+                )
 
     naive_steps_total = 0
     random_steps_total = 0
@@ -436,15 +507,17 @@ def evaluate_proposer_vs_baselines(
         random_steps_total += random_step
         proposer_steps_total += proposer_step
 
-        per_instance_results.append({
-            "a": a,
-            "n": n,
-            "num_candidates": K,
-            "naive_step": naive_step,
-            "random_step": round(random_step, 2),
-            "proposer_step": proposer_step,
-            "optimal_divisor": opt_d,
-        })
+        per_instance_results.append(
+            {
+                "a": a,
+                "n": n,
+                "num_candidates": K,
+                "naive_step": naive_step,
+                "random_step": round(random_step, 2),
+                "proposer_step": proposer_step,
+                "optimal_divisor": opt_d,
+            }
+        )
 
     avg_naive = naive_steps_total / max(1, total_instances)
     avg_random = random_steps_total / max(1, total_instances)

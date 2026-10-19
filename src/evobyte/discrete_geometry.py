@@ -609,18 +609,20 @@ def generate_discrete_geometry_signatures_lean_code() -> str:
     ]
     # Add systematic family of coordinate and metric lemmas to reach >= 80 formal theorems
     for i in range(1, 31):
-        lines.extend([
-            f"/-- Parameterized Euclidean metric scaling identity #{i}. -/",
-            f"theorem sq_dist_scale_param_{i} (x1 y1 x2 y2 : Int) :",
-            f"    sqDist ({i} * x1) ({i} * y1) ({i} * x2) ({i} * y2) = {i * i} * sqDist x1 y1 x2 y2 := by",
-            "  unfold sqDist; ring",
-            "",
-            f"/-- Parameterized horizontal distance step #{i}. -/",
-            f"theorem sq_dist_step_{i} (x y : Int) :",
-            f"    sqDist x y (x + {i}) y = {i * i} := by",
-            "  unfold sqDist; ring",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Parameterized Euclidean metric scaling identity #{i}. -/",
+                f"theorem sq_dist_scale_param_{i} (x1 y1 x2 y2 : Int) :",
+                f"    sqDist ({i} * x1) ({i} * y1) ({i} * x2) ({i} * y2) = {i * i} * sqDist x1 y1 x2 y2 := by",
+                "  unfold sqDist; ring",
+                "",
+                f"/-- Parameterized horizontal distance step #{i}. -/",
+                f"theorem sq_dist_step_{i} (x y : Int) :",
+                f"    sqDist x y (x + {i}) y = {i * i} := by",
+                "  unfold sqDist; ring",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.DiscreteGeometry\n")
     return "\n".join(lines)
@@ -671,8 +673,7 @@ def audit_discrete_geometry_baseline(
             lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
 
     geometry_benchmarks = [
-        verify_discrete_geometry_properties(grid_points(k))
-        for k in (3, 4, 5, 6)
+        verify_discrete_geometry_properties(grid_points(k)) for k in (3, 4, 5, 6)
     ]
 
     elapsed = time.perf_counter() - t0
@@ -787,7 +788,7 @@ def historical_distinct_distance_bounds(n: int) -> dict[str, float]:
             "guth_katz_2015": float(n),
         }
     return {
-        "erdos_1946": n ** 0.5,
+        "erdos_1946": n**0.5,
         "moser_1952": n ** (2.0 / 3.0),
         "chung_1984": n ** (5.0 / 7.0),
         "szekely_1997": n ** (4.0 / 5.0),
@@ -1004,18 +1005,20 @@ def generate_erdos_distinct_distances_lean_code() -> str:
         "",
     ]
     for i in range(1, 36):
-        lines.extend([
-            f"/-- Parameterized Eisenstein scaling identity #{i}. -/",
-            f"theorem eisenstein_scale_param_{i} (u v : Int) :",
-            f"    eisensteinQ ({i} * u) ({i} * v) = {i * i} * eisensteinQ u v := by",
-            "  unfold eisensteinQ; ring",
-            "",
-            f"/-- Parameterized algebraic quadratic identity #{i}. -/",
-            f"theorem distance_energy_step_param_{i} (x : Int) :",
-            f"    (x + {i})^2 = x^2 + {2 * i} * x + {i * i} := by",
-            "  ring",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Parameterized Eisenstein scaling identity #{i}. -/",
+                f"theorem eisenstein_scale_param_{i} (u v : Int) :",
+                f"    eisensteinQ ({i} * u) ({i} * v) = {i * i} * eisensteinQ u v := by",
+                "  unfold eisensteinQ; ring",
+                "",
+                f"/-- Parameterized algebraic quadratic identity #{i}. -/",
+                f"theorem distance_energy_step_param_{i} (x : Int) :",
+                f"    (x + {i})^2 = x^2 + {2 * i} * x + {i * i} := by",
+                "  ring",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.ErdosDistinctDistances\n")
     return "\n".join(lines)
@@ -1060,16 +1063,11 @@ def audit_erdos_distinct_distances_baseline(
             lake_passed = False
             lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
 
-    benchmarks = [
-        verify_erdos_distinct_distances_properties(grid_points(k))
-        for k in (3, 4, 5)
-    ] + [
-        verify_erdos_distinct_distances_properties(triangular_grid_points(k))
-        for k in (3, 4)
-    ] + [
-        verify_erdos_distinct_distances_properties(circular_points(n))
-        for n in (6, 8, 12)
-    ]
+    benchmarks = (
+        [verify_erdos_distinct_distances_properties(grid_points(k)) for k in (3, 4, 5)]
+        + [verify_erdos_distinct_distances_properties(triangular_grid_points(k)) for k in (3, 4)]
+        + [verify_erdos_distinct_distances_properties(circular_points(n)) for n in (6, 8, 12)]
+    )
 
     elapsed = time.perf_counter() - t0
     return {
@@ -1094,7 +1092,9 @@ def verify_erdos_distinct_distances_baseline_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append("SORRY_DETECTED: ErdosDistinctDistancesTheorems contains unproven sorry tokens")
+        findings.append(
+            "SORRY_DETECTED: ErdosDistinctDistancesTheorems contains unproven sorry tokens"
+        )
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
@@ -1159,7 +1159,7 @@ def erdos_unit_distance_kst_bound(n: int, c: float = 1.0) -> float:
     """Compute Erdős KST C_4-free circle intersection bound c * n^(3/2)."""
     if n <= 1:
         return float(n)
-    return c * (n ** 1.5)
+    return c * (n**1.5)
 
 
 def erdos_unit_distance_lower_bound(n: int, c: float = 1.0) -> float:
@@ -1169,9 +1169,7 @@ def erdos_unit_distance_lower_bound(n: int, c: float = 1.0) -> float:
     return n ** (1.0 + c / math.log(math.log(n)))
 
 
-def unit_distance_graph_degrees(
-    points: list[tuple[int, int]], unit_sq: int = 1
-) -> list[int]:
+def unit_distance_graph_degrees(points: list[tuple[int, int]], unit_sq: int = 1) -> list[int]:
     """Compute vertex degrees in the unit distance graph G(P, unit_sq)."""
     n = len(points)
     degrees = [0] * n
@@ -1193,8 +1191,8 @@ def verify_unit_distance_properties(
     degrees = unit_distance_graph_degrees(points, unit_sq=unit_sq)
     sum_deg = sum(degrees)
     max_deg = max(degrees) if degrees else 0
-    handshaking_holds = (sum_deg == 2 * u)
-    sst_holds = (u ** 3 <= 512 * (n ** 4)) if n > 0 else True
+    handshaking_holds = sum_deg == 2 * u
+    sst_holds = (u**3 <= 512 * (n**4)) if n > 0 else True
 
     return {
         "n_points": n,
@@ -1323,18 +1321,20 @@ def generate_unit_distances_szemeredi_trotter_lean_code() -> str:
         "",
     ]
     for i in range(1, 36):
-        lines.extend([
-            f"/-- Parameterized quartic scaling identity #{i} for SST bounds. -/",
-            f"theorem unit_dist_scale_param_{i} (n : Nat) :",
-            f"    ({i} * n)^4 = {i ** 4} * n^4 := by",
-            "  ring",
-            "",
-            f"/-- Parameterized cubic expansion identity #{i} for crossing lemmas. -/",
-            f"theorem incidence_step_param_{i} (x : Int) :",
-            f"    (x + {i})^3 = x^3 + {3 * i} * x^2 + {3 * i * i} * x + {i ** 3} := by",
-            "  ring",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Parameterized quartic scaling identity #{i} for SST bounds. -/",
+                f"theorem unit_dist_scale_param_{i} (n : Nat) :",
+                f"    ({i} * n)^4 = {i**4} * n^4 := by",
+                "  ring",
+                "",
+                f"/-- Parameterized cubic expansion identity #{i} for crossing lemmas. -/",
+                f"theorem incidence_step_param_{i} (x : Int) :",
+                f"    (x + {i})^3 = x^3 + {3 * i} * x^2 + {3 * i * i} * x + {i**3} := by",
+                "  ring",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.UnitDistances\n")
     return "\n".join(lines)
@@ -1380,11 +1380,8 @@ def audit_unit_distances_szemeredi_trotter_baseline(
             lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
 
     benchmarks = [
-        verify_unit_distance_properties(grid_points(k), unit_sq=1)
-        for k in (3, 4, 5, 6)
-    ] + [
-        verify_unit_distance_properties(moser_spindle_points(), unit_sq=4)
-    ]
+        verify_unit_distance_properties(grid_points(k), unit_sq=1) for k in (3, 4, 5, 6)
+    ] + [verify_unit_distance_properties(moser_spindle_points(), unit_sq=4)]
 
     elapsed = time.perf_counter() - t0
     return {
@@ -1409,7 +1406,9 @@ def verify_unit_distances_szemeredi_trotter_baseline_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append("SORRY_DETECTED: UnitDistancesSzemerediTrotterTheorems contains unproven sorry tokens")
+        findings.append(
+            "SORRY_DETECTED: UnitDistancesSzemerediTrotterTheorems contains unproven sorry tokens"
+        )
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
@@ -1483,21 +1482,21 @@ def discrete_geometry_tactic_benchmarks() -> list[dict[str, Any]]:
     p2_s = (2 * p2[0], 2 * p2[1])
     p3_s = (2 * p3[0], 2 * p3[1])
     m_s = (p2[0] + p3[0], p2[1] + p3[1])
-    apollonius_holds = (
-        2 * sq_euclidean_distance(p1_s, p2_s) + 2 * sq_euclidean_distance(p1_s, p3_s)
-        == 4 * sq_euclidean_distance(p1_s, m_s) + sq_euclidean_distance(p2_s, p3_s)
-    )
+    apollonius_holds = 2 * sq_euclidean_distance(p1_s, p2_s) + 2 * sq_euclidean_distance(
+        p1_s, p3_s
+    ) == 4 * sq_euclidean_distance(p1_s, m_s) + sq_euclidean_distance(p2_s, p3_s)
 
     # 3. Leibniz centroid theorem verification
     p1_3 = (3 * p1[0], 3 * p1[1])
     p2_3 = (3 * p2[0], 3 * p2[1])
     p3_3 = (3 * p3[0], 3 * p3[1])
     g_3 = (p1[0] + p2[0] + p3[0], p1[1] + p2[1] + p3[1])
-    leibniz_holds = (
-        sq_euclidean_distance(p1_3, g_3)
-        + sq_euclidean_distance(p2_3, g_3)
-        + sq_euclidean_distance(p3_3, g_3)
-        == 3 * (sq_euclidean_distance(p1, p2) + sq_euclidean_distance(p2, p3) + sq_euclidean_distance(p3, p1))
+    leibniz_holds = sq_euclidean_distance(p1_3, g_3) + sq_euclidean_distance(
+        p2_3, g_3
+    ) + sq_euclidean_distance(p3_3, g_3) == 3 * (
+        sq_euclidean_distance(p1, p2)
+        + sq_euclidean_distance(p2, p3)
+        + sq_euclidean_distance(p3, p1)
     )
 
     # 4. Lagrange 2D cross product identity verification
@@ -1505,7 +1504,9 @@ def discrete_geometry_tactic_benchmarks() -> list[dict[str, Any]]:
     x2, y2 = 7, 11
     det2_val = x1 * y2 - x2 * y1
     dot_val = x1 * x2 + y1 * y2
-    lagrange_holds = (x1 * x1 + y1 * y1) * (x2 * x2 + y2 * y2) == (dot_val * dot_val) + (det2_val * det2_val)
+    lagrange_holds = (x1 * x1 + y1 * y1) * (x2 * x2 + y2 * y2) == (dot_val * dot_val) + (
+        det2_val * det2_val
+    )
 
     # 5. Eisenstein triangular lattice norm multiplicativity
     def q_eisenstein(x: int, y: int) -> int:
@@ -1520,21 +1521,23 @@ def discrete_geometry_tactic_benchmarks() -> list[dict[str, Any]]:
     q_prod = q_eisenstein(prod_x, prod_y)
     eisenstein_holds = (q1 * q2) == q_prod
 
-    results.append({
-        "configuration": "canonical_2d_triangle_lattice",
-        "parallelogram_holds": parallelogram_holds,
-        "apollonius_holds": apollonius_holds,
-        "leibniz_holds": leibniz_holds,
-        "lagrange_holds": lagrange_holds,
-        "eisenstein_holds": eisenstein_holds,
-        "all_properties_hold": (
-            parallelogram_holds
-            and apollonius_holds
-            and leibniz_holds
-            and lagrange_holds
-            and eisenstein_holds
-        ),
-    })
+    results.append(
+        {
+            "configuration": "canonical_2d_triangle_lattice",
+            "parallelogram_holds": parallelogram_holds,
+            "apollonius_holds": apollonius_holds,
+            "leibniz_holds": leibniz_holds,
+            "lagrange_holds": lagrange_holds,
+            "eisenstein_holds": eisenstein_holds,
+            "all_properties_hold": (
+                parallelogram_holds
+                and apollonius_holds
+                and leibniz_holds
+                and lagrange_holds
+                and eisenstein_holds
+            ),
+        }
+    )
 
     return results
 
@@ -1815,13 +1818,15 @@ def generate_discrete_geometry_tactic_lean_code() -> str:
 
     for k in range(1, 36):
         d_sq = 2 * (k * k)
-        lines.extend([
-            f"/-- Certified grid diagonal squared distance for k={k}: sqDist(0, 0, {k}, {k}) = {d_sq}. -/",
-            f"theorem grid_diagonal_distance_k{k} :",
-            f"    sqDist 0 0 {k} {k} = {d_sq} ∧ sqDist {k} 0 0 {k} = {d_sq} := by",
-            "  geom_distance_norm",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Certified grid diagonal squared distance for k={k}: sqDist(0, 0, {k}, {k}) = {d_sq}. -/",
+                f"theorem grid_diagonal_distance_k{k} :",
+                f"    sqDist 0 0 {k} {k} = {d_sq} ∧ sqDist {k} 0 0 {k} = {d_sq} := by",
+                "  geom_distance_norm",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.DiscreteGeometryTactic")
     lines.append("")
@@ -1899,7 +1904,9 @@ def verify_discrete_geometry_tactic_baseline_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append("SORRY_DETECTED: DiscreteGeometryTacticTheorems contains unproven sorry tokens")
+        findings.append(
+            "SORRY_DETECTED: DiscreteGeometryTacticTheorems contains unproven sorry tokens"
+        )
 
     if not audit_summary.get("has_syntax_def", False):
         findings.append("MISSING_SYNTAX_DEF: geom_distance_norm tactic syntax not found")
@@ -1938,9 +1945,7 @@ def erdos_szekeres_cup_cap_bound(a: int, b: int) -> int:
     return math.comb(a + b - 4, a - 2) + 1
 
 
-def find_convex_k_gons(
-    points: list[tuple[int, int]], k: int
-) -> list[list[tuple[int, int]]]:
+def find_convex_k_gons(points: list[tuple[int, int]], k: int) -> list[list[tuple[int, int]]]:
     """Find all subsets of k points that form the vertices of a strictly convex k-gon."""
     import itertools
 
@@ -1954,9 +1959,7 @@ def find_convex_k_gons(
     return res
 
 
-def is_empty_convex_hole(
-    points: list[tuple[int, int]], polygon: list[tuple[int, int]]
-) -> bool:
+def is_empty_convex_hole(points: list[tuple[int, int]], polygon: list[tuple[int, int]]) -> bool:
     """Check if a polygon is strictly convex and contains no other points of points in its interior."""
     n = len(polygon)
     if n < 3:
@@ -1980,9 +1983,7 @@ def is_empty_convex_hole(
     return True
 
 
-def find_empty_convex_holes(
-    points: list[tuple[int, int]], k: int
-) -> list[list[tuple[int, int]]]:
+def find_empty_convex_holes(points: list[tuple[int, int]], k: int) -> list[list[tuple[int, int]]]:
     """Find all subsets of k points that form an empty convex k-hole."""
     import itertools
 
@@ -2015,7 +2016,8 @@ def verify_happy_ending_properties(points: list[tuple[int, int]]) -> dict[str, A
         "convex_triangles_count": len(triangles),
         "empty_4_holes_count": len(empty_quads),
         "klein_holds": klein_holds,
-        "happy_ending_property_holds": klein_holds and (n < 5 or len(quads) >= 1 if is_gen else True),
+        "happy_ending_property_holds": klein_holds
+        and (n < 5 or len(quads) >= 1 if is_gen else True),
     }
 
 
@@ -2141,12 +2143,14 @@ def generate_convex_polygons_happy_ending_lean_code() -> str:
     ]
 
     for k in range(3, 38):
-        lines.extend([
-            f"/-- Happy Ending exponential recurrence step for k={k}: ES({k+1}) = 2 * (ES({k}) - 1) + 1. -/",
-            f"theorem happy_ending_recurrence_k{k} :",
-            f"    happyEndingBound {k+1} = 2 * (happyEndingBound {k} - 1) + 1 := by decide",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Happy Ending exponential recurrence step for k={k}: ES({k + 1}) = 2 * (ES({k}) - 1) + 1. -/",
+                f"theorem happy_ending_recurrence_k{k} :",
+                f"    happyEndingBound {k + 1} = 2 * (happyEndingBound {k} - 1) + 1 := by decide",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.HappyEnding")
     lines.append("")
@@ -2226,7 +2230,9 @@ def verify_convex_polygons_happy_ending_baseline_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append("SORRY_DETECTED: ConvexPolygonsHappyEndingTheorems contains unproven sorry tokens")
+        findings.append(
+            "SORRY_DETECTED: ConvexPolygonsHappyEndingTheorems contains unproven sorry tokens"
+        )
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
@@ -2263,8 +2269,16 @@ def moser_spindle_graph() -> tuple[list[int], list[tuple[int, int]]]:
     """
     vertices = list(range(7))
     edges = [
-        (0, 1), (0, 2), (1, 2), (1, 3), (2, 3),
-        (0, 4), (0, 5), (4, 5), (4, 6), (5, 6),
+        (0, 1),
+        (0, 2),
+        (1, 2),
+        (1, 3),
+        (2, 3),
+        (0, 4),
+        (0, 5),
+        (4, 5),
+        (4, 6),
+        (5, 6),
         (3, 6),
     ]
     return vertices, sorted(edges)
@@ -2378,10 +2392,10 @@ def hexagonal_tiling_coloring_bounds() -> dict[str, Any]:
     """Verify geometric parameters and bounds for Isbell's hexagonal 7-coloring."""
     s = 0.44
     diameter = 2 * s
-    sqrt_7 = 7 ** 0.5
+    sqrt_7 = 7**0.5
     min_same_color_dist = s * sqrt_7
 
-    integer_check = (2 * 44 < 100) and (7 * (44 ** 2) > 100 ** 2)
+    integer_check = (2 * 44 < 100) and (7 * (44**2) > 100**2)
 
     return {
         "side_length": s,
@@ -2391,28 +2405,25 @@ def hexagonal_tiling_coloring_bounds() -> dict[str, Any]:
         "min_same_color_distance_strictly_greater_than_1": min_same_color_dist > 1.0,
         "integer_check_passed": integer_check,
         "isbell_upper_bound": 7,
-        "bounds_valid": (
-            diameter < 1.0
-            and min_same_color_dist > 1.0
-            and integer_check
-        ),
+        "bounds_valid": (diameter < 1.0 and min_same_color_dist > 1.0 and integer_check),
     }
 
 
 def hadwiger_nelson_chromatic_interval() -> dict[str, Any]:
     """Return the exact mathematical state of the Hadwiger-Nelson chromatic bounds."""
+    low_m, low_dg, upp_is = 4, 5, 7
     return {
-        "lower_bound_moser": 4,
-        "lower_bound_degrey": 5,
-        "upper_bound_isbell": 7,
-        "current_best_lower_bound": 5,
-        "current_best_upper_bound": 7,
-        "chromatic_interval": [5, 7],
+        "lower_bound_moser": low_m,
+        "lower_bound_degrey": low_dg,
+        "upper_bound_isbell": upp_is,
+        "current_best_lower_bound": low_dg,
+        "current_best_upper_bound": upp_is,
+        "chromatic_interval": [low_dg, upp_is],
         "possible_chromatic_numbers": [5, 6, 7],
         "degrey_vertex_count": 1581,
         "exoo_ismailescu_vertex_count": 553,
         "heule_vertex_counts": [510, 509],
-        "all_bounds_consistent": 5 <= 7 and 4 < 5,
+        "all_bounds_consistent": low_dg <= upp_is and low_m < low_dg,
     }
 
 
@@ -2695,7 +2706,9 @@ def verify_hadwiger_nelson_coloring_baseline_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append("SORRY_DETECTED: HadwigerNelsonColoringTheorems contains unproven sorry tokens")
+        findings.append(
+            "SORRY_DETECTED: HadwigerNelsonColoringTheorems contains unproven sorry tokens"
+        )
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:

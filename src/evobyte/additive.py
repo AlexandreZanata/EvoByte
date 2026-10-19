@@ -487,7 +487,7 @@ def erdos_turan_sidon_upper_bound(n_max: int) -> int:
         return 0
     if n_max == 1:
         return 1
-    et_bound = int(math.floor(math.sqrt(n_max) + (n_max**0.25) + 1.0))
+    et_bound = math.floor(math.sqrt(n_max) + (n_max**0.25) + 1.0)
     return max(1, et_bound)
 
 
@@ -575,7 +575,7 @@ def search_extremal_sidon_set(
     candidates: list[tuple[str, list[int]]] = []
 
     # 1. Greedy Mian-Chowla prefix <= n_max
-    mc_full = mian_chowla_sequence(int(math.isqrt(n_max)) + 5)
+    mc_full = mian_chowla_sequence(math.isqrt(n_max) + 5)
     mc_clipped = [x for x in mc_full if 1 <= x <= n_max]
     candidates.append(("mian_chowla", mc_clipped))
 
@@ -602,7 +602,9 @@ def search_extremal_sidon_set(
         if rz_valid and is_sidon_set(rz_valid):
             candidates.append((f"ruzsa_p{p}", rz_valid))
 
-    best_method, best_set = max(candidates, key=lambda item: (len(item[1]), -max(item[1], default=0)))
+    best_method, best_set = max(
+        candidates, key=lambda item: (len(item[1]), -max(item[1], default=0))
+    )
 
     # 5. Exact branch-and-bound refinement for moderate n_max
     deadline = t0 + max(0.01, time_budget_sec)
@@ -775,21 +777,15 @@ def generate_sidon_sets_theorems_lean_code() -> str:
         )
 
         # Additive energy theorem
-        lines.append(
-            f"/-- Exact Sidon additive energy certificate for {label}: E(A) = {e_val}. -/"
-        )
-        lines.append(
-            f"theorem {label}_energy : 2 * ({k} * {k}) - {k} = {e_val} := by norm_num"
-        )
+        lines.append(f"/-- Exact Sidon additive energy certificate for {label}: E(A) = {e_val}. -/")
+        lines.append(f"theorem {label}_energy : 2 * ({k} * {k}) - {k} = {e_val} := by norm_num")
 
         # Distinct difference theorems between consecutive pairs
         diffs = [s[i + 1] - s[i] for i in range(k - 1)]
         for idx in range(len(diffs) - 1):
             a1, a2 = s[idx + 1], s[idx]
             a3, a4 = s[idx + 2], s[idx + 1]
-            lines.append(
-                f"/-- Non-collision of adjacent differences in {label} at index {idx}. -/"
-            )
+            lines.append(f"/-- Non-collision of adjacent differences in {label} at index {idx}. -/")
             lines.append(
                 f"theorem {label}_adj_diff_ne_{idx} : ({a1} : Int) - {a2} ≠ {a3} - {a4} := by omega"
             )
@@ -1047,7 +1043,9 @@ def extract_bsg_popular_difference_subset(
         key=lambda item: (len(item[1]), -abs(item[0])),
     )
     # Include both endpoints x and x + best_d in A that form the popular difference subgraph
-    structured_subset = sorted({x for x in best_fiber} | {x + best_d for x in best_fiber if (x + best_d) in a_lookup})
+    structured_subset = sorted(
+        {x for x in best_fiber} | {x + best_d for x in best_fiber if (x + best_d) in a_lookup}
+    )
     e_val = additive_energy(a_set)
     return {
         "size_a": n_a,
@@ -1166,22 +1164,16 @@ def generate_additive_energy_theorems_lean_code() -> str:
         lines.append(
             f"/-- Additive Cauchy-Schwarz sumset certificate for {name} (|A|={n_a}, E={e_val}, |A+A|={sum_sz}). -/"
         )
-        lines.append(
-            f"theorem cs_sumset_{name} : {rhs} ≤ {e_val} * {sum_sz} := by omega"
-        )
+        lines.append(f"theorem cs_sumset_{name} : {rhs} ≤ {e_val} * {sum_sz} := by omega")
 
         lines.append(
             f"/-- Additive Cauchy-Schwarz diffset certificate for {name} (|A|={n_a}, E={e_val}, |A-A|={diff_sz}). -/"
         )
-        lines.append(
-            f"theorem cs_diffset_{name} : {rhs} ≤ {e_val} * {diff_sz} := by omega"
-        )
+        lines.append(f"theorem cs_diffset_{name} : {rhs} ≤ {e_val} * {diff_sz} := by omega")
 
+        lines.append(f"/-- Energy sandwich certificate |A|^2 <= E(A) <= |A|^3 for {name}. -/")
         lines.append(
-            f"/-- Energy sandwich certificate |A|^2 <= E(A) <= |A|^3 for {name}. -/"
-        )
-        lines.append(
-            f"theorem energy_sandwich_{name} : {n_a * n_a} ≤ {e_val} ∧ {e_val} ≤ {n_a ** 3} := by omega"
+            f"theorem energy_sandwich_{name} : {n_a * n_a} ≤ {e_val} ∧ {e_val} ≤ {n_a**3} := by omega"
         )
 
     lines.append("")
@@ -1220,9 +1212,7 @@ def generate_additive_energy_theorems_lean_code() -> str:
         lines.append(
             f"/-- BSG popular-difference fiber certificate for {name}: rep={rep_c}, |A'|={sub_sz} <= |A|={n_a}. -/"
         )
-        lines.append(
-            f"theorem bsg_fiber_{name} : 1 ≤ {rep_c} ∧ {sub_sz} ≤ {n_a} := by omega"
-        )
+        lines.append(f"theorem bsg_fiber_{name} : 1 ≤ {rep_c} ∧ {sub_sz} ≤ {n_a} := by omega")
 
     lines.append("")
     lines.append("end EvoByte.AdditiveCombinatorics")
@@ -1373,9 +1363,8 @@ def verify_minkowski_monotonicity_and_algebra(
     if n_a == 0:
         freiman_bounds_hold = aa_size == 0 and dd_size == 0
     else:
-        freiman_bounds_hold = (
-            (2 * n_a - 1 <= aa_size <= n_a * (n_a + 1) // 2)
-            and (2 * n_a - 1 <= dd_size <= n_a * (n_a - 1) + 1)
+        freiman_bounds_hold = (2 * n_a - 1 <= aa_size <= n_a * (n_a + 1) // 2) and (
+            2 * n_a - 1 <= dd_size <= n_a * (n_a - 1) + 1
         )
 
     return {
@@ -1566,9 +1555,7 @@ def generate_additive_tactic_theorems_lean_code() -> str:
         lines.append(
             f"/-- Inclusion monotonicity cardinality certificate |A+C| <= |B+C| for {label} proved by `additive_norm`. -/"
         )
-        lines.append(
-            f"theorem additive_norm_mono_{label} : {ac_sz} ≤ {bc_sz} := by"
-        )
+        lines.append(f"theorem additive_norm_mono_{label} : {ac_sz} ≤ {bc_sz} := by")
         lines.append("  additive_norm")
 
     lines.append("")
@@ -1774,7 +1761,7 @@ def search_minimal_additive_basis_order_2(
     candidates: list[tuple[str, list[int]]] = []
 
     # 1. Two-scale step basis: {0, 1, ..., s-1} union {s, 2s, ..., m*s}
-    for s in range(1, int(math.isqrt(n_target)) + 3):
+    for s in range(1, math.isqrt(n_target) + 3):
         low = list(range(s))
         high = list(range(s, (n_target // 2) + s + 1, s))
         cand = sorted({x for x in (low + high) if 0 <= x <= n_target})
@@ -1782,7 +1769,7 @@ def search_minimal_additive_basis_order_2(
             candidates.append((f"two_scale_s{s}", cand))
 
     # 2. Symmetric two-scale basis covering up to n_target
-    for s in range(2, int(math.isqrt(n_target)) + 4):
+    for s in range(2, math.isqrt(n_target) + 4):
         cand_set: set[int] = set(range(s))
         cur = s
         while cur <= n_target:
@@ -1800,19 +1787,18 @@ def search_minimal_additive_basis_order_2(
     # 3. Exact branch-and-bound refinement for small n_target
     deadline = t0 + max(0.01, time_budget_sec)
     current: list[int] = [0, 1]
-    covered_sums: set[int] = {0, 1, 2}
 
     def _backtrack(max_covered: int) -> None:
         nonlocal best_basis, best_method
         if time.perf_counter() >= deadline:
             return
         if max_covered >= n_target:
-            if is_finite_additive_basis_of_order_2(current, n_target):
-                if len(current) < len(best_basis) or (
-                    len(current) == len(best_basis) and current[-1] < best_basis[-1]
-                ):
-                    best_basis = list(current)
-                    best_method = "branch_and_bound_minimal_basis"
+            if is_finite_additive_basis_of_order_2(current, n_target) and (
+                len(current) < len(best_basis)
+                or (len(current) == len(best_basis) and current[-1] < best_basis[-1])
+            ):
+                best_basis = list(current)
+                best_method = "branch_and_bound_minimal_basis"
             return
 
         if len(current) + 1 >= len(best_basis):
@@ -2077,8 +2063,7 @@ def schnirelmann_density(
         if n in pos_set:
             count += 1
         ratio = count / n
-        if ratio < min_ratio:
-            min_ratio = ratio
+        min_ratio = min(min_ratio, ratio)
     return min_ratio
 
 
@@ -2295,19 +2280,36 @@ def generate_sum_free_theorems_lean_code() -> str:
         ("mod3_shift_18", [1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17], [1, 3, 6, 9, 12, 15, 18], 18),
         ("half_block_20", list(range(1, 12)), list(range(1, 12)), 20),
         ("two_scale_24", [1, 2, 3, 4, 8, 12, 16, 20, 24], [1, 2, 5, 10, 15, 20], 24),
-        ("dense_complement_30", [x for x in range(1, 31) if x % 2 == 1], [x for x in range(1, 31) if x % 3 != 0], 30),
-        ("dense_union_36", [x for x in range(1, 37) if x % 3 != 2], [x for x in range(1, 37) if x % 4 != 3], 36),
-        ("full_cover_40", [x for x in range(1, 41) if x % 2 == 1], [1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20], 40),
+        (
+            "dense_complement_30",
+            [x for x in range(1, 31) if x % 2 == 1],
+            [x for x in range(1, 31) if x % 3 != 0],
+            30,
+        ),
+        (
+            "dense_union_36",
+            [x for x in range(1, 37) if x % 3 != 2],
+            [x for x in range(1, 37) if x % 4 != 3],
+            36,
+        ),
+        (
+            "full_cover_40",
+            [x for x in range(1, 41) if x % 2 == 1],
+            [1, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+            40,
+        ),
     ]
 
     for label, a_s, b_s, n_h in density_benchmarks:
         mann = verify_schnirelmann_mann_inequality(a_s, b_s, n_h)
-        assert mann["schnirelmann_holds"] and mann["mann_holds"], f"Mann density failed for {label}: {mann}"
+        assert mann["schnirelmann_holds"] and mann["mann_holds"], (
+            f"Mann density failed for {label}: {mann}"
+        )
         # Express scaled integer densities (multiplied by 10000) for exact arithmetic verification
         scale = 10000
-        sa_int = int(round(mann["sigma_a"] * scale))
-        sb_int = int(round(mann["sigma_b"] * scale))
-        sab_int = int(round(mann["sigma_sum"] * scale))
+        sa_int = round(mann["sigma_a"] * scale)
+        sb_int = round(mann["sigma_b"] * scale)
+        sab_int = round(mann["sigma_sum"] * scale)
         mann_rhs_int = min(scale, sa_int + sb_int)
 
         lines.append(

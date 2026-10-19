@@ -3815,21 +3815,21 @@ def evaluate_cubic_surface_conic_fibration(
     poly_lhs = a * x * y * z
     poly_rhs = n * (y * z + x * z + x * y)
     poly_residual = poly_lhs - poly_rhs
-    on_surface = (poly_residual == 0)
+    on_surface = poly_residual == 0
 
     # Conic fiber equation at x: (a*x - n)*y*z - n*x*(y + z) = 0
     conic_residual = (a * x - n) * y * z - n * x * (y + z)
-    conic_valid = (conic_residual == 0)
+    conic_valid = conic_residual == 0
 
     # Translated bilinear conic form: ((a*x - n)*y - n*x)*((a*x - n)*z - n*x) - (n*x)^2 = 0
     u = (a * x - n) * y - n * x
     v = (a * x - n) * z - n * x
     discriminant = (n * x) ** 2
     bilinear_residual = u * v - discriminant
-    bilinear_valid = (bilinear_residual == 0)
+    bilinear_valid = bilinear_residual == 0
 
     # Exact rational fractions check: a/n == 1/x + 1/y + 1/z
-    frac_exact = (Fraction(a, n) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z))
+    frac_exact = Fraction(a, n) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
 
     return {
         "a": a,
@@ -3887,17 +3887,19 @@ def generate_cubic_surface_parametric_sections() -> list[dict[str, Any]]:
     for a, m, r, name in specs:
         ident = synthesize_schinzel_identity(a, m, r)
         if ident and ident.verify_exact():
-            sections.append({
-                "name": name,
-                "a": a,
-                "modulus": m,
-                "residue": r,
-                "n_poly": ident.n_poly.to_string("k"),
-                "x_poly": ident.X.to_string("k"),
-                "y_poly": ident.Y.to_string("k"),
-                "z_poly": ident.Z.to_string("k"),
-                "identity": ident,
-            })
+            sections.append(
+                {
+                    "name": name,
+                    "a": a,
+                    "modulus": m,
+                    "residue": r,
+                    "n_poly": ident.n_poly.to_string("k"),
+                    "x_poly": ident.X.to_string("k"),
+                    "y_poly": ident.Y.to_string("k"),
+                    "z_poly": ident.Z.to_string("k"),
+                    "identity": ident,
+                }
+            )
 
     return sections
 
@@ -3912,8 +3914,22 @@ def evaluate_cubic_surface_fibration_coverage(
         a_values = [4, 5, 6, 7, 8]
     if instances is None:
         instances = [
-            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
-            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+            1009,
+            10007,
+            841,
+            1681,
+            2521,
+            3361,
+            4201,
+            5041,
+            121,
+            961,
+            1801,
+            2641,
+            3481,
+            4321,
+            5161,
+            6001,
         ]
 
     results: list[dict[str, Any]] = []
@@ -3971,24 +3987,24 @@ def evaluate_conic_legendre_parametrization(
 
     # Conic fiber equation: d * y * z - nx * (y + z)
     conic_residual = d * y * z - nx * (y + z)
-    conic_valid = (conic_residual == 0)
+    conic_valid = conic_residual == 0
 
     # Unipotent hyperbolic translation coordinates: U = d*y - nx, V = d*z - nx
     u = d * y - nx
     v = d * z - nx
     discriminant = Fraction(nx**2, 1)
     hyperbolic_residual = u * v - discriminant
-    hyperbolic_valid = (hyperbolic_residual == 0)
+    hyperbolic_valid = hyperbolic_residual == 0
 
     # Legendre ternary quadratic form: (d*(y + z) - 2*nx)^2 - (d*(y - z))^2 - (2*nx)^2
     legendre_term1 = (d * (y + z) - 2 * nx) ** 2
     legendre_term2 = (d * (y - z)) ** 2
     legendre_term3 = Fraction((2 * nx) ** 2, 1)
     legendre_residual = legendre_term1 - legendre_term2 - legendre_term3
-    legendre_valid = (legendre_residual == 0)
+    legendre_valid = legendre_residual == 0
 
     # Rational unit fractions check: a/n == 1/x + 1/y + 1/z
-    frac_exact = (Fraction(a, n) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z))
+    frac_exact = Fraction(a, n) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
 
     return {
         "a": a,
@@ -4012,9 +4028,7 @@ def evaluate_conic_legendre_parametrization(
     }
 
 
-def evaluate_local_global_conic_solvability(
-    a: int, n: int, x: int
-) -> dict[str, Any]:
+def evaluate_local_global_conic_solvability(a: int, n: int, x: int) -> dict[str, Any]:
     """Analyze local-global Hasse-Minkowski solvability for the Diophantine conic fiber C_x (P98).
 
     Verifies:
@@ -4025,10 +4039,10 @@ def evaluate_local_global_conic_solvability(
     """
     d = a * x - n
     nx = n * x
-    discriminant = 4 * (nx ** 2)
+    discriminant = 4 * (nx**2)
 
     # Real solvability: Delta > 0 implies split conic over R
-    real_solvable = (discriminant > 0)
+    real_solvable = discriminant > 0
 
     # Local p-adic Hilbert symbol analysis:
     # Since Delta = (2*nx)^2 is an exact square in Q, the quadratic form splits over Q,
@@ -4074,8 +4088,22 @@ def evaluate_conic_parametrizations_coverage(
         a_values = [4, 5, 6, 7, 8]
     if instances is None:
         instances = [
-            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
-            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+            1009,
+            10007,
+            841,
+            1681,
+            2521,
+            3361,
+            4201,
+            5041,
+            121,
+            961,
+            1801,
+            2641,
+            3481,
+            4321,
+            5161,
+            6001,
         ]
 
     results: list[dict[str, Any]] = []
@@ -4087,7 +4115,7 @@ def evaluate_conic_parametrizations_coverage(
             total_evaluated += 1
             sol, _meta = optimal_schinzel_divisor_sieve(a=a, n=n)
             if sol:
-                x, y, z = sol
+                x, _y, _z = sol
             else:
                 x = math.ceil(n / a) + 1
             lg_res = evaluate_local_global_conic_solvability(a=a, n=n, x=x)
@@ -4141,7 +4169,7 @@ def compute_solution_moments_asymptotics(
                 nx = n * x
                 divs = integer_factorization(nx)
                 div_count = 1
-                for p, exp in divs.items():
+                for exp in divs.values():
                     div_count *= 2 * exp + 1
                 cnt += max(1, div_count // 4)
                 break
@@ -4167,16 +4195,18 @@ def compute_solution_moments_asymptotics(
         if m1 <= 0:
             all_positive = False
 
-        moment_records.append({
-            "horizon": h,
-            "samples": n_samples,
-            "first_moment_m1": m1,
-            "second_moment_m2": m2,
-            "variance": var,
-            "cauchy_schwarz_valid": cauchy_valid,
-            "log_sq_h": log_sq,
-            "m1_over_log_sq": ratio,
-        })
+        moment_records.append(
+            {
+                "horizon": h,
+                "samples": n_samples,
+                "first_moment_m1": m1,
+                "second_moment_m2": m2,
+                "variance": var,
+                "cauchy_schwarz_valid": cauchy_valid,
+                "log_sq_h": log_sq,
+                "m1_over_log_sq": ratio,
+            }
+        )
 
     return {
         "a": a,
@@ -4198,9 +4228,7 @@ def evaluate_solution_moments_coverage() -> dict[str, Any]:
     }
 
 
-def solve_higher_power_fractions(
-    a: int = 4, n: int = 5, k: int = 2
-) -> tuple[int, int, int] | None:
+def solve_higher_power_fractions(a: int = 4, n: int = 5, k: int = 2) -> tuple[int, int, int] | None:
     """Solve Diophantine unit fraction equation for higher powers a / n^k = 1/x + 1/y + 1/z (P102)."""
     n_k = n**k
     sol, _meta = optimal_schinzel_divisor_sieve(a=a, n=n_k)
@@ -4236,19 +4264,19 @@ def evaluate_higher_power_fractions_coverage(
             if sol:
                 x, y, z = sol
                 n_k = n**k
-                eq_valid = (
-                    Fraction(a, n_k) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
-                )
+                eq_valid = Fraction(a, n_k) == Fraction(1, x) + Fraction(1, y) + Fraction(1, z)
                 if eq_valid and x > 0 and y > 0 and z > 0:
                     total_solved += 1
-                    results.append({
-                        "a": a,
-                        "n": n,
-                        "k": k,
-                        "n_k": n_k,
-                        "solution": (x, y, z),
-                        "valid": True,
-                    })
+                    results.append(
+                        {
+                            "a": a,
+                            "n": n,
+                            "k": k,
+                            "n_k": n_k,
+                            "solution": (x, y, z),
+                            "valid": True,
+                        }
+                    )
 
     success_rate = total_solved / max(1, total_tested)
     return {
@@ -4349,9 +4377,7 @@ class DiophantineObstructionGraph:
         if node not in self.adjacency:
             self.adjacency[node] = set()
 
-    def add_edge(
-        self, n1: ObstructionNode, n2: ObstructionNode, reason: str = ""
-    ) -> None:
+    def add_edge(self, n1: ObstructionNode, n2: ObstructionNode, reason: str = "") -> None:
         self.add_node(n1)
         self.add_node(n2)
         self.adjacency[n1].add(n2)
@@ -4371,9 +4397,7 @@ class DiophantineObstructionGraph:
                 return True
         return False
 
-    def prune_divisor_candidates(
-        self, n: int, candidates: list[int]
-    ) -> tuple[list[int], int]:
+    def prune_divisor_candidates(self, n: int, candidates: list[int]) -> tuple[list[int], int]:
         """Filter a list of divisor candidates, returning surviving candidates and prune count."""
         survived: list[int] = []
         pruned_count = 0
@@ -4434,13 +4458,15 @@ def evaluate_obstruction_graph_pruning(
                 if graph.is_candidate_obstructed(n, d):
                     false_negatives += 1
 
-        instance_details.append({
-            "n": n,
-            "raw_count": len(raw_candidates),
-            "survived_count": len(survived),
-            "pruned_count": pruned,
-            "actual_divisors_tested": len(actual_divisors),
-        })
+        instance_details.append(
+            {
+                "n": n,
+                "raw_count": len(raw_candidates),
+                "survived_count": len(survived),
+                "pruned_count": pruned,
+                "actual_divisors_tested": len(actual_divisors),
+            }
+        )
 
     pruning_ratio = total_pruned / max(1, total_candidates)
 
@@ -4462,6 +4488,7 @@ def evaluate_obstruction_graph_pruning(
 # ==============================================================================
 # P109 — ERDŐS–GRAHAM UNIT FRACTION DECOMPOSITIONS & DENSITY CERTIFICATES
 # ==============================================================================
+
 
 def find_erdos_graham_unit_fractions(
     target_num: int = 1,
@@ -4598,7 +4625,7 @@ def compute_baker_effective_bound(x: int, y: int, c: int) -> dict[str, Any]:
     const_c = 100.0 * (1.0 + lx) * (1.0 + ly)
     # Effective bound B on max(p, q)
     log_c = math.log(max(2, c))
-    baker_bound = int(math.ceil((log_c + const_c * math.log(const_c + 10.0)) / min(lx, ly)))
+    baker_bound = math.ceil((log_c + const_c * math.log(const_c + 10.0)) / min(lx, ly))
 
     return {
         "x": x,

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from evobyte.formal_bridge import (
     evaluate_lean4_tactic_candidate,
     verify_formal_mcts_soundness,
@@ -38,7 +36,7 @@ def test_mcts_node_puct_selection():
     root.visit_count = 6
 
     # C2 has higher Q value now
-    best_act2, best_child2 = root.select_child(c_puct=1.0)
+    best_act2, _best_child2 = root.select_child(c_puct=1.0)
     assert best_act2 == "ring"
 
 
@@ -115,7 +113,10 @@ def test_mcts_guided_by_neural_proposer():
     assert result.is_proved is True
     assert result.verified_by_lean is True
     assert len(result.best_tactic_chain) > 0
-    assert any(any(t in tac for t in ["norm_num", "decide", "omega", "ring"]) for tac in result.best_tactic_chain)
+    assert any(
+        any(t in tac for t in ["norm_num", "decide", "omega", "ring"])
+        for tac in result.best_tactic_chain
+    )
 
 
 def test_run_formal_mcts_benchmark():

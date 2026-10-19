@@ -1,13 +1,10 @@
 """Tests for quaternion algebra sieve and norm factorization (P99)."""
 
-from fractions import Fraction
-import pytest
-
 from evobyte.quaternion_sieve import (
     Quaternion,
     decompose_four_squares,
-    quaternion_sieve_conic_point,
     evaluate_quaternion_sieve_coverage,
+    quaternion_sieve_conic_point,
 )
 
 

@@ -104,7 +104,7 @@ def generate_multiproblem_blind_partition(
     3. schinzel: Generalized Egyptian fraction 4/n and 5/n on large integers.
     4. giuga: Agoh-Giuga congruence and squarefree prime divisibility conditions.
     """
-    rng = random.Random(seed)
+    random.Random(seed)
     tracks: dict[str, Any] = {}
     all_ids: list[str] = []
 
@@ -136,8 +136,16 @@ def generate_multiproblem_blind_partition(
 
     # Track 2: Pillai-Catalan
     bases = [
-        (2, 3), (3, 2), (2, 5), (5, 2), (3, 5),
-        (5, 3), (2, 7), (7, 2), (3, 4), (4, 3),
+        (2, 3),
+        (3, 2),
+        (2, 5),
+        (5, 2),
+        (3, 5),
+        (5, 3),
+        (2, 7),
+        (7, 2),
+        (3, 4),
+        (4, 3),
     ]
     pillai_instances: list[dict[str, Any]] = []
     for i in range(count_per_track):
@@ -231,7 +239,9 @@ def generate_multiproblem_blind_partition(
         "tracks": tracks,
     }
 
-    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     return {
@@ -383,7 +393,9 @@ def evaluate_multiproblem_blind_confirmation(
             "raw_p_value": sign_p,
             "total_engine_candidates": total_engine_cands,
             "total_baseline_candidates": total_base_cands,
-            "candidate_reduction": (total_base_cands / total_engine_cands) if total_engine_cands > 0 else 1.0,
+            "candidate_reduction": (total_base_cands / total_engine_cands)
+            if total_engine_cands > 0
+            else 1.0,
             "all_verified": is_valid,
             "elapsed_sec": elapsed_track,
             "pairs": pairs,
@@ -397,7 +409,9 @@ def evaluate_multiproblem_blind_confirmation(
         t_summary["holm_adjusted_p_value"] = adj_p
         if adj_p < alpha and t_summary["wins"] > t_summary["losses"] and t_summary["all_verified"]:
             t_summary["outcome"] = "CONFIRMED"
-            t_summary["reason"] = f"statistically superior under Holm FWER control (p={adj_p:.4e} < alpha={alpha})"
+            t_summary["reason"] = (
+                f"statistically superior under Holm FWER control (p={adj_p:.4e} < alpha={alpha})"
+            )
         else:
             t_summary["outcome"] = "NOT_CONFIRMED"
             t_summary["reason"] = f"failed significance threshold (p={adj_p:.4e})"
@@ -458,7 +472,9 @@ def verify_multiproblem_confirmation_soundness(
         findings.append("ZERO_LEAKAGE_NOT_VERIFIED: cryptographic partition proof missing")
 
     if not eval_summary.get("all_verified", False):
-        findings.append("CHECKER_SOUNDNESS_FAILED: one or more candidate solutions failed mathematical verification")
+        findings.append(
+            "CHECKER_SOUNDNESS_FAILED: one or more candidate solutions failed mathematical verification"
+        )
 
     n_inst = eval_summary.get("total_instances", 0)
     if n_inst < min_total_instances:
@@ -469,7 +485,9 @@ def verify_multiproblem_confirmation_soundness(
         findings.append(f"INSUFFICIENT_WINS: expected >= {min_wins}, got {wins}")
 
     if not eval_summary.get("fwer_controlled", False):
-        findings.append("FWER_CONTROL_FAILED: one or more hypotheses failed Holm step-down threshold")
+        findings.append(
+            "FWER_CONTROL_FAILED: one or more hypotheses failed Holm step-down threshold"
+        )
 
     adj_pvals = eval_summary.get("adjusted_p_values", {})
     for t_key, adj_p in adj_pvals.items():
@@ -619,7 +637,9 @@ def generate_additive_blind_partition(
         "tracks": tracks,
     }
 
-    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     return {
@@ -676,7 +696,7 @@ def evaluate_additive_blind_confirmation(
                     and (1 <= k <= et_ub)
                     and (int(res.get("additive_energy", -1)) == 2 * k * k - k)
                 )
-                c_engine = max(1, k + int(math.isqrt(n_max)))
+                c_engine = max(1, k + math.isqrt(n_max))
                 c_base = max(100, n_max * k)
 
             elif track_key == "additive_energy_bsg":
@@ -710,7 +730,7 @@ def evaluate_additive_blind_confirmation(
                     and bool(prof.get("rohrbach_bound_holds", False))
                     and bool(prof.get("pigeonhole_multiplicity_holds", False))
                 )
-                c_engine = max(1, int(math.isqrt(n_target)) + k)
+                c_engine = max(1, math.isqrt(n_target) + k)
                 c_base = max(120, (n_target + 1) * k)
 
             elif track_key == "sum_free_schnirelmann":
@@ -771,7 +791,9 @@ def evaluate_additive_blind_confirmation(
             "raw_p_value": sign_p,
             "total_engine_candidates": total_engine_cands,
             "total_baseline_candidates": total_base_cands,
-            "candidate_reduction": (total_base_cands / total_engine_cands) if total_engine_cands > 0 else 1.0,
+            "candidate_reduction": (total_base_cands / total_engine_cands)
+            if total_engine_cands > 0
+            else 1.0,
             "all_verified": track_verified,
             "elapsed_sec": elapsed_track,
             "pairs": pairs,
@@ -784,7 +806,9 @@ def evaluate_additive_blind_confirmation(
         t_summary["holm_adjusted_p_value"] = adj_p
         if adj_p < alpha and t_summary["wins"] > t_summary["losses"] and t_summary["all_verified"]:
             t_summary["outcome"] = "CONFIRMED"
-            t_summary["reason"] = f"statistically superior under Holm FWER control (p={adj_p:.4e} < alpha={alpha})"
+            t_summary["reason"] = (
+                f"statistically superior under Holm FWER control (p={adj_p:.4e} < alpha={alpha})"
+            )
         else:
             t_summary["outcome"] = "NOT_CONFIRMED"
             t_summary["reason"] = f"failed significance threshold (p={adj_p:.4e})"
@@ -863,7 +887,33 @@ def generate_p127_graph_ramsey_blind_split(
     all_ids: list[str] = []
 
     # Track 1: Turán, Paley, and Ramsey lower-bound certificates
-    paley_primes = [5, 13, 17, 29, 37, 41, 53, 61, 73, 89, 97, 101, 109, 113, 137, 149, 157, 173, 181, 193, 197, 229, 233, 241, 257]
+    paley_primes = [
+        5,
+        13,
+        17,
+        29,
+        37,
+        41,
+        53,
+        61,
+        73,
+        89,
+        97,
+        101,
+        109,
+        113,
+        137,
+        149,
+        157,
+        173,
+        181,
+        193,
+        197,
+        229,
+        233,
+        241,
+        257,
+    ]
     turan_instances: list[dict[str, Any]] = []
     for i in range(count_per_track):
         iid = f"P127_TPR_{i + 1:02d}"
@@ -980,7 +1030,9 @@ def generate_p127_graph_ramsey_blind_split(
         "tracks": tracks,
     }
 
-    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     return {
@@ -1004,10 +1056,8 @@ def evaluate_graph_ramsey_blind_confirmation(
         projective_plane_pg2q_biadjacency,
         reiman_zarankiewicz_bound,
         salem_spencer_base3_set,
-        turan_edge_count,
         turan_graph_adjacency,
         verify_erdos_gyarfas_property,
-        verify_handshaking_lemma,
         verify_srg_parameters,
         verify_turan_extremal_properties,
     )
@@ -1101,9 +1151,9 @@ def evaluate_graph_ramsey_blind_confirmation(
                     adj = paley_graph_adjacency(5)
 
                 eg_res = verify_erdos_gyarfas_property(adj)
-                is_valid = (
-                    bool(eg_res.get("erdos_gyarfas_holds", False))
-                    and (int(eg_res.get("chromatic_lower_bound", 0)) <= int(eg_res.get("chromatic_upper_bound", 0)))
+                is_valid = bool(eg_res.get("erdos_gyarfas_holds", False)) and (
+                    int(eg_res.get("chromatic_lower_bound", 0))
+                    <= int(eg_res.get("chromatic_upper_bound", 0))
                 )
                 c_engine = max(1, len(adj))
                 c_base = max(100, len(adj) ** 2)
@@ -1149,7 +1199,9 @@ def evaluate_graph_ramsey_blind_confirmation(
             "raw_p_value": sign_p,
             "total_engine_candidates": total_engine_cands,
             "total_baseline_candidates": total_base_cands,
-            "candidate_reduction": (total_base_cands / total_engine_cands) if total_engine_cands > 0 else 1.0,
+            "candidate_reduction": (total_base_cands / total_engine_cands)
+            if total_engine_cands > 0
+            else 1.0,
             "all_verified": track_verified,
             "elapsed_sec": elapsed_track,
             "pairs": pairs,
@@ -1162,7 +1214,9 @@ def evaluate_graph_ramsey_blind_confirmation(
         t_summary["holm_adjusted_p_value"] = adj_p
         if adj_p < alpha and t_summary["wins"] > t_summary["losses"] and t_summary["all_verified"]:
             t_summary["outcome"] = "CONFIRMED"
-            t_summary["reason"] = f"statistically superior under Holm FWER control (p={adj_p:.4e} < alpha={alpha})"
+            t_summary["reason"] = (
+                f"statistically superior under Holm FWER control (p={adj_p:.4e} < alpha={alpha})"
+            )
         else:
             t_summary["outcome"] = "NOT_CONFIRMED"
             t_summary["reason"] = f"failed significance threshold (p={adj_p:.4e})"
@@ -1370,7 +1424,9 @@ def generate_discrete_geometry_blind_split(
         "tracks": tracks,
     }
 
-    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(data_to_hash, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     return {
@@ -1433,11 +1489,7 @@ def evaluate_discrete_geometry_blind_confirmation(
                 n_pts = len(pts)
                 d_count = distinct_distance_count(pts)
                 gk_est = guth_katz_lower_estimate(n_pts)
-                is_valid = (
-                    n_pts == k_side ** 2
-                    and d_count >= 1
-                    and d_count >= int(gk_est * 0.5)
-                )
+                is_valid = n_pts == k_side**2 and d_count >= 1 and d_count >= int(gk_est * 0.5)
                 c_engine = max(1, d_count)
                 c_base = max(50, n_pts * n_pts)
 
@@ -1446,11 +1498,7 @@ def evaluate_discrete_geometry_blind_confirmation(
                 m_lines = int(inst["m_lines"])
                 szt_bound = spencer_szemeredi_trotter_bound(n_pts, m_lines)
                 kst_bound = erdos_unit_distance_kst_bound(n_pts)
-                is_valid = (
-                    szt_bound >= n_pts
-                    and szt_bound >= m_lines
-                    and kst_bound > 0
-                )
+                is_valid = szt_bound >= n_pts and szt_bound >= m_lines and kst_bound > 0
                 c_engine = max(1, n_pts + m_lines)
                 c_base = max(60, n_pts * m_lines)
 
@@ -1481,7 +1529,7 @@ def evaluate_discrete_geometry_blind_confirmation(
                     and (interval.get("current_best_upper_bound", 0) == 7)
                 )
                 c_engine = max(1, 7 + 11 + int(inst.get("index", 0)))
-                c_base = max(100, 3 ** 7)
+                c_base = max(100, 3**7)
 
             if not is_valid:
                 findings.append(f"CHECKER_FAILED: track={track_key} iid={iid}")
@@ -1524,7 +1572,9 @@ def evaluate_discrete_geometry_blind_confirmation(
             "raw_p_value": sign_p,
             "total_engine_candidates": total_engine_cands,
             "total_baseline_candidates": total_base_cands,
-            "candidate_reduction": (total_base_cands / total_engine_cands) if total_engine_cands > 0 else 1.0,
+            "candidate_reduction": (total_base_cands / total_engine_cands)
+            if total_engine_cands > 0
+            else 1.0,
             "all_verified": track_verified,
             "elapsed_sec": elapsed_track,
             "pairs": pairs,
@@ -1537,7 +1587,9 @@ def evaluate_discrete_geometry_blind_confirmation(
         t_summary["holm_adjusted_p_value"] = adj_p
         if adj_p < alpha and t_summary["wins"] > t_summary["losses"] and t_summary["all_verified"]:
             t_summary["outcome"] = "CONFIRMED"
-            t_summary["reason"] = f"statistically superior under Holm FWER control (p={adj_p:.4e} < alpha={alpha})"
+            t_summary["reason"] = (
+                f"statistically superior under Holm FWER control (p={adj_p:.4e} < alpha={alpha})"
+            )
         else:
             t_summary["outcome"] = "NOT_CONFIRMED"
             t_summary["reason"] = f"failed significance threshold (p={adj_p:.4e})"

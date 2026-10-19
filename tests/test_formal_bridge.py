@@ -879,10 +879,11 @@ def test_p98_acceptance_rejects_wrong_phase(tmp_path: Path):
 
 def test_p98_algebraic_coverage():
     from fractions import Fraction
+
     from evobyte.algebraic import (
         evaluate_conic_legendre_parametrization,
-        evaluate_local_global_conic_solvability,
         evaluate_conic_parametrizations_coverage,
+        evaluate_local_global_conic_solvability,
     )
 
     pt = evaluate_conic_legendre_parametrization(4, 1009, 253, Fraction(1, 1))
@@ -1131,7 +1132,9 @@ def test_p102_higher_power_soundness_rejections():
 def test_p102_algebraic_coverage():
     from evobyte.algebraic import evaluate_higher_power_fractions_coverage
 
-    cov = evaluate_higher_power_fractions_coverage(powers=[2, 3, 4], base_instances=[2, 3, 5, 7, 11])
+    cov = evaluate_higher_power_fractions_coverage(
+        powers=[2, 3, 4], base_instances=[2, 3, 5, 7, 11]
+    )
     assert cov["all_solved"] is True
     assert cov["total_tested"] == 15
     assert cov["total_solved"] == 15
@@ -1191,7 +1194,7 @@ def test_p103_hyper_scale_soundness_rejections():
     from evobyte.formal_bridge import verify_hyper_scale_confirmation_soundness
 
     bad_1 = {"findings": ["SOME_ERROR"], "tracks": {}}
-    sound_1, f_1 = verify_hyper_scale_confirmation_soundness(bad_1)
+    sound_1, _f_1 = verify_hyper_scale_confirmation_soundness(bad_1)
     assert not sound_1
 
     bad_2 = {

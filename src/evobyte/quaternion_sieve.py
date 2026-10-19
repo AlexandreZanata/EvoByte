@@ -145,46 +145,44 @@ def decompose_four_squares(n: int) -> tuple[int, int, int, int]:
         return (0, 0, 0, 0)
 
     # Fast check for single square
-    r = int(math.isqrt(n))
+    r = math.isqrt(n)
     if r * r == n:
         return (r, 0, 0, 0)
 
     # Two squares
     for a in range(r, -1, -1):
         rem1 = n - a * a
-        b = int(math.isqrt(rem1))
+        b = math.isqrt(rem1)
         if b * b == rem1:
             return (a, b, 0, 0)
 
     # Three squares
     for a in range(r, -1, -1):
         rem1 = n - a * a
-        r_b = int(math.isqrt(rem1))
+        r_b = math.isqrt(rem1)
         for b in range(r_b, -1, -1):
             rem2 = rem1 - b * b
-            c = int(math.isqrt(rem2))
+            c = math.isqrt(rem2)
             if c * c == rem2:
                 return (a, b, c, 0)
 
     # Four squares (Lagrange's Four-Square Theorem guarantees solution)
     for a in range(r, -1, -1):
         rem1 = n - a * a
-        r_b = int(math.isqrt(rem1))
+        r_b = math.isqrt(rem1)
         for b in range(r_b, -1, -1):
             rem2 = rem1 - b * b
-            r_c = int(math.isqrt(rem2))
+            r_c = math.isqrt(rem2)
             for c in range(r_c, -1, -1):
                 rem3 = rem2 - c * c
-                d = int(math.isqrt(rem3))
+                d = math.isqrt(rem3)
                 if d * d == rem3:
                     return (a, b, c, d)
 
     raise RuntimeError(f"Lagrange decomposition failed unexpectedly for {n}")
 
 
-def quaternion_sieve_conic_point(
-    a: int, n: int, x: int
-) -> dict[str, Any]:
+def quaternion_sieve_conic_point(a: int, n: int, x: int) -> dict[str, Any]:
     """Synthesize a Diophantine conic solution via quaternion norm factorization (P99).
 
     Uses the identity:
@@ -223,7 +221,7 @@ def quaternion_sieve_conic_point(
         norm_u = qu.reduced_norm()
         norm_v = qv.reduced_norm()
         norm_prod = q_prod.reduced_norm()
-        norm_valid = (norm_u == u and norm_v == v and norm_prod == discriminant)
+        norm_valid = norm_u == u and norm_v == v and norm_prod == discriminant
     else:
         qu_t = decompose_four_squares(nx)
         qv_t = decompose_four_squares(nx)
@@ -264,8 +262,22 @@ def evaluate_quaternion_sieve_coverage(
         a_values = [4, 5, 6, 7, 8]
     if instances is None:
         instances = [
-            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
-            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+            1009,
+            10007,
+            841,
+            1681,
+            2521,
+            3361,
+            4201,
+            5041,
+            121,
+            961,
+            1801,
+            2641,
+            3481,
+            4321,
+            5161,
+            6001,
         ]
 
     results: list[dict[str, Any]] = []
@@ -277,7 +289,7 @@ def evaluate_quaternion_sieve_coverage(
             total_evaluated += 1
             sol, _meta = optimal_schinzel_divisor_sieve(a=a, n=n)
             if sol:
-                x, y, z = sol
+                x, _y, _z = sol
             else:
                 x = math.ceil(n / a) + 1
             res = quaternion_sieve_conic_point(a=a, n=n, x=x)

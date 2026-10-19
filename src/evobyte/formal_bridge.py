@@ -3517,8 +3517,22 @@ def export_cubic_surface_theorems_catalog(
 
     if instances is None:
         instances = [
-            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
-            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+            1009,
+            10007,
+            841,
+            1681,
+            2521,
+            3361,
+            4201,
+            5041,
+            121,
+            961,
+            1801,
+            2641,
+            3481,
+            4321,
+            5161,
+            6001,
         ]
     if a_values is None:
         a_values = [4]
@@ -3608,14 +3622,16 @@ def export_cubic_surface_theorems_catalog(
         y_str = poly1d_to_lean(ident.Y, "k")
         z_str = poly1d_to_lean(ident.Z, "k")
 
-        lines.extend([
-            f"/-- Parametric rational section on cubic surface for family {s_name} (a = {a_val}). -/",
-            f"theorem cubic_surface_section_{s_name} (k : ℚ) :",
-            f"  cubic_surface_poly {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
-            "  dsimp [cubic_surface_poly]",
-            "  ring",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Parametric rational section on cubic surface for family {s_name} (a = {a_val}). -/",
+                f"theorem cubic_surface_section_{s_name} (k : ℚ) :",
+                f"  cubic_surface_poly {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
+                "  dsimp [cubic_surface_poly]",
+                "  ring",
+                "",
+            ]
+        )
         total_theorems += 1
 
     # Add exact rational point certificates on the cubic surface
@@ -3624,19 +3640,21 @@ def export_cubic_surface_theorems_catalog(
             sol, _meta = optimal_schinzel_divisor_sieve(a=a, n=n)
             if sol:
                 x, y, z = sol
-                lines.extend([
-                    f"/-- Certified unit fraction decomposition on cubic surface for a = {a}, n = {n}. -/",
-                    f"theorem cubic_surface_cert_a{a}_n{n} :",
-                    f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
-                    "  norm_num",
-                    "",
-                    f"/-- Vanishing of cubic surface polynomial at rational point a = {a}, n = {n}. -/",
-                    f"theorem cubic_surface_point_zero_a{a}_n{n} :",
-                    f"  cubic_surface_poly {a} {n} {x} {y} {z} = 0 := by",
-                    "  dsimp [cubic_surface_poly]",
-                    "  ring",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"/-- Certified unit fraction decomposition on cubic surface for a = {a}, n = {n}. -/",
+                        f"theorem cubic_surface_cert_a{a}_n{n} :",
+                        f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                        "  norm_num",
+                        "",
+                        f"/-- Vanishing of cubic surface polynomial at rational point a = {a}, n = {n}. -/",
+                        f"theorem cubic_surface_point_zero_a{a}_n{n} :",
+                        f"  cubic_surface_poly {a} {n} {x} {y} {z} = 0 := by",
+                        "  dsimp [cubic_surface_poly]",
+                        "  ring",
+                        "",
+                    ]
+                )
                 total_theorems += 2
 
     cub_file = out / "CubicSurfaceFibrations.lean"
@@ -3717,8 +3735,22 @@ def export_conic_parametrizations_theorems_catalog(
 
     if instances is None:
         instances = [
-            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
-            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+            1009,
+            10007,
+            841,
+            1681,
+            2521,
+            3361,
+            4201,
+            5041,
+            121,
+            961,
+            1801,
+            2641,
+            3481,
+            4321,
+            5161,
+            6001,
         ]
     if a_values is None:
         a_values = [4]
@@ -3809,14 +3841,16 @@ def export_conic_parametrizations_theorems_catalog(
         y_str = poly1d_to_lean(ident.Y, "k")
         z_str = poly1d_to_lean(ident.Z, "k")
 
-        lines.extend([
-            f"/-- Legendre conic section identity for family {s_name} (a = {a_val}). -/",
-            f"theorem conic_param_section_{s_name} (k : ℚ) :",
-            f"  conic_fiber_x {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
-            "  dsimp [conic_fiber_x]",
-            "  ring",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Legendre conic section identity for family {s_name} (a = {a_val}). -/",
+                f"theorem conic_param_section_{s_name} (k : ℚ) :",
+                f"  conic_fiber_x {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
+                "  dsimp [conic_fiber_x]",
+                "  ring",
+                "",
+            ]
+        )
         total_theorems += 1
 
     # Add exact rational point certificates and Legendre evaluations for resistant primes
@@ -3827,25 +3861,27 @@ def export_conic_parametrizations_theorems_catalog(
                 x, y, z = sol
                 d_val = a * x - n
                 nx_val = n * x
-                lines.extend([
-                    f"/-- Certified unit fraction decomposition on conic for a = {a}, n = {n}. -/",
-                    f"theorem conic_param_cert_a{a}_n{n} :",
-                    f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
-                    "  norm_num",
-                    "",
-                    f"/-- Vanishing of conic fiber at rational point a = {a}, n = {n}. -/",
-                    f"theorem conic_fiber_point_zero_a{a}_n{n} :",
-                    f"  conic_fiber_x {a} {n} {x} {y} {z} = 0 := by",
-                    "  dsimp [conic_fiber_x]",
-                    "  ring",
-                    "",
-                    f"/-- Vanishing of Legendre ternary form at rational point a = {a}, n = {n}. -/",
-                    f"theorem conic_legendre_point_zero_a{a}_n{n} :",
-                    f"  legendre_conic_form ({d_val} : ℚ) ({nx_val} : ℚ) ({y} : ℚ) ({z} : ℚ) 1 = 0 := by",
-                    "  dsimp [legendre_conic_form]",
-                    "  ring",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"/-- Certified unit fraction decomposition on conic for a = {a}, n = {n}. -/",
+                        f"theorem conic_param_cert_a{a}_n{n} :",
+                        f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                        "  norm_num",
+                        "",
+                        f"/-- Vanishing of conic fiber at rational point a = {a}, n = {n}. -/",
+                        f"theorem conic_fiber_point_zero_a{a}_n{n} :",
+                        f"  conic_fiber_x {a} {n} {x} {y} {z} = 0 := by",
+                        "  dsimp [conic_fiber_x]",
+                        "  ring",
+                        "",
+                        f"/-- Vanishing of Legendre ternary form at rational point a = {a}, n = {n}. -/",
+                        f"theorem conic_legendre_point_zero_a{a}_n{n} :",
+                        f"  legendre_conic_form ({d_val} : ℚ) ({nx_val} : ℚ) ({y} : ℚ) ({z} : ℚ) 1 = 0 := by",
+                        "  dsimp [legendre_conic_form]",
+                        "  ring",
+                        "",
+                    ]
+                )
                 total_theorems += 3
 
     conic_file = out / "ConicParametrizations.lean"
@@ -3927,8 +3963,22 @@ def export_quaternion_algebra_theorems_catalog(
 
     if instances is None:
         instances = [
-            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
-            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+            1009,
+            10007,
+            841,
+            1681,
+            2521,
+            3361,
+            4201,
+            5041,
+            121,
+            961,
+            1801,
+            2641,
+            3481,
+            4321,
+            5161,
+            6001,
         ]
     if a_values is None:
         a_values = [4]
@@ -4014,14 +4064,16 @@ def export_quaternion_algebra_theorems_catalog(
         y_str = poly1d_to_lean(ident.Y, "k")
         z_str = poly1d_to_lean(ident.Z, "k")
 
-        lines.extend([
-            f"/-- Quaternion conic fiber vanishing for parametric family {s_name} (a = {a_val}). -/",
-            f"theorem quat_conic_section_{s_name} (k : ℚ) :",
-            f"  conic_fiber_x {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
-            "  dsimp [conic_fiber_x]",
-            "  ring",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Quaternion conic fiber vanishing for parametric family {s_name} (a = {a_val}). -/",
+                f"theorem quat_conic_section_{s_name} (k : ℚ) :",
+                f"  conic_fiber_x {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
+                "  dsimp [conic_fiber_x]",
+                "  ring",
+                "",
+            ]
+        )
         total_theorems += 1
 
     # Add exact four-square certificates and rational points for resistant primes
@@ -4038,34 +4090,38 @@ def export_quaternion_algebra_theorems_catalog(
                 if u_val > 0 and v_val > 0:
                     u0, u1, u2, u3 = decompose_four_squares(u_val)
                     v0, v1, v2, v3 = decompose_four_squares(v_val)
-                    lines.extend([
-                        f"/-- Four-square quaternion norm decomposition for u-factor at a = {a}, n = {n}. -/",
-                        f"theorem quat_four_sq_u_a{a}_n{n} :",
-                        f"  quat_nrd_std {u0} {u1} {u2} {u3} = {u_val} := by",
-                        "  dsimp [quat_nrd_std]",
-                        "  norm_num",
-                        "",
-                        f"/-- Four-square quaternion norm decomposition for v-factor at a = {a}, n = {n}. -/",
-                        f"theorem quat_four_sq_v_a{a}_n{n} :",
-                        f"  quat_nrd_std {v0} {v1} {v2} {v3} = {v_val} := by",
-                        "  dsimp [quat_nrd_std]",
-                        "  norm_num",
-                        "",
-                        f"/-- Certified unit fraction decomposition on conic for a = {a}, n = {n}. -/",
-                        f"theorem quat_conic_cert_a{a}_n{n} :",
-                        f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
-                        "  norm_num",
-                        "",
-                    ])
+                    lines.extend(
+                        [
+                            f"/-- Four-square quaternion norm decomposition for u-factor at a = {a}, n = {n}. -/",
+                            f"theorem quat_four_sq_u_a{a}_n{n} :",
+                            f"  quat_nrd_std {u0} {u1} {u2} {u3} = {u_val} := by",
+                            "  dsimp [quat_nrd_std]",
+                            "  norm_num",
+                            "",
+                            f"/-- Four-square quaternion norm decomposition for v-factor at a = {a}, n = {n}. -/",
+                            f"theorem quat_four_sq_v_a{a}_n{n} :",
+                            f"  quat_nrd_std {v0} {v1} {v2} {v3} = {v_val} := by",
+                            "  dsimp [quat_nrd_std]",
+                            "  norm_num",
+                            "",
+                            f"/-- Certified unit fraction decomposition on conic for a = {a}, n = {n}. -/",
+                            f"theorem quat_conic_cert_a{a}_n{n} :",
+                            f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                            "  norm_num",
+                            "",
+                        ]
+                    )
                     total_theorems += 3
                 else:
-                    lines.extend([
-                        f"/-- Certified unit fraction decomposition on conic for a = {a}, n = {n}. -/",
-                        f"theorem quat_conic_cert_a{a}_n{n} :",
-                        f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
-                        "  norm_num",
-                        "",
-                    ])
+                    lines.extend(
+                        [
+                            f"/-- Certified unit fraction decomposition on conic for a = {a}, n = {n}. -/",
+                            f"theorem quat_conic_cert_a{a}_n{n} :",
+                            f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                            "  norm_num",
+                            "",
+                        ]
+                    )
                     total_theorems += 1
 
     quat_file = out / "QuaternionAlgebraTheorems.lean"
@@ -4133,8 +4189,22 @@ def export_dioph_surface_theorems_catalog(
 
     if instances is None:
         instances = [
-            1009, 10007, 841, 1681, 2521, 3361, 4201, 5041,
-            121, 961, 1801, 2641, 3481, 4321, 5161, 6001,
+            1009,
+            10007,
+            841,
+            1681,
+            2521,
+            3361,
+            4201,
+            5041,
+            121,
+            961,
+            1801,
+            2641,
+            3481,
+            4321,
+            5161,
+            6001,
         ]
     if a_values is None:
         a_values = [4]
@@ -4246,13 +4316,15 @@ def export_dioph_surface_theorems_catalog(
         y_str = poly1d_to_lean(ident.Y, "k")
         z_str = poly1d_to_lean(ident.Z, "k")
 
-        lines.extend([
-            f"/-- Automated conic fiber vanishing for parametric family {s_name} via dioph_surface. -/",
-            f"theorem meta_conic_section_{s_name} (k : ℚ) :",
-            f"  conic_fiber_x {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
-            "  dioph_surface [conic_fiber_x]",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Automated conic fiber vanishing for parametric family {s_name} via dioph_surface. -/",
+                f"theorem meta_conic_section_{s_name} (k : ℚ) :",
+                f"  conic_fiber_x {a_val} ({n_str}) ({x_str}) ({y_str}) ({z_str}) = 0 := by",
+                "  dioph_surface [conic_fiber_x]",
+                "",
+            ]
+        )
         total_theorems += 1
 
     # Add exact four-square certificates and rational points for resistant primes
@@ -4269,32 +4341,36 @@ def export_dioph_surface_theorems_catalog(
                 if u_val > 0 and v_val > 0:
                     u0, u1, u2, u3 = decompose_four_squares(u_val)
                     v0, v1, v2, v3 = decompose_four_squares(v_val)
-                    lines.extend([
-                        f"/-- Automated four-square norm decomposition for u-factor at a = {a}, n = {n} via dioph_surface. -/",
-                        f"theorem meta_four_sq_u_a{a}_n{n} :",
-                        f"  quat_nrd_std {u0} {u1} {u2} {u3} = {u_val} := by",
-                        "  dioph_surface [quat_nrd_std]",
-                        "",
-                        f"/-- Automated four-square norm decomposition for v-factor at a = {a}, n = {n} via dioph_surface. -/",
-                        f"theorem meta_four_sq_v_a{a}_n{n} :",
-                        f"  quat_nrd_std {v0} {v1} {v2} {v3} = {v_val} := by",
-                        "  dioph_surface [quat_nrd_std]",
-                        "",
-                        f"/-- Automated certified unit fraction decomposition for a = {a}, n = {n} via dioph_surface. -/",
-                        f"theorem meta_conic_cert_a{a}_n{n} :",
-                        f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
-                        "  dioph_surface",
-                        "",
-                    ])
+                    lines.extend(
+                        [
+                            f"/-- Automated four-square norm decomposition for u-factor at a = {a}, n = {n} via dioph_surface. -/",
+                            f"theorem meta_four_sq_u_a{a}_n{n} :",
+                            f"  quat_nrd_std {u0} {u1} {u2} {u3} = {u_val} := by",
+                            "  dioph_surface [quat_nrd_std]",
+                            "",
+                            f"/-- Automated four-square norm decomposition for v-factor at a = {a}, n = {n} via dioph_surface. -/",
+                            f"theorem meta_four_sq_v_a{a}_n{n} :",
+                            f"  quat_nrd_std {v0} {v1} {v2} {v3} = {v_val} := by",
+                            "  dioph_surface [quat_nrd_std]",
+                            "",
+                            f"/-- Automated certified unit fraction decomposition for a = {a}, n = {n} via dioph_surface. -/",
+                            f"theorem meta_conic_cert_a{a}_n{n} :",
+                            f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                            "  dioph_surface",
+                            "",
+                        ]
+                    )
                     total_theorems += 3
                 else:
-                    lines.extend([
-                        f"/-- Automated certified unit fraction decomposition for a = {a}, n = {n} via dioph_surface. -/",
-                        f"theorem meta_conic_cert_a{a}_n{n} :",
-                        f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
-                        "  dioph_surface",
-                        "",
-                    ])
+                    lines.extend(
+                        [
+                            f"/-- Automated certified unit fraction decomposition for a = {a}, n = {n} via dioph_surface. -/",
+                            f"theorem meta_conic_cert_a{a}_n{n} :",
+                            f"  ({a} : ℚ) / {n} = (1 : ℚ) / {x} + (1 : ℚ) / {y} + (1 : ℚ) / {z} := by",
+                            "  dioph_surface",
+                            "",
+                        ]
+                    )
                     total_theorems += 1
 
     dioph_file = out / "DiophSurfaceTheorems.lean"
@@ -4445,12 +4521,14 @@ def export_solution_moments_theorems_catalog(
 
     for i in range(1, 13):
         h_val = harmonic_vals[i]
-        lines.extend([
-            f"/-- Exact harmonic number evaluation for n = {i}. -/",
-            f"theorem harmonic_{i}_eq : harmonic_num {i} = {h_val.numerator} / {h_val.denominator} := by",
-            "  dioph_surface [harmonic_num]",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Exact harmonic number evaluation for n = {i}. -/",
+                f"theorem harmonic_{i}_eq : harmonic_num {i} = {h_val.numerator} / {h_val.denominator} := by",
+                "  dioph_surface [harmonic_num]",
+                "",
+            ]
+        )
         total_theorems += 1
 
     # Add harmonic squared bounds (H(n)^2 >= bound)
@@ -4464,12 +4542,14 @@ def export_solution_moments_theorems_catalog(
     for n_val, bound in sq_bounds:
         h_val = harmonic_vals[n_val]
         h_sq = h_val * h_val
-        lines.extend([
-            f"/-- Harmonic squared lower bound at n = {n_val}: H({n_val})^2 = {h_sq.numerator}/{h_sq.denominator} >= {bound}. -/",
-            f"theorem harmonic_sq_bound_{n_val} : (harmonic_num {n_val})^2 ≥ {bound.numerator} / {bound.denominator} := by",
-            "  dioph_surface [harmonic_num]",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Harmonic squared lower bound at n = {n_val}: H({n_val})^2 = {h_sq.numerator}/{h_sq.denominator} >= {bound}. -/",
+                f"theorem harmonic_sq_bound_{n_val} : (harmonic_num {n_val})^2 ≥ {bound.numerator} / {bound.denominator} := by",
+                "  dioph_surface [harmonic_num]",
+                "",
+            ]
+        )
         total_theorems += 1
 
     # Section 3: Exact Divisor Counts and Cumulative Sums
@@ -4485,34 +4565,40 @@ def export_solution_moments_theorems_catalog(
     for i in range(1, 13):
         cum_divs.append(cum_divs[-1] + div_counts[i])
 
-    lines.extend([
-        "/- Section 3: Exact Cumulative Divisor Counts and Asymptotic Bounds. -/",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 3: Exact Cumulative Divisor Counts and Asymptotic Bounds. -/",
+            "",
+        ]
+    )
     for i in range(1, 13):
         d_val = div_counts[i]
         c_val = cum_divs[i]
-        lines.extend([
-            f"/-- Divisor count evaluation for n = {i}: d({i}) = {d_val}. -/",
-            f"theorem divisor_count_{i}_eq : ({d_val} : ℚ) > 0 := by",
-            "  norm_num",
-            "",
-            f"/-- Cumulative divisor sum evaluation up to X = {i}: D({i}) = {c_val}. -/",
-            f"theorem cum_divisor_{i}_bound : ({c_val} : ℚ) ≥ {i} := by",
-            "  norm_num",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Divisor count evaluation for n = {i}: d({i}) = {d_val}. -/",
+                f"theorem divisor_count_{i}_eq : ({d_val} : ℚ) > 0 := by",
+                "  norm_num",
+                "",
+                f"/-- Cumulative divisor sum evaluation up to X = {i}: D({i}) = {c_val}. -/",
+                f"theorem cum_divisor_{i}_bound : ({c_val} : ℚ) ≥ {i} := by",
+                "  norm_num",
+                "",
+            ]
+        )
         total_theorems += 2
 
     # Cumulative divisor mean bounds
     for x_val in (6, 10, 12):
         c_val = cum_divs[x_val]
-        lines.extend([
-            f"/-- Cumulative divisor average lower bound at X = {x_val}: D({x_val})/{x_val} >= 2. -/",
-            f"theorem cum_divisor_avg_bound_{x_val} : ({c_val} : ℚ) / {x_val} ≥ 2 := by",
-            "  norm_num",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Cumulative divisor average lower bound at X = {x_val}: D({x_val})/{x_val} >= 2. -/",
+                f"theorem cum_divisor_avg_bound_{x_val} : ({c_val} : ℚ) / {x_val} ≥ 2 := by",
+                "  norm_num",
+                "",
+            ]
+        )
         total_theorems += 1
 
     # Section 4: Hyperbolic Conic Divisor Sums d(n^2)
@@ -4524,56 +4610,66 @@ def export_solution_moments_theorems_catalog(
     for i in range(1, 13):
         cum_divs_sq.append(cum_divs_sq[-1] + div_sq_counts[i])
 
-    lines.extend([
-        "/- Section 4: Hyperbolic Conic Divisor Sums (D_2(X) = sum d(n^2)). -/",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 4: Hyperbolic Conic Divisor Sums (D_2(X) = sum d(n^2)). -/",
+            "",
+        ]
+    )
     for i in range(1, 13):
         d_val = div_sq_counts[i]
         c_val = cum_divs_sq[i]
-        lines.extend([
-            f"/-- Hyperbolic divisor count evaluation for n = {i}: d({i}^2) = {d_val}. -/",
-            f"theorem hyperbolic_divisor_{i}_eq : ({d_val} : ℚ) ≥ 1 := by",
-            "  norm_num",
-            "",
-            f"/-- Cumulative hyperbolic divisor sum evaluation up to X = {i}: D_2({i}) = {c_val}. -/",
-            f"theorem cum_hyperbolic_divisor_{i}_bound : ({c_val} : ℚ) ≥ {i} := by",
-            "  norm_num",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Hyperbolic divisor count evaluation for n = {i}: d({i}^2) = {d_val}. -/",
+                f"theorem hyperbolic_divisor_{i}_eq : ({d_val} : ℚ) ≥ 1 := by",
+                "  norm_num",
+                "",
+                f"/-- Cumulative hyperbolic divisor sum evaluation up to X = {i}: D_2({i}) = {c_val}. -/",
+                f"theorem cum_hyperbolic_divisor_{i}_bound : ({c_val} : ℚ) ≥ {i} := by",
+                "  norm_num",
+                "",
+            ]
+        )
         total_theorems += 2
 
     for x_val, bound_val in ((6, 3), (10, 4), (12, 5)):
         c_val = cum_divs_sq[x_val]
-        lines.extend([
-            f"/-- Cumulative hyperbolic divisor average lower bound at X = {x_val}: D_2({x_val})/{x_val} >= {bound_val}. -/",
-            f"theorem cum_hyperbolic_divisor_avg_bound_{x_val} : ({c_val} : ℚ) / {x_val} ≥ {bound_val} := by",
-            "  norm_num",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Cumulative hyperbolic divisor average lower bound at X = {x_val}: D_2({x_val})/{x_val} >= {bound_val}. -/",
+                f"theorem cum_hyperbolic_divisor_avg_bound_{x_val} : ({c_val} : ℚ) / {x_val} ≥ {bound_val} := by",
+                "  norm_num",
+                "",
+            ]
+        )
         total_theorems += 1
 
     # Section 5: Empirical First and Second Moments of Diophantine Solutions
-    lines.extend([
-        "/- Section 5: Empirical First and Second Moments of Diophantine Solutions. -/",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 5: Empirical First and Second Moments of Diophantine Solutions. -/",
+            "",
+        ]
+    )
     moments_data = compute_solution_moments_asymptotics(horizons=horizons, a=4)
     for rec in moments_data.get("records", []):
         h = rec["horizon"]
         m1 = Fraction(rec["first_moment_m1"]).limit_denominator(1000)
         m2 = Fraction(rec["second_moment_m2"]).limit_denominator(1000)
         floor_m1 = int(rec["first_moment_m1"])
-        lines.extend([
-            f"/-- Certified first moment lower bound for horizon X = {h}: M_1({h}) >= {floor_m1}. -/",
-            f"theorem sol_first_moment_h{h}_bound : ({m1.numerator} : ℚ) / {m1.denominator} ≥ {floor_m1} := by",
-            "  norm_num",
-            "",
-            f"/-- Certified Cauchy-Schwarz variance positivity for horizon X = {h}: M_2({h}) >= M_1({h})^2. -/",
-            f"theorem sol_variance_positivity_h{h} : ({m2.numerator} : ℚ) / {m2.denominator} - (({m1.numerator} : ℚ) / {m1.denominator})^2 ≥ 0 := by",
-            "  norm_num",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Certified first moment lower bound for horizon X = {h}: M_1({h}) >= {floor_m1}. -/",
+                f"theorem sol_first_moment_h{h}_bound : ({m1.numerator} : ℚ) / {m1.denominator} ≥ {floor_m1} := by",
+                "  norm_num",
+                "",
+                f"/-- Certified Cauchy-Schwarz variance positivity for horizon X = {h}: M_2({h}) >= M_1({h})^2. -/",
+                f"theorem sol_variance_positivity_h{h} : ({m2.numerator} : ℚ) / {m2.denominator} - (({m1.numerator} : ℚ) / {m1.denominator})^2 ≥ 0 := by",
+                "  norm_num",
+                "",
+            ]
+        )
         total_theorems += 2
 
     moments_file = out / "SolutionMomentsTheorems.lean"
@@ -4641,7 +4737,7 @@ def export_higher_power_theorems_catalog(
     """
     import hashlib
     import time
-    from fractions import Fraction
+
     from evobyte.algebraic import solve_higher_power_fractions
 
     t0 = time.perf_counter()
@@ -4652,7 +4748,28 @@ def export_higher_power_theorems_catalog(
     if powers is None:
         powers = [2, 3, 4]
     if base_instances is None:
-        base_instances = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71]
+        base_instances = [
+            2,
+            3,
+            5,
+            7,
+            11,
+            13,
+            17,
+            19,
+            23,
+            29,
+            31,
+            37,
+            41,
+            43,
+            47,
+            53,
+            59,
+            61,
+            67,
+            71,
+        ]
     if a_values is None:
         a_values = [4]
 
@@ -4761,120 +4878,122 @@ def export_higher_power_theorems_catalog(
     total_theorems = 15
 
     # Section 2: Homogeneous Power Scaling Transfer Identities
-    lines.extend([
-        "/- Section 2: Homogeneous Power Scaling Transfer Identities. -/",
-        "",
-        "/-- Polynomial homogeneous scaling equivalence for k = 2. -/",
-        "theorem power_scaling_poly_identity_sq : ∀ a n x y z : ℚ,",
-        "    a * (n * x) * (n * y) * (n * z) - (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) =",
-        "    n^3 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
-        "  intro a n x y z; ring",
-        "",
-        "/-- Polynomial homogeneous scaling equivalence for k = 3. -/",
-        "theorem power_scaling_poly_identity_cube : ∀ a n x y z : ℚ,",
-        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) - (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) =",
-        "    n^6 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
-        "  intro a n x y z; ring",
-        "",
-        "/-- Polynomial homogeneous scaling equivalence for k = 4. -/",
-        "theorem power_scaling_poly_identity_quartic : ∀ a n x y z : ℚ,",
-        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) - (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) =",
-        "    n^9 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
-        "  intro a n x y z; ring",
-        "",
-        "/-- Polynomial homogeneous scaling equivalence for k = 5. -/",
-        "theorem power_scaling_poly_identity_quintic : ∀ a n x y z : ℚ,",
-        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) - (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) =",
-        "    n^12 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
-        "  intro a n x y z; ring",
-        "",
-        "/-- Polynomial homogeneous scaling equivalence for k = 6. -/",
-        "theorem power_scaling_poly_identity_sextic : ∀ a n x y z : ℚ,",
-        "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) - (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) =",
-        "    n^15 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
-        "  intro a n x y z; ring",
-        "",
-        "/-- Transfer theorem from linear base solution to quadratic denominator n^2. -/",
-        "theorem power_scaling_transfer_sq : ∀ a n x y z : ℚ,",
-        "    a * x * y * z = n * (x * y + y * z + z * x) →",
-        "    a * (n * x) * (n * y) * (n * z) = (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) := by",
-        "  intro a n x y z h",
-        "  calc",
-        "    a * (n * x) * (n * y) * (n * z) = n^3 * (a * x * y * z) := by ring",
-        "    _ = n^3 * (n * (x * y + y * z + z * x)) := by rw [h]",
-        "    _ = (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) := by ring",
-        "",
-        "/-- Transfer theorem from linear base solution to cubic denominator n^3. -/",
-        "theorem power_scaling_transfer_cube : ∀ a n x y z : ℚ,",
-        "    a * x * y * z = n * (x * y + y * z + z * x) →",
-        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by",
-        "  intro a n x y z h",
-        "  calc",
-        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = n^6 * (a * x * y * z) := by ring",
-        "    _ = n^6 * (n * (x * y + y * z + z * x)) := by rw [h]",
-        "    _ = (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by ring",
-        "",
-        "/-- Transfer theorem from linear base solution to quartic denominator n^4. -/",
-        "theorem power_scaling_transfer_quartic : ∀ a n x y z : ℚ,",
-        "    a * x * y * z = n * (x * y + y * z + z * x) →",
-        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by",
-        "  intro a n x y z h",
-        "  calc",
-        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = n^9 * (a * x * y * z) := by ring",
-        "    _ = n^9 * (n * (x * y + y * z + z * x)) := by rw [h]",
-        "    _ = (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by ring",
-        "",
-        "/-- Transfer theorem from linear base solution to quintic denominator n^5. -/",
-        "theorem power_scaling_transfer_quintic : ∀ a n x y z : ℚ,",
-        "    a * x * y * z = n * (x * y + y * z + z * x) →",
-        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by",
-        "  intro a n x y z h",
-        "  calc",
-        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = n^12 * (a * x * y * z) := by ring",
-        "    _ = n^12 * (n * (x * y + y * z + z * x)) := by rw [h]",
-        "    _ = (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by ring",
-        "",
-        "/-- Transfer theorem from linear base solution to sextic denominator n^6. -/",
-        "theorem power_scaling_transfer_sextic : ∀ a n x y z : ℚ,",
-        "    a * x * y * z = n * (x * y + y * z + z * x) →",
-        "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) = (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) := by",
-        "  intro a n x y z h",
-        "  calc",
-        "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) = n^15 * (a * x * y * z) := by ring",
-        "    _ = n^15 * (n * (x * y + y * z + z * x)) := by rw [h]",
-        "    _ = (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) := by ring",
-        "",
-        "/-- Transfer theorem from quadratic solution to quartic denominator n^4. -/",
-        "theorem power_scaling_transfer_sq_to_quartic : ∀ a n x y z : ℚ,",
-        "    a * x * y * z = (n^2) * (x * y + y * z + z * x) →",
-        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = (n^4) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by",
-        "  intro a n x y z h",
-        "  calc",
-        "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = n^6 * (a * x * y * z) := by ring",
-        "    _ = n^6 * ((n^2) * (x * y + y * z + z * x)) := by rw [h]",
-        "    _ = (n^4) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by ring",
-        "",
-        "/-- Transfer theorem from cubic solution to sextic denominator n^6. -/",
-        "theorem power_scaling_transfer_cube_to_sextic : ∀ a n x y z : ℚ,",
-        "    a * x * y * z = (n^3) * (x * y + y * z + z * x) →",
-        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = (n^6) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by",
-        "  intro a n x y z h",
-        "  calc",
-        "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = n^9 * (a * x * y * z) := by ring",
-        "    _ = n^9 * ((n^3) * (x * y + y * z + z * x)) := by rw [h]",
-        "    _ = (n^6) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by ring",
-        "",
-        "/-- Transfer theorem from quadratic solution to sextic denominator n^6. -/",
-        "theorem power_scaling_transfer_sq_to_sextic : ∀ a n x y z : ℚ,",
-        "    a * x * y * z = (n^2) * (x * y + y * z + z * x) →",
-        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = (n^6) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by",
-        "  intro a n x y z h",
-        "  calc",
-        "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = n^12 * (a * x * y * z) := by ring",
-        "    _ = n^12 * ((n^2) * (x * y + y * z + z * x)) := by rw [h]",
-        "    _ = (n^6) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by ring",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 2: Homogeneous Power Scaling Transfer Identities. -/",
+            "",
+            "/-- Polynomial homogeneous scaling equivalence for k = 2. -/",
+            "theorem power_scaling_poly_identity_sq : ∀ a n x y z : ℚ,",
+            "    a * (n * x) * (n * y) * (n * z) - (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) =",
+            "    n^3 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+            "  intro a n x y z; ring",
+            "",
+            "/-- Polynomial homogeneous scaling equivalence for k = 3. -/",
+            "theorem power_scaling_poly_identity_cube : ∀ a n x y z : ℚ,",
+            "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) - (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) =",
+            "    n^6 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+            "  intro a n x y z; ring",
+            "",
+            "/-- Polynomial homogeneous scaling equivalence for k = 4. -/",
+            "theorem power_scaling_poly_identity_quartic : ∀ a n x y z : ℚ,",
+            "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) - (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) =",
+            "    n^9 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+            "  intro a n x y z; ring",
+            "",
+            "/-- Polynomial homogeneous scaling equivalence for k = 5. -/",
+            "theorem power_scaling_poly_identity_quintic : ∀ a n x y z : ℚ,",
+            "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) - (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) =",
+            "    n^12 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+            "  intro a n x y z; ring",
+            "",
+            "/-- Polynomial homogeneous scaling equivalence for k = 6. -/",
+            "theorem power_scaling_poly_identity_sextic : ∀ a n x y z : ℚ,",
+            "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) - (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) =",
+            "    n^15 * (a * x * y * z - n * (x * y + y * z + z * x)) := by",
+            "  intro a n x y z; ring",
+            "",
+            "/-- Transfer theorem from linear base solution to quadratic denominator n^2. -/",
+            "theorem power_scaling_transfer_sq : ∀ a n x y z : ℚ,",
+            "    a * x * y * z = n * (x * y + y * z + z * x) →",
+            "    a * (n * x) * (n * y) * (n * z) = (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) := by",
+            "  intro a n x y z h",
+            "  calc",
+            "    a * (n * x) * (n * y) * (n * z) = n^3 * (a * x * y * z) := by ring",
+            "    _ = n^3 * (n * (x * y + y * z + z * x)) := by rw [h]",
+            "    _ = (n^2) * ((n * x) * (n * y) + (n * y) * (n * z) + (n * z) * (n * x)) := by ring",
+            "",
+            "/-- Transfer theorem from linear base solution to cubic denominator n^3. -/",
+            "theorem power_scaling_transfer_cube : ∀ a n x y z : ℚ,",
+            "    a * x * y * z = n * (x * y + y * z + z * x) →",
+            "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by",
+            "  intro a n x y z h",
+            "  calc",
+            "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = n^6 * (a * x * y * z) := by ring",
+            "    _ = n^6 * (n * (x * y + y * z + z * x)) := by rw [h]",
+            "    _ = (n^3) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by ring",
+            "",
+            "/-- Transfer theorem from linear base solution to quartic denominator n^4. -/",
+            "theorem power_scaling_transfer_quartic : ∀ a n x y z : ℚ,",
+            "    a * x * y * z = n * (x * y + y * z + z * x) →",
+            "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by",
+            "  intro a n x y z h",
+            "  calc",
+            "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = n^9 * (a * x * y * z) := by ring",
+            "    _ = n^9 * (n * (x * y + y * z + z * x)) := by rw [h]",
+            "    _ = (n^4) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by ring",
+            "",
+            "/-- Transfer theorem from linear base solution to quintic denominator n^5. -/",
+            "theorem power_scaling_transfer_quintic : ∀ a n x y z : ℚ,",
+            "    a * x * y * z = n * (x * y + y * z + z * x) →",
+            "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by",
+            "  intro a n x y z h",
+            "  calc",
+            "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = n^12 * (a * x * y * z) := by ring",
+            "    _ = n^12 * (n * (x * y + y * z + z * x)) := by rw [h]",
+            "    _ = (n^5) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by ring",
+            "",
+            "/-- Transfer theorem from linear base solution to sextic denominator n^6. -/",
+            "theorem power_scaling_transfer_sextic : ∀ a n x y z : ℚ,",
+            "    a * x * y * z = n * (x * y + y * z + z * x) →",
+            "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) = (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) := by",
+            "  intro a n x y z h",
+            "  calc",
+            "    a * (n^5 * x) * (n^5 * y) * (n^5 * z) = n^15 * (a * x * y * z) := by ring",
+            "    _ = n^15 * (n * (x * y + y * z + z * x)) := by rw [h]",
+            "    _ = (n^6) * ((n^5 * x) * (n^5 * y) + (n^5 * y) * (n^5 * z) + (n^5 * z) * (n^5 * x)) := by ring",
+            "",
+            "/-- Transfer theorem from quadratic solution to quartic denominator n^4. -/",
+            "theorem power_scaling_transfer_sq_to_quartic : ∀ a n x y z : ℚ,",
+            "    a * x * y * z = (n^2) * (x * y + y * z + z * x) →",
+            "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = (n^4) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by",
+            "  intro a n x y z h",
+            "  calc",
+            "    a * (n^2 * x) * (n^2 * y) * (n^2 * z) = n^6 * (a * x * y * z) := by ring",
+            "    _ = n^6 * ((n^2) * (x * y + y * z + z * x)) := by rw [h]",
+            "    _ = (n^4) * ((n^2 * x) * (n^2 * y) + (n^2 * y) * (n^2 * z) + (n^2 * z) * (n^2 * x)) := by ring",
+            "",
+            "/-- Transfer theorem from cubic solution to sextic denominator n^6. -/",
+            "theorem power_scaling_transfer_cube_to_sextic : ∀ a n x y z : ℚ,",
+            "    a * x * y * z = (n^3) * (x * y + y * z + z * x) →",
+            "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = (n^6) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by",
+            "  intro a n x y z h",
+            "  calc",
+            "    a * (n^3 * x) * (n^3 * y) * (n^3 * z) = n^9 * (a * x * y * z) := by ring",
+            "    _ = n^9 * ((n^3) * (x * y + y * z + z * x)) := by rw [h]",
+            "    _ = (n^6) * ((n^3 * x) * (n^3 * y) + (n^3 * y) * (n^3 * z) + (n^3 * z) * (n^3 * x)) := by ring",
+            "",
+            "/-- Transfer theorem from quadratic solution to sextic denominator n^6. -/",
+            "theorem power_scaling_transfer_sq_to_sextic : ∀ a n x y z : ℚ,",
+            "    a * x * y * z = (n^2) * (x * y + y * z + z * x) →",
+            "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = (n^6) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by",
+            "  intro a n x y z h",
+            "  calc",
+            "    a * (n^4 * x) * (n^4 * y) * (n^4 * z) = n^12 * (a * x * y * z) := by ring",
+            "    _ = n^12 * ((n^2) * (x * y + y * z + z * x)) := by rw [h]",
+            "    _ = (n^6) * ((n^4 * x) * (n^4 * y) + (n^4 * y) * (n^4 * z) + (n^4 * z) * (n^4 * x)) := by ring",
+            "",
+        ]
+    )
     total_theorems += 13
 
     # Section 3: Parametric Rational Sections in Q[k] for n^2 and n^3
@@ -4977,10 +5096,12 @@ def export_higher_power_theorems_catalog(
         },
     ]
 
-    lines.extend([
-        "/- Section 3: Parametric Rational Sections in Q[k] for n^2 and n^3. -/",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 3: Parametric Rational Sections in Q[k] for n^2 and n^3. -/",
+            "",
+        ]
+    )
     for fam in parametric_families:
         name = fam["name"]
         a_f = fam["a"]
@@ -4988,108 +5109,124 @@ def export_higher_power_theorems_catalog(
         x_f = fam["x"]
         y_f = fam["y"]
         z_f = fam["z"]
-        lines.extend([
-            f"/-- Parametric quadratic section on higher power surface for family {name}. -/",
-            f"theorem higher_power_section_sq_{name} : ∀ k : ℚ,",
-            f"    higher_power_surface_sq {a_f} ({n_f}) (({n_f}) * ({x_f})) (({n_f}) * ({y_f})) (({n_f}) * ({z_f})) = 0 := by",
-            "  intro k",
-            "  dsimp [higher_power_surface_sq]",
-            "  ring",
-            "",
-            f"/-- Parametric cubic section on higher power surface for family {name}. -/",
-            f"theorem higher_power_section_cube_{name} : ∀ k : ℚ,",
-            f"    higher_power_surface_cube {a_f} ({n_f}) (({n_f})^2 * ({x_f})) (({n_f})^2 * ({y_f})) (({n_f})^2 * ({z_f})) = 0 := by",
-            "  intro k",
-            "  dsimp [higher_power_surface_cube]",
-            "  ring",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Parametric quadratic section on higher power surface for family {name}. -/",
+                f"theorem higher_power_section_sq_{name} : ∀ k : ℚ,",
+                f"    higher_power_surface_sq {a_f} ({n_f}) (({n_f}) * ({x_f})) (({n_f}) * ({y_f})) (({n_f}) * ({z_f})) = 0 := by",
+                "  intro k",
+                "  dsimp [higher_power_surface_sq]",
+                "  ring",
+                "",
+                f"/-- Parametric cubic section on higher power surface for family {name}. -/",
+                f"theorem higher_power_section_cube_{name} : ∀ k : ℚ,",
+                f"    higher_power_surface_cube {a_f} ({n_f}) (({n_f})^2 * ({x_f})) (({n_f})^2 * ({y_f})) (({n_f})^2 * ({z_f})) = 0 := by",
+                "  intro k",
+                "  dsimp [higher_power_surface_cube]",
+                "  ring",
+                "",
+            ]
+        )
         total_theorems += 2
 
     # Section 4: Exact Rational Unit Fraction Certificates for k = 2 (n^2)
-    lines.extend([
-        "/- Section 4: Exact Rational Unit Fraction Certificates for k = 2 (n^2). -/",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 4: Exact Rational Unit Fraction Certificates for k = 2 (n^2). -/",
+            "",
+        ]
+    )
     for n_val in base_instances:
         sol = solve_higher_power_fractions(a=4, n=n_val, k=2)
         if sol is not None:
             x_sol, y_sol, z_sol = sol
-            lines.extend([
-                f"/-- Certified unit fraction decomposition for 4 / {n_val}^2 (k = 2). -/",
-                f"theorem higher_power_cert_k2_n{n_val} :",
-                f"    (4 : ℚ) / {n_val * n_val} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
-                "  norm_num",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"/-- Certified unit fraction decomposition for 4 / {n_val}^2 (k = 2). -/",
+                    f"theorem higher_power_cert_k2_n{n_val} :",
+                    f"    (4 : ℚ) / {n_val * n_val} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
+                    "  norm_num",
+                    "",
+                ]
+            )
             total_theorems += 1
 
     # Section 5: Exact Rational Unit Fraction Certificates for k = 3 (n^3)
-    lines.extend([
-        "/- Section 5: Exact Rational Unit Fraction Certificates for k = 3 (n^3). -/",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 5: Exact Rational Unit Fraction Certificates for k = 3 (n^3). -/",
+            "",
+        ]
+    )
     for n_val in range(2, 17):
         sol = solve_higher_power_fractions(a=4, n=n_val, k=3)
         if sol is not None:
             x_sol, y_sol, z_sol = sol
-            lines.extend([
-                f"/-- Certified unit fraction decomposition for 4 / {n_val}^3 (k = 3). -/",
-                f"theorem higher_power_cert_k3_n{n_val} :",
-                f"    (4 : ℚ) / {n_val**3} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
-                "  norm_num",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"/-- Certified unit fraction decomposition for 4 / {n_val}^3 (k = 3). -/",
+                    f"theorem higher_power_cert_k3_n{n_val} :",
+                    f"    (4 : ℚ) / {n_val**3} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
+                    "  norm_num",
+                    "",
+                ]
+            )
             total_theorems += 1
 
     # Section 6: Exact Rational Unit Fraction Certificates for k = 4 (n^4)
-    lines.extend([
-        "/- Section 6: Exact Rational Unit Fraction Certificates for k = 4 (n^4). -/",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 6: Exact Rational Unit Fraction Certificates for k = 4 (n^4). -/",
+            "",
+        ]
+    )
     for n_val in range(2, 16):
         sol = solve_higher_power_fractions(a=4, n=n_val, k=4)
         if sol is not None:
             x_sol, y_sol, z_sol = sol
-            lines.extend([
-                f"/-- Certified unit fraction decomposition for 4 / {n_val}^4 (k = 4). -/",
-                f"theorem higher_power_cert_k4_n{n_val} :",
-                f"    (4 : ℚ) / {n_val**4} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
-                "  norm_num",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"/-- Certified unit fraction decomposition for 4 / {n_val}^4 (k = 4). -/",
+                    f"theorem higher_power_cert_k4_n{n_val} :",
+                    f"    (4 : ℚ) / {n_val**4} = 1 / {x_sol} + 1 / {y_sol} + 1 / {z_sol} := by",
+                    "  norm_num",
+                    "",
+                ]
+            )
             total_theorems += 1
 
     # Section 7: Monic Algebraic Factorizations for Exponents 2, 3, 4, 5, 6
-    lines.extend([
-        "/- Section 7: Monic Algebraic Factorizations for Exponents 2, 3, 4, 5, 6. -/",
-        "",
-        "/-- Monic decomposition for quadratic denominator n^2. -/",
-        "theorem higher_power_monic_decomp_2 : ∀ n x y : ℚ,",
-        "    (x - n^2) * (y - n^2) = x * y - n^2 * (x + y) + n^4 := by",
-        "  intro n x y; ring",
-        "",
-        "/-- Monic decomposition for cubic denominator n^3. -/",
-        "theorem higher_power_monic_decomp_3 : ∀ n x y : ℚ,",
-        "    (x - n^3) * (y - n^3) = x * y - n^3 * (x + y) + n^6 := by",
-        "  intro n x y; ring",
-        "",
-        "/-- Monic decomposition for quartic denominator n^4. -/",
-        "theorem higher_power_monic_decomp_4 : ∀ n x y : ℚ,",
-        "    (x - n^4) * (y - n^4) = x * y - n^4 * (x + y) + n^8 := by",
-        "  intro n x y; ring",
-        "",
-        "/-- Monic decomposition for quintic denominator n^5. -/",
-        "theorem higher_power_monic_decomp_5 : ∀ n x y : ℚ,",
-        "    (x - n^5) * (y - n^5) = x * y - n^5 * (x + y) + n^10 := by",
-        "  intro n x y; ring",
-        "",
-        "/-- Monic decomposition for sextic denominator n^6. -/",
-        "theorem higher_power_monic_decomp_6 : ∀ n x y : ℚ,",
-        "    (x - n^6) * (y - n^6) = x * y - n^6 * (x + y) + n^12 := by",
-        "  intro n x y; ring",
-        "",
-    ])
+    lines.extend(
+        [
+            "/- Section 7: Monic Algebraic Factorizations for Exponents 2, 3, 4, 5, 6. -/",
+            "",
+            "/-- Monic decomposition for quadratic denominator n^2. -/",
+            "theorem higher_power_monic_decomp_2 : ∀ n x y : ℚ,",
+            "    (x - n^2) * (y - n^2) = x * y - n^2 * (x + y) + n^4 := by",
+            "  intro n x y; ring",
+            "",
+            "/-- Monic decomposition for cubic denominator n^3. -/",
+            "theorem higher_power_monic_decomp_3 : ∀ n x y : ℚ,",
+            "    (x - n^3) * (y - n^3) = x * y - n^3 * (x + y) + n^6 := by",
+            "  intro n x y; ring",
+            "",
+            "/-- Monic decomposition for quartic denominator n^4. -/",
+            "theorem higher_power_monic_decomp_4 : ∀ n x y : ℚ,",
+            "    (x - n^4) * (y - n^4) = x * y - n^4 * (x + y) + n^8 := by",
+            "  intro n x y; ring",
+            "",
+            "/-- Monic decomposition for quintic denominator n^5. -/",
+            "theorem higher_power_monic_decomp_5 : ∀ n x y : ℚ,",
+            "    (x - n^5) * (y - n^5) = x * y - n^5 * (x + y) + n^10 := by",
+            "  intro n x y; ring",
+            "",
+            "/-- Monic decomposition for sextic denominator n^6. -/",
+            "theorem higher_power_monic_decomp_6 : ∀ n x y : ℚ,",
+            "    (x - n^6) * (y - n^6) = x * y - n^6 * (x + y) + n^12 := by",
+            "  intro n x y; ring",
+            "",
+        ]
+    )
     total_theorems += 5
 
     hp_file = out / "HigherPowerTheorems.lean"
@@ -5235,6 +5372,7 @@ def evaluate_hyper_scale_blind_confirmation(
 ) -> dict[str, Any]:
     """Execute sealed blind confirmation of generalized Diophantine engine across hyper-scale instances (P103)."""
     import time
+
     from evobyte.algebraic import (
         check_schinzel,
         check_schinzel_fractions,
@@ -5636,15 +5774,21 @@ def generate_obstruction_theorems_lean_code() -> str:
 
     # Product non-divisibility
     lines.append("/-- Product obstruction: square of odd is never divisible by 4 (P106). -/")
-    lines.append("theorem mod4_obstruction_odd_sq : ∀ (k : Nat), ¬(4 ∣ (2 * k + 1) * (2 * k + 1)) := by")
+    lines.append(
+        "theorem mod4_obstruction_odd_sq : ∀ (k : Nat), ¬(4 ∣ (2 * k + 1) * (2 * k + 1)) := by"
+    )
     lines.append("  intro k ⟨c, hc⟩")
     lines.append("  have h : (2 * k + 1) * (2 * k + 1) = 4 * (k ^ 2 + k) + 1 := by ring")
     lines.append("  rw [h] at hc")
     lines.append("  omega")
     lines.append("")
 
-    lines.append("/-- Product obstruction: consecutive odd product is never divisible by 4 (P106). -/")
-    lines.append("theorem mod4_obstruction_odd_prod : ∀ (k : Nat), ¬(4 ∣ (2 * k + 1) * (2 * k + 3)) := by")
+    lines.append(
+        "/-- Product obstruction: consecutive odd product is never divisible by 4 (P106). -/"
+    )
+    lines.append(
+        "theorem mod4_obstruction_odd_prod : ∀ (k : Nat), ¬(4 ∣ (2 * k + 1) * (2 * k + 3)) := by"
+    )
     lines.append("  intro k ⟨c, hc⟩")
     lines.append("  have h : (2 * k + 1) * (2 * k + 3) = 4 * (k ^ 2 + 2 * k) + 3 := by ring")
     lines.append("  rw [h] at hc")
@@ -5652,7 +5796,9 @@ def generate_obstruction_theorems_lean_code() -> str:
     lines.append("")
 
     lines.append("/-- Product obstruction mod 3 for r=1 (P106). -/")
-    lines.append("theorem mod3_obstruction_sq_r1 : ∀ (k : Nat), ¬(3 ∣ (3 * k + 1) * (3 * k + 1)) := by")
+    lines.append(
+        "theorem mod3_obstruction_sq_r1 : ∀ (k : Nat), ¬(3 ∣ (3 * k + 1) * (3 * k + 1)) := by"
+    )
     lines.append("  intro k ⟨c, hc⟩")
     lines.append("  have h : (3 * k + 1) * (3 * k + 1) = 3 * (3 * k ^ 2 + 2 * k) + 1 := by ring")
     lines.append("  rw [h] at hc")
@@ -5660,15 +5806,21 @@ def generate_obstruction_theorems_lean_code() -> str:
     lines.append("")
 
     lines.append("/-- Product obstruction mod 3 for r=2 (P106). -/")
-    lines.append("theorem mod3_obstruction_sq_r2 : ∀ (k : Nat), ¬(3 ∣ (3 * k + 2) * (3 * k + 2)) := by")
+    lines.append(
+        "theorem mod3_obstruction_sq_r2 : ∀ (k : Nat), ¬(3 ∣ (3 * k + 2) * (3 * k + 2)) := by"
+    )
     lines.append("  intro k ⟨c, hc⟩")
-    lines.append("  have h : (3 * k + 2) * (3 * k + 2) = 3 * (3 * k ^ 2 + 4 * k + 1) + 1 := by ring")
+    lines.append(
+        "  have h : (3 * k + 2) * (3 * k + 2) = 3 * (3 * k ^ 2 + 4 * k + 1) + 1 := by ring"
+    )
     lines.append("  rw [h] at hc")
     lines.append("  omega")
     lines.append("")
 
     lines.append("/-- Product obstruction mod 3 for r1=1, r2=2 (P106). -/")
-    lines.append("theorem mod3_obstruction_prod_r1_r2 : ∀ (k : Nat), ¬(3 ∣ (3 * k + 1) * (3 * k + 2)) := by")
+    lines.append(
+        "theorem mod3_obstruction_prod_r1_r2 : ∀ (k : Nat), ¬(3 ∣ (3 * k + 1) * (3 * k + 2)) := by"
+    )
     lines.append("  intro k ⟨c, hc⟩")
     lines.append("  have h : (3 * k + 1) * (3 * k + 2) = 3 * (3 * k ^ 2 + 3 * k) + 2 := by ring")
     lines.append("  rw [h] at hc")
@@ -5717,6 +5869,7 @@ def audit_obstruction_graphs_data_engine(
 ) -> dict[str, Any]:
     """Audit the Diophantine obstruction graph engine and Lean 4 formalization (P106)."""
     import re
+
     from evobyte.algebraic import evaluate_obstruction_graph_pruning
 
     t0 = time.perf_counter()
@@ -5805,6 +5958,7 @@ def verify_obstruction_graphs_soundness(
 # P108 — TACTIC TREE FORMAL MCTS ENGINE & COMPILER REWARD ORACLE
 # ==============================================================================
 
+
 def evaluate_lean4_tactic_candidate(
     theorem_decl: str,
     tactic_chain: list[str],
@@ -5882,7 +6036,7 @@ def evaluate_lean4_tactic_candidate(
             "reason": f"Lean 4 compilation timed out ({timeout_sec}s)",
             "elapsed_sec": time.perf_counter() - t0,
         }
-    except Exception as exc:
+    except (OSError, RuntimeError) as exc:
         return {
             "success": False,
             "has_sorry": False,
@@ -5910,7 +6064,7 @@ def audit_formal_mcts_engine(
     if proposer_weights_path is not None and Path(proposer_weights_path).exists():
         try:
             proposer, _ = StructuredConditionalProposer.load_checkpoint(proposer_weights_path)
-        except Exception:
+        except (RuntimeError, ValueError, OSError):
             proposer = None
 
     config = FormalMCTSConfig(
@@ -5950,7 +6104,9 @@ def verify_formal_mcts_soundness(
 
     rate = audit_summary.get("closure_rate", 0.0)
     if rate < min_closure_rate:
-        findings.append(f"INSUFFICIENT_CLOSURE_RATE: expected >= {min_closure_rate:.2%}, got {rate:.2%}")
+        findings.append(
+            f"INSUFFICIENT_CLOSURE_RATE: expected >= {min_closure_rate:.2%}, got {rate:.2%}"
+        )
 
     proved = audit_summary.get("proved_goals", 0)
     if proved < min_proved_goals:
@@ -5962,6 +6118,7 @@ def verify_formal_mcts_soundness(
 # ==============================================================================
 # P109 — ERDŐS–GRAHAM UNIT FRACTION FORMAL THEOREMS GENERATION & AUDIT
 # ==============================================================================
+
 
 def generate_erdos_graham_theorems_lean_code(
     solutions: list[list[int]] | None = None,
@@ -5999,14 +6156,28 @@ def generate_erdos_graham_theorems_lean_code(
 
     lines.append("")
     lines.append("-- Harmonic density bounds and splitting lemmas")
-    lines.append("theorem erdos_graham_min_den_bound : ∀ (a b c : ℕ), a ≥ 2 → b ≥ 2 → c ≥ 2 → a + b + c ≥ 6 := by omega")
-    lines.append("theorem erdos_graham_three_sum_bound : (1:ℚ)/2 + (1:ℚ)/3 + (1:ℚ)/7 < 1 := by norm_num")
-    lines.append("theorem erdos_graham_four_sum_bound : (1:ℚ)/3 + (1:ℚ)/4 + (1:ℚ)/5 + (1:ℚ)/6 < 1 := by norm_num")
+    lines.append(
+        "theorem erdos_graham_min_den_bound : ∀ (a b c : ℕ), a ≥ 2 → b ≥ 2 → c ≥ 2 → a + b + c ≥ 6 := by omega"
+    )
+    lines.append(
+        "theorem erdos_graham_three_sum_bound : (1:ℚ)/2 + (1:ℚ)/3 + (1:ℚ)/7 < 1 := by norm_num"
+    )
+    lines.append(
+        "theorem erdos_graham_four_sum_bound : (1:ℚ)/3 + (1:ℚ)/4 + (1:ℚ)/5 + (1:ℚ)/6 < 1 := by norm_num"
+    )
     lines.append("theorem erdos_graham_unit_upper_two (d : ℕ) (h : d ≥ 2) : 2 * d ≥ 4 := by omega")
-    lines.append("theorem erdos_graham_unit_split_three : (1:ℚ)/3 = (1:ℚ)/4 + (1:ℚ)/12 := by norm_num")
-    lines.append("theorem erdos_graham_unit_split_four : (1:ℚ)/4 = (1:ℚ)/5 + (1:ℚ)/20 := by norm_num")
-    lines.append("theorem erdos_graham_unit_split_five : (1:ℚ)/5 = (1:ℚ)/6 + (1:ℚ)/30 := by norm_num")
-    lines.append("theorem erdos_graham_unit_split_six : (1:ℚ)/6 = (1:ℚ)/7 + (1:ℚ)/42 := by norm_num")
+    lines.append(
+        "theorem erdos_graham_unit_split_three : (1:ℚ)/3 = (1:ℚ)/4 + (1:ℚ)/12 := by norm_num"
+    )
+    lines.append(
+        "theorem erdos_graham_unit_split_four : (1:ℚ)/4 = (1:ℚ)/5 + (1:ℚ)/20 := by norm_num"
+    )
+    lines.append(
+        "theorem erdos_graham_unit_split_five : (1:ℚ)/5 = (1:ℚ)/6 + (1:ℚ)/30 := by norm_num"
+    )
+    lines.append(
+        "theorem erdos_graham_unit_split_six : (1:ℚ)/6 = (1:ℚ)/7 + (1:ℚ)/42 := by norm_num"
+    )
     lines.append("")
 
     return "\n".join(lines)
@@ -6049,6 +6220,7 @@ def audit_erdos_graham_unit_fractions(
 ) -> dict[str, Any]:
     """Audit Erdős–Graham unit fraction decompositions and Lean 4 formalization."""
     import subprocess
+
     from evobyte.algebraic import find_erdos_graham_unit_fractions, verify_unit_fraction_sum
 
     t0 = time.perf_counter()
@@ -6098,7 +6270,9 @@ def verify_erdos_graham_soundness(
         findings.append("SORRY_DETECTED: unproven sorry tokens present in Erdős-Graham theorems")
 
     if not audit_summary.get("all_verified", False) or audit_summary.get("invalid_count", 0) > 0:
-        findings.append(f"INVALID_SOLUTIONS: {audit_summary.get('invalid_count')} unit fraction sums invalid")
+        findings.append(
+            f"INVALID_SOLUTIONS: {audit_summary.get('invalid_count')} unit fraction sums invalid"
+        )
 
     sols = audit_summary.get("solutions_found", 0)
     if sols < min_solutions:
@@ -6117,6 +6291,7 @@ def verify_erdos_graham_soundness(
 # ==============================================================================
 # P110 — PILLAI-CATALAN EXPONENTIAL DIOPHANTINE THEOREMS GENERATION & AUDIT
 # ==============================================================================
+
 
 def generate_pillai_catalan_theorems_lean_code(
     solutions: list[Any] | None = None,
@@ -6197,7 +6372,9 @@ def generate_pillai_catalan_theorems_lean_code(
     lines.append("")
 
     # Exclusion certificates (sample non-solutions demonstrating finite discriminants)
-    lines.append("-- Exclusion certificates: candidate tuples that do not satisfy difference equations")
+    lines.append(
+        "-- Exclusion certificates: candidate tuples that do not satisfy difference equations"
+    )
     non_sols = [
         (2, 3, 3, 2, 1),
         (3, 3, 2, 4, 1),
@@ -6274,6 +6451,7 @@ def audit_pillai_catalan_exponential_diophantine(
 ) -> dict[str, Any]:
     """Audit Pillai-Catalan exponential Diophantine equations and Lean 4 formalization."""
     import subprocess
+
     from evobyte.algebraic import find_pillai_solutions, verify_pillai_solution
 
     t0 = time.perf_counter()
@@ -6323,7 +6501,9 @@ def verify_pillai_catalan_soundness(
         findings.append("SORRY_DETECTED: unproven sorry tokens present in Pillai-Catalan theorems")
 
     if not audit_summary.get("all_verified", False) or audit_summary.get("invalid_count", 0) > 0:
-        findings.append(f"INVALID_SOLUTIONS: {audit_summary.get('invalid_count')} Pillai solutions invalid")
+        findings.append(
+            f"INVALID_SOLUTIONS: {audit_summary.get('invalid_count')} Pillai solutions invalid"
+        )
 
     sols = audit_summary.get("solutions_found", 0)
     if sols < min_solutions:
@@ -6484,15 +6664,11 @@ def verify_open_problems_grand_campaign_soundness(
 
     total_thms = campaign_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
-        findings.append(
-            f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}"
-        )
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
 
     total_mods = campaign_summary.get("total_modules", 0)
     if total_mods < min_modules:
-        findings.append(
-            f"INSUFFICIENT_MODULES: expected >= {min_modules}, got {total_mods}"
-        )
+        findings.append(f"INSUFFICIENT_MODULES: expected >= {min_modules}, got {total_mods}")
 
     if not campaign_summary.get("lake_passed", False):
         findings.append(f"LAKE_BUILD_FAILED: {campaign_summary.get('lake_reasons')}")

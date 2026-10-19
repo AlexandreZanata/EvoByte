@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from evobyte.statistical import (
     compute_holm_bonferroni,
     evaluate_multiproblem_blind_confirmation,
@@ -50,7 +48,9 @@ def test_generate_multiproblem_blind_partition():
 
     # Test leakage detection
     leaky_pool = {"P111_EG_01"}
-    part_leaky = generate_multiproblem_blind_partition(seed=42, count_per_track=25, dev_pool=leaky_pool)
+    part_leaky = generate_multiproblem_blind_partition(
+        seed=42, count_per_track=25, dev_pool=leaky_pool
+    )
     assert part_leaky["leakage_detected"] is True
     assert part_leaky["zero_leakage_verified"] is False
 
@@ -65,7 +65,7 @@ def test_evaluate_multiproblem_blind_confirmation():
     assert eval_res["fwer_controlled"] is True
     assert eval_res["max_holm_p_value"] < 0.01
 
-    for t_key, t_info in eval_res["tracks"].items():
+    for t_info in eval_res["tracks"].values():
         assert t_info["outcome"] == "CONFIRMED"
         assert t_info["wins"] >= 20
         assert t_info["all_verified"] is True

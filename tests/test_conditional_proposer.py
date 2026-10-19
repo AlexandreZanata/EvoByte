@@ -5,8 +5,6 @@ from __future__ import annotations
 import tempfile
 from pathlib import Path
 
-import numpy as np
-import pytest
 import torch
 
 from evobyte.models import (
@@ -19,7 +17,6 @@ from evobyte.models import (
 )
 from evobyte.training import (
     evaluate_proposer_vs_baselines,
-    generate_diophantine_training_instances,
     train_conditional_proposer,
 )
 

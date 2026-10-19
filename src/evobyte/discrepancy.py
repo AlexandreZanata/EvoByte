@@ -24,12 +24,8 @@ from evobyte.verifier import lean_resolve_binaries
 DEFAULT_DISCREPANCY_COVERING_SIGNATURES_LEAN_FILE = Path(
     "lean_proofs/Generated/DiscrepancyCoveringSignatures.lean"
 )
-DEFAULT_ERDOS_DISCREPANCY_LEAN_FILE = Path(
-    "lean_proofs/Generated/ErdosDiscrepancyTheorems.lean"
-)
-DEFAULT_ROTH_SPENCER_LEAN_FILE = Path(
-    "lean_proofs/Generated/RothSpencerDiscrepancyTheorems.lean"
-)
+DEFAULT_ERDOS_DISCREPANCY_LEAN_FILE = Path("lean_proofs/Generated/ErdosDiscrepancyTheorems.lean")
+DEFAULT_ROTH_SPENCER_LEAN_FILE = Path("lean_proofs/Generated/RothSpencerDiscrepancyTheorems.lean")
 
 
 # ==============================================================================
@@ -62,8 +58,7 @@ def hypergraph_discrepancy(incidence_matrix: list[list[int]], signs: list[int]) 
     for row in incidence_matrix:
         row_sum = sum(signs[j] for j, val in enumerate(row) if val != 0 and j < len(signs))
         d = abs(row_sum)
-        if d > max_d:
-            max_d = d
+        max_d = max(max_d, d)
     return max_d
 
 
@@ -115,7 +110,7 @@ def is_completely_multiplicative(f_dict: dict[int, int], max_n: int = 50) -> boo
     if f_dict.get(1) != 1:
         return False
 
-    limit = int(math.isqrt(max_n)) + 1
+    limit = math.isqrt(max_n) + 1
     for a in range(1, limit + 1):
         if a not in f_dict:
             continue
@@ -216,10 +211,8 @@ def verify_covering_system(congruences: list[tuple[int, int]]) -> dict[str, Any]
 def is_primitive_set(elements: list[int]) -> bool:
     """Check if a set of positive integers is primitive: no element divides any other element."""
     s = sorted(set(elements))
-    if not s or any(x <= 1 for x in s):
-        # By convention, primitive sets consist of integers >= 2
-        if any(x <= 0 for x in s):
-            return False
+    if not s or any(x <= 0 for x in s):
+        return False
 
     n = len(s)
     for i in range(n):
@@ -245,26 +238,30 @@ def discrepancy_covering_benchmarks() -> list[dict[str, Any]]:
     # Benchmark 1: Classic Erdős 1950 Covering System: (0, 2), (0, 3), (1, 4), (5, 6), (7, 12)
     erdos_covering = [(0, 2), (0, 3), (1, 4), (5, 6), (7, 12)]
     res1 = verify_covering_system(erdos_covering)
-    benchmarks.append({
-        "name": "erdos_1950_covering_system",
-        "is_covering": res1["is_covering"],
-        "distinct_moduli": res1["distinct_moduli"],
-        "min_modulus": res1["min_modulus"],
-        "max_modulus": res1["max_modulus"],
-        "reciprocal_sum": res1["reciprocal_sum"],
-        "passed": res1["is_covering"] and res1["distinct_moduli"] and res1["min_modulus"] == 2,
-    })
+    benchmarks.append(
+        {
+            "name": "erdos_1950_covering_system",
+            "is_covering": res1["is_covering"],
+            "distinct_moduli": res1["distinct_moduli"],
+            "min_modulus": res1["min_modulus"],
+            "max_modulus": res1["max_modulus"],
+            "reciprocal_sum": res1["reciprocal_sum"],
+            "passed": res1["is_covering"] and res1["distinct_moduli"] and res1["min_modulus"] == 2,
+        }
+    )
 
     # Benchmark 2: Completely Multiplicative Liouville Sequence Prefix Discrepancy
     liouville_100 = liouville_sequence(100)
     res2 = arithmetic_progression_discrepancy(liouville_100, max_step=10)
-    benchmarks.append({
-        "name": "liouville_ap_discrepancy_100",
-        "max_discrepancy": res2["max_discrepancy"],
-        "best_step": res2["best_step"],
-        "best_length": res2["best_length"],
-        "passed": res2["max_discrepancy"] >= 3,
-    })
+    benchmarks.append(
+        {
+            "name": "liouville_ap_discrepancy_100",
+            "max_discrepancy": res2["max_discrepancy"],
+            "best_step": res2["best_step"],
+            "best_length": res2["best_length"],
+            "passed": res2["max_discrepancy"] >= 3,
+        }
+    )
 
     # Benchmark 3: Spencer 6*sqrt(n) Bound on 6x6 Identity Hypergraph
     n = 6
@@ -272,24 +269,28 @@ def discrepancy_covering_benchmarks() -> list[dict[str, Any]]:
     signs = [1, -1, 1, -1, 1, -1]
     disc_id = hypergraph_discrepancy(id_matrix, signs)
     sp_b = spencer_bound(n)
-    benchmarks.append({
-        "name": "spencer_hypergraph_discrepancy",
-        "n": n,
-        "discrepancy": disc_id,
-        "spencer_bound": round(sp_b, 4),
-        "passed": disc_id <= sp_b,
-    })
+    benchmarks.append(
+        {
+            "name": "spencer_hypergraph_discrepancy",
+            "n": n,
+            "discrepancy": disc_id,
+            "spencer_bound": round(sp_b, 4),
+            "passed": disc_id <= sp_b,
+        }
+    )
 
     # Benchmark 4: Primitive Set Verification & Erdős Series Sum
     primes_first = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
     is_prim = is_primitive_set(primes_first)
     recip_sum = primitive_set_reciprocal_log_sum(primes_first)
-    benchmarks.append({
-        "name": "primitive_primes_subset",
-        "is_primitive": is_prim,
-        "reciprocal_log_sum": round(recip_sum, 6),
-        "passed": is_prim and recip_sum > 1.0,
-    })
+    benchmarks.append(
+        {
+            "name": "primitive_primes_subset",
+            "is_primitive": is_prim,
+            "reciprocal_log_sum": round(recip_sum, 6),
+            "passed": is_prim and recip_sum > 1.0,
+        }
+    )
 
     return benchmarks
 
@@ -519,18 +520,20 @@ def generate_discrepancy_covering_signatures_lean_code() -> str:
 
     # Add systematic parameterized families to ensure >= 80 formal theorems in the baseline module
     for i in range(1, 41):
-        lines.extend([
-            f"/-- Parameterized sign scaling identity #{i}. -/",
-            f"theorem sign_scale_param_{i} (s : Int) (h : s^2 = 1) :",
-            f"    ({i} * s)^2 = {i * i} := by",
-            "  nlinarith",
-            "",
-            f"/-- Parameterized homogeneous step bound #{i}. -/",
-            f"theorem homogeneous_step_bound_{i} (prev : Int) :",
-            f"    prev - {i} ≤ prev + {i} := by",
-            "  linarith",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Parameterized sign scaling identity #{i}. -/",
+                f"theorem sign_scale_param_{i} (s : Int) (h : s^2 = 1) :",
+                f"    ({i} * s)^2 = {i * i} := by",
+                "  nlinarith",
+                "",
+                f"/-- Parameterized homogeneous step bound #{i}. -/",
+                f"theorem homogeneous_step_bound_{i} (prev : Int) :",
+                f"    prev - {i} ≤ prev + {i} := by",
+                "  linarith",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.DiscrepancyCovering\n")
     return "\n".join(lines)
@@ -612,9 +615,7 @@ def verify_discrepancy_covering_baseline_soundness(
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
-        findings.append(
-            f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}"
-        )
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
 
     benchmarks = audit_summary.get("benchmarks", [])
     if not benchmarks:
@@ -656,7 +657,7 @@ def generate_completely_multiplicative_sequence(
 
     # Smallest prime factor sieve (SPF)
     spf = list(range(length + 1))
-    for i in range(2, int(math.isqrt(length)) + 1):
+    for i in range(2, math.isqrt(length) + 1):
         if spf[i] == i:
             for j in range(i * i, length + 1, i):
                 if spf[j] == j:
@@ -673,9 +674,7 @@ def generate_completely_multiplicative_sequence(
     return res
 
 
-def verify_tao_homogeneous_reduction(
-    f_seq: list[int], d: int, n: int
-) -> dict[str, Any]:
+def verify_tao_homogeneous_reduction(f_seq: list[int], d: int, n: int) -> dict[str, Any]:
     """Verify Terence Tao's homogeneous AP reduction: D(f, n, d) = f(d) * D(f, n, 1).
 
     For completely multiplicative f, sum_{k=1}^n f(k * d) = f(d) * sum_{k=1}^n f(k).
@@ -714,44 +713,52 @@ def erdos_discrepancy_benchmarks() -> list[dict[str, Any]]:
     seq_50 = generate_completely_multiplicative_sequence(primes_map, 50)
     f_dict = {i: seq_50[i - 1] for i in range(1, 51)}
     is_mult = is_completely_multiplicative(f_dict, max_n=50)
-    benchmarks.append({
-        "name": "multiplicative_sequence_generator",
-        "length": 50,
-        "is_completely_multiplicative": is_mult,
-        "passed": is_mult and len(seq_50) == 50 and seq_50[0] == 1,
-    })
+    benchmarks.append(
+        {
+            "name": "multiplicative_sequence_generator",
+            "length": 50,
+            "is_completely_multiplicative": is_mult,
+            "passed": is_mult and len(seq_50) == 50 and seq_50[0] == 1,
+        }
+    )
 
     # Benchmark 2: Tao homogeneous reduction on Liouville sequence (d=2, n=15)
     lio_100 = liouville_sequence(100)
     res_red2 = verify_tao_homogeneous_reduction(lio_100, d=2, n=15)
-    benchmarks.append({
-        "name": "tao_homogeneous_reduction_d2",
-        "d": 2,
-        "n": 15,
-        "hom_sum": res_red2.get("hom_sum"),
-        "std_sum": res_red2.get("std_sum"),
-        "passed": res_red2.get("valid", False),
-    })
+    benchmarks.append(
+        {
+            "name": "tao_homogeneous_reduction_d2",
+            "d": 2,
+            "n": 15,
+            "hom_sum": res_red2.get("hom_sum"),
+            "std_sum": res_red2.get("std_sum"),
+            "passed": res_red2.get("valid", False),
+        }
+    )
 
     # Benchmark 3: Tao homogeneous reduction on Liouville sequence (d=3, n=15)
     res_red3 = verify_tao_homogeneous_reduction(lio_100, d=3, n=15)
-    benchmarks.append({
-        "name": "tao_homogeneous_reduction_d3",
-        "d": 3,
-        "n": 15,
-        "hom_sum": res_red3.get("hom_sum"),
-        "std_sum": res_red3.get("std_sum"),
-        "passed": res_red3.get("valid", False),
-    })
+    benchmarks.append(
+        {
+            "name": "tao_homogeneous_reduction_d3",
+            "d": 3,
+            "n": 15,
+            "hom_sum": res_red3.get("hom_sum"),
+            "std_sum": res_red3.get("std_sum"),
+            "passed": res_red3.get("valid", False),
+        }
+    )
 
     # Benchmark 4: Polymath5 EDP threshold verification
     bounds = polymath_edp_bounds()
-    benchmarks.append({
-        "name": "polymath_edp_thresholds",
-        "c1_threshold": bounds.get(1),
-        "c2_threshold": bounds.get(2),
-        "passed": bounds.get(1) == 12 and bounds.get(2) == 1161,
-    })
+    benchmarks.append(
+        {
+            "name": "polymath_edp_thresholds",
+            "c1_threshold": bounds.get(1),
+            "c2_threshold": bounds.get(2),
+            "passed": bounds.get(1) == 12 and bounds.get(2) == 1161,
+        }
+    )
 
     return benchmarks
 
@@ -912,19 +919,21 @@ def generate_erdos_discrepancy_lean_code() -> str:
 
     # Add systematic parameterized families to ensure >= 80 formal theorems
     for i in range(1, 41):
-        lines.extend([
-            f"/-- Parameterized multiplicative factor preservation #{i}. -/",
-            f"theorem tao_param_preservation_{i} (s S : Int) (hs : s^2 = 1) :",
-            f"    ({i} * (s * S))^2 = {i * i} * S^2 := by",
-            f"  have h : ({i} * (s * S))^2 = {i * i} * s^2 * S^2 := by ring",
-            "  rw [h, hs]",
-            "  ring",
-            "",
-            f"/-- Parameterized discrepancy prefix bound #{i}. -/",
-            f"theorem edp_prefix_bound_{i} (s : Int) (hs : s ≤ {i}) :",
-            f"    s ≤ {i} := hs",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Parameterized multiplicative factor preservation #{i}. -/",
+                f"theorem tao_param_preservation_{i} (s S : Int) (hs : s^2 = 1) :",
+                f"    ({i} * (s * S))^2 = {i * i} * S^2 := by",
+                f"  have h : ({i} * (s * S))^2 = {i * i} * s^2 * S^2 := by ring",
+                "  rw [h, hs]",
+                "  ring",
+                "",
+                f"/-- Parameterized discrepancy prefix bound #{i}. -/",
+                f"theorem edp_prefix_bound_{i} (s : Int) (hs : s ≤ {i}) :",
+                f"    s ≤ {i} := hs",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.ErdosDiscrepancy\n")
     return "\n".join(lines)
@@ -1001,9 +1010,7 @@ def verify_erdos_discrepancy_baseline_soundness(
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
-        findings.append(
-            f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}"
-        )
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
 
     benchmarks = audit_summary.get("benchmarks", [])
     if not benchmarks:
@@ -1029,7 +1036,7 @@ def roth_ap_discrepancy_lower_bound(n: int, c: float = 0.25) -> float:
     """
     if n <= 0:
         return 0.0
-    return float(c * (n ** 0.25))
+    return float(c * (n**0.25))
 
 
 def spencer_six_deviations_bound(n: int) -> float:
@@ -1085,8 +1092,7 @@ def find_ap_discrepancy(signs: list[int]) -> int:
     max_d = 0
     for prog in aps:
         s = abs(sum(signs[idx] for idx in prog))
-        if s > max_d:
-            max_d = s
+        max_d = max(max_d, s)
     return max_d
 
 
@@ -1097,46 +1103,54 @@ def roth_spencer_benchmarks() -> list[dict[str, Any]]:
     # Benchmark 1: Roth AP lower bound scaling on geometric milestones
     milestones = [16, 81, 256, 625]
     bounds = [roth_ap_discrepancy_lower_bound(m, c=0.25) for m in milestones]
-    benchmarks.append({
-        "name": "roth_ap_lower_bound_scaling",
-        "milestones": milestones,
-        "bounds": bounds,
-        "passed": math.isclose(bounds[0], 0.5)
-        and math.isclose(bounds[1], 0.75)
-        and math.isclose(bounds[2], 1.0)
-        and math.isclose(bounds[3], 1.25),
-    })
+    benchmarks.append(
+        {
+            "name": "roth_ap_lower_bound_scaling",
+            "milestones": milestones,
+            "bounds": bounds,
+            "passed": math.isclose(bounds[0], 0.5)
+            and math.isclose(bounds[1], 0.75)
+            and math.isclose(bounds[2], 1.0)
+            and math.isclose(bounds[3], 1.25),
+        }
+    )
 
     # Benchmark 2: Spencer bound vs Naive Chernoff bound comparison
     n_large = 10**8
     spencer_b = spencer_six_deviations_bound(n_large)
     naive_b = naive_chernoff_bound(n_large)
-    benchmarks.append({
-        "name": "spencer_beats_naive_asymptotics",
-        "n": n_large,
-        "spencer_bound": spencer_b,
-        "naive_bound": naive_b,
-        "passed": spencer_b < naive_b,
-    })
+    benchmarks.append(
+        {
+            "name": "spencer_beats_naive_asymptotics",
+            "n": n_large,
+            "spencer_bound": spencer_b,
+            "naive_bound": naive_b,
+            "passed": spencer_b < naive_b,
+        }
+    )
 
     # Benchmark 3: Exact AP discrepancy calculation on Alternating sequence
     alt_10 = [1 if i % 2 == 0 else -1 for i in range(10)]
     d_alt = find_ap_discrepancy(alt_10)
-    benchmarks.append({
-        "name": "ap_discrepancy_alternating",
-        "n": 10,
-        "discrepancy": d_alt,
-        "passed": d_alt == 5,
-    })
+    benchmarks.append(
+        {
+            "name": "ap_discrepancy_alternating",
+            "n": 10,
+            "discrepancy": d_alt,
+            "passed": d_alt == 5,
+        }
+    )
 
     # Benchmark 4: Spencer six deviations quadratic equivalence
     spencer_quad_ok = all(
         int(spencer_six_deviations_bound(k)) ** 2 <= 36 * k for k in [1, 4, 9, 16, 25]
     )
-    benchmarks.append({
-        "name": "spencer_quadratic_identity",
-        "passed": spencer_quad_ok,
-    })
+    benchmarks.append(
+        {
+            "name": "spencer_quadratic_identity",
+            "passed": spencer_quad_ok,
+        }
+    )
 
     return benchmarks
 
@@ -1254,15 +1268,17 @@ def generate_roth_spencer_lean_code() -> str:
     ]
 
     for i in range(1, 46):
-        lines.extend([
-            f"/-- Parameterized Roth scale milestone #{i}: step witness. -/",
-            f"theorem roth_scale_step_{i} (D : Int) (h : D ≥ {i}) : D ≥ {i} := h",
-            "",
-            f"/-- Parameterized Spencer deviation scale #{i}: ({6 * i})^2 <= 36 * ({i * i}). -/",
-            f"theorem spencer_scale_bound_{i} : ({6 * i} : Int)^2 ≤ 36 * ({i * i} : Int) := by",
-            "  decide",
-            "",
-        ])
+        lines.extend(
+            [
+                f"/-- Parameterized Roth scale milestone #{i}: step witness. -/",
+                f"theorem roth_scale_step_{i} (D : Int) (h : D ≥ {i}) : D ≥ {i} := h",
+                "",
+                f"/-- Parameterized Spencer deviation scale #{i}: ({6 * i})^2 <= 36 * ({i * i}). -/",
+                f"theorem spencer_scale_bound_{i} : ({6 * i} : Int)^2 ≤ 36 * ({i * i} : Int) := by",
+                "  decide",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.RothSpencer\n")
     return "\n".join(lines)
@@ -1339,9 +1355,7 @@ def verify_roth_spencer_baseline_soundness(
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
-        findings.append(
-            f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}"
-        )
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {total_thms}")
 
     benchmarks = audit_summary.get("benchmarks", [])
     if not benchmarks:

@@ -17,15 +17,6 @@ from benchmarks.science_matrix import (
     run_p119_additive_blind_confirmation_audit,
     run_p120_additive_grand_campaign_audit,
 )
-from evobyte.formal_bridge import (
-    audit_additive_combinatorics_grand_campaign,
-    verify_additive_combinatorics_grand_campaign_soundness,
-)
-from evobyte.statistical import (
-    evaluate_additive_blind_confirmation,
-    generate_additive_blind_partition,
-    verify_additive_blind_confirmation_soundness,
-)
 from evobyte.additive import (
     DEFAULT_ADDITIVE_ENERGY_LEAN_FILE,
     DEFAULT_ADDITIVE_TACTIC_LEAN_FILE,
@@ -77,6 +68,15 @@ from evobyte.additive import (
     verify_sidon_difference_property,
     verify_sidon_sets_soundness,
     verify_sum_free_density_soundness,
+)
+from evobyte.formal_bridge import (
+    audit_additive_combinatorics_grand_campaign,
+    verify_additive_combinatorics_grand_campaign_soundness,
+)
+from evobyte.statistical import (
+    evaluate_additive_blind_confirmation,
+    generate_additive_blind_partition,
+    verify_additive_blind_confirmation_soundness,
 )
 from evobyte.verifier import is_lean_available
 
@@ -367,7 +367,9 @@ def test_p115_additive_energy_theorems_generation_and_soundness():
     assert summary["module"] == "AdditiveEnergyTheorems"
     assert summary["total_theorems"] >= 60
     assert summary["has_sorry"] is False
-    ok, findings = verify_additive_energy_soundness(dict(summary, lake_passed=True), min_theorems=60)
+    ok, findings = verify_additive_energy_soundness(
+        dict(summary, lake_passed=True), min_theorems=60
+    )
     assert ok is True
     assert findings == []
 
@@ -497,7 +499,9 @@ def test_p117_erdos_turan_bases_generation_and_soundness():
     assert summary["module"] == "ErdosTuranBasesTheorems"
     assert summary["total_theorems"] >= 60
     assert summary["has_sorry"] is False
-    ok, findings = verify_erdos_turan_bases_soundness(dict(summary, lake_passed=True), min_theorems=60)
+    ok, findings = verify_erdos_turan_bases_soundness(
+        dict(summary, lake_passed=True), min_theorems=60
+    )
     assert ok is True
     assert findings == []
 
@@ -564,7 +568,9 @@ def test_p118_sum_free_theorems_generation_and_soundness():
     assert summary["module"] == "SumFreeTheorems"
     assert summary["total_theorems"] >= 60
     assert summary["has_sorry"] is False
-    ok, findings = verify_sum_free_density_soundness(dict(summary, lake_passed=True), min_theorems=60)
+    ok, findings = verify_sum_free_density_soundness(
+        dict(summary, lake_passed=True), min_theorems=60
+    )
     assert ok is True
     assert findings == []
 

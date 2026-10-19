@@ -7634,9 +7634,7 @@ def run_p96_grand_campaign_audit(
     return report
 
 
-def run_p97_cubic_surface_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p97_cubic_surface_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P97 audit: Diophantine cubic surface conic fibrations and rational sections in Lean 4.
 
     Verifies:
@@ -8392,9 +8390,7 @@ def run_p101_solution_moments_audit(
     return report
 
 
-def run_p102_higher_power_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p102_higher_power_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P102 audit: Higher power Diophantine fractions in Lean 4.
 
     Verifies:
@@ -8587,7 +8583,9 @@ def run_p103_blind_confirmation_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P103 HYPER-SCALE BLIND CONFIRMATION AUDIT (10^9 <= n <= 10^12, Holm FWER Control alpha=0.01)")
+    print(
+        "P103 HYPER-SCALE BLIND CONFIRMATION AUDIT (10^9 <= n <= 10^12, Holm FWER Control alpha=0.01)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -8874,7 +8872,9 @@ def run_p105_open_problems_database_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P105 HERMETIC OPEN PROBLEMS DATABASE & DEPENDENT TYPING AUDIT (100 Problems, Zero Sorry)")
+    print(
+        "P105 HERMETIC OPEN PROBLEMS DATABASE & DEPENDENT TYPING AUDIT (100 Problems, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -9018,7 +9018,9 @@ def run_p106_obstruction_graphs_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P106 DIOPHANTINE OBSTRUCTION GRAPHS & NEGATIVE SEARCH SPACE AUDIT (Zero Sorry, Sound Pruning)")
+    print(
+        "P106 DIOPHANTINE OBSTRUCTION GRAPHS & NEGATIVE SEARCH SPACE AUDIT (Zero Sorry, Sound Pruning)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -9173,7 +9175,9 @@ def run_p107_conditional_proposer_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P107 LIGHTWEIGHT CONDITIONAL NEURAL PROPOSER AUDIT (<= 5M, Zero Hallucination, Classical Baseline Speedup)")
+    print(
+        "P107 LIGHTWEIGHT CONDITIONAL NEURAL PROPOSER AUDIT (<= 5M, Zero Hallucination, Classical Baseline Speedup)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -9231,11 +9235,13 @@ def run_p107_conditional_proposer_audit(
         and train_run_a.get("best_val_loss") == train_run_b.get("best_val_loss")
     )
     if not is_reproducible:
-        findings.append("NON_REPRODUCIBLE: training runs with same seed yielded different validation histories")
+        findings.append(
+            "NON_REPRODUCIBLE: training runs with same seed yielded different validation histories"
+        )
 
     # 3. Independent checkpoint reload
     if weights_path.exists():
-        loaded_model, ckpt_meta = StructuredConditionalProposer.load_checkpoint(weights_path)
+        loaded_model, _ckpt_meta = StructuredConditionalProposer.load_checkpoint(weights_path)
     else:
         findings.append(f"MISSING_CHECKPOINT: weights file {weights_path} not created")
         loaded_model = train_run_a.get("model", StructuredConditionalProposer())
@@ -9254,37 +9260,59 @@ def run_p107_conditional_proposer_audit(
         findings.append("HALLUCINATED_TACTIC: predicted tactic not in CANONICAL_LEAN_TACTICS")
     sample_identities = loaded_model.predict_identities(4, 101)
     if any(i[0] not in CANONICAL_ALGEBRAIC_IDENTITIES for i in sample_identities):
-        findings.append("HALLUCINATED_IDENTITY: predicted identity not in CANONICAL_ALGEBRAIC_IDENTITIES")
+        findings.append(
+            "HALLUCINATED_IDENTITY: predicted identity not in CANONICAL_ALGEBRAIC_IDENTITIES"
+        )
 
     # 6. Evaluation against classical baselines
     eval_res = evaluate_proposer_vs_baselines(loaded_model, device=device_name)
     if not eval_res.get("zero_hallucination", False):
-        findings.append(f"HALLUCINATION_DETECTED: {eval_res.get('hallucinations')} foreign candidates")
+        findings.append(
+            f"HALLUCINATION_DETECTED: {eval_res.get('hallucinations')} foreign candidates"
+        )
     if not eval_res.get("sound", False):
-        findings.append(f"FALSE_NEGATIVES_DETECTED: {eval_res.get('false_negatives')} missed solutions")
+        findings.append(
+            f"FALSE_NEGATIVES_DETECTED: {eval_res.get('false_negatives')} missed solutions"
+        )
 
     speedup = eval_res.get("speedup_vs_naive", 0.0)
     reduction = eval_res.get("reduction_pct", 0.0)
     if speedup < min_speedup_vs_naive:
-        findings.append(f"INSUFFICIENT_SPEEDUP: speedup {speedup:.2f}x < required {min_speedup_vs_naive}x")
+        findings.append(
+            f"INSUFFICIENT_SPEEDUP: speedup {speedup:.2f}x < required {min_speedup_vs_naive}x"
+        )
     if reduction < min_reduction_pct:
-        findings.append(f"INSUFFICIENT_REDUCTION: reduction {reduction:.1f}% < required {min_reduction_pct}%")
+        findings.append(
+            f"INSUFFICIENT_REDUCTION: reduction {reduction:.1f}% < required {min_reduction_pct}%"
+        )
 
-    print(f"  Model architecture: {param_count:,} params (limit {max_params:,}), resident memory {mem_mb:.2f} MB")
-    print(f"  Training reproducibility: {is_reproducible} (epochs: {max_epochs}, best val loss: {train_run_a.get('best_val_loss', 0.0):.4f})")
-    print(f"  Baseline comparison: naive avg steps {eval_res.get('avg_naive_steps')}, neural avg steps {eval_res.get('avg_proposer_steps')}")
-    print(f"  Speedup vs naive: {speedup:.2f}x (reduction: {reduction:.1f}%), speedup vs random: {eval_res.get('speedup_vs_random'):.2f}x")
-    print(f"  Integrity: zero_hallucination={eval_res.get('zero_hallucination')}, false_negatives={eval_res.get('false_negatives')}")
+    print(
+        f"  Model architecture: {param_count:,} params (limit {max_params:,}), resident memory {mem_mb:.2f} MB"
+    )
+    print(
+        f"  Training reproducibility: {is_reproducible} (epochs: {max_epochs}, best val loss: {train_run_a.get('best_val_loss', 0.0):.4f})"
+    )
+    print(
+        f"  Baseline comparison: naive avg steps {eval_res.get('avg_naive_steps')}, neural avg steps {eval_res.get('avg_proposer_steps')}"
+    )
+    print(
+        f"  Speedup vs naive: {speedup:.2f}x (reduction: {reduction:.1f}%), speedup vs random: {eval_res.get('speedup_vs_random'):.2f}x"
+    )
+    print(
+        f"  Integrity: zero_hallucination={eval_res.get('zero_hallucination')}, false_negatives={eval_res.get('false_negatives')}"
+    )
 
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
         findings.append("DIRTY_SOURCE: tree not clean; proposer claims from dirty code rejected")
 
-    clean_tree = not bool(dirty)
+    not bool(dirty)
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p107_config": config_sha[:16],
             "weights_sha256": train_run_a.get("weights_sha256", "")[:16],
@@ -9343,9 +9371,7 @@ def run_p107_conditional_proposer_audit(
     return report
 
 
-def run_p108_formal_mcts_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p108_formal_mcts_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P108 audit: Monte Carlo Tree Search (MCTS) over Lean 4 tactic spaces guided by kernel feedback.
 
     Verifies:
@@ -9375,7 +9401,9 @@ def run_p108_formal_mcts_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P108 LEAN 4 TACTIC TREE FORMAL MCTS AUDIT (Zero Sorry, Compiler Feedback, High Closure Rate)")
+    print(
+        "P108 LEAN 4 TACTIC TREE FORMAL MCTS AUDIT (Zero Sorry, Compiler Feedback, High Closure Rate)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -9413,25 +9441,27 @@ def run_p108_formal_mcts_audit(
         f"  Search stats: avg iterations={bench.get('avg_iterations')}, avg nodes={bench.get('avg_nodes_expanded')}, "
         f"max depth={bench.get('max_depth')}"
     )
-    print(
-        f"  Integrity: zero_sorry={bench.get('zero_sorry')}, verified_by_lean=True"
-    )
+    print(f"  Integrity: zero_sorry={bench.get('zero_sorry')}, verified_by_lean=True")
 
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
         findings.append("DIRTY_SOURCE: tree not clean; formal MCTS claims from dirty code rejected")
 
-    clean_tree = not bool(dirty)
+    not bool(dirty)
     dataset_hashes = {
         "p108_config": config_sha[:16],
     }
     if Path(proposer_weights_path).exists():
-        dataset_hashes["proposer_weights"] = hashlib.sha256(Path(proposer_weights_path).read_bytes()).hexdigest()[:16]
+        dataset_hashes["proposer_weights"] = hashlib.sha256(
+            Path(proposer_weights_path).read_bytes()
+        ).hexdigest()[:16]
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes=dataset_hashes,
         config={"acceptance_phase": "P108"},
     )
@@ -9480,9 +9510,7 @@ def run_p108_formal_mcts_audit(
     return report
 
 
-def run_p109_erdos_graham_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p109_erdos_graham_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P109 audit: Erdős–Graham unit fraction decompositions and density certificates audit.
 
     Verifies:
@@ -9513,7 +9541,9 @@ def run_p109_erdos_graham_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P109 ERDŐS–GRAHAM UNIT FRACTION DECOMPOSITION AUDIT (Zero Sorry, Exact Soundness, Lean 4 Verified)")
+    print(
+        "P109 ERDŐS–GRAHAM UNIT FRACTION DECOMPOSITION AUDIT (Zero Sorry, Exact Soundness, Lean 4 Verified)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -9521,9 +9551,7 @@ def run_p109_erdos_graham_audit(
     seed = int(config.get("seed", 42))
     device_name = config.get("device", "cpu")
     project_dir = config.get("project_dir", "lean_proofs")
-    generated_path = config.get(
-        "generated_path", "lean_proofs/Generated/ErdosGrahamTheorems.lean"
-    )
+    generated_path = config.get("generated_path", "lean_proofs/Generated/ErdosGrahamTheorems.lean")
     max_len = int(config.get("max_len", 5))
     limit = int(config.get("limit", 80))
     min_solutions = int(config.get("min_solutions", 50))
@@ -9557,12 +9585,16 @@ def run_p109_erdos_graham_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
-        findings.append("DIRTY_SOURCE: tree not clean; Erdős-Graham claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; Erdős-Graham claims from dirty code rejected"
+        )
 
-    clean_tree = not bool(dirty)
+    not bool(dirty)
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p109_config": config_sha[:16],
             "lean_theorems": engine_audit.get("sha256", "")[:16],
@@ -9627,6 +9659,7 @@ def run_p110_pillai_catalan_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.formal_bridge import (
@@ -9648,7 +9681,9 @@ def run_p110_pillai_catalan_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P110 PILLAI-CATALAN EXPONENTIAL DIOPHANTINE AUDIT (Zero Sorry, Exact Soundness, Lean 4 Verified)")
+    print(
+        "P110 PILLAI-CATALAN EXPONENTIAL DIOPHANTINE AUDIT (Zero Sorry, Exact Soundness, Lean 4 Verified)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -9692,12 +9727,16 @@ def run_p110_pillai_catalan_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
-        findings.append("DIRTY_SOURCE: tree not clean; Pillai-Catalan claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; Pillai-Catalan claims from dirty code rejected"
+        )
 
-    clean_tree = not bool(dirty)
+    not bool(dirty)
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p110_config": config_sha[:16],
             "lean_theorems": engine_audit.get("sha256", "")[:16],
@@ -9764,17 +9803,18 @@ def run_p111_multiproblem_confirmation_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
-    from evobyte.statistical import (
-        evaluate_multiproblem_blind_confirmation,
-        generate_multiproblem_blind_partition,
-        verify_multiproblem_confirmation_soundness,
-    )
     from evobyte.provenance import (
         collect_provenance,
         get_git_commit,
         get_git_status,
+    )
+    from evobyte.statistical import (
+        evaluate_multiproblem_blind_confirmation,
+        generate_multiproblem_blind_partition,
+        verify_multiproblem_confirmation_soundness,
     )
 
     t0 = time.perf_counter()
@@ -9841,10 +9881,12 @@ def run_p111_multiproblem_confirmation_audit(
     if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
         findings.append("DIRTY_SOURCE: tree not clean; P111 claims from dirty code rejected")
 
-    clean_tree = not bool(dirty)
+    not bool(dirty)
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p111_config": config_sha[:16],
             "p111_split": split_data.get("checksum", "")[:16],
@@ -9910,6 +9952,7 @@ def run_p112_open_problems_grand_campaign_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.formal_bridge import (
@@ -9931,7 +9974,9 @@ def run_p112_open_problems_grand_campaign_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P112 OPEN PROBLEMS GRAND FORMAL CAMPAIGN AUDIT (26 Modules, 1,500+ Theorems, Zero Sorry, Hash Chain)")
+    print(
+        "P112 OPEN PROBLEMS GRAND FORMAL CAMPAIGN AUDIT (26 Modules, 1,500+ Theorems, Zero Sorry, Hash Chain)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -9961,13 +10006,17 @@ def run_p112_open_problems_grand_campaign_audit(
             f"CHAIN_HASH_MISMATCH: expected {expected_chain_hash}, computed {campaign_audit.get('final_chain_hash')}"
         )
 
-    dossier_p = _REPO_ROOT / str(config.get("dossier_path", "docs/research/p112-open-problems-dossier.md"))
+    dossier_p = _REPO_ROOT / str(
+        config.get("dossier_path", "docs/research/p112-open-problems-dossier.md")
+    )
     if not dossier_p.exists():
         findings.append(f"DOSSIER_FILE_MISSING: {dossier_p}")
     else:
         dossier_text = dossier_p.read_text(encoding="utf-8")
         if campaign_audit.get("final_chain_hash", "") not in dossier_text:
-            findings.append("DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier")
+            findings.append(
+                "DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier"
+            )
 
     print(
         f"  Total formal modules: {campaign_audit.get('total_modules')}, "
@@ -9982,10 +10031,12 @@ def run_p112_open_problems_grand_campaign_audit(
     if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
         findings.append("DIRTY_SOURCE: tree not clean; P112 claims from dirty code rejected")
 
-    clean_tree = not bool(dirty)
+    not bool(dirty)
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p112_config": config_sha[:16],
             "lean_chain_hash": campaign_audit.get("final_chain_hash", "")[:16],
@@ -10050,6 +10101,7 @@ def run_p113_additive_combinatorics_baseline_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.additive import (
@@ -10071,7 +10123,9 @@ def run_p113_additive_combinatorics_baseline_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P113 ADDITIVE COMBINATORICS FORMAL BASELINE AUDIT (Lean 4, Sidon Sets, Additive Energy, Zero Sorry)")
+    print(
+        "P113 ADDITIVE COMBINATORICS FORMAL BASELINE AUDIT (Lean 4, Sidon Sets, Additive Energy, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -10082,7 +10136,9 @@ def run_p113_additive_combinatorics_baseline_audit(
 
     baseline_audit = audit_additive_combinatorics_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/AdditiveCombinatoricsSignatures.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/AdditiveCombinatoricsSignatures.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -10107,7 +10163,9 @@ def run_p113_additive_combinatorics_baseline_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p113_config": config_sha[:16],
             "lean_theorems": baseline_audit.get("sha256", "")[:16],
@@ -10155,9 +10213,7 @@ def run_p113_additive_combinatorics_baseline_audit(
     return report
 
 
-def run_p114_sidon_sets_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p114_sidon_sets_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P114 audit: Structured extremal Sidon sets B_2[1] search and Lean 4 difference non-collision audit.
 
     Verifies:
@@ -10170,6 +10226,7 @@ def run_p114_sidon_sets_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.additive import (
@@ -10191,7 +10248,9 @@ def run_p114_sidon_sets_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P114 SIDON SETS EXTREMAL SEARCH AUDIT (Lean 4, Singer/Bose-Chowla/Ruzsa, Erdős-Turán Bounds, Zero Sorry)")
+    print(
+        "P114 SIDON SETS EXTREMAL SEARCH AUDIT (Lean 4, Singer/Bose-Chowla/Ruzsa, Erdős-Turán Bounds, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -10227,7 +10286,9 @@ def run_p114_sidon_sets_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p114_config": config_sha[:16],
             "lean_theorems": sidon_audit.get("sha256", "")[:16],
@@ -10292,6 +10353,7 @@ def run_p115_additive_energy_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.additive import (
@@ -10313,7 +10375,9 @@ def run_p115_additive_energy_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P115 ADDITIVE ENERGY & BALOG-SZEMERÉDI-GOWERS AUDIT (Lean 4, Cauchy-Schwarz, Plünnecke-Ruzsa, Zero Sorry)")
+    print(
+        "P115 ADDITIVE ENERGY & BALOG-SZEMERÉDI-GOWERS AUDIT (Lean 4, Cauchy-Schwarz, Plünnecke-Ruzsa, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -10349,7 +10413,9 @@ def run_p115_additive_energy_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p115_config": config_sha[:16],
             "lean_theorems": energy_audit.get("sha256", "")[:16],
@@ -10413,6 +10479,7 @@ def run_p116_additive_norm_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.additive import (
@@ -10434,7 +10501,9 @@ def run_p116_additive_norm_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P116 ADDITIVE_NORM METATACTIC AUDIT (Lean 4, Minkowski Sumset Normalization, Zero Sorry)")
+    print(
+        "P116 ADDITIVE_NORM METATACTIC AUDIT (Lean 4, Minkowski Sumset Normalization, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -10471,7 +10540,9 @@ def run_p116_additive_norm_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p116_config": config_sha[:16],
             "lean_theorems": tactic_audit.get("sha256", "")[:16],
@@ -10537,6 +10608,7 @@ def run_p117_erdos_turan_bases_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.additive import (
@@ -10558,7 +10630,9 @@ def run_p117_erdos_turan_bases_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P117 ERDŐS-TURÁN ADDITIVE BASES AUDIT (Lean 4, Rohrbach Bounds, Representation Multiplicity, Zero Sorry)")
+    print(
+        "P117 ERDŐS-TURÁN ADDITIVE BASES AUDIT (Lean 4, Rohrbach Bounds, Representation Multiplicity, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -10594,7 +10668,9 @@ def run_p117_erdos_turan_bases_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p117_config": config_sha[:16],
             "lean_theorems": bases_audit.get("sha256", "")[:16],
@@ -10658,6 +10734,7 @@ def run_p118_sum_free_density_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.additive import (
@@ -10679,7 +10756,9 @@ def run_p118_sum_free_density_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P118 SUM-FREE SETS & SCHNIRELMANN-MANN DENSITY AUDIT (Lean 4, Erdős ceil(N/3) Bounds, Zero Sorry)")
+    print(
+        "P118 SUM-FREE SETS & SCHNIRELMANN-MANN DENSITY AUDIT (Lean 4, Erdős ceil(N/3) Bounds, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -10715,7 +10794,9 @@ def run_p118_sum_free_density_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p118_config": config_sha[:16],
             "lean_theorems": sf_audit.get("sha256", "")[:16],
@@ -10779,6 +10860,7 @@ def run_p119_additive_blind_confirmation_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.provenance import (
@@ -10801,7 +10883,9 @@ def run_p119_additive_blind_confirmation_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P119 ADDITIVE COMBINATORICS BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)")
+    print(
+        "P119 ADDITIVE COMBINATORICS BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -10858,7 +10942,9 @@ def run_p119_additive_blind_confirmation_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p119_config": config_sha[:16],
             "p119_split": split_data.get("checksum", "")[:16],
@@ -10925,6 +11011,7 @@ def run_p120_additive_grand_campaign_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.formal_bridge import (
@@ -10946,7 +11033,9 @@ def run_p120_additive_grand_campaign_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P120 ADDITIVE COMBINATORICS GRAND FORMAL CAMPAIGN AUDIT (32 Modules, 2,000+ Theorems, Zero Sorry, Hash Chain)")
+    print(
+        "P120 ADDITIVE COMBINATORICS GRAND FORMAL CAMPAIGN AUDIT (32 Modules, 2,000+ Theorems, Zero Sorry, Hash Chain)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -10976,13 +11065,17 @@ def run_p120_additive_grand_campaign_audit(
             f"CHAIN_HASH_MISMATCH: expected {expected_chain_hash}, computed {campaign_audit.get('final_chain_hash')}"
         )
 
-    dossier_p = _REPO_ROOT / str(config.get("dossier_path", "docs/research/p120-additive-combinatorics-dossier.md"))
+    dossier_p = _REPO_ROOT / str(
+        config.get("dossier_path", "docs/research/p120-additive-combinatorics-dossier.md")
+    )
     if not dossier_p.exists():
         findings.append(f"DOSSIER_FILE_MISSING: {dossier_p}")
     else:
         dossier_text = dossier_p.read_text(encoding="utf-8")
         if campaign_audit.get("final_chain_hash", "") not in dossier_text:
-            findings.append("DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier")
+            findings.append(
+                "DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier"
+            )
 
     print(
         f"  Total formal modules: {campaign_audit.get('total_modules')}, "
@@ -11000,7 +11093,9 @@ def run_p120_additive_grand_campaign_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p120_config": config_sha[:16],
             "lean_chain_hash": campaign_audit.get("final_chain_hash", "")[:16],
@@ -11066,6 +11161,7 @@ def run_p121_extremal_graph_ramsey_baseline_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.graph_ramsey import (
@@ -11087,7 +11183,9 @@ def run_p121_extremal_graph_ramsey_baseline_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P121 EXTREMAL GRAPH & RAMSEY BASELINE AUDIT (Lean 4, Mantel-Turán, Erdős-Szekeres, Zero Sorry)")
+    print(
+        "P121 EXTREMAL GRAPH & RAMSEY BASELINE AUDIT (Lean 4, Mantel-Turán, Erdős-Szekeres, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -11098,7 +11196,9 @@ def run_p121_extremal_graph_ramsey_baseline_audit(
 
     baseline_audit = audit_extremal_graph_ramsey_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/ExtremalGraphRamseySignatures.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/ExtremalGraphRamseySignatures.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -11123,7 +11223,9 @@ def run_p121_extremal_graph_ramsey_baseline_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p121_config": config_sha[:16],
             "lean_theorems": baseline_audit.get("sha256", "")[:16],
@@ -11173,9 +11275,7 @@ def run_p121_extremal_graph_ramsey_baseline_audit(
     return report
 
 
-def run_p122_paley_ramsey_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p122_paley_ramsey_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P122 audit: Paley graphs, strongly regular parameters, and Ramsey lower-bound constructions.
 
     Verifies:
@@ -11188,6 +11288,7 @@ def run_p122_paley_ramsey_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.graph_ramsey import (
@@ -11209,7 +11310,9 @@ def run_p122_paley_ramsey_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P122 PALEY GRAPHS & RAMSEY LOWER-BOUND CONSTRUCTIONS AUDIT (Lean 4, SRG, Paley P(q), Zero Sorry)")
+    print(
+        "P122 PALEY GRAPHS & RAMSEY LOWER-BOUND CONSTRUCTIONS AUDIT (Lean 4, SRG, Paley P(q), Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -11245,7 +11348,9 @@ def run_p122_paley_ramsey_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p122_config": config_sha[:16],
             "lean_theorems": paley_audit.get("sha256", "")[:16],
@@ -11310,6 +11415,7 @@ def run_p123_zarankiewicz_kst_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.graph_ramsey import (
@@ -11342,7 +11448,9 @@ def run_p123_zarankiewicz_kst_audit(
 
     kst_audit = audit_zarankiewicz_kovari_sos_turan(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/ZarankiewiczKovariSosTuranTheorems.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/ZarankiewiczKovariSosTuranTheorems.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -11367,7 +11475,9 @@ def run_p123_zarankiewicz_kst_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p123_config": config_sha[:16],
             "lean_theorems": kst_audit.get("sha256", "")[:16],
@@ -11431,6 +11541,7 @@ def run_p124_graph_ramsey_norm_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.graph_ramsey import (
@@ -11452,7 +11563,9 @@ def run_p124_graph_ramsey_norm_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P124 GRAPH_RAMSEY_NORM METATACTIC AUDIT (Lean 4, Goodman Monochromatic Triangles, Cauchy-Schwarz, Zero Sorry)")
+    print(
+        "P124 GRAPH_RAMSEY_NORM METATACTIC AUDIT (Lean 4, Goodman Monochromatic Triangles, Cauchy-Schwarz, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -11489,7 +11602,9 @@ def run_p124_graph_ramsey_norm_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p124_config": config_sha[:16],
             "lean_theorems": tactic_audit.get("sha256", "")[:16],
@@ -11554,6 +11669,7 @@ def run_p125_roth_salem_spencer_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.graph_ramsey import (
@@ -11611,7 +11727,9 @@ def run_p125_roth_salem_spencer_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p125_config": config_sha[:16],
             "lean_theorems": roth_audit.get("sha256", "")[:16],
@@ -11676,6 +11794,7 @@ def run_p126_erdos_gyarfas_chromatic_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.graph_ramsey import (
@@ -11697,7 +11816,9 @@ def run_p126_erdos_gyarfas_chromatic_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P126 ERDŐS-GYÁRFÁS CYCLES & CHROMATIC AUDIT (Lean 4, Power-of-2 Cycles, Dirac, Zero Sorry)")
+    print(
+        "P126 ERDŐS-GYÁRFÁS CYCLES & CHROMATIC AUDIT (Lean 4, Power-of-2 Cycles, Dirac, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -11708,7 +11829,9 @@ def run_p126_erdos_gyarfas_chromatic_audit(
 
     gyarfas_audit = audit_erdos_gyarfas_chromatic_invariants(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/ErdosGyarfasChromaticTheorems.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/ErdosGyarfasChromaticTheorems.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -11733,7 +11856,9 @@ def run_p126_erdos_gyarfas_chromatic_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p126_config": config_sha[:16],
             "lean_theorems": gyarfas_audit.get("sha256", "")[:16],
@@ -11797,6 +11922,7 @@ def run_p127_graph_ramsey_blind_confirmation_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.provenance import (
@@ -11819,7 +11945,9 @@ def run_p127_graph_ramsey_blind_confirmation_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P127 GRAPH & RAMSEY BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)")
+    print(
+        "P127 GRAPH & RAMSEY BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -11876,7 +12004,9 @@ def run_p127_graph_ramsey_blind_confirmation_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p127_config": config_sha[:16],
             "p127_split": split_data.get("checksum", "")[:16],
@@ -11943,6 +12073,7 @@ def run_p128_extremal_graph_ramsey_grand_campaign_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.formal_bridge import (
@@ -11964,7 +12095,9 @@ def run_p128_extremal_graph_ramsey_grand_campaign_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P128 EXTREMAL GRAPH & RAMSEY GRAND FORMAL CAMPAIGN AUDIT (38 Modules, 2,800+ Theorems, Zero Sorry, Hash Chain)")
+    print(
+        "P128 EXTREMAL GRAPH & RAMSEY GRAND FORMAL CAMPAIGN AUDIT (38 Modules, 2,800+ Theorems, Zero Sorry, Hash Chain)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -11994,13 +12127,17 @@ def run_p128_extremal_graph_ramsey_grand_campaign_audit(
             f"CHAIN_HASH_MISMATCH: expected {expected_chain_hash}, computed {campaign_audit.get('final_chain_hash')}"
         )
 
-    dossier_p = _REPO_ROOT / str(config.get("dossier_path", "docs/research/p128-extremal-graph-ramsey-dossier.md"))
+    dossier_p = _REPO_ROOT / str(
+        config.get("dossier_path", "docs/research/p128-extremal-graph-ramsey-dossier.md")
+    )
     if not dossier_p.exists():
         findings.append(f"DOSSIER_FILE_MISSING: {dossier_p}")
     else:
         dossier_text = dossier_p.read_text(encoding="utf-8")
         if campaign_audit.get("final_chain_hash", "") not in dossier_text:
-            findings.append("DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier")
+            findings.append(
+                "DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier"
+            )
 
     print(
         f"  Total formal modules: {campaign_audit.get('total_modules')}, "
@@ -12018,7 +12155,9 @@ def run_p128_extremal_graph_ramsey_grand_campaign_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p128_config": config_sha[:16],
             "lean_chain_hash": campaign_audit.get("final_chain_hash", "")[:16],
@@ -12085,6 +12224,7 @@ def run_p129_discrete_geometry_baseline_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrete_geometry import (
@@ -12106,7 +12246,9 @@ def run_p129_discrete_geometry_baseline_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P129 DISCRETE GEOMETRY & DISTINCT DISTANCES BASELINE AUDIT (Lean 4, Metric Axioms, Zero Sorry)")
+    print(
+        "P129 DISCRETE GEOMETRY & DISTINCT DISTANCES BASELINE AUDIT (Lean 4, Metric Axioms, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -12142,7 +12284,9 @@ def run_p129_discrete_geometry_baseline_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p129_config": config_sha[:16],
             "lean_theorems": baseline_audit.get("sha256", "")[:16],
@@ -12207,6 +12351,7 @@ def run_p130_erdos_distinct_distances_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrete_geometry import (
@@ -12228,7 +12373,9 @@ def run_p130_erdos_distinct_distances_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P130 ERDŐS DISTINCT DISTANCES & GUTH-KATZ BASELINE AUDIT (Lean 4, Elekes-Sharir, Zero Sorry)")
+    print(
+        "P130 ERDŐS DISTINCT DISTANCES & GUTH-KATZ BASELINE AUDIT (Lean 4, Elekes-Sharir, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -12239,7 +12386,9 @@ def run_p130_erdos_distinct_distances_audit(
 
     baseline_audit = audit_erdos_distinct_distances_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/ErdosDistinctDistancesTheorems.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/ErdosDistinctDistancesTheorems.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -12264,7 +12413,9 @@ def run_p130_erdos_distinct_distances_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p130_config": config_sha[:16],
             "lean_theorems": baseline_audit.get("sha256", "")[:16],
@@ -12329,6 +12480,7 @@ def run_p131_unit_distances_szemeredi_trotter_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrete_geometry import (
@@ -12350,7 +12502,9 @@ def run_p131_unit_distances_szemeredi_trotter_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P131 UNIT DISTANCES & SZEMERÉDI-TROTTER BASELINE AUDIT (Lean 4, Crossing Lemma, Zero Sorry)")
+    print(
+        "P131 UNIT DISTANCES & SZEMERÉDI-TROTTER BASELINE AUDIT (Lean 4, Crossing Lemma, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -12361,7 +12515,9 @@ def run_p131_unit_distances_szemeredi_trotter_audit(
 
     baseline_audit = audit_unit_distances_szemeredi_trotter_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/UnitDistancesSzemerediTrotterTheorems.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/UnitDistancesSzemerediTrotterTheorems.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -12386,7 +12542,9 @@ def run_p131_unit_distances_szemeredi_trotter_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p131_config": config_sha[:16],
             "lean_theorems": baseline_audit.get("sha256", "")[:16],
@@ -12453,6 +12611,7 @@ def run_p132_geom_distance_norm_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrete_geometry import (
@@ -12485,7 +12644,9 @@ def run_p132_geom_distance_norm_audit(
 
     tactic_audit = audit_discrete_geometry_tactic_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/DiscreteGeometryTacticTheorems.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/DiscreteGeometryTacticTheorems.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -12511,7 +12672,9 @@ def run_p132_geom_distance_norm_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p132_config": config_sha[:16],
             "lean_theorems": tactic_audit.get("sha256", "")[:16],
@@ -12579,6 +12742,7 @@ def run_p133_convex_polygons_happy_ending_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrete_geometry import (
@@ -12611,7 +12775,9 @@ def run_p133_convex_polygons_happy_ending_audit(
 
     baseline_audit = audit_convex_polygons_happy_ending_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/ConvexPolygonsHappyEndingTheorems.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/ConvexPolygonsHappyEndingTheorems.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -12636,7 +12802,9 @@ def run_p133_convex_polygons_happy_ending_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p133_config": config_sha[:16],
             "lean_theorems": baseline_audit.get("sha256", "")[:16],
@@ -12702,6 +12870,7 @@ def run_p134_hadwiger_nelson_coloring_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrete_geometry import (
@@ -12734,7 +12903,9 @@ def run_p134_hadwiger_nelson_coloring_audit(
 
     baseline_audit = audit_hadwiger_nelson_coloring_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/HadwigerNelsonColoringTheorems.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/HadwigerNelsonColoringTheorems.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -12759,7 +12930,9 @@ def run_p134_hadwiger_nelson_coloring_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p134_config": config_sha[:16],
             "lean_theorems": baseline_audit.get("sha256", "")[:16],
@@ -12823,6 +12996,7 @@ def run_p135_discrete_geometry_blind_confirmation_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.provenance import (
@@ -12845,7 +13019,9 @@ def run_p135_discrete_geometry_blind_confirmation_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P135 DISCRETE GEOMETRY BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)")
+    print(
+        "P135 DISCRETE GEOMETRY BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -12902,7 +13078,9 @@ def run_p135_discrete_geometry_blind_confirmation_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p135_config": config_sha[:16],
             "p135_split": split_data.get("checksum", "")[:16],
@@ -12968,6 +13146,7 @@ def run_p136_discrete_geometry_grand_campaign_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.formal_bridge import (
@@ -12989,7 +13168,9 @@ def run_p136_discrete_geometry_grand_campaign_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P136 DISCRETE GEOMETRY GRAND FORMAL CAMPAIGN AUDIT (44 Modules, 3,300+ Theorems, Zero Sorry, Hash Chain)")
+    print(
+        "P136 DISCRETE GEOMETRY GRAND FORMAL CAMPAIGN AUDIT (44 Modules, 3,300+ Theorems, Zero Sorry, Hash Chain)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -13019,13 +13200,17 @@ def run_p136_discrete_geometry_grand_campaign_audit(
             f"CHAIN_HASH_MISMATCH: expected {expected_chain_hash}, computed {campaign_audit.get('final_chain_hash')}"
         )
 
-    dossier_p = _REPO_ROOT / str(config.get("dossier_path", "docs/research/p136-discrete-geometry-dossier.md"))
+    dossier_p = _REPO_ROOT / str(
+        config.get("dossier_path", "docs/research/p136-discrete-geometry-dossier.md")
+    )
     if not dossier_p.exists():
         findings.append(f"DOSSIER_FILE_MISSING: {dossier_p}")
     else:
         dossier_text = dossier_p.read_text(encoding="utf-8")
         if campaign_audit.get("final_chain_hash", "") not in dossier_text:
-            findings.append("DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier")
+            findings.append(
+                "DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier"
+            )
 
     print(
         f"  Total formal modules: {campaign_audit.get('total_modules')}, "
@@ -13043,7 +13228,9 @@ def run_p136_discrete_geometry_grand_campaign_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p136_config": config_sha[:16],
             "lean_chain_hash": campaign_audit.get("final_chain_hash", "")[:16],
@@ -13110,6 +13297,7 @@ def run_p137_discrepancy_covering_baseline_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrepancy import (
@@ -13142,7 +13330,9 @@ def run_p137_discrepancy_covering_baseline_audit(
 
     baseline_audit = audit_discrepancy_covering_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/DiscrepancyCoveringSignatures.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/DiscrepancyCoveringSignatures.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -13172,7 +13362,9 @@ def run_p137_discrepancy_covering_baseline_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p137_config": config_sha[:16],
             "lean_signatures": baseline_audit.get("sha256", "")[:16],
@@ -13238,6 +13430,7 @@ def run_p138_erdos_discrepancy_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrepancy import (
@@ -13259,7 +13452,9 @@ def run_p138_erdos_discrepancy_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P138 ERDŐS DISCREPANCY PROBLEM & COMPLETELY MULTIPLICATIVE REDUCTION AUDIT (Lean 4, Zero Sorry)")
+    print(
+        "P138 ERDŐS DISCREPANCY PROBLEM & COMPLETELY MULTIPLICATIVE REDUCTION AUDIT (Lean 4, Zero Sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -13300,7 +13495,9 @@ def run_p138_erdos_discrepancy_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p138_config": config_sha[:16],
             "lean_signatures": baseline_audit.get("sha256", "")[:16],
@@ -13367,6 +13564,7 @@ def run_p139_roth_spencer_discrepancy_audit(
     import json
     import time
     from pathlib import Path
+
     import torch as _torch
 
     from evobyte.discrepancy import (
@@ -13399,7 +13597,9 @@ def run_p139_roth_spencer_discrepancy_audit(
 
     baseline_audit = audit_roth_spencer_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get("lean_file", "lean_proofs/Generated/RothSpencerDiscrepancyTheorems.lean"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/RothSpencerDiscrepancyTheorems.lean"
+        ),
         verify_lake=verify_lake,
     )
 
@@ -13429,7 +13629,9 @@ def run_p139_roth_spencer_discrepancy_audit(
 
     prov = collect_provenance(
         seed=seed,
-        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
         dataset_hashes={
             "p139_config": config_sha[:16],
             "lean_signatures": baseline_audit.get("sha256", "")[:16],
