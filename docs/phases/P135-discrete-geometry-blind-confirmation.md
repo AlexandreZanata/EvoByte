@@ -1,6 +1,6 @@
 # P135 — Confirmação cega em larga escala em geometria discreta sob controle FWER (Bonferroni-Holm)
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P134 concluída; branch a partir de `codex/p134-hadwiger-nelson-plane-coloring`.
 **Owner:** agente executor; revisor estatístico/matemático nos gates indicados.
 **Pré-requisito:** P134 concluída com teoremas de geometria discreta e colorações provados; partição cega selada de 100 instâncias intocada.

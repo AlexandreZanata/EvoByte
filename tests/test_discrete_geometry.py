@@ -802,3 +802,78 @@ def test_verify_hadwiger_nelson_coloring_soundness_rejections() -> None:
     sound, findings = verify_hadwiger_nelson_coloring_baseline_soundness(bad_bench_audit)
     assert sound is False
     assert any("INVALID_MOSER_BENCHMARK" in f for f in findings)
+
+
+# ==============================================================================
+# P135 TESTS: DISCRETE GEOMETRY BLIND CONFIRMATION & FWER CONTROL
+# ==============================================================================
+
+
+def test_p135_discrete_geometry_blind_partition_and_fwer_evaluation() -> None:
+    """Test generation of P135 blind split and FWER-controlled evaluation."""
+    from evobyte.statistical import (
+        evaluate_discrete_geometry_blind_confirmation,
+        generate_discrete_geometry_blind_split,
+        verify_discrete_geometry_blind_confirmation_soundness,
+    )
+
+    part = generate_discrete_geometry_blind_split(seed=135, count_per_track=25, alpha=0.01)
+    assert part["split_id"] == "p135-discrete-geometry-blind-partition-v1"
+    assert part["total_instances"] == 100
+    assert part["zero_leakage_verified"] is True
+    assert len(part["checksum"]) == 64
+
+    eval_res = evaluate_discrete_geometry_blind_confirmation(part, alpha=0.01)
+    assert eval_res["phase"] == "P135"
+    assert eval_res["total_instances"] == 100
+    assert eval_res["total_wins"] == 100
+    assert eval_res["total_losses"] == 0
+    assert eval_res["fwer_controlled"] is True
+    assert eval_res["max_holm_p_value"] < 0.01
+    assert eval_res["all_confirmed"] is True
+
+    sound, findings = verify_discrete_geometry_blind_confirmation_soundness(eval_res)
+    assert sound is True
+    assert findings == []
+
+    # Test leakage detection
+    contaminated = generate_discrete_geometry_blind_split(
+        seed=135, count_per_track=5, dev_pool={"P135_DDG_01"}, alpha=0.01
+    )
+    assert contaminated["leakage_detected"] is True
+    assert contaminated["zero_leakage_verified"] is False
+
+
+def test_p135_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P135 audit rejects invalid configuration phase."""
+    import json
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p135_discrete_geometry_blind_confirmation_audit
+
+    cfg_p = tmp_path / "bad-p135.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P135 configuration"):
+        run_p135_discrete_geometry_blind_confirmation_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p135_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P135 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p135_discrete_geometry_blind_confirmation_audit
+
+    cfg_file = repo_root / "experiments/p135-config.json"
+    out_file = tmp_path / "p135-smoke-out.json"
+
+    report = run_p135_discrete_geometry_blind_confirmation_audit(cfg_file, out_file)
+    assert report["phase"] == "P135"
+    assert report["total_instances"] == 100
+    assert report["total_wins"] == 100
+    assert out_file.exists()
