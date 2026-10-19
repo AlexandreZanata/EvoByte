@@ -319,6 +319,32 @@ blind FWER confirmation, and 3,800+ Lean 4 theorems.
 - [P143 — Confirmação cega em larga escala em discrepância e recobrimentos sob controle FWER](P143-discrepancy-covering-blind-confirmation.md).
 - [P144 — Grande campanha formal de discrepância e recobrimentos com dossiê certificado em Lean 4](P144-discrepancy-covering-grand-dossier.md).
 
+## Constructive algebraic discovery & high-moduli Schinzel program (P145–P152)
+
+Defined under D038 to pivot from shallow broad lema enumeration to deep constructive discovery on narrow, computationally tractable problems. Targets high-moduli ($M \ge 840$) Schinzel open congruence orbits, quadratic ring sieves, parameterized polynomial identities in $\mathbb{Q}[k]$, extremal finite Sidon certificates, and dual-verifier international novelty audit.
+
+- [P145 — Banco formal de classes de congruência resistentes de Schinzel e recobrimentos modulares de alta ordem](P145-schinzel-high-moduli-congruence-database.md).
+- [P146 — Crivo diofantino acelerado em anéis quadráticos para classes resistentes de Schinzel](P146-quadratic-ring-sieve-resistant-schinzel.md).
+- [P147 — Síntese automatizada de identidades paramétricas polinomiais para classes residuais abertas](P147-automated-polynomial-identity-synthesis.md).
+- [P148 — Certificação formal no kernel Lean 4 das novas identidades paramétricas](P148-lean4-kernel-certification-identities.md).
+- [P149 — Síntese e verificação formal de certificados extremais construtivos em combinatória finita](P149-extremal-finite-constructive-certificates.md).
+- [P150 — Auditoria rigorosa de novidade contra literatura internacional e checadores duais](P150-world-literature-novelty-dual-audit.md).
+- [P151 — Confirmação cega em partição selada sob controle estatístico Holm FWER](P151-blind-confirmation-holm-fwer.md).
+- [P152 — Grande campanha formal de descoberta construtiva e dossiê de literatura](P152-constructive-algebraic-grand-dossier.md).
+
+## P13 clean reproduction closing & systems publication program (P153–P160)
+
+Defined under D039 to close the foundational H1 benchmark matrix with strict wall-clock time provenance post-D013 audit. Executes measured baselines (Random, GP, PySR), 9 full-pipeline ablations, strict hidden/extrapolation generalization splits, Holm FWER statistical verdict, containerized hermetic reproduction, and publication-ready systems research manuscript.
+
+- [P153 — Auditoria e isolamento do harness de reprodução limpa da matriz P13](P153-p13-clean-reproduction-harness-audit.md).
+- [P154 — Execução da matriz completa sob orçamentos estritos de tempo de parede](P154-wall-clock-benchmark-matrix-execution.md).
+- [P155 — Medição exata dos baselines competitivos pareados sob mesmo orçamento](P155-honest-baselines-gp-pysr-execution.md).
+- [P156 — Avaliação de generalização em splits ocultos e extrapolação estrita sem vazamento](P156-generalization-hidden-extrapolation-audit.md).
+- [P157 — Auditoria e medição sistemática das 9 ablações de pipeline e cascata](P157-full-cascade-gpu-ablations-measurement.md).
+- [P158 — Veredito estatístico dos 5 critérios de H1 e análise de fronteira de Pareto](P158-h1-statistical-verdict-pareto-analysis.md).
+- [P159 — Reprodutibilidade independente em contêiner hermético limpo](P159-clean-environment-container-reproducibility.md).
+- [P160 — Redação e consolidação do manuscrito científico de sistemas e publicação](P160-systems-research-manuscript-publication.md).
+
 Execute one micro-task at a time. All phases remain Proposed until their explicit
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.

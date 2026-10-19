@@ -781,3 +781,37 @@ P137 banco formal discrepância e recobrimentos -> P138 EDP e funções multipli
 3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P143):** partição selada de 100 instâncias sem vazamento para o crivo.
+
+---
+
+## Programa de Descoberta Algébrica Construtiva e Identidades de Schinzel em Módulos Altos (P145–P152)
+
+Decisão formal: D038. Este programa pivota da enumeração horizontal de lemas elementares em múltiplos domínios para o aprofundamento vertical em problemas estreitos e computacionalmente tratáveis, buscando novidade matemática genuína.
+
+### Macro-tarefas de P145–P152
+
+1. **Banco formal de classes resistentes de Schinzel (P145):** Mapeamento e tipagem em Lean 4 das classes abertas para $a \in \{5, 6, 7\}$ sob módulos $M \in \{840, 2520, 5040\}$ (`SchinzelHighModuliSignatures.lean`).
+2. **Crivo diofantino acelerado em anéis quadráticos (P146):** Fatoração e crivo de normas em $\mathbb{Z}[\sqrt{d}]$ e quatérnios de Hurwitz para poda de ramos sem quadrados.
+3. **Síntese automatizada de identidades polinomiais (P147):** Interpolação de Newton sobre frações contínuas e busca evolutiva em $\mathbb{Q}[k]$ com coordenadas estritamente positivas em $\mathbb{N}$.
+4. **Certificação formal no kernel Lean 4 (P148):** Compilação formal no kernel via tática `ring` e lemas de divisibilidade inteira com zero `sorry`.
+5. **Certificados extremais construtivos em combinatória finita (P149):** Algoritmo branch-and-bound vetorial para conjuntos de Sidon $B_2[1]$ densos ($N \le 2000$) e certificados formais provados via `decide`.
+6. **Auditoria rigorosa de novidade contra literatura internacional (P150):** Checadores duais independentes (Python + Lean 4) e confronto com ErdosProblems, OEIS e publicações mundiais.
+7. **Confirmação cega em partição selada (P151):** Validação de 100 instâncias resistentes contra baselines sob controle Bonferroni–Holm em $\alpha = 0{,}01$.
+8. **Grande campanha de descoberta e dossiê de literatura (P152):** Dossiê formal em `docs/research/`, cadeia criptográfica SHA-256 e pacote matemático pronto para publicação.
+
+---
+
+## Programa de Fechamento da Matriz Limpa P13 e Manuscrito Científico de Sistemas/CVPS (P153–P160)
+
+Decisão formal: D039. Este programa fecha a auditoria fundacional D013 e consolida os resultados de sistemas e computação evolutiva de alto throughput (CVPS) em um artigo científico completo pronto para submissão a conferência/periódico de ponta.
+
+### Macro-tarefas de P153–P160
+
+1. **Auditoria e isolamento do harness de reprodução limpa (P153):** Eliminação de resíduos históricos e temporização estrita via `time.perf_counter()` medindo o laço quente completo na GPU.
+2. **Execução da matriz completa sob tempo de parede (P154):** 20 sementes independentes em orçamentos reais de 10 s, 1 min, 10 min e 1 h sobre alvos Level-A e Level-B na RTX 4060.
+3. **Medição exata dos baselines competitivos pareados (P155):** Execução pareada de Random Search, Classical GP e PySR sob rigorosamente o mesmo timeout e sementes.
+4. **Avaliação de generalização oculta e extrapolação (P156):** Teste cego em $X_{\text{hidden}}$ e $X_{\text{extrap}}$ demonstrando que bytecode compacto previne memorização (*bloat*).
+5. **Auditoria e medição sistemática das 9 ablações (P157):** Medição empírica de cada componente: verificador em cascata ($14.6\times$ CVPS), early stop ($2.1\times$), MAP-Elites e residência em VRAM.
+6. **Veredito estatístico dos 5 critérios de H1 e Pareto (P158):** Teste de postos sinalizados de Wilcoxon + Holm FWER e curvas de Pareto empíricas (CVPS vs. MSE e Bytes vs. MSE).
+7. **Reprodutibilidade independente em contêiner hermético (P159):** Dockerfile hermético, execução de `make verify` sem conexão de rede e pacote de dados abertos para Zenodo.
+8. **Redação do manuscrito científico de sistemas e publicação (P160):** Artigo completo em LaTeX (`docs/paper/`) com figuras geradas dos dados brutos e submissão pronta para publicação.
