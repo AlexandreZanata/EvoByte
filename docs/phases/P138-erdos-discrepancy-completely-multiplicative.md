@@ -1,6 +1,6 @@
 # P138 — Problema da discrepância de Erdős (EDP) e multiplicatividade completa
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P137 concluída; branch a partir de `codex/p137-discrepancy-covering-formal-database`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P137 concluída com assinaturas de discrepância e recobrimentos aprovadas no Lean 4.

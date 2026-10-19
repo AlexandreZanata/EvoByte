@@ -11,12 +11,17 @@ import pytest
 from evobyte.discrepancy import (
     arithmetic_progression_discrepancy,
     audit_discrepancy_covering_baseline,
+    audit_erdos_discrepancy_baseline,
     discrepancy_covering_benchmarks,
+    erdos_discrepancy_benchmarks,
+    generate_completely_multiplicative_sequence,
     generate_discrepancy_covering_signatures_lean_code,
+    generate_erdos_discrepancy_lean_code,
     hypergraph_discrepancy,
     is_completely_multiplicative,
     is_primitive_set,
     liouville_sequence,
+    polymath_edp_bounds,
     primitive_set_reciprocal_log_sum,
     roth_ap_bound,
     sign_value,
@@ -24,6 +29,8 @@ from evobyte.discrepancy import (
     subset_discrepancy,
     verify_covering_system,
     verify_discrepancy_covering_baseline_soundness,
+    verify_erdos_discrepancy_baseline_soundness,
+    verify_tao_homogeneous_reduction,
 )
 
 
@@ -265,5 +272,160 @@ def test_p137_audit_smoke(tmp_path: Path) -> None:
     report = run_p137_discrepancy_covering_baseline_audit(tmp_cfg, out_file)
     assert report["phase"] == "P137"
     assert report["total_theorems"] >= 75
+    assert report["has_sorry"] is False
+    assert out_file.exists()
+
+
+def test_polymath_edp_bounds() -> None:
+    """Test Polymath5 minimal sequence lengths requiring discrepancy > C."""
+    bounds = polymath_edp_bounds()
+    assert bounds[1] == 12
+    assert bounds[2] == 1161
+
+
+def test_generate_completely_multiplicative_sequence() -> None:
+    """Test generation of completely multiplicative sequences from prime values."""
+    assert generate_completely_multiplicative_sequence({2: -1}, 0) == []
+
+    primes_map = {2: -1, 3: 1, 5: -1, 7: 1}
+    seq = generate_completely_multiplicative_sequence(primes_map, 30)
+    assert len(seq) == 30
+    assert seq[0] == 1
+    assert seq[1] == -1
+    assert seq[2] == 1
+    assert seq[3] == 1
+    assert seq[5] == -1
+    assert seq[7] == -1
+    assert seq[8] == 1
+    assert seq[9] == 1
+
+    f_dict = {i: seq[i - 1] for i in range(1, 31)}
+    assert is_completely_multiplicative(f_dict, max_n=30) is True
+
+
+def test_verify_tao_homogeneous_reduction() -> None:
+    """Test Tao's homogeneous AP reduction: D(f, n, d) = f(d) * D(f, n, 1)."""
+    lio = liouville_sequence(50)
+    res_d2 = verify_tao_homogeneous_reduction(lio, d=2, n=15)
+    assert res_d2["valid"] is True
+    assert res_d2["reduction_holds"] is True
+    assert res_d2["abs_preserved"] is True
+    assert res_d2["hom_sum"] == res_d2["f_d"] * res_d2["std_sum"]
+
+    res_d3 = verify_tao_homogeneous_reduction(lio, d=3, n=15)
+    assert res_d3["valid"] is True
+    assert res_d3["reduction_holds"] is True
+
+    res_oob = verify_tao_homogeneous_reduction(lio, d=10, n=10)
+    assert res_oob["valid"] is False
+    assert res_oob["reason"] == "out_of_bounds"
+
+
+def test_erdos_discrepancy_benchmarks() -> None:
+    """Test all EDP deterministic benchmarks pass."""
+    benchmarks = erdos_discrepancy_benchmarks()
+    assert len(benchmarks) == 4
+    for b in benchmarks:
+        assert b["passed"] is True
+
+
+def test_generate_erdos_discrepancy_lean_code() -> None:
+    """Test generated Lean code for EDP contains expected theorems and zero sorry."""
+    code = generate_erdos_discrepancy_lean_code()
+    assert "namespace EvoByte.ErdosDiscrepancy" in code
+    assert "theorem sign_sq" in code
+    assert "theorem tao_factorization_len_2" in code
+    assert "theorem discrepancy_energy_preservation" in code
+    assert "theorem polymath_c1_threshold" in code
+    assert "sorry" not in code
+    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    assert len(thms) >= 80
+
+
+def test_audit_erdos_discrepancy_baseline() -> None:
+    """Test P138 baseline audit against Lean 4 kernel."""
+    audit = audit_erdos_discrepancy_baseline(verify_lake=True)
+    assert audit["module"] == "ErdosDiscrepancyTheorems"
+    assert audit["has_sorry"] is False
+    assert audit["lake_passed"] is True
+    assert audit["total_theorems"] >= 80
+    assert len(audit["benchmarks"]) == 4
+
+    sound, findings = verify_erdos_discrepancy_baseline_soundness(audit, min_theorems=80)
+    assert sound is True
+    assert findings == []
+
+
+def test_verify_erdos_discrepancy_baseline_soundness_rejections() -> None:
+    """Test that soundness validator properly catches defects."""
+    bad_audit = {
+        "has_sorry": True,
+        "lake_passed": True,
+        "total_theorems": 100,
+        "benchmarks": [{"passed": True}],
+    }
+    sound, findings = verify_erdos_discrepancy_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    bad_lake = {
+        "has_sorry": False,
+        "lake_passed": False,
+        "lake_reasons": ["error"],
+        "total_theorems": 100,
+        "benchmarks": [{"passed": True}],
+    }
+    sound2, findings2 = verify_erdos_discrepancy_baseline_soundness(bad_lake)
+    assert sound2 is False
+    assert any("LAKE_BUILD_FAILED" in f for f in findings2)
+
+    few_thms = {
+        "has_sorry": False,
+        "lake_passed": True,
+        "total_theorems": 10,
+        "benchmarks": [{"passed": True}],
+    }
+    sound3, findings3 = verify_erdos_discrepancy_baseline_soundness(few_thms, min_theorems=80)
+    assert sound3 is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings3)
+
+
+def test_p138_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P138 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p138_erdos_discrepancy_audit
+
+    cfg_p = tmp_path / "bad-p138.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P138 configuration"):
+        run_p138_erdos_discrepancy_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p138_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P138 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p138_erdos_discrepancy_audit
+
+    cfg_file = repo_root / "experiments/p138-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p138-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data), encoding="utf-8")
+    out_file = tmp_path / "p138-smoke-out.json"
+
+    report = run_p138_erdos_discrepancy_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P138"
+    assert report["total_theorems"] >= 80
     assert report["has_sorry"] is False
     assert out_file.exists()
