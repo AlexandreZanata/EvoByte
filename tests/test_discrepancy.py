@@ -41,9 +41,13 @@ from evobyte.discrepancy import (
     verify_erdos_discrepancy_baseline_soundness,
     verify_roth_spencer_baseline_soundness,
     verify_tao_homogeneous_reduction,
+    audit_covering_systems_baseline,
     audit_discrepancy_tactic_baseline,
+    covering_systems_benchmarks,
     discrepancy_tactic_benchmarks,
+    generate_covering_systems_lean_code,
     generate_discrepancy_tactic_lean_code,
+    verify_covering_systems_baseline_soundness,
 )
 from evobyte.verifier import is_lean_available
 
@@ -703,5 +707,103 @@ def test_p140_audit_smoke(tmp_path: Path) -> None:
     assert report["phase"] == "P140"
     assert report["total_theorems"] >= 80
     assert report["tactic_uses"] >= 80
+    assert report["has_sorry"] is False
+    assert out_file.exists()
+
+
+# ==============================================================================
+# P141: COVERING SYSTEMS & HOUGH MINIMUM MODULUS TESTS
+# ==============================================================================
+
+
+def test_p141_covering_systems_benchmarks() -> None:
+    """Test that all covering systems properties hold in deterministic benchmarks."""
+    benchmarks = covering_systems_benchmarks()
+    assert len(benchmarks) >= 5
+    for b in benchmarks:
+        assert b["passed"] is True
+
+
+def test_p141_generate_covering_systems_lean_code() -> None:
+    """Test generated Lean code contains expected theorems and zero sorry."""
+    code = generate_covering_systems_lean_code()
+    assert "erdos_covering_res_0" in code
+    assert "erdos_1950_system_covers_fin" in code
+    assert "erdos_1950_full_covering" in code
+    assert "hough_constant_value" in code
+    assert "odd_modulus_is_not_two" in code
+    assert "three_odd_moduli_cannot_cover_cleared" in code
+    assert "sorry" not in code
+
+
+def test_p141_covering_systems_soundness_checker() -> None:
+    """Test verification soundness checks for P141."""
+    valid_summary = {
+        "has_sorry": False,
+        "total_theorems": 150,
+        "lake_passed": True,
+        "sha256": "b" * 64,
+        "benchmarks": [{"name": "test_b", "passed": True}],
+    }
+    sound, findings = verify_covering_systems_baseline_soundness(valid_summary, min_theorems=80)
+    assert sound is True
+    assert len(findings) == 0
+
+    # Sorry detected
+    bad_sorry = dict(valid_summary, has_sorry=True)
+    sound, findings = verify_covering_systems_baseline_soundness(bad_sorry, min_theorems=80)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    # Insufficient theorems
+    bad_thms = dict(valid_summary, total_theorems=10)
+    sound, findings = verify_covering_systems_baseline_soundness(bad_thms, min_theorems=80)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    # Failed benchmark
+    bad_bench = dict(valid_summary, benchmarks=[{"name": "fail_b", "passed": False}])
+    sound, findings = verify_covering_systems_baseline_soundness(bad_bench, min_theorems=80)
+    assert sound is False
+    assert any("BENCHMARK_FAILED" in f for f in findings)
+
+
+def test_p141_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P141 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p141_covering_systems_audit
+
+    cfg_p = tmp_path / "bad-p141.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P141 configuration"):
+        run_p141_covering_systems_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p141_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P141 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p141_covering_systems_audit
+
+    cfg_file = repo_root / "experiments/p141-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p141-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data), encoding="utf-8")
+    out_file = tmp_path / "p141-smoke-out.json"
+
+    report = run_p141_covering_systems_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P141"
+    assert report["total_theorems"] >= 80
     assert report["has_sorry"] is False
     assert out_file.exists()

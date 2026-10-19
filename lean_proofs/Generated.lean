@@ -47,3 +47,4 @@ import Generated.DiscrepancyCoveringSignatures
 import Generated.ErdosDiscrepancyTheorems
 import Generated.RothSpencerDiscrepancyTheorems
 import Generated.DiscrepancyTacticTheorems
+import Generated.CoveringSystemsTheorems
