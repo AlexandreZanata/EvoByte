@@ -1,6 +1,6 @@
 # P137 — Banco formal de teoria de discrepância combinatória e recobrimentos em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P136 concluída; branch a partir de `codex/p137-p144-discrepancy-covering-program`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P136 concluída com grande campanha de geometria discreta consolidada documentalmente sob D036.
