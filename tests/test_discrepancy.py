@@ -10,26 +10,35 @@ import pytest
 
 from evobyte.discrepancy import (
     arithmetic_progression_discrepancy,
+    arithmetic_progressions_family,
     audit_discrepancy_covering_baseline,
     audit_erdos_discrepancy_baseline,
+    audit_roth_spencer_baseline,
     discrepancy_covering_benchmarks,
     erdos_discrepancy_benchmarks,
+    find_ap_discrepancy,
     generate_completely_multiplicative_sequence,
     generate_discrepancy_covering_signatures_lean_code,
     generate_erdos_discrepancy_lean_code,
+    generate_roth_spencer_lean_code,
     hypergraph_discrepancy,
     is_completely_multiplicative,
     is_primitive_set,
     liouville_sequence,
+    naive_chernoff_bound,
     polymath_edp_bounds,
     primitive_set_reciprocal_log_sum,
     roth_ap_bound,
+    roth_ap_discrepancy_lower_bound,
+    roth_spencer_benchmarks,
     sign_value,
     spencer_bound,
+    spencer_six_deviations_bound,
     subset_discrepancy,
     verify_covering_system,
     verify_discrepancy_covering_baseline_soundness,
     verify_erdos_discrepancy_baseline_soundness,
+    verify_roth_spencer_baseline_soundness,
     verify_tao_homogeneous_reduction,
 )
 
@@ -426,6 +435,158 @@ def test_p138_audit_smoke(tmp_path: Path) -> None:
 
     report = run_p138_erdos_discrepancy_audit(tmp_cfg, out_file)
     assert report["phase"] == "P138"
+    assert report["total_theorems"] >= 80
+    assert report["has_sorry"] is False
+    assert out_file.exists()
+
+
+def test_roth_ap_discrepancy_lower_bound() -> None:
+    """Test Klaus Roth AP discrepancy lower bound formula."""
+    assert roth_ap_discrepancy_lower_bound(0) == 0.0
+    assert roth_ap_discrepancy_lower_bound(-10) == 0.0
+    assert math.isclose(roth_ap_discrepancy_lower_bound(16, c=0.25), 0.5)
+    assert math.isclose(roth_ap_discrepancy_lower_bound(81, c=0.25), 0.75)
+    assert math.isclose(roth_ap_discrepancy_lower_bound(256, c=0.25), 1.0)
+
+
+def test_spencer_six_deviations_bound() -> None:
+    """Test Joel Spencer 6*sqrt(n) upper bound."""
+    assert spencer_six_deviations_bound(0) == 0.0
+    assert spencer_six_deviations_bound(-5) == 0.0
+    assert math.isclose(spencer_six_deviations_bound(1), 6.0)
+    assert math.isclose(spencer_six_deviations_bound(4), 12.0)
+    assert math.isclose(spencer_six_deviations_bound(9), 18.0)
+    assert math.isclose(spencer_six_deviations_bound(16), 24.0)
+
+    assert naive_chernoff_bound(0) == 0.0
+    assert naive_chernoff_bound(100) > 0.0
+    assert spencer_six_deviations_bound(10**8) < naive_chernoff_bound(10**8)
+
+
+def test_arithmetic_progressions_family() -> None:
+    """Test generation of arithmetic progressions family."""
+    assert arithmetic_progressions_family(0) == []
+    assert arithmetic_progressions_family(-1) == []
+
+    aps_3 = arithmetic_progressions_family(3)
+    assert len(aps_3) == 7
+    assert [0, 1, 2] in aps_3
+    assert [0, 2] in aps_3
+
+
+def test_find_ap_discrepancy() -> None:
+    """Test calculation of exact arithmetic progression discrepancy."""
+    assert find_ap_discrepancy([]) == 0
+    assert find_ap_discrepancy([1, 1, 1, 1, 1]) == 5
+    assert find_ap_discrepancy([1, -1, 1, -1]) == 2
+
+
+def test_roth_spencer_benchmarks() -> None:
+    """Test all Roth-Spencer deterministic benchmarks pass."""
+    benchmarks = roth_spencer_benchmarks()
+    assert len(benchmarks) == 4
+    for b in benchmarks:
+        assert b["passed"] is True
+
+
+def test_generate_roth_spencer_lean_code() -> None:
+    """Test generated Lean code for Roth-Spencer contains expected theorems and zero sorry."""
+    code = generate_roth_spencer_lean_code()
+    assert "namespace EvoByte.RothSpencer" in code
+    assert "theorem roth_fourth_power_lower_bound" in code
+    assert "theorem roth_fourth_power_16" in code
+    assert "theorem spencer_constant_sq" in code
+    assert "theorem spencer_bound_squared" in code
+    assert "theorem odd_progression_discrepancy_len_3_nonzero" in code
+    assert "sorry" not in code
+    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    assert len(thms) >= 80
+
+
+def test_audit_roth_spencer_baseline() -> None:
+    """Test P139 baseline audit against Lean 4 kernel."""
+    audit = audit_roth_spencer_baseline(verify_lake=True)
+    assert audit["module"] == "RothSpencerDiscrepancyTheorems"
+    assert audit["has_sorry"] is False
+    assert audit["lake_passed"] is True
+    assert audit["total_theorems"] >= 80
+    assert len(audit["benchmarks"]) == 4
+
+    sound, findings = verify_roth_spencer_baseline_soundness(audit, min_theorems=80)
+    assert sound is True
+    assert findings == []
+
+
+def test_verify_roth_spencer_baseline_soundness_rejections() -> None:
+    """Test that soundness validator properly catches defects."""
+    bad_audit = {
+        "has_sorry": True,
+        "lake_passed": True,
+        "total_theorems": 100,
+        "benchmarks": [{"passed": True}],
+    }
+    sound, findings = verify_roth_spencer_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    bad_lake = {
+        "has_sorry": False,
+        "lake_passed": False,
+        "lake_reasons": ["error"],
+        "total_theorems": 100,
+        "benchmarks": [{"passed": True}],
+    }
+    sound2, findings2 = verify_roth_spencer_baseline_soundness(bad_lake)
+    assert sound2 is False
+    assert any("LAKE_BUILD_FAILED" in f for f in findings2)
+
+    few_thms = {
+        "has_sorry": False,
+        "lake_passed": True,
+        "total_theorems": 10,
+        "benchmarks": [{"passed": True}],
+    }
+    sound3, findings3 = verify_roth_spencer_baseline_soundness(few_thms, min_theorems=80)
+    assert sound3 is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings3)
+
+
+def test_p139_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P139 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p139_roth_spencer_discrepancy_audit
+
+    cfg_p = tmp_path / "bad-p139.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P139 configuration"):
+        run_p139_roth_spencer_discrepancy_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p139_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P139 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p139_roth_spencer_discrepancy_audit
+
+    cfg_file = repo_root / "experiments/p139-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p139-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data), encoding="utf-8")
+    out_file = tmp_path / "p139-smoke-out.json"
+
+    report = run_p139_roth_spencer_discrepancy_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P139"
     assert report["total_theorems"] >= 80
     assert report["has_sorry"] is False
     assert out_file.exists()

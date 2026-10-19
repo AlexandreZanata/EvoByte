@@ -45,3 +45,4 @@ import Generated.ConvexPolygonsHappyEndingTheorems
 import Generated.HadwigerNelsonColoringTheorems
 import Generated.DiscrepancyCoveringSignatures
 import Generated.ErdosDiscrepancyTheorems
+import Generated.RothSpencerDiscrepancyTheorems

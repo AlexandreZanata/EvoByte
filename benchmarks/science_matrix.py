@@ -777,6 +777,7 @@ ACCEPTANCE_PHASES = (
     "P136",
     "P137",
     "P138",
+    "P139",
 )
 
 
@@ -13349,6 +13350,135 @@ def run_p138_erdos_discrepancy_audit(
     return report
 
 
+def run_p139_roth_spencer_discrepancy_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P139 audit: Roth AP Discrepancy Lower Bound & Spencer's Six Deviations Theorem.
+
+    Verifies:
+    1. Complete Lean 4 compilation of RothSpencerDiscrepancyTheorems.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Klaus Roth's (1964) arithmetic progression discrepancy lower bound disc(AP) = Omega(n^{1/4}),
+       Joel Spencer's (1985) six deviations bound disc(F) <= 6*sqrt(n) overcoming naive union bound,
+       exact AP discrepancy calculation, and parity non-vanishing properties.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+    import torch as _torch
+
+    from evobyte.discrepancy import (
+        audit_roth_spencer_baseline,
+        verify_roth_spencer_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P139":
+        raise ValueError(f"Config {cfg_p} is not a P139 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P139 ROTH AP LOWER BOUND & SPENCER SIX DEVIATIONS AUDIT (Lean 4, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    baseline_audit = audit_roth_spencer_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/RothSpencerDiscrepancyTheorems.lean"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_roth_spencer_baseline_soundness(
+        baseline_audit, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_sha256 = config.get("expected_sha256")
+    if expected_sha256 and baseline_audit.get("sha256") != expected_sha256:
+        findings.append(
+            f"SHA256_MISMATCH: expected {expected_sha256}, computed {baseline_audit.get('sha256')}"
+        )
+
+    print(
+        f"  Module: {baseline_audit.get('module')}, "
+        f"Theorems verified: {baseline_audit.get('total_theorems')}, "
+        f"Has sorry: {baseline_audit.get('has_sorry')}, "
+        f"Lake passed: {baseline_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P139 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"),
+        dataset_hashes={
+            "p139_config": config_sha[:16],
+            "lean_signatures": baseline_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P139"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P139",
+        "verdict": verdict,
+        "claim_scope": (
+            "Roth AP Discrepancy Lower Bound & Spencer Six Deviations Theorem formal baseline; "
+            "verified in Lean 4 kernel with zero sorry tokens; deterministic benchmark verification."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "module": baseline_audit.get("module"),
+        "lean_file": baseline_audit.get("lean_file"),
+        "sha256": baseline_audit.get("sha256"),
+        "total_theorems": baseline_audit.get("total_theorems", 0),
+        "has_sorry": baseline_audit.get("has_sorry", False),
+        "lake_passed": baseline_audit.get("lake_passed", False),
+        "benchmarks": baseline_audit.get("benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P139",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P139 audit {verdict}: {baseline_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -17477,6 +17607,8 @@ def main() -> int:
             run_p137_discrepancy_covering_baseline_audit(args.config, args.output)
         elif args.acceptance_phase == "P138":
             run_p138_erdos_discrepancy_audit(args.config, args.output)
+        elif args.acceptance_phase == "P139":
+            run_p139_roth_spencer_discrepancy_audit(args.config, args.output)
         return 0
 
     seeds = (

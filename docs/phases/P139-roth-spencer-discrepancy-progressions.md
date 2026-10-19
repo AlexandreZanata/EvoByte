@@ -1,6 +1,6 @@
 # P139 — Cota de Roth em progressões aritméticas e cota de Spencer de seis desvios
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P138 concluída; branch a partir de `codex/p138-erdos-discrepancy-completely-multiplicative`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P138 concluída com teoremas de multiplicatividade e EDP aprovados.
