@@ -41,6 +41,9 @@ from evobyte.discrepancy import (
     verify_roth_spencer_baseline_soundness,
     verify_tao_homogeneous_reduction,
 )
+from evobyte.verifier import is_lean_available
+
+needs_lean = pytest.mark.skipif(not is_lean_available(), reason="requires Lean 4 toolchain")
 
 
 def test_sign_value() -> None:
@@ -206,6 +209,7 @@ def test_generate_discrepancy_covering_signatures_lean_code() -> None:
     assert len(thms) >= 80
 
 
+@needs_lean
 def test_audit_discrepancy_covering_baseline() -> None:
     """Test P137 baseline audit against Lean 4 kernel."""
     audit = audit_discrepancy_covering_baseline(verify_lake=True)
@@ -351,6 +355,7 @@ def test_generate_erdos_discrepancy_lean_code() -> None:
     assert len(thms) >= 80
 
 
+@needs_lean
 def test_audit_erdos_discrepancy_baseline() -> None:
     """Test P138 baseline audit against Lean 4 kernel."""
     audit = audit_erdos_discrepancy_baseline(verify_lake=True)
@@ -503,6 +508,7 @@ def test_generate_roth_spencer_lean_code() -> None:
     assert len(thms) >= 80
 
 
+@needs_lean
 def test_audit_roth_spencer_baseline() -> None:
     """Test P139 baseline audit against Lean 4 kernel."""
     audit = audit_roth_spencer_baseline(verify_lake=True)

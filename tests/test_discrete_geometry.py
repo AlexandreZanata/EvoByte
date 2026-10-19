@@ -69,6 +69,9 @@ from evobyte.discrete_geometry import (
     verify_unit_distance_properties,
     verify_unit_distances_szemeredi_trotter_baseline_soundness,
 )
+from evobyte.verifier import is_lean_available
+
+needs_lean = pytest.mark.skipif(not is_lean_available(), reason="requires Lean 4 toolchain")
 
 
 def test_sq_euclidean_distance_and_identities() -> None:
@@ -167,6 +170,7 @@ def test_generate_discrete_geometry_signatures_lean_code() -> None:
     assert len(thms) >= 75
 
 
+@needs_lean
 def test_audit_discrete_geometry_baseline() -> None:
     """Test baseline audit against live project Lean 4 code."""
     audit = audit_discrete_geometry_baseline(verify_lake=True)
@@ -262,6 +266,7 @@ def test_generate_erdos_distinct_distances_lean_code() -> None:
     assert len(thms) >= 75
 
 
+@needs_lean
 def test_audit_erdos_distinct_distances_baseline() -> None:
     """Test P130 baseline audit against Lean 4 kernel."""
     audit = audit_erdos_distinct_distances_baseline(verify_lake=True)
@@ -365,6 +370,7 @@ def test_generate_unit_distances_szemeredi_trotter_lean_code() -> None:
     assert len(thms) >= 75
 
 
+@needs_lean
 def test_audit_unit_distances_szemeredi_trotter_baseline() -> None:
     """Test P131 baseline audit against Lean 4 kernel."""
     audit = audit_unit_distances_szemeredi_trotter_baseline(verify_lake=True)
@@ -457,6 +463,7 @@ def test_generate_discrete_geometry_tactic_lean_code() -> None:
     assert len(thms) >= 80
 
 
+@needs_lean
 def test_audit_discrete_geometry_tactic_baseline() -> None:
     """Test P132 baseline audit against Lean 4 kernel."""
     audit = audit_discrete_geometry_tactic_baseline(verify_lake=True)
@@ -618,6 +625,7 @@ def test_generate_convex_polygons_happy_ending_lean_code() -> None:
     assert len(thms) >= 75
 
 
+@needs_lean
 def test_audit_convex_polygons_happy_ending_baseline() -> None:
     """Test P133 baseline audit against Lean 4 kernel."""
     audit = audit_convex_polygons_happy_ending_baseline(verify_lake=True)
@@ -764,6 +772,7 @@ def test_generate_hadwiger_nelson_coloring_lean_code() -> None:
     assert len(thms) >= 75
 
 
+@needs_lean
 def test_audit_hadwiger_nelson_coloring_baseline() -> None:
     """Test P134 baseline audit against Lean 4 kernel."""
     audit = audit_hadwiger_nelson_coloring_baseline(verify_lake=True)

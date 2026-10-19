@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from evobyte.formal_bridge import (
     evaluate_lean4_tactic_candidate,
     verify_formal_mcts_soundness,
@@ -14,6 +16,9 @@ from evobyte.mcts_formal import (
     run_formal_mcts_benchmark,
 )
 from evobyte.models import StructuredConditionalProposer
+from evobyte.verifier import is_lean_available
+
+needs_lean = pytest.mark.skipif(not is_lean_available(), reason="requires Lean 4 toolchain")
 
 
 def test_mcts_node_puct_selection():
@@ -40,6 +45,7 @@ def test_mcts_node_puct_selection():
     assert best_act2 == "ring"
 
 
+@needs_lean
 def test_evaluate_lean4_tactic_candidate_success_and_failure():
     # Omega success
     res_omega = evaluate_lean4_tactic_candidate(
@@ -64,6 +70,7 @@ def test_evaluate_lean4_tactic_candidate_success_and_failure():
     assert res_fail["success"] is False
 
 
+@needs_lean
 def test_reject_sorry_tokens():
     res = evaluate_lean4_tactic_candidate(
         "theorem test_s (n : Nat) : n = n",
@@ -80,6 +87,7 @@ def test_reject_sorry_tokens():
     assert res2["has_sorry"] is True
 
 
+@needs_lean
 def test_mcts_searcher_binomial():
     searcher = FormalMCTSSearcher(config=FormalMCTSConfig(max_iterations=10, max_depth=2))
     decl = "theorem mcts_unit_square (x y : Nat) : (x + y)^2 = x^2 + 2*x*y + y^2"
@@ -91,6 +99,7 @@ def test_mcts_searcher_binomial():
     assert "ring" in result.best_tactic_chain
 
 
+@needs_lean
 def test_mcts_searcher_linear_ineq():
     searcher = FormalMCTSSearcher(config=FormalMCTSConfig(max_iterations=10, max_depth=2))
     decl = "theorem mcts_unit_bound (n : Nat) (h : n >= 4) : 4 * n > n + 3"
@@ -101,6 +110,7 @@ def test_mcts_searcher_linear_ineq():
     assert "omega" in result.best_tactic_chain
 
 
+@needs_lean
 def test_mcts_guided_by_neural_proposer():
     proposer = StructuredConditionalProposer()
     searcher = FormalMCTSSearcher(
@@ -119,6 +129,7 @@ def test_mcts_guided_by_neural_proposer():
     )
 
 
+@needs_lean
 def test_run_formal_mcts_benchmark():
     searcher = FormalMCTSSearcher(config=FormalMCTSConfig(max_iterations=15, max_depth=2))
     goals = get_default_formal_mcts_benchmark_goals()[:4]
