@@ -64,6 +64,15 @@ from evobyte.discrete_geometry import (
     verify_happy_ending_properties,
     verify_unit_distance_properties,
     verify_unit_distances_szemeredi_trotter_baseline_soundness,
+    DEFAULT_HADWIGER_NELSON_LEAN_FILE,
+    audit_hadwiger_nelson_coloring_baseline,
+    generate_hadwiger_nelson_coloring_lean_code,
+    hadwiger_nelson_chromatic_interval,
+    hexagonal_tiling_coloring_bounds,
+    is_valid_unit_distance_coloring,
+    moser_spindle_graph,
+    verify_hadwiger_nelson_coloring_baseline_soundness,
+    verify_moser_spindle_chromatic_number,
 )
 
 
@@ -620,3 +629,176 @@ def test_verify_convex_polygons_soundness_rejections() -> None:
     sound, findings = verify_convex_polygons_happy_ending_baseline_soundness(failing_audit)
     assert sound is False
     assert any("LAKE_BUILD_FAILED" in f for f in findings)
+
+
+# ==============================================================================
+# P134 TESTS: HADWIGER-NELSON PROBLEM & PLANE COLORING
+# ==============================================================================
+
+
+def test_moser_spindle_graph() -> None:
+    """Test construction of Moser spindle 7-vertex 11-edge unit-distance graph."""
+    vertices, edges = moser_spindle_graph()
+    assert len(vertices) == 7
+    assert len(edges) == 11
+    assert vertices == list(range(7))
+
+    # All edges are pairs (u, v) with u < v
+    for u, v in edges:
+        assert 0 <= u < v < 7
+
+    # Check key structural edges: shared apex 0, tips 3 and 6, cross edge (3, 6)
+    assert (3, 6) in edges
+    assert (0, 1) in edges and (0, 2) in edges and (0, 4) in edges and (0, 5) in edges
+
+
+def test_is_valid_unit_distance_coloring() -> None:
+    """Test validity checker for unit distance proper graph coloring."""
+    _, edges = moser_spindle_graph()
+
+    # Monochromatic coloring is completely invalid
+    all_zeros = [0] * 7
+    assert is_valid_unit_distance_coloring(edges, all_zeros) is False
+
+    # Valid 4-coloring
+    col4 = [0, 1, 2, 0, 1, 2, 3]
+    assert is_valid_unit_distance_coloring(edges, col4) is True
+
+    # Violate cross edge (3, 6)
+    invalid_col = [0, 1, 2, 0, 1, 2, 0]
+    assert is_valid_unit_distance_coloring(edges, invalid_col) is False
+
+
+def test_verify_moser_spindle_chromatic_number() -> None:
+    """Test Moser spindle invariants: non-3-colorable, 4-colorable, omega=3, alpha=2."""
+    res = verify_moser_spindle_chromatic_number()
+    assert res["vertices_count"] == 7
+    assert res["edges_count"] == 11
+    assert res["valid_3_colorings_count"] == 0
+    assert res["is_3_colorable"] is False
+    assert res["is_4_colorable"] is True
+    assert res["chromatic_number"] == 4
+    assert res["clique_number"] == 3
+    assert res["triangles_count"] == 4
+    assert res["independence_number"] == 2
+    assert res["ceil_n_div_alpha"] == 4
+    assert res["handshaking_holds"] is True
+    assert res["degree_sum"] == 22
+    assert res["invariants_hold"] is True
+
+
+def test_hexagonal_tiling_coloring_bounds() -> None:
+    """Test Isbell's hexagonal 7-coloring geometry and diameter bounds."""
+    res = hexagonal_tiling_coloring_bounds()
+    assert res["side_length"] == 0.44
+    assert res["tile_diameter"] < 1.0
+    assert res["tile_diameter_strictly_less_than_1"] is True
+    assert res["min_same_color_distance"] > 1.0
+    assert res["min_same_color_distance_strictly_greater_than_1"] is True
+    assert res["integer_check_passed"] is True
+    assert res["isbell_upper_bound"] == 7
+    assert res["bounds_valid"] is True
+
+
+def test_hadwiger_nelson_chromatic_interval() -> None:
+    """Test Hadwiger-Nelson bounds interval: [5, 7]."""
+    res = hadwiger_nelson_chromatic_interval()
+    assert res["lower_bound_moser"] == 4
+    assert res["lower_bound_degrey"] == 5
+    assert res["upper_bound_isbell"] == 7
+    assert res["current_best_lower_bound"] == 5
+    assert res["current_best_upper_bound"] == 7
+    assert res["chromatic_interval"] == [5, 7]
+    assert res["possible_chromatic_numbers"] == [5, 6, 7]
+    assert res["degrey_vertex_count"] == 1581
+    assert res["exoo_ismailescu_vertex_count"] == 553
+    assert res["heule_vertex_counts"] == [510, 509]
+    assert res["all_bounds_consistent"] is True
+
+
+def test_generate_hadwiger_nelson_coloring_lean_code() -> None:
+    """Test generation of HadwigerNelsonColoringTheorems.lean module."""
+    code = generate_hadwiger_nelson_coloring_lean_code()
+    assert "namespace EvoByte.HadwigerNelson" in code
+    assert "sorry" not in code
+    thms = [line for line in code.splitlines() if line.startswith("theorem ") or line.startswith("lemma ")]
+    assert len(thms) >= 75
+
+
+def test_audit_hadwiger_nelson_coloring_baseline() -> None:
+    """Test P134 baseline audit against Lean 4 kernel."""
+    audit = audit_hadwiger_nelson_coloring_baseline(verify_lake=True)
+    assert audit["module"] == "HadwigerNelsonColoringTheorems"
+    assert audit["has_sorry"] is False
+    assert audit["lake_passed"] is True
+    assert audit["total_theorems"] >= 75
+    assert audit["benchmarks"]["moser_invariants"]["invariants_hold"] is True
+    assert audit["benchmarks"]["tiling_bounds"]["bounds_valid"] is True
+    assert audit["benchmarks"]["interval_bounds"]["all_bounds_consistent"] is True
+
+    sound, findings = verify_hadwiger_nelson_coloring_baseline_soundness(audit, min_theorems=75)
+    assert sound is True
+    assert findings == []
+
+
+def test_verify_hadwiger_nelson_coloring_soundness_rejections() -> None:
+    """Test that P134 soundness validator properly catches defects."""
+    bad_audit = {
+        "has_sorry": True,
+        "total_theorems": 100,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": {
+            "moser_invariants": {"invariants_hold": True},
+            "tiling_bounds": {"bounds_valid": True},
+            "interval_bounds": {"all_bounds_consistent": True},
+        },
+    }
+    sound, findings = verify_hadwiger_nelson_coloring_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    sparse_audit = {
+        "has_sorry": False,
+        "total_theorems": 10,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": {
+            "moser_invariants": {"invariants_hold": True},
+            "tiling_bounds": {"bounds_valid": True},
+            "interval_bounds": {"all_bounds_consistent": True},
+        },
+    }
+    sound, findings = verify_hadwiger_nelson_coloring_baseline_soundness(sparse_audit, min_theorems=75)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    failing_audit = {
+        "has_sorry": False,
+        "total_theorems": 100,
+        "lake_passed": False,
+        "sha256": "a" * 64,
+        "benchmarks": {
+            "moser_invariants": {"invariants_hold": True},
+            "tiling_bounds": {"bounds_valid": True},
+            "interval_bounds": {"all_bounds_consistent": True},
+        },
+    }
+    sound, findings = verify_hadwiger_nelson_coloring_baseline_soundness(failing_audit)
+    assert sound is False
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+
+    bad_bench_audit = {
+        "has_sorry": False,
+        "total_theorems": 100,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": {
+            "moser_invariants": {"invariants_hold": False},
+            "tiling_bounds": {"bounds_valid": True},
+            "interval_bounds": {"all_bounds_consistent": True},
+        },
+    }
+    sound, findings = verify_hadwiger_nelson_coloring_baseline_soundness(bad_bench_audit)
+    assert sound is False
+    assert any("INVALID_MOSER_BENCHMARK" in f for f in findings)

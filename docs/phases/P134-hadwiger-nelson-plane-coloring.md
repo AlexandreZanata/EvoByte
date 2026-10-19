@@ -1,6 +1,6 @@
 # P134 — Colorações de distâncias unitárias no plano e problema de Hadwiger-Nelson
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P133 concluída; branch a partir de `codex/p133-convex-polygons-happy-ending`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P133 concluída com teoremas de polígonos convexos provados e compilados no Lean 4.

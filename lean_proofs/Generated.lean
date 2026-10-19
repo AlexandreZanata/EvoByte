@@ -42,3 +42,4 @@ import Generated.ErdosDistinctDistancesTheorems
 import Generated.UnitDistancesSzemerediTrotterTheorems
 import Generated.DiscreteGeometryTacticTheorems
 import Generated.ConvexPolygonsHappyEndingTheorems
+import Generated.HadwigerNelsonColoringTheorems
