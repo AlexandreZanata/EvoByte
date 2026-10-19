@@ -735,3 +735,49 @@ P129 banco formal geometria discreta -> P130 distâncias distintas Guth-Katz
 3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
 4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
 5. **Controle estatístico cego (P135):** partição selada de 100 instâncias sem vazamento para o crivo.
+
+## Programa de teoria de discrepância, problema da discrepância de Erdős e sistemas de recobrimento em Lean 4 (P137–P144)
+
+**Programa proposto em 2026-10-19 (D037).** Sucede a conclusão de P129–P136 sob D036.
+O programa P129–P136 consolidou 3.466 teoremas formais em 44 módulos em `lean_proofs/Generated/`,
+cobrindo assinaturas métricas euclidianas, cota de Guth–Katz $\Omega(n/\log n)$, incidências de Szemerédi–Trotter,
+meta-tática `geom_distance_norm`, polígonos convexos de Erdős–Szekeres e colorações de Hadwiger–Nelson.
+
+O programa P137–P144 estende o motor formal do EvoByte para a fronteira de teoria de discrepância combinatória,
+o célebre Problema da Discrepância de Erdős (EDP), sistemas de recobrimento por congruências e séries de conjuntos primitivos:
+1. **Banco formal de teoria de discrepância combinatória e recobrimentos (P137):** Tipagem dependente para sequências
+   de sinais $f: \mathbb{N} \to \{-1, +1\}$, matrizes de incidência de hipergrafos, sistemas de congruências $(a_i \pmod{m_i})$
+   e assinaturas canônicas (`DiscrepancyCoveringSignatures.lean`).
+2. **Problema da discrepância de Erdős (EDP) e multiplicatividade completa (P138):** Formalização do teorema clássico
+   de Terence Tao (2016) sobre o EDP ($\sup_{n, d} |\sum_{k=1}^n f(kd)| = \infty$), conexão com formas automórficas e funções completamente multiplicativas (`ErdosDiscrepancyTheorems.lean`).
+3. **Cota de Roth em progressões aritméticas e cota de Spencer de seis desvios (P139):** Formalização da cota inferior
+   de Klaus Roth (1964) para discrepância em progressões $\text{disc}(\mathcal{AP}) = \Omega(N^{1/4})$ e teorema de Joel Spencer (1985)
+   "Six standard deviations suffice" para sistemas de conjuntos $\text{disc}(\mathcal{F}) \le 6\sqrt{n}$ (`RothSpencerDiscrepancyTheorems.lean`).
+4. **Meta-tática customizada de balanceamento de discrepância (P140):** Implementação da meta-tática `discrepancy_norm`
+   para resolução e simplificação automática de somas de prefixos de sinais, desigualdades quadráticas de Cauchy–Schwarz e bounds em $\{-1, +1\}^n$ (`DiscrepancyTacticTheorems.lean`).
+5. **Sistemas de recobrimento de congruências e teorema de Hough do módulo mínimo (P141):** Formalização da resolução
+   da conjectura de Erdős por Bob Hough (2015) sobre a limitação do menor módulo ($m_1 \le 10^{16}$) em sistemas de recobrimento com módulos distintos,
+   densidade local e sistemas sem módulos pares (`CoveringSystemsTheorems.lean`).
+6. **Conjuntos primitivos e conjectura de Erdős sobre séries de divisores (P142):** Formalização de conjuntos primitivos
+   onde nenhum elemento divide outro, limites de densidade logarítmica e a resolução da conjectura de Erdős (1935) por Lichtman (2023) $\sum_{a \in A} \frac{1}{a \log a} \le \sum_{p \in \mathbb{P}} \frac{1}{p \log p}$ (`PrimitiveSetsDivisorsTheorems.lean`).
+7. **Confirmação cega multiproblema em discrepância e recobrimentos (P143):** Partição selada de 100 instâncias de discrepância,
+   progressões aritméticas e congruências de recobrimento sob controle estrito FWER via Bonferroni–Holm ($\alpha = 0{,}01$).
+8. **Grande campanha formal de discrepância e recobrimentos com dossiê (P144):** Expansão para mais de 3.800 teoremas certificados no
+   kernel do Lean 4 em 50 módulos com zero tokens `sorry` e cadeia criptográfica SHA-256 de custódia.
+
+### Ordem e dependências de P137–P144
+
+```text
+P137 banco formal discrepância e recobrimentos -> P138 EDP e funções multiplicativas Tao
+ -> P139 cotas de Roth e Spencer -> P140 meta-tática discrepancy_norm
+ -> P141 sistemas de recobrimento e Hough -> P142 conjuntos primitivos e divisores
+ -> P143 confirmação cega FWER -> P144 grande campanha e dossiê final
+```
+
+### Regras do programa P137–P144
+
+1. **Uma microtarefa por ciclo:** cada fase define seu escopo e produz exatamente um commit atômico e PR.
+2. **Lean 4 hermético:** compilação via `lake -d lean_proofs build` hermética em CI local, sem chamadas de rede.
+3. **Lemas formais no kernel:** todas as novas propriedades e teoremas devem compilar no kernel do Lean 4 com zero tokens `sorry`.
+4. **Sem alegações espúrias:** nenhuma conjectura aberta universal é considerada resolvida sem prova formal completa e fechada de todos os casos.
+5. **Controle estatístico cego (P143):** partição selada de 100 instâncias sem vazamento para o crivo.

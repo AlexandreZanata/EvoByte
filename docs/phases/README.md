@@ -297,6 +297,28 @@ metatactic, Happy Ending convex polygons, Hadwiger–Nelson plane colorings, bli
 - [P135 — Confirmação cega em larga escala em geometria discreta sob controle FWER (Bonferroni-Holm)](P135-discrete-geometry-blind-confirmation.md).
 - [P136 — Grande campanha formal de geometria discreta com dossiê certificado em Lean 4](P136-discrete-geometry-grand-dossier.md).
 
+P129–P136 are completed (Done, D036) with all measured gates passing, clean-tree
+verification, 3,466 Lean 4 kernel theorems with zero sorry across 44 modules (593 discrete geometry theorems), and PRs #168–#175.
+No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
+
+## Discrepancy theory, Erdős discrepancy problem & covering systems program (P137–P144)
+
+[The discrepancy and covering systems contract](../FORMAL_SEARCH_PLAN.md#programa-de-teoria-de-discrepância-problema-da-discrepância-de-erdős-e-sistemas-de-recobrimento-em-lean-4-p137p144)
+defines the formal research extension adopted under D037 following the conclusion of
+P129–P136. It targets combinatorial discrepancy, the Erdős Discrepancy Problem (EDP / Tao 2016),
+Roth's AP discrepancy lower bound $\Omega(N^{1/4})$, Spencer's six standard deviations theorem,
+the `discrepancy_norm` metatactic, Hough's minimum modulus covering theorem, Erdős primitive set divisor series,
+blind FWER confirmation, and 3,800+ Lean 4 theorems.
+
+- [P137 — Banco formal de teoria de discrepância combinatória e recobrimentos em Lean 4](P137-discrepancy-covering-formal-database.md).
+- [P138 — Problema da discrepância de Erdős (EDP) e multiplicatividade completa](P138-erdos-discrepancy-completely-multiplicative.md).
+- [P139 — Cota de Roth em progressões aritméticas e cota de Spencer de seis desvios](P139-roth-spencer-discrepancy-progressions.md).
+- [P140 — Meta-tática customizada discrepancy_norm e automação de discrepância em Lean 4](P140-discrepancy-norm-metatactic.md).
+- [P141 — Sistemas de recobrimento de congruências e teorema de Hough do módulo mínimo](P141-covering-systems-minimum-modulus-hough.md).
+- [P142 — Conjuntos primitivos e conjectura de Erdős sobre séries de divisores](P142-primitive-sets-divisor-series-erdos.md).
+- [P143 — Confirmação cega em larga escala em discrepância e recobrimentos sob controle FWER](P143-discrepancy-covering-blind-confirmation.md).
+- [P144 — Grande campanha formal de discrepância e recobrimentos com dossiê certificado em Lean 4](P144-discrepancy-covering-grand-dossier.md).
+
 Execute one micro-task at a time. All phases remain Proposed until their explicit
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.

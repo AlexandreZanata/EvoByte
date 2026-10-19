@@ -322,8 +322,28 @@ P131 formalizes unit distance bounds and the Szemerédi–Trotter point-line inc
 P132 implements the custom `geom_distance_norm` metaprogramming tactic in Lean 4.
 P133 formalizes the Happy Ending Problem, Erdős–Szekeres convex polygon bounds $ES(k)$, and empty polygon invariants.
 P134 proves Hadwiger–Nelson unit distance plane graph coloring bounds ($\chi(\mathbb{R}^2) \ge 5$) and Moser spindle certificates.
-P135 confirms performance on a sealed blind split of 100 discrete geometry instances under Holm FWER control.
-P136 executes a grand discrete geometry campaign certifying 3,300+ Lean 4 theorems and the final dossier.
+P135 confirms performance on a sealed blind split of 100 discrete geometry instances under Holm FWER control (100/100 wins, $p = 2.38 \times 10^{-7} \le 0.01$).
+P136 executes a grand discrete geometry campaign certifying 3,466 Lean 4 theorems across 44 modules with zero `sorry`, SHA-256 hash chain head `4b8a2fb678e5b08bcf8130631a401474877f51ee96d8ee9a911f2cc33247605f`, and the final dossier.
+All phases P129–P136 are Done (D036).
+
+## Discrepancy theory, Erdős discrepancy problem & covering systems program (D037)
+
+[P137–P144](phases/README.md#discrepancy-theory-erdos-discrepancy-problem--covering-systems-program-p137p144)
+define the formal research extension targeting combinatorial discrepancy, the Erdős Discrepancy Problem (EDP),
+and covering systems under D037.
+Following the conclusion of P129–P136 under D036, this program targets the Erdős discrepancy problem (Tao 2016),
+Roth's arithmetic progression discrepancy lower bounds, Spencer's six standard deviations theorem, the `discrepancy_norm`
+metatactic, Hough's minimum modulus covering theorem, Erdős primitive set divisor series (Lichtman 2023),
+blind confirmation with Holm FWER control, and expansion to 3,800+ certified theorems in Lean 4.
+
+P137 formalizes combinatorial discrepancy, completely multiplicative sequences, and covering systems signatures in Lean 4.
+P138 formalizes the Erdős Discrepancy Problem (EDP) and completely multiplicative functions following Tao (2016).
+P139 formalizes Roth's $\Omega(N^{1/4})$ discrepancy lower bound for APs and Spencer's $6\sqrt{n}$ theorem.
+P140 implements the custom `discrepancy_norm` metaprogramming tactic in Lean 4.
+P141 formalizes covering systems of congruences and Hough's minimum modulus theorem ($m_1 \le 10^{16}$).
+P142 formalizes Erdős primitive set divisor series $\sum \frac{1}{a \log a}$ and logarithmic density.
+P143 confirms performance on a sealed blind split of 100 discrepancy and covering instances under Holm FWER control.
+P144 executes a grand discrepancy and covering systems campaign certifying 3,800+ Lean 4 theorems and the final dossier.
 All phases remain Proposed until measured and accepted.
 
 ## Quantum track (experimental, deferred expansion)
