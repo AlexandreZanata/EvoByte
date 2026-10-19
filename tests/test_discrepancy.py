@@ -37,9 +37,13 @@ from evobyte.discrepancy import (
     subset_discrepancy,
     verify_covering_system,
     verify_discrepancy_covering_baseline_soundness,
+    verify_discrepancy_tactic_baseline_soundness,
     verify_erdos_discrepancy_baseline_soundness,
     verify_roth_spencer_baseline_soundness,
     verify_tao_homogeneous_reduction,
+    audit_discrepancy_tactic_baseline,
+    discrepancy_tactic_benchmarks,
+    generate_discrepancy_tactic_lean_code,
 )
 from evobyte.verifier import is_lean_available
 
@@ -594,5 +598,110 @@ def test_p139_audit_smoke(tmp_path: Path) -> None:
     report = run_p139_roth_spencer_discrepancy_audit(tmp_cfg, out_file)
     assert report["phase"] == "P139"
     assert report["total_theorems"] >= 80
+    assert report["has_sorry"] is False
+    assert out_file.exists()
+
+
+# ==============================================================================
+# P140: DISCREPANCY_NORM METATACTIC TESTS
+# ==============================================================================
+
+
+def test_p140_discrepancy_tactic_benchmarks() -> None:
+    """Test that all discrepancy algebra properties hold in benchmarks."""
+    benchmarks = discrepancy_tactic_benchmarks()
+    assert len(benchmarks) >= 1
+    for b in benchmarks:
+        assert b["all_properties_hold"] is True
+        assert b["parallelogram_all_hold"] is True
+        assert b["polarization_all_hold"] is True
+        assert b["cs_2d_holds"] is True
+        assert b["step_energy_holds"] is True
+        assert b["balance_4_holds"] is True
+
+
+def test_p140_generate_discrepancy_tactic_lean_code() -> None:
+    """Test generated Lean code contains expected syntax definitions and zero sorry."""
+    code = generate_discrepancy_tactic_lean_code()
+    assert 'syntax "discrepancy_norm" : tactic' in code
+    assert 'syntax "discrepancy_intro" : tactic' in code
+    assert "sorry" not in code
+    assert "discEnergy2" in code
+    assert "parallelogram_2term_norm" in code
+    assert "cauchy_schwarz_2d_identity_diff_norm" in code
+
+
+def test_p140_discrepancy_tactic_soundness_checker() -> None:
+    """Test verification soundness checks for P140."""
+    valid_summary = {
+        "has_sorry": False,
+        "has_syntax_def": True,
+        "total_theorems": 100,
+        "tactic_uses": 100,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": [{"all_properties_hold": True}],
+    }
+    sound, findings = verify_discrepancy_tactic_baseline_soundness(valid_summary, min_theorems=80)
+    assert sound is True
+    assert len(findings) == 0
+
+    # Sorry detected
+    bad_sorry = dict(valid_summary, has_sorry=True)
+    sound, findings = verify_discrepancy_tactic_baseline_soundness(bad_sorry, min_theorems=80)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    # Missing syntax def
+    bad_syntax = dict(valid_summary, has_syntax_def=False)
+    sound, findings = verify_discrepancy_tactic_baseline_soundness(bad_syntax, min_theorems=80)
+    assert sound is False
+    assert any("MISSING_SYNTAX_DEF" in f for f in findings)
+
+    # Insufficient theorems
+    bad_thms = dict(valid_summary, total_theorems=10)
+    sound, findings = verify_discrepancy_tactic_baseline_soundness(bad_thms, min_theorems=80)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+
+def test_p140_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P140 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p140_discrepancy_norm_audit
+
+    cfg_p = tmp_path / "bad-p140.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P140 configuration"):
+        run_p140_discrepancy_norm_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p140_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P140 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p140_discrepancy_norm_audit
+
+    cfg_file = repo_root / "experiments/p140-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p140-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data), encoding="utf-8")
+    out_file = tmp_path / "p140-smoke-out.json"
+
+    report = run_p140_discrepancy_norm_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P140"
+    assert report["total_theorems"] >= 80
+    assert report["tactic_uses"] >= 80
     assert report["has_sorry"] is False
     assert out_file.exists()

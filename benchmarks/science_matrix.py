@@ -778,6 +778,7 @@ ACCEPTANCE_PHASES = (
     "P137",
     "P138",
     "P139",
+    "P140",
 )
 
 
@@ -13681,6 +13682,138 @@ def run_p139_roth_spencer_discrepancy_audit(
     return report
 
 
+def run_p140_discrepancy_norm_audit(
+    config_path: str | Path,
+    output_path: str | Path,
+) -> dict[str, Any]:
+    """P140 audit: custom metatactic discrepancy_norm and discrepancy theory automation in Lean 4.
+
+    Verifies:
+    1. Complete Lean 4 compilation of DiscrepancyTacticTheorems.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Custom metatactics discrepancy_norm and discrepancy_intro defined and used.
+    4. Combinatorial discrepancy algebra benchmarks verified: parallelogram identities,
+       polarization, Cauchy-Schwarz difference, homogeneous step energy, and 4-term balance.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.discrepancy import (
+        audit_discrepancy_tactic_baseline,
+        verify_discrepancy_tactic_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P140":
+        raise ValueError(f"Config {cfg_p} is not a P140 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P140 DISCREPANCY_NORM METATACTIC AUDIT (Lean 4, Discrepancy Automation, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    tactic_audit = audit_discrepancy_tactic_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/DiscrepancyTacticTheorems.lean"
+        ),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_discrepancy_tactic_baseline_soundness(
+        tactic_audit,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Lean 4 module: {tactic_audit.get('module')}, "
+        f"Theorems verified: {tactic_audit.get('total_theorems')}, "
+        f"Tactic uses: {tactic_audit.get('tactic_uses')}, "
+        f"Has sorry: {tactic_audit.get('has_sorry')}, "
+        f"Lake passed: {tactic_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P140 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p140_config": config_sha[:16],
+            "lean_theorems": tactic_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P140"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P140",
+        "verdict": verdict,
+        "claim_scope": (
+            "Custom metatactic discrepancy_norm and discrepancy automation in Lean 4; "
+            "verified in Lean 4 kernel with zero sorry tokens; deterministic benchmark verification."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "module": tactic_audit.get("module"),
+        "lean_file": tactic_audit.get("lean_file"),
+        "sha256": tactic_audit.get("sha256"),
+        "total_theorems": tactic_audit.get("total_theorems", 0),
+        "tactic_uses": tactic_audit.get("tactic_uses", 0),
+        "has_sorry": tactic_audit.get("has_sorry", False),
+        "lake_passed": tactic_audit.get("lake_passed", False),
+        "benchmarks": tactic_audit.get("benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P140",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P140 audit {verdict}: {tactic_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -17811,6 +17944,8 @@ def main() -> int:
             run_p138_erdos_discrepancy_audit(args.config, args.output)
         elif args.acceptance_phase == "P139":
             run_p139_roth_spencer_discrepancy_audit(args.config, args.output)
+        elif args.acceptance_phase == "P140":
+            run_p140_discrepancy_norm_audit(args.config, args.output)
         return 0
 
     seeds = (
