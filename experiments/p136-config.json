@@ -1,0 +1,14 @@
+{
+  "phase": "P136",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 3300,
+  "min_modules": 44,
+  "expected_chain_hash": "4b8a2fb678e5b08bcf8130631a401474877f51ee96d8ee9a911f2cc33247605f",
+  "dossier_path": "docs/research/p136-discrete-geometry-dossier.md",
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P136 Discrete geometry grand formal campaign and certified literature dossier audit. Consolidates 44 formal modules in Lean 4 with 3,466 theorems, zero sorry, and SHA-256 cryptographic hash chain."
+}

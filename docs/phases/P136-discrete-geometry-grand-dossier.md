@@ -1,6 +1,6 @@
 # P136 — Grande campanha formal de geometria discreta com dossiê certificado em Lean 4
 
-**Status:** Proposed.
+**Status:** In review.
 **Dependência:** P135 concluída; branch a partir de `codex/p135-discrete-geometry-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P135 concluída com confirmação estatística cega aprovada; ambiente Lean 4 e Lake herméticos.
