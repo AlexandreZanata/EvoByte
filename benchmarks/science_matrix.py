@@ -781,6 +781,7 @@ ACCEPTANCE_PHASES = (
     "P140",
     "P141",
     "P142",
+    "P143",
 )
 
 
@@ -14077,6 +14078,156 @@ def run_p142_primitive_sets_audit(
     return report
 
 
+def run_p143_discrepancy_covering_blind_confirmation_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P143 audit: Sealed multi-track blind confirmation of discrepancy & covering systems engine.
+
+    Verifies:
+    1. Cryptographic seal and zero leakage of 100 discrepancy and covering systems instances across 4 tracks.
+    2. Mathematical verification of every candidate certificate (Erdős Discrepancy Problem, Roth-Spencer AP Bounds, Covering Systems, Primitive Sets).
+    3. Step-down Bonferroni-Holm FWER control at alpha = 0.01 across all 4 tracks.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.statistical import (
+        evaluate_discrepancy_covering_blind_confirmation,
+        generate_discrepancy_covering_blind_split,
+        verify_discrepancy_covering_blind_confirmation_soundness,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P143":
+        raise ValueError(f"Config {cfg_p} is not a P143 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P143 DISCREPANCY & COVERING BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 143))
+    device_name = config.get("device", "cpu")
+    alpha = float(config.get("alpha", 0.01))
+    min_total = int(config.get("min_total_instances", 100))
+    min_wins = int(config.get("min_wins", 80))
+
+    split_p = _REPO_ROOT / str(config.get("split_path", "experiments/p143-blind-split.json"))
+    if not split_p.exists():
+        findings.append(f"SPLIT_FILE_MISSING: {split_p}")
+        split_data = generate_discrepancy_covering_blind_split(
+            seed=seed,
+            count_per_track=int(config.get("count_per_track", 25)),
+            alpha=alpha,
+        )
+    else:
+        with open(split_p, encoding="utf-8") as f:
+            split_data = json.load(f)
+        split_sha = hashlib.sha256(split_p.read_bytes()).hexdigest()
+        expected_sha = config.get("split_sha256")
+        if expected_sha and split_sha != expected_sha:
+            findings.append(
+                f"SPLIT_CHECKSUM_MISMATCH: expected {expected_sha}, computed {split_sha}"
+            )
+
+    eval_res = evaluate_discrepancy_covering_blind_confirmation(
+        partition=split_data,
+        alpha=alpha,
+    )
+
+    sound, soundness_findings = verify_discrepancy_covering_blind_confirmation_soundness(
+        eval_res,
+        min_total_instances=min_total,
+        min_wins=min_wins,
+        alpha=alpha,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    for t_key, t_info in eval_res.get("tracks", {}).items():
+        print(
+            f"  Track: {t_key:<28} | Instances: {t_info['instances_count']:2d} | "
+            f"Wins: {t_info['wins']:2d} | Losses: {t_info['losses']:2d} | "
+            f"Candidate Red: {t_info['candidate_reduction']:6.1f}x | "
+            f"Holm p: {t_info['holm_adjusted_p_value']:.4e} | Outcome: {t_info['outcome']}"
+        )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P143 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p143_config": config_sha[:16],
+            "split_checksum": split_data.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P143"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P143",
+        "verdict": verdict,
+        "claim_scope": (
+            "Sealed blind confirmation of discrepancy and covering systems engine across 4 tracks; "
+            "FWER strictly controlled via Bonferroni-Holm step-down procedure at alpha = 0.01."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "split_id": split_data.get("split_id"),
+        "split_checksum": split_data.get("checksum"),
+        "total_instances": eval_res.get("total_instances", 0),
+        "total_wins": eval_res.get("total_wins", 0),
+        "total_losses": eval_res.get("total_losses", 0),
+        "fwer_controlled": eval_res.get("fwer_controlled", False),
+        "max_holm_p_value": eval_res.get("max_holm_p_value", 1.0),
+        "tracks": eval_res.get("tracks", {}),
+        "resolved_config": {
+            "acceptance_phase": "P143",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P143 audit {verdict}: {eval_res.get('total_wins', 0)}/{eval_res.get('total_instances', 0)} wins "
+        f"(max Holm p={eval_res.get('max_holm_p_value', 1.0):.4e}); report -> {out_p}"
+    )
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -18213,6 +18364,8 @@ def main() -> int:
             run_p141_covering_systems_audit(args.config, args.output)
         elif args.acceptance_phase == "P142":
             run_p142_primitive_sets_audit(args.config, args.output)
+        elif args.acceptance_phase == "P143":
+            run_p143_discrepancy_covering_blind_confirmation_audit(args.config, args.output)
         return 0
 
     seeds = (

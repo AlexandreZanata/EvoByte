@@ -1,6 +1,6 @@
 # P143 — Confirmação cega em larga escala em discrepância e recobrimentos sob controle FWER
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P142 concluída; branch a partir de `codex/p142-primitive-sets-divisor-series-erdos`.
 **Owner:** agente executor; revisor estatístico nos gates indicados.
 **Pré-requisito:** P142 concluída; integridade e isolamento de split preservados.
