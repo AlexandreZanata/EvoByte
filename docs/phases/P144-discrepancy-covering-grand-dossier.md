@@ -1,6 +1,6 @@
 # P144 — Grande campanha formal de discrepância e recobrimentos com dossiê certificado em Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P143 concluída; branch a partir de `codex/p143-discrepancy-covering-blind-confirmation`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P143 concluída com confirmação estatística cega aprovada; ambiente Lean 4 e Lake herméticos.

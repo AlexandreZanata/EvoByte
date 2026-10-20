@@ -995,3 +995,91 @@ def test_p142_audit_smoke(tmp_path: Path) -> None:
     assert report["total_theorems"] >= 80
     assert report["has_sorry"] is False
     assert out_file.exists()
+
+
+# ==============================================================================
+# P144 TESTS: DISCREPANCY & COVERING GRAND FORMAL CAMPAIGN & LITERATURE DOSSIER
+# ==============================================================================
+
+
+def test_p144_discrepancy_covering_grand_campaign_audit() -> None:
+    """Test P144 50-module formal audit, theorem count (>= 3,800), zero sorry, and hash chain."""
+    from evobyte.formal_bridge import (
+        audit_discrepancy_covering_grand_campaign,
+        verify_discrepancy_covering_grand_campaign_soundness,
+    )
+
+    audit = audit_discrepancy_covering_grand_campaign(verify_lake=False)
+    assert audit["total_modules"] == 50
+    assert audit["total_theorems"] >= 3800
+    assert audit["discrepancy_covering_theorems"] >= 500
+    assert audit["has_sorry"] is False
+    assert audit["missing_modules"] == []
+    assert audit["final_chain_hash"] == "937b60b65fca489722598725a2325d086890acd6a4cbcac08e25bfaae96a7fbd"
+    assert len(audit["hash_chain"]) == 50
+
+    sound, findings = verify_discrepancy_covering_grand_campaign_soundness(audit, min_theorems=3800, min_modules=50)
+    assert sound is True
+    assert findings == []
+
+
+def test_p144_soundness_validator_rejections() -> None:
+    """Test that P144 soundness validator rejects defective formal campaigns."""
+    from evobyte.formal_bridge import verify_discrepancy_covering_grand_campaign_soundness
+
+    bad_campaign = {
+        "total_modules": 50,
+        "total_theorems": 3900,
+        "discrepancy_covering_theorems": 200,  # below 500
+        "has_sorry": False,
+        "lake_passed": True,
+        "missing_modules": [],
+    }
+    sound, findings = verify_discrepancy_covering_grand_campaign_soundness(bad_campaign)
+    assert sound is False
+    assert any("INSUFFICIENT_DISCREPANCY_COVERING_THEOREMS" in f for f in findings)
+
+
+def test_p144_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P144 audit rejects invalid configuration phase."""
+    import json
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p144_discrepancy_covering_grand_campaign_audit
+
+    cfg_p = tmp_path / "bad-p144.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P144 configuration"):
+        run_p144_discrepancy_covering_grand_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p144_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P144 audit on valid config."""
+    import json
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p144_discrepancy_covering_grand_campaign_audit
+
+    cfg_file = repo_root / "experiments/p144-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p144-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data), encoding="utf-8")
+    out_file = tmp_path / "p144-smoke-out.json"
+
+    report = run_p144_discrepancy_covering_grand_campaign_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P144"
+    assert report["total_modules"] == 50
+    assert report["total_theorems"] >= 3800
+    assert report["discrepancy_covering_theorems"] >= 500
+    assert report["final_chain_hash"] == "937b60b65fca489722598725a2325d086890acd6a4cbcac08e25bfaae96a7fbd"
+    assert out_file.exists()
