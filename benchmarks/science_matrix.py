@@ -785,6 +785,7 @@ ACCEPTANCE_PHASES = (
     "P144",
     "P145",
     "P146",
+    "P147",
 )
 
 
@@ -14652,6 +14653,136 @@ def run_p146_schinzel_quadratic_sieve_audit(
     return report
 
 
+def run_p147_polynomial_identity_synthesis_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P147 audit: automated parametric polynomial identity synthesis for Schinzel resistant classes.
+
+    Verifies:
+    1. Synthesis of exact symbolic identities (X(k), Y(k), Z(k)) in Q[k] for resistant classes.
+    2. Identical satisfaction of a*X*Y*Z = n*(X*Y + Y*Z + Z*X) in Q[k].
+    3. Strict positivity and non-degeneracy 0 < X(k) < Y(k) < Z(k) across all sample evaluations.
+    4. Canonical checksum verification across synthesized database.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        audit_schinzel_polynomial_identity_synthesis_baseline,
+        verify_schinzel_polynomial_identity_synthesis_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P147":
+        raise ValueError(f"Config {cfg_p} is not a P147 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P147 AUTOMATED POLYNOMIAL IDENTITY SYNTHESIS AUDIT (Q[k], M in {840, 2520, 5040}, a in {5,6,7,8})")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_identities = int(config.get("min_identities", 20))
+    max_classes_per_pair = int(config.get("max_classes_per_pair", 5))
+    k0 = int(config.get("k0", 1))
+
+    baseline_audit = audit_schinzel_polynomial_identity_synthesis_baseline(
+        max_classes_per_pair=max_classes_per_pair, k0=k0
+    )
+
+    sound, soundness_findings = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
+        baseline_audit, min_identities=min_identities
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_checksum = config.get("expected_checksum")
+    if expected_checksum and baseline_audit.get("checksum") != expected_checksum:
+        findings.append(
+            f"CHECKSUM_MISMATCH: expected {expected_checksum}, computed {baseline_audit.get('checksum')}"
+        )
+
+    print(
+        f"  Total processed: {baseline_audit.get('total_processed')}, "
+        f"Total synthesized: {baseline_audit.get('total_synthesized')}, "
+        f"All algebraic valid: {baseline_audit.get('all_algebraic_valid')}, "
+        f"All strictly ordered: {baseline_audit.get('all_strictly_ordered')}, "
+        f"Checksum: {baseline_audit.get('checksum')[:16]}..."
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P147 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p147_config": config_sha[:16],
+            "database_checksum": baseline_audit.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P147"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P147",
+        "verdict": verdict,
+        "claim_scope": (
+            "Automated parametric polynomial identity synthesis for Schinzel resistant classes; "
+            "symbolic exact identities in Q[k] with non-degeneracy and strict positivity 0 < X < Y < Z."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_processed": baseline_audit.get("total_processed", 0),
+        "total_synthesized": baseline_audit.get("total_synthesized", 0),
+        "all_algebraic_valid": baseline_audit.get("all_algebraic_valid", False),
+        "all_strictly_ordered": baseline_audit.get("all_strictly_ordered", False),
+        "checksum": baseline_audit.get("checksum", ""),
+        "identities_sample": baseline_audit.get("identities_sample", []),
+        "resolved_config": {
+            "acceptance_phase": "P147",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P147 audit {verdict}: {baseline_audit.get('total_synthesized', 0)} polynomial identities verified; "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -18798,6 +18929,8 @@ def main() -> int:
             run_p145_schinzel_high_moduli_audit(args.config, args.output)
         elif args.acceptance_phase == "P146":
             run_p146_schinzel_quadratic_sieve_audit(args.config, args.output)
+        elif args.acceptance_phase == "P147":
+            run_p147_polynomial_identity_synthesis_audit(args.config, args.output)
         return 0
 
     seeds = (

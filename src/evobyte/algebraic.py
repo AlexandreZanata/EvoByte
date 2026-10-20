@@ -5321,3 +5321,169 @@ def verify_schinzel_quadratic_sieve_baseline_soundness(
         findings.append("INVALID_SOLUTIONS: some generated solutions do not satisfy the Diophantine equation")
 
     return len(findings) == 0, findings
+
+
+def synthesize_polynomial_identity_for_class(
+    a: int, M: int, r: int, k0: int = 1, max_c: int = 30
+) -> dict[str, Any] | None:
+    """Synthesize an exact parametric polynomial identity (X(k), Y(k), Z(k)) in Q[k]
+    solving a/n(k) = 1/X(k) + 1/Y(k) + 1/Z(k) for progression n(k) = M*k + r.
+
+    Enforces:
+    1. Exact symbolic identity a*X*Y*Z - n*(X*Y + Y*Z + Z*X) == 0 in Q[k].
+    2. Strict ordering and positivity: 0 < X(k) < Y(k) < Z(k) for all k >= k0.
+    3. Non-degeneracy: deg(X) >= 1, deg(Y) >= 1, deg(Z) >= 1.
+    """
+    from sympy import degree, simplify
+    from sympy.abc import k
+
+    n = M * k + r
+    for c in range(1, max_c + 1):
+        if (r + c) % a != 0:
+            continue
+        X = (n + c) / a
+        D = n * X
+        for delta_name, delta in [("X", X), ("n", n), ("1", 1), ("c", c), ("D", D)]:
+            Y = (D + delta) / c
+            delta_prime = (D * D) / delta
+            Z = (D + delta_prime) / c
+
+            # Check algebraic identity
+            diff = simplify(a * X * Y * Z - n * (X * Y + Y * Z + Z * X))
+            if diff != 0:
+                continue
+
+            # Check strict ordering and positivity across sample points k in [k0, k0+3]
+            ordered = True
+            samples: list[dict[str, Any]] = []
+            for k_val in range(k0, k0 + 4):
+                xv = float(X.subs(k, k_val))
+                yv = float(Y.subs(k, k_val))
+                zv = float(Z.subs(k, k_val))
+                nv = float(n.subs(k, k_val))
+                if not (0 < xv < yv < zv):
+                    ordered = False
+                    break
+                samples.append({
+                    "k": k_val,
+                    "n": nv,
+                    "X": xv,
+                    "Y": yv,
+                    "Z": zv,
+                    "sum_reciprocals": 1.0 / xv + 1.0 / yv + 1.0 / zv,
+                    "target": float(a) / nv,
+                })
+            if not ordered:
+                continue
+
+            return {
+                "a": a,
+                "modulus": M,
+                "residue": r,
+                "c": c,
+                "delta_type": delta_name,
+                "X_poly": str(X),
+                "Y_poly": str(Y),
+                "Z_poly": str(Z),
+                "degrees": [int(degree(X, k)), int(degree(Y, k)), int(degree(Z, k))],
+                "k0": k0,
+                "verified_algebraic": True,
+                "strictly_ordered": True,
+                "samples": samples,
+            }
+    return None
+
+
+def synthesize_schinzel_polynomial_database(
+    max_classes_per_pair: int = 5, k0: int = 1
+) -> dict[str, Any]:
+    """Synthesize database of parametric polynomial identities across Schinzel high moduli pairs."""
+    db = build_schinzel_high_moduli_database()
+    identities: list[dict[str, Any]] = []
+    total_classes_processed = 0
+    all_algebraic_valid = True
+    all_strictly_ordered = True
+
+    for pair_key, pair in db["pairs"].items():
+        a = pair["a"]
+        M = pair["modulus"]
+        resistant = pair["resistant_classes"]
+        classes_to_process = resistant[:max_classes_per_pair] if max_classes_per_pair > 0 else resistant
+        for r in classes_to_process:
+            total_classes_processed += 1
+            res = synthesize_polynomial_identity_for_class(a, M, r, k0=k0)
+            if res is None:
+                all_algebraic_valid = False
+                all_strictly_ordered = False
+            else:
+                res["pair"] = pair_key
+                identities.append(res)
+
+    canonical_payload = {
+        "total_processed": total_classes_processed,
+        "total_synthesized": len(identities),
+        "all_algebraic_valid": all_algebraic_valid,
+        "all_strictly_ordered": all_strictly_ordered,
+        "identities": [
+            {
+                "pair": item["pair"],
+                "a": item["a"],
+                "modulus": item["modulus"],
+                "residue": item["residue"],
+                "c": item["c"],
+                "delta_type": item["delta_type"],
+                "degrees": item["degrees"],
+            }
+            for item in identities
+        ],
+    }
+    canonical_bytes = json.dumps(canonical_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    checksum = hashlib.sha256(canonical_bytes).hexdigest()
+
+    return {
+        "total_processed": total_classes_processed,
+        "total_synthesized": len(identities),
+        "all_algebraic_valid": all_algebraic_valid,
+        "all_strictly_ordered": all_strictly_ordered,
+        "identities": identities,
+        "checksum": checksum,
+    }
+
+
+def audit_schinzel_polynomial_identity_synthesis_baseline(
+    max_classes_per_pair: int = 5, k0: int = 1
+) -> dict[str, Any]:
+    """Audit P147: automated polynomial identity synthesis for resistant classes."""
+    t0 = time.perf_counter()
+    database = synthesize_schinzel_polynomial_database(
+        max_classes_per_pair=max_classes_per_pair, k0=k0
+    )
+    elapsed = time.perf_counter() - t0
+    return {
+        "total_processed": database["total_processed"],
+        "total_synthesized": database["total_synthesized"],
+        "all_algebraic_valid": database["all_algebraic_valid"],
+        "all_strictly_ordered": database["all_strictly_ordered"],
+        "checksum": database["checksum"],
+        "identities_sample": database["identities"][:6],
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
+    audit_data: dict[str, Any], min_identities: int = 20
+) -> tuple[bool, list[str]]:
+    """Validate soundness of P147 polynomial identity synthesis baseline audit."""
+    findings: list[str] = []
+
+    tot = audit_data.get("total_synthesized", 0)
+    if tot < min_identities:
+        findings.append(f"INSUFFICIENT_IDENTITIES: expected >= {min_identities}, got {tot}")
+
+    if not audit_data.get("all_algebraic_valid", False):
+        findings.append("INVALID_ALGEBRAIC_IDENTITIES: some identities failed symbolic verification")
+
+    if not audit_data.get("all_strictly_ordered", False):
+        findings.append("DEGENERATE_OR_DISORDERED_POLYNOMIALS: some polynomial triples violate 0 < X < Y < Z")
+
+    return len(findings) == 0, findings

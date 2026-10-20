@@ -1398,3 +1398,104 @@ def test_p146_audit_smoke(tmp_path: Path) -> None:
     assert report["all_resistant_solved"] is True
     assert report["all_solutions_valid"] is True
     assert out_file.exists()
+
+
+def test_synthesize_polynomial_identity_for_class() -> None:
+    """Test synthesis of exact parametric polynomial identities in Q[k]."""
+    from evobyte.algebraic import synthesize_polynomial_identity_for_class
+
+    res5 = synthesize_polynomial_identity_for_class(a=5, M=840, r=1, k0=1)
+    assert res5 is not None
+    assert res5["verified_algebraic"] is True
+    assert res5["strictly_ordered"] is True
+    assert res5["degrees"] == [1, 2, 3]
+    assert len(res5["samples"]) == 4
+
+    res7 = synthesize_polynomial_identity_for_class(a=7, M=840, r=121, k0=1)
+    assert res7 is not None
+    assert res7["verified_algebraic"] is True
+    assert res7["strictly_ordered"] is True
+
+
+def test_p147_database_and_soundness() -> None:
+    """Test soundness verification and error detection for P147 baseline audit."""
+    from evobyte.algebraic import (
+        synthesize_schinzel_polynomial_database,
+        verify_schinzel_polynomial_identity_synthesis_baseline_soundness,
+    )
+
+    db = synthesize_schinzel_polynomial_database(max_classes_per_pair=2)
+    assert db["total_synthesized"] >= 20
+    assert db["all_algebraic_valid"] is True
+    assert db["all_strictly_ordered"] is True
+
+    sound, findings = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
+        db, min_identities=20
+    )
+    assert sound is True
+    assert findings == []
+
+    # Test error detection
+    corrupted_alg = dict(db)
+    corrupted_alg["all_algebraic_valid"] = False
+    s_alg, f_alg = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(corrupted_alg)
+    assert s_alg is False
+    assert any("INVALID_ALGEBRAIC_IDENTITIES" in f for f in f_alg)
+
+    corrupted_ord = dict(db)
+    corrupted_ord["all_strictly_ordered"] = False
+    s_ord, f_ord = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(corrupted_ord)
+    assert s_ord is False
+    assert any("DEGENERATE_OR_DISORDERED_POLYNOMIALS" in f for f in f_ord)
+
+    corrupted_count = dict(db)
+    corrupted_count["total_synthesized"] = 5
+    s_cnt, f_cnt = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
+        corrupted_count, min_identities=20
+    )
+    assert s_cnt is False
+    assert any("INSUFFICIENT_IDENTITIES" in f for f in f_cnt)
+
+
+def test_p147_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P147 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p147_polynomial_identity_synthesis_audit
+
+    cfg_p = tmp_path / "bad-p147.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P147 configuration"):
+        run_p147_polynomial_identity_synthesis_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p147_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P147 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p147_polynomial_identity_synthesis_audit
+
+    cfg_file = repo_root / "experiments/p147-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["max_classes_per_pair"] = 1
+    cfg_data["min_identities"] = 5
+    cfg_data["expected_checksum"] = None
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p147-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p147-smoke-out.json"
+
+    report = run_p147_polynomial_identity_synthesis_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P147"
+    assert report["total_synthesized"] >= 5
+    assert report["all_algebraic_valid"] is True
+    assert report["all_strictly_ordered"] is True
+    assert out_file.exists()
