@@ -1585,3 +1585,175 @@ def test_p148_audit_smoke(tmp_path: Path) -> None:
     assert report["total_theorems"] >= 100
     assert report["has_sorry"] is False
     assert out_file.exists()
+
+
+def test_p150_corpora_and_classification() -> None:
+    """Test P150 world literature corpora index and classification taxonomy."""
+    from evobyte.algebraic import build_world_literature_corpora, classify_instance_novelty
+
+    corpora = build_world_literature_corpora()
+    assert "corpora" in corpora
+    indexed = corpora["corpora"]
+    for ref in [
+        "Erdos-Straus-1948",
+        "Schinzel-Sierpinski-1956",
+        "Mordell-1967",
+        "Elsholtz-Tao-2013",
+        "Mian-Chowla-1944",
+        "Singer-1938",
+        "Ruzsa-1993",
+    ]:
+        assert ref in indexed
+
+    # Test classification for Schinzel
+    res_novel = classify_instance_novelty(
+        "schinzel",
+        {
+            "a": 5,
+            "modulus": 840,
+            "residue": 1,
+            "verified_algebraic": True,
+            "strictly_ordered": True,
+        },
+    )
+    assert res_novel["verdict"] == "novel-extension"
+
+    res_known = classify_instance_novelty(
+        "schinzel",
+        {
+            "a": 4,
+            "modulus": 24,
+            "residue": 1,
+            "verified_algebraic": True,
+            "strictly_ordered": True,
+        },
+    )
+    assert res_known["verdict"] == "known-rediscovery"
+
+    res_inconclusive = classify_instance_novelty(
+        "schinzel",
+        {
+            "a": 5,
+            "modulus": 840,
+            "residue": 1,
+            "verified_algebraic": False,
+            "strictly_ordered": True,
+        },
+    )
+    assert res_inconclusive["verdict"] == "inconclusive-instance"
+
+    # Test classification for Sidon
+    res_sidon_novel = classify_instance_novelty(
+        "sidon",
+        {
+            "family": "bnb_dense",
+            "is_sidon": True,
+            "cardinality": 42,
+            "max_element": 1764,
+        },
+    )
+    assert res_sidon_novel["verdict"] == "novel-extension"
+
+    res_sidon_known = classify_instance_novelty(
+        "sidon",
+        {
+            "family": "singer",
+            "param": 2,
+            "is_sidon": True,
+            "cardinality": 3,
+            "max_element": 4,
+        },
+    )
+    assert res_sidon_known["verdict"] == "known-rediscovery"
+
+
+def test_p150_world_literature_dual_audit_soundness() -> None:
+    """Test P150 dual audit execution and soundness verification."""
+    from evobyte.algebraic import (
+        audit_world_literature_novelty_dual,
+        verify_world_literature_novelty_soundness,
+    )
+
+    audit_res = audit_world_literature_novelty_dual(verify_lake=False)
+    assert audit_res["total_instances_audited"] == 108
+    assert audit_res["schinzel_identities_count"] == 58
+    assert audit_res["sidon_certificates_count"] == 50
+    assert audit_res["dual_checker_agreement_rate"] == 1.0
+    assert audit_res["zero_inconclusive"] is True
+    assert audit_res["classification_counts"]["novel-extension"] >= 50
+    assert audit_res["classification_counts"]["known-rediscovery"] >= 20
+
+    sound, findings = verify_world_literature_novelty_soundness(audit_res, min_instances=100)
+    assert sound is True
+    assert findings == []
+
+    # Test error detection: discordance
+    corrupted_rate = dict(audit_res, dual_checker_agreement_rate=0.95)
+    s_rate, f_rate = verify_world_literature_novelty_soundness(corrupted_rate)
+    assert s_rate is False
+    assert any("DUAL_CHECKER_DISCORDANCE" in x for x in f_rate)
+
+    # Test error detection: sorry
+    corrupted_sorry = dict(audit_res, has_sorry=True)
+    s_sorry, f_sorry = verify_world_literature_novelty_soundness(corrupted_sorry)
+    assert s_sorry is False
+    assert any("SORRY_DETECTED" in x for x in f_sorry)
+
+    # Test error detection: inconclusive
+    corrupted_inconcl = dict(
+        audit_res,
+        classification_counts={"novel-extension": 70, "known-rediscovery": 20, "inconclusive-instance": 1},
+    )
+    s_inc, f_inc = verify_world_literature_novelty_soundness(corrupted_inconcl)
+    assert s_inc is False
+    assert any("INCONCLUSIVE_INSTANCES_DETECTED" in x for x in f_inc)
+
+    # Test error detection: insufficient instances
+    corrupted_inst = dict(audit_res, total_instances_audited=50)
+    s_inst, f_inst = verify_world_literature_novelty_soundness(corrupted_inst, min_instances=100)
+    assert s_inst is False
+    assert any("INSUFFICIENT_INSTANCES" in x for x in f_inst)
+
+
+def test_p150_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P150 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p150_world_literature_audit
+
+    cfg_p = tmp_path / "bad-p150.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P150 configuration"):
+        run_p150_world_literature_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p150_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P150 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p150_world_literature_audit
+
+    cfg_file = repo_root / "experiments/p150-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p150-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p150-smoke-out.json"
+
+    report = run_p150_world_literature_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P150"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_instances_audited"] == 108
+    assert report["dual_checker_agreement_rate"] == 1.0
+    assert report["zero_inconclusive"] is True
+    assert report["has_sorry"] is False
+    assert out_file.exists()
