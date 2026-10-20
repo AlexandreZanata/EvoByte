@@ -1160,3 +1160,136 @@ def test_p95_confirmation_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P95 configuration"):
         run_p95_extreme_scale_audit(cfg_p, tmp_path / "out.json")
+
+
+# ==============================================================================
+# P145 TESTS: SCHINZEL HIGH-ORDER MODULI CONGRUENCE DATABASE & RESISTANT ORBITS
+# ==============================================================================
+
+
+def test_p145_schinzel_high_moduli_database() -> None:
+    """Test P145 Schinzel high moduli database construction, lifting towers, and soundness."""
+    from evobyte.algebraic import (
+        build_schinzel_high_moduli_database,
+        compute_schinzel_coprime_residues,
+        compute_schinzel_quadratic_residues,
+        verify_schinzel_high_moduli_database_soundness,
+    )
+
+    qr840 = compute_schinzel_quadratic_residues(840)
+    assert len(qr840) == 6
+    assert qr840 == [1, 121, 169, 289, 361, 529]
+
+    qr2520 = compute_schinzel_quadratic_residues(2520)
+    assert len(qr2520) == 18
+
+    qr5040 = compute_schinzel_quadratic_residues(5040)
+    assert len(qr5040) == 36
+
+    db = build_schinzel_high_moduli_database()
+    assert len(db["pairs"]) == 12
+    assert db["lifting_towers"]["2520_to_840_valid"] is True
+    assert db["lifting_towers"]["5040_to_2520_valid"] is True
+
+    sound, findings = verify_schinzel_high_moduli_database_soundness(db)
+    assert sound is True
+    assert findings == []
+
+
+def test_p145_schinzel_high_moduli_baseline_audit() -> None:
+    """Test P145 formal module audit, theorem count (>= 80), and absence of sorry."""
+    from evobyte.algebraic import (
+        audit_schinzel_high_moduli_baseline,
+        verify_schinzel_high_moduli_baseline_soundness,
+    )
+
+    audit = audit_schinzel_high_moduli_baseline(verify_lake=False)
+    assert audit["total_theorems"] >= 80
+    assert audit["has_sorry"] is False
+    assert audit["database_sound"] is True
+    assert audit["sha256"] == "d260059205969979f4e0c5b25718502c8cb4d7c8a78f5bb9955c68d6fba770aa"
+
+    sound, findings = verify_schinzel_high_moduli_baseline_soundness(audit, min_theorems=80)
+    assert sound is True
+    assert findings == []
+
+
+def test_p145_soundness_validator_rejections() -> None:
+    """Test that P145 soundness validator rejects defective formal baselines."""
+    from evobyte.algebraic import verify_schinzel_high_moduli_baseline_soundness
+
+    # Defect: sorry present
+    bad_audit = {
+        "total_theorems": 100,
+        "has_sorry": True,
+        "database_sound": True,
+        "lake_passed": True,
+    }
+    sound, findings = verify_schinzel_high_moduli_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    # Defect: insufficient theorems
+    low_thms = {
+        "total_theorems": 20,
+        "has_sorry": False,
+        "database_sound": True,
+        "lake_passed": True,
+    }
+    sound, findings = verify_schinzel_high_moduli_baseline_soundness(low_thms, min_theorems=80)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    # Defect: database unsound
+    bad_db = {
+        "total_theorems": 100,
+        "has_sorry": False,
+        "database_sound": False,
+        "database_findings": ["TEST_CORRUPTION"],
+        "lake_passed": True,
+    }
+    sound, findings = verify_schinzel_high_moduli_baseline_soundness(bad_db)
+    assert sound is False
+    assert "TEST_CORRUPTION" in findings
+
+
+def test_p145_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P145 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p145_schinzel_high_moduli_audit
+
+    cfg_p = tmp_path / "bad-p145.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P145 configuration"):
+        run_p145_schinzel_high_moduli_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p145_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P145 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p145_schinzel_high_moduli_audit
+
+    cfg_file = repo_root / "experiments/p145-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p145-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p145-smoke-out.json"
+
+    report = run_p145_schinzel_high_moduli_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P145"
+    assert report["total_theorems"] >= 80
+    assert report["has_sorry"] is False
+    assert report["database_sound"] is True
+    assert out_file.exists()

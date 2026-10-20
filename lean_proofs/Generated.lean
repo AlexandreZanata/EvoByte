@@ -49,3 +49,4 @@ import Generated.RothSpencerDiscrepancyTheorems
 import Generated.DiscrepancyTacticTheorems
 import Generated.CoveringSystemsTheorems
 import Generated.PrimitiveSetsDivisorsTheorems
+import Generated.SchinzelHighModuliSignatures

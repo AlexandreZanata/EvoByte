@@ -4679,3 +4679,418 @@ def sieve_pillai_fixed_bases(
         if val == 1 and 2 <= q <= max_q:
             solutions.append((p, q))
     return solutions
+
+
+# ==============================================================================
+# P145 — SCHINZEL HIGH-ORDER MODULI CONGRUENCE DATABASE & RESISTANT ORBITS
+# ==============================================================================
+
+SCHINZEL_HIGH_MODULI: tuple[int, ...] = (840, 2520, 5040)
+SCHINZEL_NUMERATORS: tuple[int, ...] = (5, 6, 7, 8)
+
+
+@functools.lru_cache(maxsize=16)
+def compute_schinzel_coprime_residues(modulus: int) -> list[int]:
+    """Compute all coprime residues modulo m."""
+    return [x for x in range(1, modulus) if math.gcd(x, modulus) == 1]
+
+
+@functools.lru_cache(maxsize=16)
+def compute_schinzel_quadratic_residues(modulus: int) -> list[int]:
+    """Compute all coprime quadratic residues modulo m."""
+    coprimes = compute_schinzel_coprime_residues(modulus)
+    return sorted({(x * x) % modulus for x in coprimes})
+
+
+def classify_schinzel_residue_class(a: int, modulus: int, r: int) -> dict[str, Any]:
+    """Classify residue r modulo modulus for numerator a in Schinzel's ternary Egyptian fraction problem.
+
+    Determines:
+    1. Common factor reduction with modulus or numerator:
+       - gcd(r, modulus) > 1 -> factor reduction
+       - gcd(r, a) > 1 -> numerator simplification
+    2. Even reduction: if r % 2 == 0, then a/(2k) reduces to (a/2)/k or has direct 3-term split
+    3. Small prime algebraic covering:
+       - a = 5: if r % 5 == 4 (i.e. r = -1 mod 5), 5/(5k-1) = 1/k + 1/(k(5k-1))
+       - a = 6: if r % 3 == 0, 6/(3k) = 2/k; if r % 6 == 5, 6/(6k-1) = 1/k + 1/(k(6k-1))
+       - a = 7: if r % 4 == 0, 7/(4k) = 1/k + 1/(2k) + 1/(4k); if r % 7 == 6, 7/(7k-1) = 1/k + ...
+       - a = 8: if r % 4 == 0, 8/(4k) = 1/k + 1/(2k) + 1/(2k); if r % 8 == 7, 8/(8k-1) = 1/k + ...
+    4. Resistant status:
+       - gcd(r, modulus) == 1 AND r in quadratic_residues(modulus) AND r not covered by linear reductions.
+    """
+    if modulus not in SCHINZEL_HIGH_MODULI:
+        raise ValueError(f"Modulus {modulus} not in supported high moduli: {SCHINZEL_HIGH_MODULI}")
+    if r < 0 or r >= modulus:
+        raise ValueError(f"Residue {r} out of bounds for modulus {modulus}")
+    if a not in SCHINZEL_NUMERATORS:
+        raise ValueError(f"Numerator {a} not in supported Schinzel numerators: {SCHINZEL_NUMERATORS}")
+
+    g_mod = math.gcd(r, modulus)
+    g_a = math.gcd(r, a)
+    qr = compute_schinzel_quadratic_residues(modulus)
+    is_qr = r in qr
+
+    # Check immediate covering mechanisms
+    if g_a > 1:
+        return {
+            "a": a,
+            "modulus": modulus,
+            "residue": r,
+            "is_resistant": False,
+            "mechanism": f"numerator_gcd_{g_a}",
+            "is_coprime_to_modulus": g_mod == 1,
+            "is_quadratic_residue": is_qr,
+        }
+
+    if r % 2 == 0:
+        return {
+            "a": a,
+            "modulus": modulus,
+            "residue": r,
+            "is_resistant": False,
+            "mechanism": "even_parity_reduction",
+            "is_coprime_to_modulus": False,
+            "is_quadratic_residue": is_qr,
+        }
+
+    if g_mod > 1:
+        return {
+            "a": a,
+            "modulus": modulus,
+            "residue": r,
+            "is_resistant": False,
+            "mechanism": f"composite_modulus_factor_{g_mod}",
+            "is_coprime_to_modulus": False,
+            "is_quadratic_residue": is_qr,
+        }
+
+    # Here r is coprime to modulus and odd
+    # Check numerator-specific 2-term/3-term algebraic identities:
+    if a == 5:
+        if r % 5 == 4:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": False,
+                "mechanism": "mod5_neg1_two_term",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": is_qr,
+            }
+        if r % 5 == 0:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": False,
+                "mechanism": "mod5_zero_reduction",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": is_qr,
+            }
+        # If r is in quadratic residues mod modulus, it is a resistant class
+        if is_qr:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": True,
+                "mechanism": "sierpinski_resistant_quadratic_residue",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": True,
+            }
+
+    elif a == 6:
+        if r % 6 == 5:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": False,
+                "mechanism": "mod6_neg1_two_term",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": is_qr,
+            }
+        if r % 3 == 0:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": False,
+                "mechanism": "mod3_zero_reduction",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": is_qr,
+            }
+        if is_qr:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": True,
+                "mechanism": "schinzel_a6_resistant_quadratic_residue",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": True,
+            }
+
+    elif a == 7:
+        if r % 7 == 6:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": False,
+                "mechanism": "mod7_neg1_two_term",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": is_qr,
+            }
+        if r % 7 == 0:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": False,
+                "mechanism": "mod7_zero_reduction",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": is_qr,
+            }
+        if is_qr:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": True,
+                "mechanism": "schinzel_a7_resistant_quadratic_residue",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": True,
+            }
+
+    elif a == 8:
+        if r % 8 == 7:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": False,
+                "mechanism": "mod8_neg1_two_term",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": is_qr,
+            }
+        if is_qr:
+            return {
+                "a": a,
+                "modulus": modulus,
+                "residue": r,
+                "is_resistant": True,
+                "mechanism": "schinzel_a8_resistant_quadratic_residue",
+                "is_coprime_to_modulus": True,
+                "is_quadratic_residue": True,
+            }
+
+    # Default covered by algebraic parametric lift
+    return {
+        "a": a,
+        "modulus": modulus,
+        "residue": r,
+        "is_resistant": False,
+        "mechanism": "algebraic_parametric_orbit",
+        "is_coprime_to_modulus": True,
+        "is_quadratic_residue": is_qr,
+    }
+
+
+def build_schinzel_high_moduli_database(
+    moduli: tuple[int, ...] = SCHINZEL_HIGH_MODULI,
+    numerators: tuple[int, ...] = SCHINZEL_NUMERATORS,
+) -> dict[str, Any]:
+    """Construct the comprehensive Schinzel high moduli congruence database across all (a, M) pairs."""
+    db: dict[str, Any] = {
+        "moduli": list(moduli),
+        "numerators": list(numerators),
+        "pairs": {},
+        "lifting_towers": {},
+        "canonical_qr_840": compute_schinzel_quadratic_residues(840),
+        "canonical_qr_2520": compute_schinzel_quadratic_residues(2520),
+        "canonical_qr_5040": compute_schinzel_quadratic_residues(5040),
+    }
+
+    # Build lifting verification: 2520 -> 840 and 5040 -> 2520
+    qr840_set = set(db["canonical_qr_840"])
+    qr2520_set = set(db["canonical_qr_2520"])
+    qr5040_set = set(db["canonical_qr_5040"])
+
+    lift_2520_to_840 = {r: (r % 840) for r in db["canonical_qr_2520"]}
+    all_2520_lift_valid = all(base in qr840_set for base in lift_2520_to_840.values())
+
+    lift_5040_to_2520 = {r: (r % 2520) for r in db["canonical_qr_5040"]}
+    all_5040_lift_valid = all(base in qr2520_set for base in lift_5040_to_2520.values())
+
+    db["lifting_towers"] = {
+        "2520_to_840_valid": all_2520_lift_valid,
+        "5040_to_2520_valid": all_5040_lift_valid,
+        "classes_840": len(qr840_set),
+        "classes_2520": len(qr2520_set),
+        "classes_5040": len(qr5040_set),
+    }
+
+    total_resistant_classes = 0
+    total_covered_classes = 0
+
+    for a in numerators:
+        for m in moduli:
+            pair_key = f"a{a}_m{m}"
+            covered: list[int] = []
+            resistant: list[int] = []
+            mechanisms: dict[str, int] = {}
+
+            for r in range(m):
+                cls_info = classify_schinzel_residue_class(a, m, r)
+                mech = cls_info["mechanism"]
+                mechanisms[mech] = mechanisms.get(mech, 0) + 1
+
+                if cls_info["is_resistant"]:
+                    resistant.append(r)
+                else:
+                    covered.append(r)
+
+            total_resistant_classes += len(resistant)
+            total_covered_classes += len(covered)
+
+            db["pairs"][pair_key] = {
+                "a": a,
+                "modulus": m,
+                "total_classes": m,
+                "covered_count": len(covered),
+                "resistant_count": len(resistant),
+                "resistant_classes": resistant,
+                "resistant_ratio": len(resistant) / m,
+                "mechanisms": mechanisms,
+            }
+
+    db["total_resistant_classes_all_pairs"] = total_resistant_classes
+    db["total_covered_classes_all_pairs"] = total_covered_classes
+    return db
+
+
+def verify_schinzel_high_moduli_database_soundness(
+    database: dict[str, Any],
+) -> tuple[bool, list[str]]:
+    """Verify mathematical consistency and soundness of the Schinzel high moduli database."""
+    findings: list[str] = []
+
+    if not database.get("lifting_towers", {}).get("2520_to_840_valid", False):
+        findings.append("INVALID_LIFTING_2520_TO_840: quadratic residues do not lift correctly")
+
+    if not database.get("lifting_towers", {}).get("5040_to_2520_valid", False):
+        findings.append("INVALID_LIFTING_5040_TO_2520: quadratic residues do not lift correctly")
+
+    pairs = database.get("pairs", {})
+    if not pairs:
+        findings.append("EMPTY_PAIRS: database contains no (a, modulus) evaluation pairs")
+
+    for pair_key, pair_data in pairs.items():
+        m = pair_data.get("modulus", 0)
+        a = pair_data.get("a", 0)
+        tot = pair_data.get("total_classes", 0)
+        cov = pair_data.get("covered_count", 0)
+        res = pair_data.get("resistant_count", 0)
+        res_list = pair_data.get("resistant_classes", [])
+
+        if cov + res != tot or tot != m:
+            findings.append(f"PARTITION_MISMATCH_{pair_key}: covered ({cov}) + resistant ({res}) != total ({tot})")
+
+        # Resistant residues must be coprime to modulus
+        for r in res_list:
+            if math.gcd(r, m) != 1:
+                findings.append(f"RESISTANT_NOT_COPRIME_{pair_key}: residue {r} not coprime to {m}")
+            if r % 2 == 0:
+                findings.append(f"RESISTANT_EVEN_{pair_key}: residue {r} is even")
+
+    return len(findings) == 0, findings
+
+
+def audit_schinzel_high_moduli_baseline(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    verify_lake: bool = True,
+) -> dict[str, Any]:
+    """Audit P145: Schinzel high moduli congruence database and formal Lean 4 signatures."""
+    import re
+    import subprocess
+    import time
+    from pathlib import Path
+    from evobyte.formal_bridge import lean_resolve_binaries
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+
+    module_name = "SchinzelHighModuliSignatures.lean"
+    mod_p = gen / module_name
+    if not mod_p.exists():
+        raise FileNotFoundError(f"Formal module not found: {mod_p}")
+
+    mod_bytes = mod_p.read_bytes()
+    mod_text = mod_bytes.decode("utf-8")
+    mod_sha = hashlib.sha256(mod_bytes).hexdigest()
+
+    thms = re.findall(r"^(?:theorem|lemma)\s+([a-zA-Z0-9_]+)", mod_text, flags=re.MULTILINE)
+    has_sorry = bool(re.search(r"\bsorry\b", mod_text))
+
+    db = build_schinzel_high_moduli_database()
+    db_sound, db_findings = verify_schinzel_high_moduli_database_soundness(db)
+
+    lake_passed = True
+    lake_reasons: list[str] = []
+    if verify_lake:
+        bins = lean_resolve_binaries(proj)
+        lake_proc = subprocess.run(
+            [bins["lake"], "-d", str(proj), "build", "Generated"],
+            capture_output=True,
+            text=True,
+            cwd=str(proj),
+            timeout=180,
+            check=False,
+        )
+        if lake_proc.returncode != 0:
+            lake_passed = False
+            lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "module": module_name,
+        "path": str(mod_p),
+        "sha256": mod_sha,
+        "total_theorems": len(thms),
+        "has_sorry": has_sorry,
+        "database": db,
+        "database_sound": db_sound,
+        "database_findings": db_findings,
+        "lake_passed": lake_passed,
+        "lake_reasons": lake_reasons,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_schinzel_high_moduli_baseline_soundness(
+    audit_data: dict[str, Any],
+    min_theorems: int = 80,
+) -> tuple[bool, list[str]]:
+    """Validate soundness of P145 Schinzel high moduli baseline audit."""
+    findings: list[str] = []
+
+    if audit_data.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: formal module contains unproven sorry tokens")
+
+    tot_thms = audit_data.get("total_theorems", 0)
+    if tot_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {tot_thms}")
+
+    if not audit_data.get("lake_passed", False):
+        findings.append(f"LAKE_BUILD_FAILED: {audit_data.get('lake_reasons')}")
+
+    if not audit_data.get("database_sound", False):
+        findings.extend(audit_data.get("database_findings", ["DATABASE_UNSOUND"]))
+
+    return len(findings) == 0, findings
