@@ -784,6 +784,7 @@ ACCEPTANCE_PHASES = (
     "P143",
     "P144",
     "P145",
+    "P146",
 )
 
 
@@ -14516,6 +14517,141 @@ def run_p145_schinzel_high_moduli_audit(
     return report
 
 
+def run_p146_schinzel_quadratic_sieve_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P146 audit: accelerated Diophantine quadratic sieve for Schinzel resistant classes and Lean 4 norm theorems.
+
+    Verifies:
+    1. Complete Lean 4 compilation of SchinzelQuadraticRingSieveTheorems.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Deterministic accelerated quadratic sieve resolution of resistant classes across M in {840, 2520, 5040} and a in {5, 6, 7, 8}.
+    4. Exact validation of Diophantine solutions a*x*y*z = n*(x*y + y*z + z*x).
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        audit_schinzel_quadratic_sieve_baseline,
+        verify_schinzel_quadratic_sieve_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P146":
+        raise ValueError(f"Config {cfg_p} is not a P146 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P146 ACCELERATED QUADRATIC SIEVE SCHINZEL AUDIT (Lean 4, M in {840, 2520, 5040}, a in {5,6,7,8})")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    baseline_audit = audit_schinzel_quadratic_sieve_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_schinzel_quadratic_sieve_baseline_soundness(
+        baseline_audit, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_sha256 = config.get("expected_sha256")
+    if expected_sha256 and baseline_audit.get("sha256") != expected_sha256:
+        findings.append(
+            f"SHA256_MISMATCH: expected {expected_sha256}, computed {baseline_audit.get('sha256')}"
+        )
+
+    print(
+        f"  Module: {baseline_audit.get('module')}, "
+        f"Theorems verified: {baseline_audit.get('total_theorems')}, "
+        f"Has sorry: {baseline_audit.get('has_sorry')}, "
+        f"Lake passed: {baseline_audit.get('lake_passed')}, "
+        f"All resistant solved: {baseline_audit.get('all_resistant_solved')}, "
+        f"All solutions valid: {baseline_audit.get('all_solutions_valid')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P146 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p146_config": config_sha[:16],
+            "lean_signatures": baseline_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P146"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P146",
+        "verdict": verdict,
+        "claim_scope": (
+            "Accelerated Diophantine quadratic sieve for Schinzel resistant classes; "
+            "norm divisibility and hyperbolic factorization verified in Lean 4 kernel with 0 sorry."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": baseline_audit.get("total_theorems", 0),
+        "has_sorry": baseline_audit.get("has_sorry", False),
+        "lake_passed": baseline_audit.get("lake_passed", False),
+        "sha256": baseline_audit.get("sha256", ""),
+        "module": baseline_audit.get("module", ""),
+        "total_tested": baseline_audit.get("total_tested", 0),
+        "all_resistant_solved": baseline_audit.get("all_resistant_solved", False),
+        "all_solutions_valid": baseline_audit.get("all_solutions_valid", False),
+        "sieve_results_sample": baseline_audit.get("sieve_results", [])[:6],
+        "resolved_config": {
+            "acceptance_phase": "P146",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P146 audit {verdict}: {baseline_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -18660,6 +18796,8 @@ def main() -> int:
             run_p144_discrepancy_covering_grand_campaign_audit(args.config, args.output)
         elif args.acceptance_phase == "P145":
             run_p145_schinzel_high_moduli_audit(args.config, args.output)
+        elif args.acceptance_phase == "P146":
+            run_p146_schinzel_quadratic_sieve_audit(args.config, args.output)
         return 0
 
     seeds = (

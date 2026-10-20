@@ -50,3 +50,4 @@ import Generated.DiscrepancyTacticTheorems
 import Generated.CoveringSystemsTheorems
 import Generated.PrimitiveSetsDivisorsTheorems
 import Generated.SchinzelHighModuliSignatures
+import Generated.SchinzelQuadraticRingSieveTheorems

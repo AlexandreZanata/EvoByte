@@ -1293,3 +1293,108 @@ def test_p145_audit_smoke(tmp_path: Path) -> None:
     assert report["has_sorry"] is False
     assert report["database_sound"] is True
     assert out_file.exists()
+
+
+def test_accelerated_schinzel_quadratic_sieve() -> None:
+    """Test accelerated quadratic sieve for Schinzel resistant instances across numerators."""
+    from evobyte.algebraic import accelerated_schinzel_quadratic_sieve
+
+    # Invalid inputs
+    assert accelerated_schinzel_quadratic_sieve(1, a=5)[0] is None
+    assert accelerated_schinzel_quadratic_sieve(10, a=0)[0] is None
+
+    # Test resistant instances for a in {5, 6, 7, 8} with M=840
+    test_cases = [
+        (840 * 1 + 1, 5),
+        (840 * 1 + 121, 5),
+        (840 * 1 + 1, 6),
+        (840 * 1 + 121, 6),
+        (840 * 1 + 1, 7),
+        (840 * 1 + 121, 7),
+        (840 * 1 + 1, 8),
+        (840 * 1 + 121, 8),
+    ]
+    for n, a in test_cases:
+        sol, telemetry = accelerated_schinzel_quadratic_sieve(n, a=a, max_x_steps=50)
+        assert sol is not None, f"Failed to solve for a={a}, n={n}"
+        x, y, z = sol
+        assert x > 0 and y > 0 and z > 0
+        assert a * x * y * z == n * (x * y + y * z + z * x)
+        assert telemetry["verified"] is True
+        assert telemetry["modular_pruned"] >= 0
+
+
+def test_p146_soundness_and_lake() -> None:
+    """Test soundness verification and error detection for P146 baseline audit."""
+    from evobyte.algebraic import (
+        audit_schinzel_quadratic_sieve_baseline,
+        verify_schinzel_quadratic_sieve_baseline_soundness,
+    )
+
+    audit_res = audit_schinzel_quadratic_sieve_baseline(verify_lake=False)
+    assert audit_res["total_theorems"] >= 80
+    assert audit_res["has_sorry"] is False
+    assert audit_res["all_resistant_solved"] is True
+    assert audit_res["all_solutions_valid"] is True
+
+    # Test error detection
+    corrupted = dict(audit_res)
+    corrupted["has_sorry"] = True
+    sound, findings = verify_schinzel_quadratic_sieve_baseline_soundness(corrupted)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    corrupted_thms = dict(audit_res)
+    corrupted_thms["total_theorems"] = 10
+    sound, findings = verify_schinzel_quadratic_sieve_baseline_soundness(corrupted_thms, min_theorems=80)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    corrupted_unsolved = dict(audit_res)
+    corrupted_unsolved["all_resistant_solved"] = False
+    sound, findings = verify_schinzel_quadratic_sieve_baseline_soundness(corrupted_unsolved)
+    assert sound is False
+    assert any("UNSOLVED_RESISTANT_INSTANCES" in f for f in findings)
+
+
+def test_p146_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P146 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p146_schinzel_quadratic_sieve_audit
+
+    cfg_p = tmp_path / "bad-p146.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P146 configuration"):
+        run_p146_schinzel_quadratic_sieve_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p146_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P146 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p146_schinzel_quadratic_sieve_audit
+
+    cfg_file = repo_root / "experiments/p146-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p146-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p146-smoke-out.json"
+
+    report = run_p146_schinzel_quadratic_sieve_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P146"
+    assert report["total_theorems"] >= 80
+    assert report["has_sorry"] is False
+    assert report["all_resistant_solved"] is True
+    assert report["all_solutions_valid"] is True
+    assert out_file.exists()
