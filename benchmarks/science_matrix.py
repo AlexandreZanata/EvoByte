@@ -789,6 +789,7 @@ ACCEPTANCE_PHASES = (
     "P148",
     "P149",
     "P150",
+    "P151",
 )
 
 
@@ -15197,6 +15198,150 @@ def run_p150_world_literature_audit(
     return report
 
 
+def run_p151_blind_confirmation_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P151 audit: sealed blind confirmation under Bonferroni-Holm family-wise error rate control.
+
+    Verifies:
+    1. Blind sealed partition of 100 Schinzel and Sidon instances across 4 tracks.
+    2. Zero leakage verified between development set and test partition.
+    3. Pairwise superiority over naive baseline under identical budgets.
+    4. Bonferroni-Holm step-down procedure strictly controlling FWER at alpha = 0.01.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.statistical import (
+        evaluate_p151_schinzel_sidon_blind_confirmation,
+        generate_p151_schinzel_sidon_blind_split,
+        verify_p151_schinzel_sidon_blind_confirmation_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P151":
+        raise ValueError(f"Config {cfg_p} is not a P151 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P151 BLIND CONFIRMATION AUDIT (SCHINZEL & SIDON, BONFERRONI-HOLM FWER alpha=0.01)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    alpha = float(config.get("alpha", 0.01))
+    min_total_instances = int(config.get("min_total_instances", 100))
+    min_wins = int(config.get("min_wins", 80))
+
+    partition_path = config.get("partition_path", "experiments/p151-blind-split.json")
+    part_p = Path(partition_path)
+    if part_p.exists():
+        with open(part_p, encoding="utf-8") as f:
+            partition = json.load(f)
+    else:
+        partition = generate_p151_schinzel_sidon_blind_split(seed=seed, alpha=alpha)
+
+    eval_report = evaluate_p151_schinzel_sidon_blind_confirmation(partition, alpha=alpha)
+
+    sound, soundness_findings = verify_p151_schinzel_sidon_blind_confirmation_soundness(
+        eval_report,
+        min_total_instances=min_total_instances,
+        min_wins=min_wins,
+        alpha=alpha,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_partition_checksum = config.get("expected_partition_checksum")
+    if expected_partition_checksum and partition.get("checksum") != expected_partition_checksum:
+        findings.append(
+            f"CHECKSUM_MISMATCH: expected {expected_partition_checksum}, computed {partition.get('checksum')}"
+        )
+
+    print(
+        f"  Total instances: {eval_report.get('total_instances')}, "
+        f"Wins: {eval_report.get('total_wins')}, Losses: {eval_report.get('total_losses')}, "
+        f"FWER controlled: {eval_report.get('fwer_controlled')}, "
+        f"Max Holm p-value: {eval_report.get('max_holm_p_value'):.4e}, "
+        f"Zero leakage: {eval_report.get('zero_leakage_verified')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P151 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p151_config": config_sha[:16],
+            "partition_checksum": partition.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P151"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P151",
+        "verdict": verdict,
+        "claim_scope": (
+            "Blind sealed confirmation across 100 Schinzel resistant instances and extremal Sidon packing certificates; "
+            "family-wise error rate strictly controlled under Bonferroni-Holm step-down procedure at alpha=0.01."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_instances": eval_report.get("total_instances", 0),
+        "total_wins": eval_report.get("total_wins", 0),
+        "total_losses": eval_report.get("total_losses", 0),
+        "fwer_controlled": eval_report.get("fwer_controlled", False),
+        "max_holm_p_value": eval_report.get("max_holm_p_value", 1.0),
+        "adjusted_p_values": eval_report.get("adjusted_p_values", {}),
+        "zero_leakage_verified": eval_report.get("zero_leakage_verified", False),
+        "partition_checksum": partition.get("checksum", ""),
+        "tracks": eval_report.get("tracks", {}),
+        "resolved_config": {
+            "acceptance_phase": "P151",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P151 audit {verdict}: {eval_report.get('total_wins', 0)}/{eval_report.get('total_instances', 0)} wins "
+        f"(max Holm p={eval_report.get('max_holm_p_value', 1.0):.4e}); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -19351,6 +19496,8 @@ def main() -> int:
             run_p149_constructive_certificates_audit(args.config, args.output)
         elif args.acceptance_phase == "P150":
             run_p150_world_literature_audit(args.config, args.output)
+        elif args.acceptance_phase == "P151":
+            run_p151_blind_confirmation_audit(args.config, args.output)
         return 0
 
     seeds = (

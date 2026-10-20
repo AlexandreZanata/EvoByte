@@ -216,3 +216,109 @@ def test_p143_audit_smoke(tmp_path):
     assert report["total_wins"] >= 80
     assert report["fwer_controlled"] is True
     assert out_file.exists()
+
+
+def test_p151_generate_schinzel_sidon_blind_split():
+    from evobyte.statistical import generate_p151_schinzel_sidon_blind_split
+
+    dev_pool = {"DEV_01", "DEV_02"}
+    part = generate_p151_schinzel_sidon_blind_split(seed=151, count_per_track=25, dev_pool=dev_pool)
+    assert part["total_instances"] == 100
+    assert part["count_per_track"] == 25
+    assert len(part["tracks"]) == 4
+    assert set(part["tracks"].keys()) == {
+        "schinzel_m840",
+        "schinzel_m2520",
+        "schinzel_m5040",
+        "extremal_sidon_packing",
+    }
+    assert part["leakage_detected"] is False
+    assert part["zero_leakage_verified"] is True
+    assert part["checksum"] == "3edae916f6c5ae7248f486a14114938d76e625cb2f17626d771cb733defbec35"
+
+    # Test leakage detection
+    leaky_pool = {"P151_SCH840_01"}
+    part_leaky = generate_p151_schinzel_sidon_blind_split(seed=151, dev_pool=leaky_pool)
+    assert part_leaky["leakage_detected"] is True
+    assert part_leaky["zero_leakage_verified"] is False
+
+
+def test_p151_evaluate_schinzel_sidon_blind_confirmation():
+    from evobyte.statistical import (
+        generate_p151_schinzel_sidon_blind_split,
+        evaluate_p151_schinzel_sidon_blind_confirmation,
+        verify_p151_schinzel_sidon_blind_confirmation_soundness,
+    )
+
+    part = generate_p151_schinzel_sidon_blind_split()
+    eval_res = evaluate_p151_schinzel_sidon_blind_confirmation(part, alpha=0.01)
+
+    assert eval_res["phase"] == "P151"
+    assert eval_res["total_instances"] == 100
+    assert eval_res["total_wins"] == 100
+    assert eval_res["total_losses"] == 0
+    assert eval_res["fwer_controlled"] is True
+    assert eval_res["max_holm_p_value"] < 1e-5
+    assert eval_res["all_confirmed"] is True
+
+    sound, findings = verify_p151_schinzel_sidon_blind_confirmation_soundness(eval_res)
+    assert sound is True
+    assert findings == []
+
+    # Test leakage corruption
+    corrupted_leak = dict(eval_res, leakage_detected=True)
+    s_leak, f_leak = verify_p151_schinzel_sidon_blind_confirmation_soundness(corrupted_leak)
+    assert s_leak is False
+    assert any("LEAKAGE" in f for f in f_leak)
+
+    # Test insufficient wins corruption
+    corrupted_wins = dict(eval_res, total_wins=50)
+    s_wins, f_wins = verify_p151_schinzel_sidon_blind_confirmation_soundness(corrupted_wins, min_wins=80)
+    assert s_wins is False
+    assert any("INSUFFICIENT_WINS" in f for f in f_wins)
+
+
+def test_p151_acceptance_rejects_wrong_phase(tmp_path):
+    import json
+    from pathlib import Path
+    import sys
+    import pytest
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p151_blind_confirmation_audit
+
+    cfg_p = tmp_path / "bad-p151.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P151 configuration"):
+        run_p151_blind_confirmation_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p151_audit_smoke(tmp_path):
+    import json
+    from pathlib import Path
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p151_blind_confirmation_audit
+
+    cfg_file = repo_root / "experiments/p151-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p151-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data), encoding="utf-8")
+    out_file = tmp_path / "p151-smoke-out.json"
+
+    report = run_p151_blind_confirmation_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P151"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_instances"] == 100
+    assert report["total_wins"] == 100
+    assert report["fwer_controlled"] is True
+    assert report["max_holm_p_value"] < 1e-5
+    assert out_file.exists()

@@ -1,0 +1,883 @@
+{
+  "alpha": 0.01,
+  "checksum": "3edae916f6c5ae7248f486a14114938d76e625cb2f17626d771cb733defbec35",
+  "count_per_track": 25,
+  "description": "Sealed blind partition of 100 Schinzel resistant instances and extremal Sidon packing certificates for P151 confirmation under Bonferroni-Holm family-wise error rate control (alpha=0.01).",
+  "leakage_detected": false,
+  "seed": 151,
+  "split_id": "p151-schinzel-sidon-blind-partition-v1",
+  "total_instances": 100,
+  "tracks": {
+    "extremal_sidon_packing": {
+      "instances": [
+        {
+          "index": 0,
+          "instance_id": "P151_SIDON_01",
+          "min_cardinality": 7,
+          "n_val": 80,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 1,
+          "instance_id": "P151_SIDON_02",
+          "min_cardinality": 9,
+          "n_val": 140,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 2,
+          "instance_id": "P151_SIDON_03",
+          "min_cardinality": 10,
+          "n_val": 200,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 3,
+          "instance_id": "P151_SIDON_04",
+          "min_cardinality": 12,
+          "n_val": 260,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 4,
+          "instance_id": "P151_SIDON_05",
+          "min_cardinality": 13,
+          "n_val": 320,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 5,
+          "instance_id": "P151_SIDON_06",
+          "min_cardinality": 14,
+          "n_val": 380,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 6,
+          "instance_id": "P151_SIDON_07",
+          "min_cardinality": 15,
+          "n_val": 440,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 7,
+          "instance_id": "P151_SIDON_08",
+          "min_cardinality": 16,
+          "n_val": 500,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 8,
+          "instance_id": "P151_SIDON_09",
+          "min_cardinality": 17,
+          "n_val": 560,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 9,
+          "instance_id": "P151_SIDON_10",
+          "min_cardinality": 18,
+          "n_val": 620,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 10,
+          "instance_id": "P151_SIDON_11",
+          "min_cardinality": 18,
+          "n_val": 680,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 11,
+          "instance_id": "P151_SIDON_12",
+          "min_cardinality": 19,
+          "n_val": 740,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 12,
+          "instance_id": "P151_SIDON_13",
+          "min_cardinality": 20,
+          "n_val": 800,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 13,
+          "instance_id": "P151_SIDON_14",
+          "min_cardinality": 20,
+          "n_val": 860,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 14,
+          "instance_id": "P151_SIDON_15",
+          "min_cardinality": 21,
+          "n_val": 920,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 15,
+          "instance_id": "P151_SIDON_16",
+          "min_cardinality": 22,
+          "n_val": 980,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 16,
+          "instance_id": "P151_SIDON_17",
+          "min_cardinality": 22,
+          "n_val": 1040,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 17,
+          "instance_id": "P151_SIDON_18",
+          "min_cardinality": 23,
+          "n_val": 1100,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 18,
+          "instance_id": "P151_SIDON_19",
+          "min_cardinality": 23,
+          "n_val": 1160,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 19,
+          "instance_id": "P151_SIDON_20",
+          "min_cardinality": 24,
+          "n_val": 1220,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 20,
+          "instance_id": "P151_SIDON_21",
+          "min_cardinality": 25,
+          "n_val": 1280,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 21,
+          "instance_id": "P151_SIDON_22",
+          "min_cardinality": 25,
+          "n_val": 1340,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 22,
+          "instance_id": "P151_SIDON_23",
+          "min_cardinality": 26,
+          "n_val": 1400,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 23,
+          "instance_id": "P151_SIDON_24",
+          "min_cardinality": 26,
+          "n_val": 1460,
+          "track": "extremal_sidon_packing"
+        },
+        {
+          "index": 24,
+          "instance_id": "P151_SIDON_25",
+          "min_cardinality": 27,
+          "n_val": 1520,
+          "track": "extremal_sidon_packing"
+        }
+      ],
+      "name": "Extremal Sidon Difference Packing Certificates"
+    },
+    "schinzel_m2520": {
+      "instances": [
+        {
+          "a": 5,
+          "index": 0,
+          "instance_id": "P151_SCH2520_01",
+          "k_val": 1,
+          "modulus": 2520,
+          "residue": 1,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 6,
+          "index": 1,
+          "instance_id": "P151_SCH2520_02",
+          "k_val": 2,
+          "modulus": 2520,
+          "residue": 1,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 7,
+          "index": 2,
+          "instance_id": "P151_SCH2520_03",
+          "k_val": 3,
+          "modulus": 2520,
+          "residue": 1,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 5,
+          "index": 3,
+          "instance_id": "P151_SCH2520_04",
+          "k_val": 4,
+          "modulus": 2520,
+          "residue": 121,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 6,
+          "index": 4,
+          "instance_id": "P151_SCH2520_05",
+          "k_val": 5,
+          "modulus": 2520,
+          "residue": 121,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 7,
+          "index": 5,
+          "instance_id": "P151_SCH2520_06",
+          "k_val": 1,
+          "modulus": 2520,
+          "residue": 121,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 5,
+          "index": 6,
+          "instance_id": "P151_SCH2520_07",
+          "k_val": 2,
+          "modulus": 2520,
+          "residue": 361,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 6,
+          "index": 7,
+          "instance_id": "P151_SCH2520_08",
+          "k_val": 3,
+          "modulus": 2520,
+          "residue": 169,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 7,
+          "index": 8,
+          "instance_id": "P151_SCH2520_09",
+          "k_val": 4,
+          "modulus": 2520,
+          "residue": 169,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 5,
+          "index": 9,
+          "instance_id": "P151_SCH2520_10",
+          "k_val": 5,
+          "modulus": 2520,
+          "residue": 841,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 6,
+          "index": 10,
+          "instance_id": "P151_SCH2520_11",
+          "k_val": 1,
+          "modulus": 2520,
+          "residue": 289,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 7,
+          "index": 11,
+          "instance_id": "P151_SCH2520_12",
+          "k_val": 2,
+          "modulus": 2520,
+          "residue": 289,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 5,
+          "index": 12,
+          "instance_id": "P151_SCH2520_13",
+          "k_val": 3,
+          "modulus": 2520,
+          "residue": 961,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 6,
+          "index": 13,
+          "instance_id": "P151_SCH2520_14",
+          "k_val": 4,
+          "modulus": 2520,
+          "residue": 361,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 7,
+          "index": 14,
+          "instance_id": "P151_SCH2520_15",
+          "k_val": 5,
+          "modulus": 2520,
+          "residue": 361,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 5,
+          "index": 15,
+          "instance_id": "P151_SCH2520_16",
+          "k_val": 1,
+          "modulus": 2520,
+          "residue": 1201,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 6,
+          "index": 16,
+          "instance_id": "P151_SCH2520_17",
+          "k_val": 2,
+          "modulus": 2520,
+          "residue": 529,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 7,
+          "index": 17,
+          "instance_id": "P151_SCH2520_18",
+          "k_val": 3,
+          "modulus": 2520,
+          "residue": 529,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 5,
+          "index": 18,
+          "instance_id": "P151_SCH2520_19",
+          "k_val": 4,
+          "modulus": 2520,
+          "residue": 1681,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 6,
+          "index": 19,
+          "instance_id": "P151_SCH2520_20",
+          "k_val": 5,
+          "modulus": 2520,
+          "residue": 841,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 7,
+          "index": 20,
+          "instance_id": "P151_SCH2520_21",
+          "k_val": 1,
+          "modulus": 2520,
+          "residue": 841,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 5,
+          "index": 21,
+          "instance_id": "P151_SCH2520_22",
+          "k_val": 2,
+          "modulus": 2520,
+          "residue": 1801,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 6,
+          "index": 22,
+          "instance_id": "P151_SCH2520_23",
+          "k_val": 3,
+          "modulus": 2520,
+          "residue": 961,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 7,
+          "index": 23,
+          "instance_id": "P151_SCH2520_24",
+          "k_val": 4,
+          "modulus": 2520,
+          "residue": 961,
+          "track": "schinzel_m2520"
+        },
+        {
+          "a": 5,
+          "index": 24,
+          "instance_id": "P151_SCH2520_25",
+          "k_val": 5,
+          "modulus": 2520,
+          "residue": 2041,
+          "track": "schinzel_m2520"
+        }
+      ],
+      "name": "Schinzel Resistant Classes Modulo 2520"
+    },
+    "schinzel_m5040": {
+      "instances": [
+        {
+          "a": 5,
+          "index": 0,
+          "instance_id": "P151_SCH5040_01",
+          "k_val": 1,
+          "modulus": 5040,
+          "residue": 1,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 6,
+          "index": 1,
+          "instance_id": "P151_SCH5040_02",
+          "k_val": 2,
+          "modulus": 5040,
+          "residue": 1,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 7,
+          "index": 2,
+          "instance_id": "P151_SCH5040_03",
+          "k_val": 3,
+          "modulus": 5040,
+          "residue": 1,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 5,
+          "index": 3,
+          "instance_id": "P151_SCH5040_04",
+          "k_val": 4,
+          "modulus": 5040,
+          "residue": 121,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 6,
+          "index": 4,
+          "instance_id": "P151_SCH5040_05",
+          "k_val": 5,
+          "modulus": 5040,
+          "residue": 121,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 7,
+          "index": 5,
+          "instance_id": "P151_SCH5040_06",
+          "k_val": 1,
+          "modulus": 5040,
+          "residue": 121,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 5,
+          "index": 6,
+          "instance_id": "P151_SCH5040_07",
+          "k_val": 2,
+          "modulus": 5040,
+          "residue": 361,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 6,
+          "index": 7,
+          "instance_id": "P151_SCH5040_08",
+          "k_val": 3,
+          "modulus": 5040,
+          "residue": 169,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 7,
+          "index": 8,
+          "instance_id": "P151_SCH5040_09",
+          "k_val": 4,
+          "modulus": 5040,
+          "residue": 169,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 5,
+          "index": 9,
+          "instance_id": "P151_SCH5040_10",
+          "k_val": 5,
+          "modulus": 5040,
+          "residue": 841,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 6,
+          "index": 10,
+          "instance_id": "P151_SCH5040_11",
+          "k_val": 1,
+          "modulus": 5040,
+          "residue": 289,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 7,
+          "index": 11,
+          "instance_id": "P151_SCH5040_12",
+          "k_val": 2,
+          "modulus": 5040,
+          "residue": 289,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 5,
+          "index": 12,
+          "instance_id": "P151_SCH5040_13",
+          "k_val": 3,
+          "modulus": 5040,
+          "residue": 961,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 6,
+          "index": 13,
+          "instance_id": "P151_SCH5040_14",
+          "k_val": 4,
+          "modulus": 5040,
+          "residue": 361,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 7,
+          "index": 14,
+          "instance_id": "P151_SCH5040_15",
+          "k_val": 5,
+          "modulus": 5040,
+          "residue": 361,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 5,
+          "index": 15,
+          "instance_id": "P151_SCH5040_16",
+          "k_val": 1,
+          "modulus": 5040,
+          "residue": 1201,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 6,
+          "index": 16,
+          "instance_id": "P151_SCH5040_17",
+          "k_val": 2,
+          "modulus": 5040,
+          "residue": 529,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 7,
+          "index": 17,
+          "instance_id": "P151_SCH5040_18",
+          "k_val": 3,
+          "modulus": 5040,
+          "residue": 529,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 5,
+          "index": 18,
+          "instance_id": "P151_SCH5040_19",
+          "k_val": 4,
+          "modulus": 5040,
+          "residue": 1681,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 6,
+          "index": 19,
+          "instance_id": "P151_SCH5040_20",
+          "k_val": 5,
+          "modulus": 5040,
+          "residue": 841,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 7,
+          "index": 20,
+          "instance_id": "P151_SCH5040_21",
+          "k_val": 1,
+          "modulus": 5040,
+          "residue": 841,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 5,
+          "index": 21,
+          "instance_id": "P151_SCH5040_22",
+          "k_val": 2,
+          "modulus": 5040,
+          "residue": 1801,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 6,
+          "index": 22,
+          "instance_id": "P151_SCH5040_23",
+          "k_val": 3,
+          "modulus": 5040,
+          "residue": 961,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 7,
+          "index": 23,
+          "instance_id": "P151_SCH5040_24",
+          "k_val": 4,
+          "modulus": 5040,
+          "residue": 961,
+          "track": "schinzel_m5040"
+        },
+        {
+          "a": 5,
+          "index": 24,
+          "instance_id": "P151_SCH5040_25",
+          "k_val": 5,
+          "modulus": 5040,
+          "residue": 2041,
+          "track": "schinzel_m5040"
+        }
+      ],
+      "name": "Schinzel Resistant Classes Modulo 5040"
+    },
+    "schinzel_m840": {
+      "instances": [
+        {
+          "a": 5,
+          "index": 0,
+          "instance_id": "P151_SCH840_01",
+          "k_val": 1,
+          "modulus": 840,
+          "residue": 1,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 6,
+          "index": 1,
+          "instance_id": "P151_SCH840_02",
+          "k_val": 2,
+          "modulus": 840,
+          "residue": 1,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 7,
+          "index": 2,
+          "instance_id": "P151_SCH840_03",
+          "k_val": 3,
+          "modulus": 840,
+          "residue": 1,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 5,
+          "index": 3,
+          "instance_id": "P151_SCH840_04",
+          "k_val": 4,
+          "modulus": 840,
+          "residue": 121,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 6,
+          "index": 4,
+          "instance_id": "P151_SCH840_05",
+          "k_val": 5,
+          "modulus": 840,
+          "residue": 121,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 7,
+          "index": 5,
+          "instance_id": "P151_SCH840_06",
+          "k_val": 1,
+          "modulus": 840,
+          "residue": 121,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 5,
+          "index": 6,
+          "instance_id": "P151_SCH840_07",
+          "k_val": 2,
+          "modulus": 840,
+          "residue": 361,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 6,
+          "index": 7,
+          "instance_id": "P151_SCH840_08",
+          "k_val": 3,
+          "modulus": 840,
+          "residue": 169,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 7,
+          "index": 8,
+          "instance_id": "P151_SCH840_09",
+          "k_val": 4,
+          "modulus": 840,
+          "residue": 169,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 5,
+          "index": 9,
+          "instance_id": "P151_SCH840_10",
+          "k_val": 5,
+          "modulus": 840,
+          "residue": 1,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 6,
+          "index": 10,
+          "instance_id": "P151_SCH840_11",
+          "k_val": 1,
+          "modulus": 840,
+          "residue": 289,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 7,
+          "index": 11,
+          "instance_id": "P151_SCH840_12",
+          "k_val": 2,
+          "modulus": 840,
+          "residue": 289,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 5,
+          "index": 12,
+          "instance_id": "P151_SCH840_13",
+          "k_val": 3,
+          "modulus": 840,
+          "residue": 121,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 6,
+          "index": 13,
+          "instance_id": "P151_SCH840_14",
+          "k_val": 4,
+          "modulus": 840,
+          "residue": 361,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 7,
+          "index": 14,
+          "instance_id": "P151_SCH840_15",
+          "k_val": 5,
+          "modulus": 840,
+          "residue": 361,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 5,
+          "index": 15,
+          "instance_id": "P151_SCH840_16",
+          "k_val": 1,
+          "modulus": 840,
+          "residue": 361,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 6,
+          "index": 16,
+          "instance_id": "P151_SCH840_17",
+          "k_val": 2,
+          "modulus": 840,
+          "residue": 529,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 7,
+          "index": 17,
+          "instance_id": "P151_SCH840_18",
+          "k_val": 3,
+          "modulus": 840,
+          "residue": 529,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 5,
+          "index": 18,
+          "instance_id": "P151_SCH840_19",
+          "k_val": 4,
+          "modulus": 840,
+          "residue": 1,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 6,
+          "index": 19,
+          "instance_id": "P151_SCH840_20",
+          "k_val": 5,
+          "modulus": 840,
+          "residue": 1,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 7,
+          "index": 20,
+          "instance_id": "P151_SCH840_21",
+          "k_val": 1,
+          "modulus": 840,
+          "residue": 1,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 5,
+          "index": 21,
+          "instance_id": "P151_SCH840_22",
+          "k_val": 2,
+          "modulus": 840,
+          "residue": 121,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 6,
+          "index": 22,
+          "instance_id": "P151_SCH840_23",
+          "k_val": 3,
+          "modulus": 840,
+          "residue": 121,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 7,
+          "index": 23,
+          "instance_id": "P151_SCH840_24",
+          "k_val": 4,
+          "modulus": 840,
+          "residue": 121,
+          "track": "schinzel_m840"
+        },
+        {
+          "a": 5,
+          "index": 24,
+          "instance_id": "P151_SCH840_25",
+          "k_val": 5,
+          "modulus": 840,
+          "residue": 361,
+          "track": "schinzel_m840"
+        }
+      ],
+      "name": "Schinzel Resistant Classes Modulo 840"
+    }
+  },
+  "zero_leakage_verified": true
+}
