@@ -1,0 +1,14 @@
+{
+  "phase": "P152",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 4800,
+  "min_modules": 54,
+  "min_constructive_theorems": 500,
+  "expected_chain_hash": "c713f17c40f7f44649eadd3eb881fc39f61ede4fa782c602ff5589418a1da68f",
+  "dossier_path": "docs/research/p152-constructive-algebraic-dossier.md",
+  "verify_lake": true,
+  "require_clean_tree": true
+}

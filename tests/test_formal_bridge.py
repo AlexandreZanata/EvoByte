@@ -1451,3 +1451,107 @@ def test_p112_grand_campaign_audit_smoke(tmp_path: Path):
         report["final_chain_hash"]
         == "0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268"
     )
+
+
+def test_p152_grand_campaign_config_rejection(tmp_path: Path):
+    from benchmarks.science_matrix import run_p152_grand_campaign_audit
+
+    cfg_p = tmp_path / "bad-phase.json"
+    cfg_p.write_text(json.dumps({"phase": "P999"}))
+    with pytest.raises(ValueError, match="not a P152 configuration"):
+        run_p152_grand_campaign_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p152_grand_campaign_soundness_rejections():
+    from evobyte.formal_bridge import verify_constructive_algebraic_grand_campaign_soundness
+
+    bad_summary = {
+        "missing_modules": ["MissingModule.lean"],
+        "has_sorry": True,
+        "total_theorems": 100,
+        "constructive_algebraic_theorems": 50,
+        "total_modules": 5,
+        "lake_passed": False,
+        "lake_reasons": ["build error"],
+        "final_chain_hash": "short",
+    }
+    sound, findings = verify_constructive_algebraic_grand_campaign_soundness(
+        bad_summary,
+        min_theorems=4800,
+        min_modules=54,
+        min_constructive_theorems=500,
+    )
+    assert sound is False
+    assert any("MISSING_MODULES" in f for f in findings)
+    assert any("SORRY_DETECTED" in f for f in findings)
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+    assert any("INSUFFICIENT_CONSTRUCTIVE_ALGEBRAIC_THEOREMS" in f for f in findings)
+    assert any("INSUFFICIENT_MODULES" in f for f in findings)
+    assert any("LAKE_BUILD_FAILED" in f for f in findings)
+
+
+def test_p152_grand_campaign_audit_fast_no_lake():
+    from evobyte.formal_bridge import (
+        audit_constructive_algebraic_grand_campaign,
+        verify_constructive_algebraic_grand_campaign_soundness,
+    )
+
+    summary = audit_constructive_algebraic_grand_campaign(
+        project_dir="lean_proofs",
+        generated_dir="lean_proofs/Generated",
+        verify_lake=False,
+    )
+    assert summary["total_modules"] == 54
+    assert summary["total_theorems"] >= 4800
+    assert summary["constructive_algebraic_theorems"] >= 500
+    assert summary["has_sorry"] is False
+    assert summary["missing_modules"] == []
+    assert (
+        summary["final_chain_hash"]
+        == "c713f17c40f7f44649eadd3eb881fc39f61ede4fa782c602ff5589418a1da68f"
+    )
+
+    sound, findings = verify_constructive_algebraic_grand_campaign_soundness(
+        summary,
+        min_theorems=4800,
+        min_modules=54,
+        min_constructive_theorems=500,
+    )
+    assert sound is True
+    assert findings == []
+
+
+@needs_lean
+def test_p152_grand_campaign_audit_smoke(tmp_path: Path):
+    from benchmarks.science_matrix import run_p152_grand_campaign_audit
+
+    cfg = {
+        "phase": "P152",
+        "min_theorems": 4800,
+        "min_modules": 54,
+        "min_constructive_theorems": 500,
+        "expected_chain_hash": "c713f17c40f7f44649eadd3eb881fc39f61ede4fa782c602ff5589418a1da68f",
+        "project_dir": "lean_proofs",
+        "generated_dir": "lean_proofs/Generated",
+        "dossier_path": "docs/research/p152-constructive-algebraic-dossier.md",
+        "allow_dirty": True,
+        "require_clean_tree": False,
+        "verify_lake": True,
+        "seed": 42,
+    }
+    cfg_p = tmp_path / "p152-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p152-out.json"
+
+    report = run_p152_grand_campaign_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P152"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_modules"] == 54
+    assert report["total_theorems"] >= 4800
+    assert report["constructive_algebraic_theorems"] >= 500
+    assert report["has_sorry"] is False
+    assert (
+        report["final_chain_hash"]
+        == "c713f17c40f7f44649eadd3eb881fc39f61ede4fa782c602ff5589418a1da68f"
+    )
