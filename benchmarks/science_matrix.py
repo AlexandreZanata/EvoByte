@@ -791,6 +791,7 @@ ACCEPTANCE_PHASES = (
     "P150",
     "P151",
     "P152",
+    "P153",
 )
 
 
@@ -15493,6 +15494,134 @@ def run_p152_grand_campaign_audit(
     return report
 
 
+def run_p153_clean_harness_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P153 audit: Clean reproduction harness audit for benchmark matrix P13 / Frente 2 (D039).
+
+    Verifies:
+    1. Hardware probe and live VRAM telemetry are authentic and non-simulated.
+    2. Strict monotonic deadlines measure wall-clock elapsed time and overshoot.
+    3. Candidate counters track exact candidate hashes with bounded memory.
+    4. PySR baseline adapter honestly reports availability and never fabricates wins.
+    5. 9-Ablation battery produces divergent configurations with measured metrics.
+    6. Per-budget execution generates genuine measured scaling curves (synthesized=False, status='measured').
+    7. Hot-loop wall-clock timing tracks complete execution via time.perf_counter().
+    8. Manifest hashes match raw observation files bit-a-bit.
+    9. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from full_matrix import audit_clean_reproduction_harness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P153":
+        raise ValueError(f"Config {cfg_p} is not a P153 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P153 CLEAN REPRODUCTION HARNESS AUDIT (WALL-CLOCK TIMED, VRAM MEASURED, ZERO SIMULATIONS)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    expected_gpu_substr = config.get(
+        "expected_gpu_substr", "RTX 4060" if _torch.cuda.is_available() else None
+    )
+    min_vram_mb = int(config.get("min_vram_mb", 6000 if _torch.cuda.is_available() else 0))
+
+    audit_res = audit_clean_reproduction_harness(
+        output_path=output_path,
+        seed=seed,
+        device_name=device_name,
+        expected_gpu_substr=expected_gpu_substr,
+        min_vram_mb=min_vram_mb,
+    )
+
+    if audit_res.get("verdict") != "ACCEPTED":
+        findings.append(f"HARNESS_AUDIT_FAILED: audit checks failed with checks={audit_res.get('checks')}")
+
+    checks = audit_res.get("checks", {})
+    for check_name, check_val in checks.items():
+        if check_val is False:
+            findings.append(f"FAILED_CHECK: {check_name} returned False")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P153 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=seed,
+        device=dev_actual,
+        dataset_hashes={
+            "p153_config": config_sha[:16],
+            "vram_allocated_mb": str(audit_res.get("vram_telemetry", {}).get("allocated_mb", 0.0)),
+        },
+        config={"acceptance_phase": "P153"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P153",
+        "verdict": verdict,
+        "claim_scope": (
+            "Audited clean benchmark harness for P13 reproduction matrix: "
+            "wall-clock timing via time.perf_counter(), live VRAM telemetry without simulation, "
+            "honest baseline adapters, per-budget execution with measured status, "
+            "and clean git tree provenance."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "checks": checks,
+        "claims": audit_res.get("claims", []),
+        "hardware_probe": audit_res.get("hardware_probe", {}),
+        "vram_telemetry": audit_res.get("vram_telemetry", {}),
+        "resolved_config": {
+            "acceptance_phase": "P153",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P153 audit {verdict}: {len(audit_res.get('claims', []))} claims verified, "
+        f"{len(checks)} integrity checks passed; "
+        f"report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P153 clean harness audit rejected: {findings}")
+
+    return report
+
+
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -19651,6 +19780,8 @@ def main() -> int:
             run_p151_blind_confirmation_audit(args.config, args.output)
         elif args.acceptance_phase == "P152":
             run_p152_grand_campaign_audit(args.config, args.output)
+        elif args.acceptance_phase == "P153":
+            run_p153_clean_harness_audit(args.config, args.output)
         return 0
 
     seeds = (

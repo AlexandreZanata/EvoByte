@@ -165,3 +165,68 @@ def test_seeding_is_deterministic_across_numpy_and_torch():
     seed_all(123)
     t2 = torch.randn(4).tolist()
     assert t1 == t2
+
+
+def test_p153_hardware_integrity_and_vram_telemetry():
+    from hw_probe import check_hardware_integrity, get_vram_telemetry, measure_vram_peak
+
+    hw_ok, findings = check_hardware_integrity()
+    assert hw_ok is True
+    assert findings == []
+
+    vram = get_vram_telemetry(0)
+    assert isinstance(vram, dict)
+    assert "cuda_available" in vram
+    assert "allocated_mb" in vram
+    assert "reserved_mb" in vram
+
+    with measure_vram_peak(0) as tracker:
+        assert isinstance(tracker, dict)
+        assert "start_allocated_mb" in tracker
+
+
+def test_p153_clean_harness_audit_smoke(tmp_path: Path):
+    from benchmarks.full_matrix import audit_clean_reproduction_harness
+
+    out_file = tmp_path / "p153-test-audit.json"
+    res = audit_clean_reproduction_harness(output_path=out_file, seed=42)
+    assert out_file.exists()
+    assert res["phase"] == "P153"
+    assert res["verdict"] == "ACCEPTED"
+    assert res["checks"]["hot_loop_ok"] is True
+    assert res["checks"]["budget_measured_ok"] is True
+    assert res["checks"]["device_ok"] is True
+    assert res["checks"]["counter_ok"] is True
+    assert res["checks"]["deadline_ok"] is True
+    assert res["checks"]["pysr_ok"] is True
+    assert res["checks"]["ablation_path_ok"] is True
+    assert res["checks"]["manifest_ok"] is True
+    assert res["checks"]["hardware_integrity_ok"] is True
+
+
+def test_p153_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p153_clean_harness_audit
+
+    # Rejection of wrong phase
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P153 configuration"):
+        run_p153_clean_harness_audit(bad_cfg, tmp_path / "out.json")
+
+    # Smoke acceptance run
+    good_cfg = tmp_path / "p153-config.json"
+    good_cfg.write_text(
+        json.dumps({
+            "phase": "P153",
+            "seed": 42,
+            "allow_dirty": True,
+            "require_clean_tree": False,
+        }),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p153-out.json"
+    report = run_p153_clean_harness_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P153"
+    assert report["verdict"] == "ACCEPTED"
