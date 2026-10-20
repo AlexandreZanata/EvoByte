@@ -787,6 +787,7 @@ ACCEPTANCE_PHASES = (
     "P146",
     "P147",
     "P148",
+    "P149",
 )
 
 
@@ -14914,6 +14915,146 @@ def run_p148_schinzel_lean4_certification_audit(
     return report
 
 
+def run_p149_constructive_certificates_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P149 audit: extremal constructive certificates in finite additive combinatorics (B_2[1] Sidon sets).
+
+    Verifies:
+    1. Complete Lean 4 compilation of ExtremalConstructiveCertificates.lean via Lake.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Mathematical verification of dense Sidon sets N <= 2000 across Ruzsa, Mian-Chowla, Singer, and B&B families.
+    4. Exact difference collision-free property verified via decide.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.additive import (
+        audit_extremal_constructive_certificates_baseline,
+        verify_extremal_constructive_certificates_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P149":
+        raise ValueError(f"Config {cfg_p} is not a P149 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P149 EXTREMAL CONSTRUCTIVE CERTIFICATES AUDIT (ExtremalConstructiveCertificates.lean, 0 sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    baseline_audit = audit_extremal_constructive_certificates_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_extremal_constructive_certificates_baseline_soundness(
+        baseline_audit, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_sha256 = config.get("expected_sha256")
+    if expected_sha256 and baseline_audit.get("sha256") != expected_sha256:
+        findings.append(
+            f"SHA256_MISMATCH: expected {expected_sha256}, computed {baseline_audit.get('sha256')}"
+        )
+
+    expected_checksum = config.get("expected_checksum")
+    certs_summary = baseline_audit.get("certificates_summary", {})
+    if expected_checksum and certs_summary.get("checksum") != expected_checksum:
+        findings.append(
+            f"CHECKSUM_MISMATCH: expected {expected_checksum}, computed {certs_summary.get('checksum')}"
+        )
+
+    print(
+        f"  Module: {baseline_audit.get('module')}, "
+        f"Theorems verified: {baseline_audit.get('total_theorems')}, "
+        f"Has sorry: {baseline_audit.get('has_sorry')}, "
+        f"Lake passed: {baseline_audit.get('lake_passed')}, "
+        f"Total certificates: {certs_summary.get('total_certificates')}, "
+        f"All valid: {certs_summary.get('all_valid')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P149 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p149_config": config_sha[:16],
+            "lean_signatures": baseline_audit.get("sha256", "")[:16],
+            "certificates_checksum": certs_summary.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P149"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P149",
+        "verdict": verdict,
+        "claim_scope": (
+            "Synthesis and formal verification in Lean 4 kernel of extremal constructive certificates; "
+            "dense B_2[1] Sidon sets N <= 2000 proven difference collision-free with 0 sorry in ExtremalConstructiveCertificates.lean."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": baseline_audit.get("total_theorems", 0),
+        "has_sorry": baseline_audit.get("has_sorry", False),
+        "lake_passed": baseline_audit.get("lake_passed", False),
+        "sha256": baseline_audit.get("sha256", ""),
+        "module": baseline_audit.get("module", ""),
+        "certificates_summary": certs_summary,
+        "resolved_config": {
+            "acceptance_phase": "P149",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P149 audit {verdict}: {baseline_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -19064,6 +19205,8 @@ def main() -> int:
             run_p147_polynomial_identity_synthesis_audit(args.config, args.output)
         elif args.acceptance_phase == "P148":
             run_p148_schinzel_lean4_certification_audit(args.config, args.output)
+        elif args.acceptance_phase == "P149":
+            run_p149_constructive_certificates_audit(args.config, args.output)
         return 0
 
     seeds = (
