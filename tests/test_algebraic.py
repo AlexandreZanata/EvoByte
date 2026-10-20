@@ -1499,3 +1499,89 @@ def test_p147_audit_smoke(tmp_path: Path) -> None:
     assert report["all_algebraic_valid"] is True
     assert report["all_strictly_ordered"] is True
     assert out_file.exists()
+
+
+def test_p148_compiler_and_theorems() -> None:
+    """Test synthesis and compilation of P148 Lean 4 module."""
+    from evobyte.formal_bridge import compile_schinzel_high_moduli_theorems_module
+
+    res = compile_schinzel_high_moduli_theorems_module(max_classes_per_pair=5)
+    assert res["total_theorems"] >= 100
+    assert res["has_sorry"] is False
+    assert Path(res["path"]).exists()
+
+
+def test_p148_soundness_and_lake() -> None:
+    """Test soundness verification and error detection for P148 certification baseline audit."""
+    from evobyte.formal_bridge import (
+        audit_schinzel_high_moduli_certification_baseline,
+        verify_schinzel_high_moduli_certification_baseline_soundness,
+    )
+
+    audit_res = audit_schinzel_high_moduli_certification_baseline(verify_lake=False)
+    assert audit_res["total_theorems"] >= 100
+    assert audit_res["has_sorry"] is False
+
+    sound, findings = verify_schinzel_high_moduli_certification_baseline_soundness(audit_res, min_theorems=100)
+    assert sound is True
+    assert findings == []
+
+    # Test error detection
+    corrupted = dict(audit_res)
+    corrupted["has_sorry"] = True
+    s, f = verify_schinzel_high_moduli_certification_baseline_soundness(corrupted)
+    assert s is False
+    assert any("SORRY_DETECTED" in x for x in f)
+
+    corrupted_thms = dict(audit_res)
+    corrupted_thms["total_theorems"] = 10
+    s_thms, f_thms = verify_schinzel_high_moduli_certification_baseline_soundness(corrupted_thms, min_theorems=100)
+    assert s_thms is False
+    assert any("INSUFFICIENT_THEOREMS" in x for x in f_thms)
+
+    corrupted_lake = dict(audit_res)
+    corrupted_lake["lake_passed"] = False
+    s_lake, f_lake = verify_schinzel_high_moduli_certification_baseline_soundness(corrupted_lake)
+    assert s_lake is False
+    assert any("LAKE_BUILD_FAILED" in x for x in f_lake)
+
+
+def test_p148_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P148 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p148_schinzel_lean4_certification_audit
+
+    cfg_p = tmp_path / "bad-p148.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P148 configuration"):
+        run_p148_schinzel_lean4_certification_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p148_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P148 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p148_schinzel_lean4_certification_audit
+
+    cfg_file = repo_root / "experiments/p148-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p148-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p148-smoke-out.json"
+
+    report = run_p148_schinzel_lean4_certification_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P148"
+    assert report["total_theorems"] >= 100
+    assert report["has_sorry"] is False
+    assert out_file.exists()

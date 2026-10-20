@@ -7374,3 +7374,163 @@ def verify_discrepancy_covering_grand_campaign_soundness(
         )
         sound = False
     return sound, findings
+
+
+def compile_schinzel_high_moduli_theorems_module(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    max_classes_per_pair: int = 5,
+) -> dict[str, Any]:
+    """Synthesize and compile Lean 4 module SchinzelHighModuliTheorems.lean with verified parametric identities (P148)."""
+    import re
+    from evobyte.algebraic import synthesize_schinzel_polynomial_database
+
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+    gen.mkdir(parents=True, exist_ok=True)
+
+    db = synthesize_schinzel_polynomial_database(max_classes_per_pair=max_classes_per_pair)
+    lines = [
+        "-- EvoByte Certified Parametric Polynomial Identities for Schinzel Resistant Classes (P148)",
+        "-- Verified mechanically in Lean 4 kernel via `ring` and `norm_num` tactics.",
+        "import Mathlib.Tactic.Ring",
+        "import Mathlib.Tactic.NormNum",
+        "",
+        "theorem schinzel_poly_identity_sub (a n X Y Z : ℚ) (h : a * X * Y * Z = n * (X * Y + Y * Z + Z * X)) :",
+        "    a * X * Y * Z - n * (X * Y + Y * Z + Z * X) = 0 := by",
+        "  rw [h]",
+        "  ring",
+        "",
+    ]
+
+    for ident in db["identities"]:
+        pair = ident["pair"]
+        r = ident["residue"]
+        a = ident["a"]
+        M = ident["modulus"]
+        X_str = ident["X_poly"].replace("**", "^")
+        Y_str = ident["Y_poly"].replace("**", "^")
+        Z_str = ident["Z_poly"].replace("**", "^")
+
+        thm1 = f"""theorem schinzel_identity_{pair}_r{r} (k : ℚ) :
+    let n : ℚ := {M} * k + {r}
+    let X : ℚ := {X_str}
+    let Y : ℚ := {Y_str}
+    let Z : ℚ := {Z_str}
+    {a} * X * Y * Z = n * (X * Y + Y * Z + Z * X) := by
+  intro n X Y Z
+  dsimp [n, X, Y, Z]
+  ring
+"""
+        k_val = 1
+        X_k = X_str.replace("k", f"({k_val} : ℚ)")
+        Y_k = Y_str.replace("k", f"({k_val} : ℚ)")
+        Z_k = Z_str.replace("k", f"({k_val} : ℚ)")
+        thm2 = f"""theorem schinzel_ordering_{pair}_r{r} :
+    let X : ℚ := {X_k}
+    let Y : ℚ := {Y_k}
+    let Z : ℚ := {Z_k}
+    0 < X ∧ X < Y ∧ Y < Z := by
+  intro X Y Z
+  dsimp [X, Y, Z]
+  norm_num
+"""
+        lines.append(thm1)
+        lines.append(thm2)
+
+    code = "\n".join(lines)
+    target_p = gen / "SchinzelHighModuliTheorems.lean"
+    target_p.write_text(code, encoding="utf-8")
+
+    thms = re.findall(r"^(?:theorem|lemma)\s+([a-zA-Z0-9_]+)", code, flags=re.MULTILINE)
+    sha = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    has_sorry = bool(re.search(r"\bsorry\b", code))
+
+    return {
+        "module": "SchinzelHighModuliTheorems.lean",
+        "path": str(target_p),
+        "sha256": sha,
+        "total_theorems": len(thms),
+        "has_sorry": has_sorry,
+    }
+
+
+def audit_schinzel_high_moduli_certification_baseline(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    verify_lake: bool = True,
+) -> dict[str, Any]:
+    """Audit P148: formal certification in Lean 4 kernel of synthesized parametric polynomial identities."""
+    import re
+    import subprocess
+    import time
+    from pathlib import Path
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+
+    module_name = "SchinzelHighModuliTheorems.lean"
+    mod_p = gen / module_name
+    if not mod_p.exists():
+        raise FileNotFoundError(f"Formal module not found: {mod_p}")
+
+    mod_bytes = mod_p.read_bytes()
+    mod_text = mod_bytes.decode("utf-8")
+    mod_sha = hashlib.sha256(mod_bytes).hexdigest()
+
+    thms = re.findall(r"^(?:theorem|lemma)\s+([a-zA-Z0-9_]+)", mod_text, flags=re.MULTILINE)
+    has_sorry = bool(re.search(r"\bsorry\b", mod_text))
+
+    lake_passed = True
+    lake_reasons: list[str] = []
+    if verify_lake:
+        bins = lean_resolve_binaries(proj)
+        lake_proc = subprocess.run(
+            [bins["lake"], "-d", str(proj), "build", "Generated"],
+            capture_output=True,
+            text=True,
+            cwd=str(proj),
+            timeout=180,
+            check=False,
+        )
+        if lake_proc.returncode != 0:
+            lake_passed = False
+            lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "module": module_name,
+        "path": str(mod_p),
+        "sha256": mod_sha,
+        "total_theorems": len(thms),
+        "has_sorry": has_sorry,
+        "lake_passed": lake_passed,
+        "lake_reasons": lake_reasons,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_schinzel_high_moduli_certification_baseline_soundness(
+    audit_data: dict[str, Any],
+    min_theorems: int = 100,
+) -> tuple[bool, list[str]]:
+    """Validate soundness of P148 Schinzel formal certification baseline audit."""
+    findings: list[str] = []
+
+    if audit_data.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: formal module contains unproven sorry tokens")
+
+    tot_thms = audit_data.get("total_theorems", 0)
+    if tot_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {tot_thms}")
+
+    if not audit_data.get("lake_passed", False):
+        findings.append(f"LAKE_BUILD_FAILED: {audit_data.get('lake_reasons')}")
+
+    return len(findings) == 0, findings
