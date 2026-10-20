@@ -1,6 +1,6 @@
 # P142 — Conjuntos primitivos e conjectura de Erdős sobre séries de divisores
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P141 concluída; branch a partir de `codex/p141-covering-systems-minimum-modulus-hough`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P141 concluída com teoremas de recobrimento e Hough aprovados.

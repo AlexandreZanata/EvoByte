@@ -807,3 +807,191 @@ def test_p141_audit_smoke(tmp_path: Path) -> None:
     assert report["total_theorems"] >= 80
     assert report["has_sorry"] is False
     assert out_file.exists()
+
+
+# ==============================================================================
+# P142: PRIMITIVE SETS & ERDŐS DIVISOR SERIES TESTS
+# ==============================================================================
+
+
+def test_generate_interval_primitive_set() -> None:
+    """Test generating canonical interval primitive sets I_n = {n+1, ..., 2n}."""
+    from evobyte.discrepancy import generate_interval_primitive_set, is_primitive_set
+
+    for n in [1, 2, 5, 10, 25]:
+        s = generate_interval_primitive_set(n)
+        assert len(s) == n
+        assert s[0] == n + 1
+        assert s[-1] == 2 * n
+        assert is_primitive_set(s) is True
+
+    assert generate_interval_primitive_set(0) == []
+
+
+def test_generate_semiprime_primitive_set() -> None:
+    """Test generating semiprime primitive sets from primes."""
+    from evobyte.discrepancy import generate_semiprime_primitive_set, is_primitive_set
+
+    primes = [2, 3, 5, 7, 11]
+    semiprimes = generate_semiprime_primitive_set(primes)
+    # len should be 5 choose 2 = 10
+    assert len(semiprimes) == 10
+    assert is_primitive_set(semiprimes) is True
+
+
+def test_generate_homogeneous_prime_factor_set() -> None:
+    """Test generating square-free integers with exactly omega_k prime factors."""
+    from evobyte.discrepancy import (
+        generate_homogeneous_prime_factor_set,
+        is_primitive_set,
+    )
+
+    primes = [2, 3, 5, 7, 11]
+    # omega_k = 3 -> 5 choose 3 = 10 elements
+    omega3 = generate_homogeneous_prime_factor_set(primes, 3)
+    assert len(omega3) == 10
+    assert is_primitive_set(omega3) is True
+
+    assert generate_homogeneous_prime_factor_set(primes, 0) == []
+    assert generate_homogeneous_prime_factor_set(primes, 10) == []
+
+
+def test_verify_erdos_extremal_antichain() -> None:
+    """Test verification of Erdős's canonical extremal antichain theorem."""
+    from evobyte.discrepancy import verify_erdos_extremal_antichain
+
+    res = verify_erdos_extremal_antichain(50)
+    assert res["valid"] is True
+    assert res["n"] == 50
+    assert res["interval_size"] == 50
+    assert res["distinct_odd_parts"] is True
+    assert res["covers_all_odd_parts"] is True
+
+    bad = verify_erdos_extremal_antichain(0)
+    assert bad["valid"] is False
+
+
+def test_lichtman_erdos_reciprocal_log_sum_bound() -> None:
+    """Test evaluating reciprocal log sums against Lichtman's constant."""
+    from evobyte.discrepancy import lichtman_erdos_reciprocal_log_sum_bound
+
+    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+    eval_res = lichtman_erdos_reciprocal_log_sum_bound(primes)
+    assert eval_res["satisfies_bound"] is True
+    assert eval_res["reciprocal_log_sum"] < eval_res["lichtman_constant"]
+
+
+def test_primitive_sets_benchmarks() -> None:
+    """Test deterministic benchmarks for primitive sets."""
+    from evobyte.discrepancy import primitive_sets_benchmarks
+
+    benchmarks = primitive_sets_benchmarks()
+    assert len(benchmarks) == 5
+    for b in benchmarks:
+        assert b["passed"] is True
+
+
+def test_generate_primitive_sets_lean_code() -> None:
+    """Test Lean code generator for primitive sets."""
+    from evobyte.discrepancy import generate_primitive_sets_lean_code
+
+    code = generate_primitive_sets_lean_code()
+    assert "namespace EvoByte.PrimitiveSets" in code
+    assert "interval_primitive" in code
+    assert "lichtmanConstantScaled" in code
+    assert "sorry" not in code
+
+
+def test_audit_primitive_sets_baseline() -> None:
+    """Test auditing primitive sets formal baseline against Lean 4 kernel."""
+    from evobyte.discrepancy import (
+        audit_primitive_sets_baseline,
+        verify_primitive_sets_baseline_soundness,
+    )
+
+    audit = audit_primitive_sets_baseline(verify_lake=True)
+    assert audit["module"] == "PrimitiveSetsDivisorsTheorems"
+    assert audit["total_theorems"] >= 80
+    assert audit["has_sorry"] is False
+    assert audit["lake_passed"] is True
+    assert len(audit["sha256"]) == 64
+    assert len(audit["benchmarks"]) == 5
+
+    sound, findings = verify_primitive_sets_baseline_soundness(audit, min_theorems=80)
+    assert sound is True
+    assert findings == []
+
+
+def test_verify_primitive_sets_baseline_soundness_rejections() -> None:
+    """Test soundness gate catches errors."""
+    from evobyte.discrepancy import verify_primitive_sets_baseline_soundness
+
+    valid = {
+        "has_sorry": False,
+        "total_theorems": 100,
+        "lake_passed": True,
+        "sha256": "a" * 64,
+        "benchmarks": [{"name": "b1", "passed": True}],
+    }
+    sound, findings = verify_primitive_sets_baseline_soundness(valid, min_theorems=80)
+    assert sound is True
+    assert len(findings) == 0
+
+    # Sorry detected
+    bad_sorry = dict(valid, has_sorry=True)
+    sound, findings = verify_primitive_sets_baseline_soundness(bad_sorry, min_theorems=80)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    # Insufficient theorems
+    bad_thms = dict(valid, total_theorems=10)
+    sound, findings = verify_primitive_sets_baseline_soundness(bad_thms, min_theorems=80)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    # Failed benchmark
+    bad_bench = dict(valid, benchmarks=[{"name": "fail_b", "passed": False}])
+    sound, findings = verify_primitive_sets_baseline_soundness(bad_bench, min_theorems=80)
+    assert sound is False
+    assert any("BENCHMARK_FAILED" in f for f in findings)
+
+
+def test_p142_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P142 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p142_primitive_sets_audit
+
+    cfg_p = tmp_path / "bad-p142.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P142 configuration"):
+        run_p142_primitive_sets_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p142_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P142 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from science_matrix import run_p142_primitive_sets_audit
+
+    cfg_file = repo_root / "experiments/p142-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p142-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data), encoding="utf-8")
+    out_file = tmp_path / "p142-smoke-out.json"
+
+    report = run_p142_primitive_sets_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P142"
+    assert report["total_theorems"] >= 80
+    assert report["has_sorry"] is False
+    assert out_file.exists()
