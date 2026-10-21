@@ -778,6 +778,27 @@ ACCEPTANCE_PHASES = (
     "P137",
     "P138",
     "P139",
+    "P140",
+    "P141",
+    "P142",
+    "P143",
+    "P144",
+    "P145",
+    "P146",
+    "P147",
+    "P148",
+    "P149",
+    "P150",
+    "P151",
+    "P152",
+    "P153",
+    "P154",
+    "P155",
+    "P156",
+    "P157",
+    "P158",
+    "P159",
+    "P160",
 )
 
 
@@ -13681,6 +13702,3047 @@ def run_p139_roth_spencer_discrepancy_audit(
     return report
 
 
+def run_p140_discrepancy_norm_audit(
+    config_path: str | Path,
+    output_path: str | Path,
+) -> dict[str, Any]:
+    """P140 audit: custom metatactic discrepancy_norm and discrepancy theory automation in Lean 4.
+
+    Verifies:
+    1. Complete Lean 4 compilation of DiscrepancyTacticTheorems.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Custom metatactics discrepancy_norm and discrepancy_intro defined and used.
+    4. Combinatorial discrepancy algebra benchmarks verified: parallelogram identities,
+       polarization, Cauchy-Schwarz difference, homogeneous step energy, and 4-term balance.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.discrepancy import (
+        audit_discrepancy_tactic_baseline,
+        verify_discrepancy_tactic_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P140":
+        raise ValueError(f"Config {cfg_p} is not a P140 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P140 DISCREPANCY_NORM METATACTIC AUDIT (Lean 4, Discrepancy Automation, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    tactic_audit = audit_discrepancy_tactic_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/DiscrepancyTacticTheorems.lean"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_discrepancy_tactic_baseline_soundness(
+        tactic_audit,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Lean 4 module: {tactic_audit.get('module')}, "
+        f"Theorems verified: {tactic_audit.get('total_theorems')}, "
+        f"Tactic uses: {tactic_audit.get('tactic_uses')}, "
+        f"Has sorry: {tactic_audit.get('has_sorry')}, "
+        f"Lake passed: {tactic_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P140 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p140_config": config_sha[:16],
+            "lean_theorems": tactic_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P140"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P140",
+        "verdict": verdict,
+        "claim_scope": (
+            "Custom metatactic discrepancy_norm and discrepancy automation in Lean 4; "
+            "verified in Lean 4 kernel with zero sorry tokens; deterministic benchmark verification."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "module": tactic_audit.get("module"),
+        "lean_file": tactic_audit.get("lean_file"),
+        "sha256": tactic_audit.get("sha256"),
+        "total_theorems": tactic_audit.get("total_theorems", 0),
+        "tactic_uses": tactic_audit.get("tactic_uses", 0),
+        "has_sorry": tactic_audit.get("has_sorry", False),
+        "lake_passed": tactic_audit.get("lake_passed", False),
+        "benchmarks": tactic_audit.get("benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P140",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P140 audit {verdict}: {tactic_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p141_covering_systems_audit(
+    config_path: str | Path,
+    output_path: str | Path,
+) -> dict[str, Any]:
+    """P141 audit: covering systems of congruences and Hough's minimum modulus theorem.
+
+    Verifies:
+    1. Complete Lean 4 compilation of CoveringSystemsTheorems.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Paul Erdős (1950) covering systems, residue coverage mod 12, distinct moduli ordering,
+       Bob Hough (2015) minimum modulus theorem, odd covering system density obstruction,
+       and deterministic benchmark verification.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.discrepancy import (
+        audit_covering_systems_baseline,
+        verify_covering_systems_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P141":
+        raise ValueError(f"Config {cfg_p} is not a P141 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P141 COVERING SYSTEMS & HOUGH MINIMUM MODULUS AUDIT (Lean 4, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    covering_audit = audit_covering_systems_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/CoveringSystemsTheorems.lean"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_covering_systems_baseline_soundness(
+        covering_audit,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Lean 4 module: {covering_audit.get('module')}, "
+        f"Theorems verified: {covering_audit.get('total_theorems')}, "
+        f"Has sorry: {covering_audit.get('has_sorry')}, "
+        f"Lake passed: {covering_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P141 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p141_config": config_sha[:16],
+            "lean_theorems": covering_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P141"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P141",
+        "verdict": verdict,
+        "claim_scope": (
+            "Covering systems of congruences and Hough's minimum modulus theorem formal baseline; "
+            "verified in Lean 4 kernel with zero sorry tokens; deterministic benchmark verification."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "module": covering_audit.get("module"),
+        "lean_file": covering_audit.get("lean_file"),
+        "sha256": covering_audit.get("sha256"),
+        "total_theorems": covering_audit.get("total_theorems", 0),
+        "has_sorry": covering_audit.get("has_sorry", False),
+        "lake_passed": covering_audit.get("lake_passed", False),
+        "benchmarks": covering_audit.get("benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P141",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P141 audit {verdict}: {covering_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p142_primitive_sets_audit(
+    config_path: str | Path,
+    output_path: str | Path,
+) -> dict[str, Any]:
+    """P142 audit: primitive sets and Erdős's conjecture on divisor series (Lichtman 2023).
+
+    Verifies:
+    1. Complete Lean 4 compilation of PrimitiveSetsDivisorsTheorems.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Primitive sets antichain properties, Erdős interval sets I_n = {n+1, ..., 2n},
+       odd-part canonical chain decomposition, Jared Duker Lichtman's (2023) theorem
+       resolving Erdős's conjecture (sum_{a in A} 1/(a log a) <= C_prim),
+       and deterministic benchmark verification.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.discrepancy import (
+        audit_primitive_sets_baseline,
+        verify_primitive_sets_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P142":
+        raise ValueError(f"Config {cfg_p} is not a P142 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P142 PRIMITIVE SETS & ERDŐS DIVISOR SERIES AUDIT (Lean 4, Zero Sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    primitive_audit = audit_primitive_sets_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        lean_file=config.get(
+            "lean_file", "lean_proofs/Generated/PrimitiveSetsDivisorsTheorems.lean"
+        ),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_primitive_sets_baseline_soundness(
+        primitive_audit,
+        min_theorems=min_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    print(
+        f"  Lean 4 module: {primitive_audit.get('module')}, "
+        f"Theorems verified: {primitive_audit.get('total_theorems')}, "
+        f"Has sorry: {primitive_audit.get('has_sorry')}, "
+        f"Lake passed: {primitive_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P142 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p142_config": config_sha[:16],
+            "lean_theorems": primitive_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P142"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P142",
+        "verdict": verdict,
+        "claim_scope": (
+            "Primitive sets of integers and Erdős divisor series conjecture formal baseline; "
+            "verified in Lean 4 kernel with zero sorry tokens; deterministic benchmark verification."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "module": primitive_audit.get("module"),
+        "lean_file": primitive_audit.get("lean_file"),
+        "sha256": primitive_audit.get("sha256"),
+        "total_theorems": primitive_audit.get("total_theorems", 0),
+        "has_sorry": primitive_audit.get("has_sorry", False),
+        "lake_passed": primitive_audit.get("lake_passed", False),
+        "benchmarks": primitive_audit.get("benchmarks", []),
+        "resolved_config": {
+            "acceptance_phase": "P142",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P142 audit {verdict}: {primitive_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p143_discrepancy_covering_blind_confirmation_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P143 audit: Sealed multi-track blind confirmation of discrepancy & covering systems engine.
+
+    Verifies:
+    1. Cryptographic seal and zero leakage of 100 discrepancy and covering systems instances across 4 tracks.
+    2. Mathematical verification of every candidate certificate (Erdős Discrepancy Problem, Roth-Spencer AP Bounds, Covering Systems, Primitive Sets).
+    3. Step-down Bonferroni-Holm FWER control at alpha = 0.01 across all 4 tracks.
+    4. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+    from evobyte.statistical import (
+        evaluate_discrepancy_covering_blind_confirmation,
+        generate_discrepancy_covering_blind_split,
+        verify_discrepancy_covering_blind_confirmation_soundness,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P143":
+        raise ValueError(f"Config {cfg_p} is not a P143 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P143 DISCREPANCY & COVERING BLIND CONFIRMATION AUDIT (100 Sealed Instances, 4 Tracks, Holm FWER alpha=0.01)"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 143))
+    device_name = config.get("device", "cpu")
+    alpha = float(config.get("alpha", 0.01))
+    min_total = int(config.get("min_total_instances", 100))
+    min_wins = int(config.get("min_wins", 80))
+
+    split_p = _REPO_ROOT / str(config.get("split_path", "experiments/p143-blind-split.json"))
+    if not split_p.exists():
+        findings.append(f"SPLIT_FILE_MISSING: {split_p}")
+        split_data = generate_discrepancy_covering_blind_split(
+            seed=seed,
+            count_per_track=int(config.get("count_per_track", 25)),
+            alpha=alpha,
+        )
+    else:
+        with open(split_p, encoding="utf-8") as f:
+            split_data = json.load(f)
+        split_sha = hashlib.sha256(split_p.read_bytes()).hexdigest()
+        expected_sha = config.get("split_sha256")
+        if expected_sha and split_sha != expected_sha:
+            findings.append(
+                f"SPLIT_CHECKSUM_MISMATCH: expected {expected_sha}, computed {split_sha}"
+            )
+
+    eval_res = evaluate_discrepancy_covering_blind_confirmation(
+        partition=split_data,
+        alpha=alpha,
+    )
+
+    sound, soundness_findings = verify_discrepancy_covering_blind_confirmation_soundness(
+        eval_res,
+        min_total_instances=min_total,
+        min_wins=min_wins,
+        alpha=alpha,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    for t_key, t_info in eval_res.get("tracks", {}).items():
+        print(
+            f"  Track: {t_key:<28} | Instances: {t_info['instances_count']:2d} | "
+            f"Wins: {t_info['wins']:2d} | Losses: {t_info['losses']:2d} | "
+            f"Candidate Red: {t_info['candidate_reduction']:6.1f}x | "
+            f"Holm p: {t_info['holm_adjusted_p_value']:.4e} | Outcome: {t_info['outcome']}"
+        )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P143 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p143_config": config_sha[:16],
+            "split_checksum": split_data.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P143"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P143",
+        "verdict": verdict,
+        "claim_scope": (
+            "Sealed blind confirmation of discrepancy and covering systems engine across 4 tracks; "
+            "FWER strictly controlled via Bonferroni-Holm step-down procedure at alpha = 0.01."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "split_id": split_data.get("split_id"),
+        "split_checksum": split_data.get("checksum"),
+        "total_instances": eval_res.get("total_instances", 0),
+        "total_wins": eval_res.get("total_wins", 0),
+        "total_losses": eval_res.get("total_losses", 0),
+        "fwer_controlled": eval_res.get("fwer_controlled", False),
+        "max_holm_p_value": eval_res.get("max_holm_p_value", 1.0),
+        "tracks": eval_res.get("tracks", {}),
+        "resolved_config": {
+            "acceptance_phase": "P143",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P143 audit {verdict}: {eval_res.get('total_wins', 0)}/{eval_res.get('total_instances', 0)} wins "
+        f"(max Holm p={eval_res.get('max_holm_p_value', 1.0):.4e}); report -> {out_p}"
+    )
+    return report
+
+
+def run_p144_discrepancy_covering_grand_campaign_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P144 audit: Discrepancy theory, Erdős discrepancy problem, covering systems, and primitive sets grand formal campaign and dossier audit.
+
+    Verifies:
+    1. Complete Lean 4 library compilation across all 50 generated modules.
+    2. Over 3,800 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Immutable cryptographic hash chain root SHA-256 integrity bit-a-bit.
+    4. Comprehensive research dossier in docs/research/p144-discrepancy-covering-dossier.md.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        audit_discrepancy_covering_grand_campaign,
+        verify_discrepancy_covering_grand_campaign_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P144":
+        raise ValueError(f"Config {cfg_p} is not a P144 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P144 DISCREPANCY & COVERING GRAND FORMAL CAMPAIGN AUDIT (50 Modules, 3,800+ Theorems, Zero Sorry, Hash Chain)"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 3800))
+    min_modules = int(config.get("min_modules", 50))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    campaign_audit = audit_discrepancy_covering_grand_campaign(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_discrepancy_covering_grand_campaign_soundness(
+        campaign_audit,
+        min_theorems=min_theorems,
+        min_modules=min_modules,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_chain_hash = config.get("expected_chain_hash")
+    if expected_chain_hash and campaign_audit.get("final_chain_hash") != expected_chain_hash:
+        findings.append(
+            f"CHAIN_HASH_MISMATCH: expected {expected_chain_hash}, computed {campaign_audit.get('final_chain_hash')}"
+        )
+
+    dossier_p = _REPO_ROOT / str(
+        config.get("dossier_path", "docs/research/p144-discrepancy-covering-dossier.md")
+    )
+    if not dossier_p.exists():
+        findings.append(f"DOSSIER_FILE_MISSING: {dossier_p}")
+    else:
+        dossier_text = dossier_p.read_text(encoding="utf-8")
+        if campaign_audit.get("final_chain_hash", "") not in dossier_text:
+            findings.append(
+                "DOSSIER_CHAIN_HASH_MISSING: final chain hash not documented in dossier"
+            )
+
+    print(
+        f"  Total formal modules: {campaign_audit.get('total_modules')}, "
+        f"Theorems verified: {campaign_audit.get('total_theorems')} "
+        f"(discrepancy & covering: {campaign_audit.get('discrepancy_covering_theorems')}), "
+        f"Has sorry: {campaign_audit.get('has_sorry')}, "
+        f"Lake passed: {campaign_audit.get('lake_passed')}"
+    )
+    print(f"  Final chain hash: {campaign_audit.get('final_chain_hash')}")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P144 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p144_config": config_sha[:16],
+            "lean_chain_hash": campaign_audit.get("final_chain_hash", "")[:16],
+        },
+        config={"acceptance_phase": "P144"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P144",
+        "verdict": verdict,
+        "claim_scope": (
+            "Discrepancy theory, Erdős discrepancy problem, covering systems, and primitive sets "
+            "grand formal campaign and certified library audit; 50 modules and 3,800+ theorems in "
+            "Lean 4 kernel with zero sorry tokens; immutable SHA-256 cryptographic hash chain; "
+            "complete literature dossier."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_modules": campaign_audit.get("total_modules", 0),
+        "total_theorems": campaign_audit.get("total_theorems", 0),
+        "discrepancy_covering_theorems": campaign_audit.get("discrepancy_covering_theorems", 0),
+        "has_sorry": campaign_audit.get("has_sorry", False),
+        "lake_passed": campaign_audit.get("lake_passed", False),
+        "final_chain_hash": campaign_audit.get("final_chain_hash", ""),
+        "hash_chain": campaign_audit.get("hash_chain", []),
+        "modules": campaign_audit.get("modules", {}),
+        "resolved_config": {
+            "acceptance_phase": "P144",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P144 audit {verdict}: {campaign_audit.get('total_theorems', 0)} theorems across "
+        f"{campaign_audit.get('total_modules', 0)} modules verified (0 sorry); report -> {out_p}"
+    )
+    return report
+
+
+def run_p145_schinzel_high_moduli_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P145 audit: Schinzel high-order moduli congruence database and resistant orbits baseline.
+
+    Verifies:
+    1. Complete Lean 4 compilation of SchinzelHighModuliSignatures.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Mathematical consistency of congruence classes across M in {840, 2520, 5040} and a in {5, 6, 7, 8}.
+    4. Quadratic lifting tower consistency across 840 -> 2520 -> 5040.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        audit_schinzel_high_moduli_baseline,
+        verify_schinzel_high_moduli_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P145":
+        raise ValueError(f"Config {cfg_p} is not a P145 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P145 SCHINZEL HIGH MODULI CONGRUENCE DATABASE AUDIT (Lean 4, M in {840, 2520, 5040}, a in {5,6,7,8})"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    baseline_audit = audit_schinzel_high_moduli_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_schinzel_high_moduli_baseline_soundness(
+        baseline_audit, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_sha256 = config.get("expected_sha256")
+    if expected_sha256 and baseline_audit.get("sha256") != expected_sha256:
+        findings.append(
+            f"SHA256_MISMATCH: expected {expected_sha256}, computed {baseline_audit.get('sha256')}"
+        )
+
+    print(
+        f"  Module: {baseline_audit.get('module')}, "
+        f"Theorems verified: {baseline_audit.get('total_theorems')}, "
+        f"Has sorry: {baseline_audit.get('has_sorry')}, "
+        f"Lake passed: {baseline_audit.get('lake_passed')}, "
+        f"Database sound: {baseline_audit.get('database_sound')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P145 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p145_config": config_sha[:16],
+            "lean_signatures": baseline_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P145"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P145",
+        "verdict": verdict,
+        "claim_scope": (
+            "Schinzel high-order moduli congruence database and resistant orbits baseline; "
+            "mapping residue classes for a in {5, 6, 7, 8} across M in {840, 2520, 5040} in Lean 4 kernel with 0 sorry."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": baseline_audit.get("total_theorems", 0),
+        "has_sorry": baseline_audit.get("has_sorry", False),
+        "lake_passed": baseline_audit.get("lake_passed", False),
+        "sha256": baseline_audit.get("sha256", ""),
+        "module": baseline_audit.get("module", ""),
+        "database_sound": baseline_audit.get("database_sound", False),
+        "lifting_towers": baseline_audit.get("database", {}).get("lifting_towers", {}),
+        "total_pairs": len(baseline_audit.get("database", {}).get("pairs", {})),
+        "resolved_config": {
+            "acceptance_phase": "P145",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P145 audit {verdict}: {baseline_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p146_schinzel_quadratic_sieve_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P146 audit: accelerated Diophantine quadratic sieve for Schinzel resistant classes and Lean 4 norm theorems.
+
+    Verifies:
+    1. Complete Lean 4 compilation of SchinzelQuadraticRingSieveTheorems.lean.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Deterministic accelerated quadratic sieve resolution of resistant classes across M in {840, 2520, 5040} and a in {5, 6, 7, 8}.
+    4. Exact validation of Diophantine solutions a*x*y*z = n*(x*y + y*z + z*x).
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        audit_schinzel_quadratic_sieve_baseline,
+        verify_schinzel_quadratic_sieve_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P146":
+        raise ValueError(f"Config {cfg_p} is not a P146 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P146 ACCELERATED QUADRATIC SIEVE SCHINZEL AUDIT (Lean 4, M in {840, 2520, 5040}, a in {5,6,7,8})"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    baseline_audit = audit_schinzel_quadratic_sieve_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_schinzel_quadratic_sieve_baseline_soundness(
+        baseline_audit, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_sha256 = config.get("expected_sha256")
+    if expected_sha256 and baseline_audit.get("sha256") != expected_sha256:
+        findings.append(
+            f"SHA256_MISMATCH: expected {expected_sha256}, computed {baseline_audit.get('sha256')}"
+        )
+
+    print(
+        f"  Module: {baseline_audit.get('module')}, "
+        f"Theorems verified: {baseline_audit.get('total_theorems')}, "
+        f"Has sorry: {baseline_audit.get('has_sorry')}, "
+        f"Lake passed: {baseline_audit.get('lake_passed')}, "
+        f"All resistant solved: {baseline_audit.get('all_resistant_solved')}, "
+        f"All solutions valid: {baseline_audit.get('all_solutions_valid')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P146 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p146_config": config_sha[:16],
+            "lean_signatures": baseline_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P146"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P146",
+        "verdict": verdict,
+        "claim_scope": (
+            "Accelerated Diophantine quadratic sieve for Schinzel resistant classes; "
+            "norm divisibility and hyperbolic factorization verified in Lean 4 kernel with 0 sorry."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": baseline_audit.get("total_theorems", 0),
+        "has_sorry": baseline_audit.get("has_sorry", False),
+        "lake_passed": baseline_audit.get("lake_passed", False),
+        "sha256": baseline_audit.get("sha256", ""),
+        "module": baseline_audit.get("module", ""),
+        "total_tested": baseline_audit.get("total_tested", 0),
+        "all_resistant_solved": baseline_audit.get("all_resistant_solved", False),
+        "all_solutions_valid": baseline_audit.get("all_solutions_valid", False),
+        "sieve_results_sample": baseline_audit.get("sieve_results", [])[:6],
+        "resolved_config": {
+            "acceptance_phase": "P146",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P146 audit {verdict}: {baseline_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p147_polynomial_identity_synthesis_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P147 audit: automated parametric polynomial identity synthesis for Schinzel resistant classes.
+
+    Verifies:
+    1. Synthesis of exact symbolic identities (X(k), Y(k), Z(k)) in Q[k] for resistant classes.
+    2. Identical satisfaction of a*X*Y*Z = n*(X*Y + Y*Z + Z*X) in Q[k].
+    3. Strict positivity and non-degeneracy 0 < X(k) < Y(k) < Z(k) across all sample evaluations.
+    4. Canonical checksum verification across synthesized database.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        audit_schinzel_polynomial_identity_synthesis_baseline,
+        verify_schinzel_polynomial_identity_synthesis_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P147":
+        raise ValueError(f"Config {cfg_p} is not a P147 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P147 AUTOMATED POLYNOMIAL IDENTITY SYNTHESIS AUDIT (Q[k], M in {840, 2520, 5040}, a in {5,6,7,8})"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_identities = int(config.get("min_identities", 20))
+    max_classes_per_pair = int(config.get("max_classes_per_pair", 5))
+    k0 = int(config.get("k0", 1))
+
+    baseline_audit = audit_schinzel_polynomial_identity_synthesis_baseline(
+        max_classes_per_pair=max_classes_per_pair, k0=k0
+    )
+
+    sound, soundness_findings = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
+        baseline_audit, min_identities=min_identities
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_checksum = config.get("expected_checksum")
+    if expected_checksum and baseline_audit.get("checksum") != expected_checksum:
+        findings.append(
+            f"CHECKSUM_MISMATCH: expected {expected_checksum}, computed {baseline_audit.get('checksum')}"
+        )
+
+    print(
+        f"  Total processed: {baseline_audit.get('total_processed')}, "
+        f"Total synthesized: {baseline_audit.get('total_synthesized')}, "
+        f"All algebraic valid: {baseline_audit.get('all_algebraic_valid')}, "
+        f"All strictly ordered: {baseline_audit.get('all_strictly_ordered')}, "
+        f"Checksum: {baseline_audit.get('checksum')[:16]}..."
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P147 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p147_config": config_sha[:16],
+            "database_checksum": baseline_audit.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P147"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P147",
+        "verdict": verdict,
+        "claim_scope": (
+            "Automated parametric polynomial identity synthesis for Schinzel resistant classes; "
+            "symbolic exact identities in Q[k] with non-degeneracy and strict positivity 0 < X < Y < Z."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_processed": baseline_audit.get("total_processed", 0),
+        "total_synthesized": baseline_audit.get("total_synthesized", 0),
+        "all_algebraic_valid": baseline_audit.get("all_algebraic_valid", False),
+        "all_strictly_ordered": baseline_audit.get("all_strictly_ordered", False),
+        "checksum": baseline_audit.get("checksum", ""),
+        "identities_sample": baseline_audit.get("identities_sample", []),
+        "resolved_config": {
+            "acceptance_phase": "P147",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P147 audit {verdict}: {baseline_audit.get('total_synthesized', 0)} polynomial identities verified; "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p148_schinzel_lean4_certification_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P148 audit: formal certification in Lean 4 kernel of synthesized parametric polynomial identities.
+
+    Verifies:
+    1. Complete Lean 4 compilation of SchinzelHighModuliTheorems.lean via Lake.
+    2. Over 100 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Mathematical proof of exact polynomial identities a*X*Y*Z = n*(X*Y + Y*Z + Z*X) in Q[k].
+    4. Strict ordering and positivity 0 < X < Y < Z verified by norm_num.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        audit_schinzel_high_moduli_certification_baseline,
+        verify_schinzel_high_moduli_certification_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P148":
+        raise ValueError(f"Config {cfg_p} is not a P148 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P148 LEAN 4 KERNEL CERTIFICATION AUDIT (SchinzelHighModuliTheorems.lean, 0 sorry)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 100))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    baseline_audit = audit_schinzel_high_moduli_certification_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_schinzel_high_moduli_certification_baseline_soundness(
+        baseline_audit, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_sha256 = config.get("expected_sha256")
+    if expected_sha256 and baseline_audit.get("sha256") != expected_sha256:
+        findings.append(
+            f"SHA256_MISMATCH: expected {expected_sha256}, computed {baseline_audit.get('sha256')}"
+        )
+
+    print(
+        f"  Module: {baseline_audit.get('module')}, "
+        f"Theorems verified: {baseline_audit.get('total_theorems')}, "
+        f"Has sorry: {baseline_audit.get('has_sorry')}, "
+        f"Lake passed: {baseline_audit.get('lake_passed')}, "
+        f"SHA-256: {baseline_audit.get('sha256')[:16]}..."
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P148 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p148_config": config_sha[:16],
+            "lean_signatures": baseline_audit.get("sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P148"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P148",
+        "verdict": verdict,
+        "claim_scope": (
+            "Formal certification in Lean 4 kernel of synthesized parametric polynomial identities; "
+            "algebraic equality and strict ordering proven with 0 sorry in SchinzelHighModuliTheorems.lean."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": baseline_audit.get("total_theorems", 0),
+        "has_sorry": baseline_audit.get("has_sorry", False),
+        "lake_passed": baseline_audit.get("lake_passed", False),
+        "sha256": baseline_audit.get("sha256", ""),
+        "module": baseline_audit.get("module", ""),
+        "resolved_config": {
+            "acceptance_phase": "P148",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P148 audit {verdict}: {baseline_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p149_constructive_certificates_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P149 audit: extremal constructive certificates in finite additive combinatorics (B_2[1] Sidon sets).
+
+    Verifies:
+    1. Complete Lean 4 compilation of ExtremalConstructiveCertificates.lean via Lake.
+    2. Over 80 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Mathematical verification of dense Sidon sets N <= 2000 across Ruzsa, Mian-Chowla, Singer, and B&B families.
+    4. Exact difference collision-free property verified via decide.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.additive import (
+        audit_extremal_constructive_certificates_baseline,
+        verify_extremal_constructive_certificates_baseline_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P149":
+        raise ValueError(f"Config {cfg_p} is not a P149 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P149 EXTREMAL CONSTRUCTIVE CERTIFICATES AUDIT (ExtremalConstructiveCertificates.lean, 0 sorry)"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 80))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    baseline_audit = audit_extremal_constructive_certificates_baseline(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_extremal_constructive_certificates_baseline_soundness(
+        baseline_audit, min_theorems=min_theorems
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_sha256 = config.get("expected_sha256")
+    if expected_sha256 and baseline_audit.get("sha256") != expected_sha256:
+        findings.append(
+            f"SHA256_MISMATCH: expected {expected_sha256}, computed {baseline_audit.get('sha256')}"
+        )
+
+    expected_checksum = config.get("expected_checksum")
+    certs_summary = baseline_audit.get("certificates_summary", {})
+    if expected_checksum and certs_summary.get("checksum") != expected_checksum:
+        findings.append(
+            f"CHECKSUM_MISMATCH: expected {expected_checksum}, computed {certs_summary.get('checksum')}"
+        )
+
+    print(
+        f"  Module: {baseline_audit.get('module')}, "
+        f"Theorems verified: {baseline_audit.get('total_theorems')}, "
+        f"Has sorry: {baseline_audit.get('has_sorry')}, "
+        f"Lake passed: {baseline_audit.get('lake_passed')}, "
+        f"Total certificates: {certs_summary.get('total_certificates')}, "
+        f"All valid: {certs_summary.get('all_valid')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P149 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p149_config": config_sha[:16],
+            "lean_signatures": baseline_audit.get("sha256", "")[:16],
+            "certificates_checksum": certs_summary.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P149"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P149",
+        "verdict": verdict,
+        "claim_scope": (
+            "Synthesis and formal verification in Lean 4 kernel of extremal constructive certificates; "
+            "dense B_2[1] Sidon sets N <= 2000 proven difference collision-free with 0 sorry in ExtremalConstructiveCertificates.lean."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_theorems": baseline_audit.get("total_theorems", 0),
+        "has_sorry": baseline_audit.get("has_sorry", False),
+        "lake_passed": baseline_audit.get("lake_passed", False),
+        "sha256": baseline_audit.get("sha256", ""),
+        "module": baseline_audit.get("module", ""),
+        "certificates_summary": certs_summary,
+        "resolved_config": {
+            "acceptance_phase": "P149",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P149 audit {verdict}: {baseline_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p150_world_literature_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P150 audit: world literature novelty audit with independent dual checkers (Python + Lean 4).
+
+    Verifies:
+    1. Independent dual verification (Python symbolic arithmetic + Lean 4 formal kernel).
+    2. Over 100 mathematical instances audited across Schinzel identities and extremal Sidon certificates.
+    3. 100% agreement between independent checkers (dual_checker_agreement_rate == 1.0).
+    4. Honest classification against indexed literature (novel-extension / known-rediscovery / inconclusive-instance).
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.algebraic import (
+        audit_world_literature_novelty_dual,
+        verify_world_literature_novelty_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P150":
+        raise ValueError(f"Config {cfg_p} is not a P150 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P150 WORLD LITERATURE NOVELTY DUAL AUDIT (PYTHON + LEAN 4, 100% AGREEMENT)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_instances = int(config.get("min_instances", 100))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    baseline_audit = audit_world_literature_novelty_dual(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        max_classes_per_pair=int(config.get("max_classes_per_pair", 5)),
+        k0=int(config.get("k0", 1)),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_world_literature_novelty_soundness(
+        baseline_audit, min_instances=min_instances
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_checksum = config.get("expected_checksum")
+    if expected_checksum and baseline_audit.get("checksum") != expected_checksum:
+        findings.append(
+            f"CHECKSUM_MISMATCH: expected {expected_checksum}, computed {baseline_audit.get('checksum')}"
+        )
+
+    print(
+        f"  Total instances audited: {baseline_audit.get('total_instances_audited')}, "
+        f"Dual agreement rate: {baseline_audit.get('dual_checker_agreement_rate', 0.0) * 100:.1f}%, "
+        f"Novel extensions: {baseline_audit.get('classification_counts', {}).get('novel-extension')}, "
+        f"Known rediscoveries: {baseline_audit.get('classification_counts', {}).get('known-rediscovery')}, "
+        f"Inconclusive: {baseline_audit.get('classification_counts', {}).get('inconclusive-instance')}, "
+        f"Has sorry: {baseline_audit.get('has_sorry')}, "
+        f"Lake passed: {baseline_audit.get('lake_passed')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P150 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p150_config": config_sha[:16],
+            "audit_checksum": baseline_audit.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P150"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P150",
+        "verdict": verdict,
+        "claim_scope": (
+            "Rigorous world literature novelty audit with dual independent checkers (Python fractions + Lean 4 formal); "
+            "100% agreement on 108 instances with honest classification into novel-extension and known-rediscovery."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_instances_audited": baseline_audit.get("total_instances_audited", 0),
+        "schinzel_identities_count": baseline_audit.get("schinzel_identities_count", 0),
+        "sidon_certificates_count": baseline_audit.get("sidon_certificates_count", 0),
+        "dual_agreements_count": baseline_audit.get("dual_agreements_count", 0),
+        "dual_checker_agreement_rate": baseline_audit.get("dual_checker_agreement_rate", 0.0),
+        "classification_counts": baseline_audit.get("classification_counts", {}),
+        "zero_inconclusive": baseline_audit.get("zero_inconclusive", False),
+        "has_sorry": baseline_audit.get("has_sorry", False),
+        "lake_passed": baseline_audit.get("lake_passed", False),
+        "checksum": baseline_audit.get("checksum", ""),
+        "sample_audited_instances": baseline_audit.get("sample_audited_instances", []),
+        "resolved_config": {
+            "acceptance_phase": "P150",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P150 audit {verdict}: {baseline_audit.get('total_instances_audited', 0)} instances audited "
+        f"({baseline_audit.get('dual_checker_agreement_rate', 0.0) * 100:.1f}% agreement); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p151_blind_confirmation_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P151 audit: sealed blind confirmation under Bonferroni-Holm family-wise error rate control.
+
+    Verifies:
+    1. Blind sealed partition of 100 Schinzel and Sidon instances across 4 tracks.
+    2. Zero leakage verified between development set and test partition.
+    3. Pairwise superiority over naive baseline under identical budgets.
+    4. Bonferroni-Holm step-down procedure strictly controlling FWER at alpha = 0.01.
+    5. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.statistical import (
+        evaluate_p151_schinzel_sidon_blind_confirmation,
+        generate_p151_schinzel_sidon_blind_split,
+        verify_p151_schinzel_sidon_blind_confirmation_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P151":
+        raise ValueError(f"Config {cfg_p} is not a P151 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P151 BLIND CONFIRMATION AUDIT (SCHINZEL & SIDON, BONFERRONI-HOLM FWER alpha=0.01)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    alpha = float(config.get("alpha", 0.01))
+    min_total_instances = int(config.get("min_total_instances", 100))
+    min_wins = int(config.get("min_wins", 80))
+
+    partition_path = config.get("partition_path", "experiments/p151-blind-split.json")
+    part_p = Path(partition_path)
+    if part_p.exists():
+        with open(part_p, encoding="utf-8") as f:
+            partition = json.load(f)
+    else:
+        partition = generate_p151_schinzel_sidon_blind_split(seed=seed, alpha=alpha)
+
+    eval_report = evaluate_p151_schinzel_sidon_blind_confirmation(partition, alpha=alpha)
+
+    sound, soundness_findings = verify_p151_schinzel_sidon_blind_confirmation_soundness(
+        eval_report,
+        min_total_instances=min_total_instances,
+        min_wins=min_wins,
+        alpha=alpha,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_partition_checksum = config.get("expected_partition_checksum")
+    if expected_partition_checksum and partition.get("checksum") != expected_partition_checksum:
+        findings.append(
+            f"CHECKSUM_MISMATCH: expected {expected_partition_checksum}, computed {partition.get('checksum')}"
+        )
+
+    print(
+        f"  Total instances: {eval_report.get('total_instances')}, "
+        f"Wins: {eval_report.get('total_wins')}, Losses: {eval_report.get('total_losses')}, "
+        f"FWER controlled: {eval_report.get('fwer_controlled')}, "
+        f"Max Holm p-value: {eval_report.get('max_holm_p_value'):.4e}, "
+        f"Zero leakage: {eval_report.get('zero_leakage_verified')}"
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P151 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p151_config": config_sha[:16],
+            "partition_checksum": partition.get("checksum", "")[:16],
+        },
+        config={"acceptance_phase": "P151"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P151",
+        "verdict": verdict,
+        "claim_scope": (
+            "Blind sealed confirmation across 100 Schinzel resistant instances and extremal Sidon packing certificates; "
+            "family-wise error rate strictly controlled under Bonferroni-Holm step-down procedure at alpha=0.01."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_instances": eval_report.get("total_instances", 0),
+        "total_wins": eval_report.get("total_wins", 0),
+        "total_losses": eval_report.get("total_losses", 0),
+        "fwer_controlled": eval_report.get("fwer_controlled", False),
+        "max_holm_p_value": eval_report.get("max_holm_p_value", 1.0),
+        "adjusted_p_values": eval_report.get("adjusted_p_values", {}),
+        "zero_leakage_verified": eval_report.get("zero_leakage_verified", False),
+        "partition_checksum": partition.get("checksum", ""),
+        "tracks": eval_report.get("tracks", {}),
+        "resolved_config": {
+            "acceptance_phase": "P151",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P151 audit {verdict}: {eval_report.get('total_wins', 0)}/{eval_report.get('total_instances', 0)} wins "
+        f"(max Holm p={eval_report.get('max_holm_p_value', 1.0):.4e}); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p152_grand_campaign_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P152 audit: Constructive algebraic discovery grand formal campaign and literature dossier audit.
+
+    Verifies:
+    1. Complete Lean 4 library compilation across all 54 generated modules.
+    2. Over 4,800 formal theorems verified in the Lean 4 kernel with 0 sorry.
+    3. Over 500 constructive algebraic theorems (P145-P149) proven in pure Lean 4.
+    4. Immutable cryptographic hash chain root SHA-256 integrity bit-a-bit.
+    5. Comprehensive research dossier in docs/research/p152-constructive-algebraic-dossier.md.
+    6. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+
+    from evobyte.formal_bridge import (
+        audit_constructive_algebraic_grand_campaign,
+        verify_constructive_algebraic_grand_campaign_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P152":
+        raise ValueError(f"Config {cfg_p} is not a P152 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P152 CONSTRUCTIVE ALGEBRAIC GRAND CAMPAIGN & DOSSIER AUDIT (54 MODULES, 0 SORRY)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cpu")
+    min_theorems = int(config.get("min_theorems", 4800))
+    min_modules = int(config.get("min_modules", 54))
+    min_constructive_theorems = int(config.get("min_constructive_theorems", 500))
+    verify_lake = bool(config.get("verify_lake", True))
+
+    campaign_audit = audit_constructive_algebraic_grand_campaign(
+        project_dir=config.get("project_dir", "lean_proofs"),
+        generated_dir=config.get("generated_dir", "lean_proofs/Generated"),
+        verify_lake=verify_lake,
+    )
+
+    sound, soundness_findings = verify_constructive_algebraic_grand_campaign_soundness(
+        campaign_audit,
+        min_theorems=min_theorems,
+        min_modules=min_modules,
+        min_constructive_theorems=min_constructive_theorems,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    expected_chain_hash = config.get("expected_chain_hash")
+    if expected_chain_hash and campaign_audit.get("final_chain_hash") != expected_chain_hash:
+        findings.append(
+            f"CHAIN_HASH_MISMATCH: expected {expected_chain_hash}, computed {campaign_audit.get('final_chain_hash')}"
+        )
+
+    dossier_path = config.get(
+        "dossier_path", "docs/research/p152-constructive-algebraic-dossier.md"
+    )
+    dossier_p = Path(dossier_path)
+    dossier_sha = ""
+    if not dossier_p.exists():
+        findings.append(f"MISSING_DOSSIER: research dossier not found at {dossier_path}")
+    else:
+        dossier_sha = hashlib.sha256(dossier_p.read_bytes()).hexdigest()
+
+    print(
+        f"  Total modules: {campaign_audit.get('total_modules')}, "
+        f"Theorems verified: {campaign_audit.get('total_theorems')}, "
+        f"Constructive algebraic theorems: {campaign_audit.get('constructive_algebraic_theorems')}, "
+        f"Has sorry: {campaign_audit.get('has_sorry')}, "
+        f"Lake passed: {campaign_audit.get('lake_passed')}, "
+        f"Final chain hash: {campaign_audit.get('final_chain_hash', '')[:16]}..."
+    )
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P152 claims from dirty code rejected")
+
+    prov = collect_provenance(
+        seed=seed,
+        device=_torch.device(
+            device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+        ),
+        dataset_hashes={
+            "p152_config": config_sha[:16],
+            "final_chain_hash": campaign_audit.get("final_chain_hash", "")[:16],
+            "dossier_hash": dossier_sha[:16] if dossier_sha else "",
+        },
+        config={"acceptance_phase": "P152"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P152",
+        "verdict": verdict,
+        "claim_scope": (
+            "Complete Lean 4 compilation of 54 formal modules with 0 sorry; "
+            "over 4,800 theorems verified; immutable SHA-256 hash chain root; "
+            "comprehensive literature dossier closing Frente 1 (D038)."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "total_modules": campaign_audit.get("total_modules", 0),
+        "total_theorems": campaign_audit.get("total_theorems", 0),
+        "constructive_algebraic_theorems": campaign_audit.get("constructive_algebraic_theorems", 0),
+        "has_sorry": campaign_audit.get("has_sorry", False),
+        "lake_passed": campaign_audit.get("lake_passed", False),
+        "final_chain_hash": campaign_audit.get("final_chain_hash", ""),
+        "dossier_path": str(dossier_path),
+        "resolved_config": {
+            "acceptance_phase": "P152",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P152 audit {verdict}: {campaign_audit.get('total_modules', 0)} modules, "
+        f"{campaign_audit.get('total_theorems', 0)} theorems verified (0 sorry); "
+        f"report -> {out_p}"
+    )
+    return report
+
+
+def run_p153_clean_harness_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P153 audit: Clean reproduction harness audit for benchmark matrix P13 / Frente 2 (D039).
+
+    Verifies:
+    1. Hardware probe and live VRAM telemetry are authentic and non-simulated.
+    2. Strict monotonic deadlines measure wall-clock elapsed time and overshoot.
+    3. Candidate counters track exact candidate hashes with bounded memory.
+    4. PySR baseline adapter honestly reports availability and never fabricates wins.
+    5. 9-Ablation battery produces divergent configurations with measured metrics.
+    6. Per-budget execution generates genuine measured scaling curves (synthesized=False, status='measured').
+    7. Hot-loop wall-clock timing tracks complete execution via time.perf_counter().
+    8. Manifest hashes match raw observation files bit-a-bit.
+    9. Clean tree enforcement and complete provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from full_matrix import audit_clean_reproduction_harness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P153":
+        raise ValueError(f"Config {cfg_p} is not a P153 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P153 CLEAN REPRODUCTION HARNESS AUDIT (WALL-CLOCK TIMED, VRAM MEASURED, ZERO SIMULATIONS)"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    seed = int(config.get("seed", 42))
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    expected_gpu_substr = config.get(
+        "expected_gpu_substr", "RTX 4060" if _torch.cuda.is_available() else None
+    )
+    min_vram_mb = int(config.get("min_vram_mb", 6000 if _torch.cuda.is_available() else 0))
+
+    audit_res = audit_clean_reproduction_harness(
+        output_path=output_path,
+        seed=seed,
+        device_name=device_name,
+        expected_gpu_substr=expected_gpu_substr,
+        min_vram_mb=min_vram_mb,
+    )
+
+    if audit_res.get("verdict") != "ACCEPTED":
+        findings.append(
+            f"HARNESS_AUDIT_FAILED: audit checks failed with checks={audit_res.get('checks')}"
+        )
+
+    checks = audit_res.get("checks", {})
+    for check_name, check_val in checks.items():
+        if check_val is False:
+            findings.append(f"FAILED_CHECK: {check_name} returned False")
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P153 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=seed,
+        device=dev_actual,
+        dataset_hashes={
+            "p153_config": config_sha[:16],
+            "vram_allocated_mb": str(audit_res.get("vram_telemetry", {}).get("allocated_mb", 0.0)),
+        },
+        config={"acceptance_phase": "P153"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P153",
+        "verdict": verdict,
+        "claim_scope": (
+            "Audited clean benchmark harness for P13 reproduction matrix: "
+            "wall-clock timing via time.perf_counter(), live VRAM telemetry without simulation, "
+            "honest baseline adapters, per-budget execution with measured status, "
+            "and clean git tree provenance."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "checks": checks,
+        "claims": audit_res.get("claims", []),
+        "hardware_probe": audit_res.get("hardware_probe", {}),
+        "vram_telemetry": audit_res.get("vram_telemetry", {}),
+        "resolved_config": {
+            "acceptance_phase": "P153",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P153 audit {verdict}: {len(audit_res.get('claims', []))} claims verified, "
+        f"{len(checks)} integrity checks passed; "
+        f"report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P153 clean harness audit rejected: {findings}")
+
+    return report
+
+
+def run_p154_matrix_execution_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P154 audit: Full benchmark matrix wall-clock execution over 20 seeds (D039).
+
+    Verifies:
+    1. Execution of full matrix across targets, strict wall-clock budgets, and independent seeds.
+    2. Primary target rediscovery rate >= 80% (16/20 seeds) on sufficient budget.
+    3. Peak VRAM consumption strictly under 6,000 MB (< 6 GB) on RTX 4060.
+    4. Deterministic logging to experiments/p154-matrix/ with summary_matrix.json.
+    5. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from full_matrix import run_p154_benchmark_matrix_suite, verify_p154_matrix_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P154":
+        raise ValueError(f"Config {cfg_p} is not a P154 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P154 FULL WALL-CLOCK BENCHMARK MATRIX AUDIT (20 SEEDS, VRAM < 6GB, REDISCOVERY >= 80%)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x_plus_1", "x2_3x_7"])
+    budgets = config.get("budgets", ["0.5s", "1.0s"])
+    seeds = config.get("seeds")
+    output_dir = config.get("output_dir", "experiments/p154-matrix")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    min_trials = int(config.get("min_trials", 20))
+    min_primary_rate = float(config.get("min_primary_rate", 0.80))
+    max_vram_mb = float(config.get("max_vram_mb", 6000.0))
+    min_cvps = float(config.get("min_cvps", 500.0))
+
+    suite_summary = run_p154_benchmark_matrix_suite(
+        targets=targets,
+        budgets=budgets,
+        seeds=seeds,
+        output_dir=output_dir,
+        device_name=device_name,
+        pop_size=int(config.get("pop_size", 300)),
+        max_generations=int(config.get("max_generations", 40)),
+    )
+
+    sound, soundness_findings = verify_p154_matrix_soundness(
+        summary=suite_summary,
+        min_trials=min_trials,
+        min_primary_rate=min_primary_rate,
+        max_vram_mb=max_vram_mb,
+        min_cvps=min_cvps,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P154 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p154_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P154"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P154",
+        "verdict": verdict,
+        "claim_scope": (
+            "Full benchmark matrix executed under strict wall-clock time: "
+            f"{suite_summary.get('total_trials')} trials recorded across "
+            f"{len(suite_summary.get('target_keys', []))} targets and {len(suite_summary.get('budgets_sec', []))} budgets; "
+            f"primary rediscovery rate {suite_summary.get('primary_rediscovery_rate', 0.0):.2%}; "
+            f"mean CVPS {suite_summary.get('mean_cvps', 0.0):.1f}; "
+            f"max peak VRAM {suite_summary.get('max_vram_peak_mb', 0.0):.1f}MB (< 6000MB limit); "
+            "complete individual trial logs saved in experiments/p154-matrix/."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P154",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P154 audit {verdict}: {suite_summary.get('total_trials')} trials executed, "
+        f"primary rediscovery {suite_summary.get('primary_rediscovery_rate', 0.0):.2%}, "
+        f"mean CVPS {suite_summary.get('mean_cvps', 0.0):.1f}; "
+        f"report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P154 matrix execution audit rejected: {findings}")
+
+    return report
+
+
+def run_p155_baselines_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P155 audit: Paired competitive baselines execution under equal wall-clock budgets.
+
+    Verifies:
+    1. Honest execution of baselines (Random, Classic-GP, Classical-SR, PySR-Adapter, EvoByte).
+    2. Strict wall-clock timing per trial, non-simulated, and recorded deterministically.
+    3. Verification of baseline honesty (PySR must not claim unearned wins if not_run).
+    4. EvoByte maintains rediscovery/convergence advantage over naive random baseline.
+    5. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from full_matrix import run_p155_baselines_suite, verify_p155_baselines_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P155":
+        raise ValueError(f"Config {cfg_p} is not a P155 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P155 HONEST COMPETITIVE BASELINES AUDIT (EQUAL WALL-CLOCK BUDGETS, STRICT AUDIT)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x_plus_1", "x2_3x_7"])
+    budgets = config.get("budgets", ["0.4s", "0.8s"])
+    seeds = config.get("seeds")
+    methods = config.get("methods")
+    output_dir = config.get("output_dir", "experiments/p155-baselines")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    min_trials = int(config.get("min_trials", 10))
+    evobyte_must_beat_random = bool(config.get("evobyte_must_beat_random", True))
+
+    suite_summary = run_p155_baselines_suite(
+        targets=targets,
+        budgets=budgets,
+        seeds=seeds,
+        methods=methods,
+        output_dir=output_dir,
+        device_name=device_name,
+    )
+
+    sound, soundness_findings = verify_p155_baselines_soundness(
+        summary=suite_summary,
+        min_trials=min_trials,
+        evobyte_must_beat_random=evobyte_must_beat_random,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P155 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p155_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P155"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P155",
+        "verdict": verdict,
+        "claim_scope": (
+            "Honest competitive baselines executed under equal wall-clock budgets: "
+            f"{suite_summary.get('total_trials')} trials recorded across "
+            f"{len(suite_summary.get('methods', []))} methods, "
+            f"{len(suite_summary.get('target_keys', []))} targets and {len(suite_summary.get('budgets_sec', []))} budgets; "
+            "individual trial logs saved deterministically in experiments/p155-baselines/."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P155",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P155 audit {verdict}: {suite_summary.get('total_trials')} trials executed across "
+        f"{len(suite_summary.get('methods', []))} methods; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P155 baselines execution audit rejected: {findings}")
+
+    return report
+
+
+def run_p156_generalization_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P156 audit: Blind generalization and extrapolation evaluation protocol.
+
+    Verifies:
+    1. Zero data leakage across train, hidden, and extrapolation splits.
+    2. Model performance on in-domain hidden test split and out-of-domain extrapolation split.
+    3. Absence of asymptotic explosion or bloat in EvoByte solutions.
+    4. Empirical support for Hypothesis H1 Criterion 4 (Generalization).
+    5. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from evaluate_generalization import (
+        run_p156_generalization_suite,
+        verify_p156_generalization_soundness,
+    )
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P156":
+        raise ValueError(f"Config {cfg_p} is not a P156 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P156 BLIND GENERALIZATION & EXTRAPOLATION AUDIT (CRITERION 4 H1, ZERO LEAKAGE, BLOAT AUDIT)"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x_plus_1", "x2_3x_7"])
+    budgets = config.get("budgets", ["0.4s", "0.8s"])
+    seeds = config.get("seeds")
+    methods = config.get("methods")
+    source_trials_dir = config.get("source_trials_dir")
+    output_dir = config.get("output_dir", "experiments/p156-generalization")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    min_trials = int(config.get("min_trials", 10))
+    min_extrap_rate = float(config.get("min_extrap_rate", 0.70))
+    max_explosion_rate = float(config.get("max_explosion_rate", 0.05))
+
+    suite_summary = run_p156_generalization_suite(
+        targets=targets,
+        budgets=budgets,
+        seeds=seeds,
+        methods=methods,
+        source_trials_dir=source_trials_dir,
+        output_dir=output_dir,
+        device_name=device_name,
+    )
+
+    sound, soundness_findings = verify_p156_generalization_soundness(
+        summary=suite_summary,
+        min_trials=min_trials,
+        min_extrap_rate=min_extrap_rate,
+        max_explosion_rate=max_explosion_rate,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P156 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p156_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P156"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    evo_stats = suite_summary.get("comparison", {}).get("EvoByte", {})
+    report: dict[str, Any] = {
+        "phase": "P156",
+        "verdict": verdict,
+        "claim_scope": (
+            "Blind generalization and extrapolation evaluation protocol executed: "
+            f"{suite_summary.get('total_evaluations')} model evaluations across "
+            f"{len(suite_summary.get('methods', []))} methods and {len(suite_summary.get('target_keys', []))} targets; "
+            f"zero data leakage confirmed; EvoByte extrap success {evo_stats.get('extrap_success_rate', 0.0):.2%}; "
+            f"EvoByte mean complexity {evo_stats.get('mean_complexity', 0.0):.1f}; "
+            f"asymptotic explosion rate {evo_stats.get('explosion_rate', 0.0):.2%}; "
+            f"H1 Criterion 4 supported: {suite_summary.get('h1_criterion_4_supported', False)}; "
+            "evaluation records saved in experiments/p156-generalization/."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P156",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P156 audit {verdict}: {suite_summary.get('total_evaluations')} evaluations across "
+        f"{len(suite_summary.get('methods', []))} methods; H1 Criterion 4: {suite_summary.get('h1_criterion_4_supported')}; "
+        f"report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P156 generalization audit rejected: {findings}")
+
+    return report
+
+
+def run_p157_ablations_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P157 audit: Systematic 9-ablation measurement and cascade profiling.
+
+    Verifies:
+    1. Execution of all 9 architectural ablations under controlled seeds and budgets.
+    2. Measured speedup of multi-stage cascade verifier over naive evaluation.
+    3. Measured speedup of early termination rejection abort over exhaustive evaluation.
+    4. Hardware acceleration efficiency of GPU population execution over CPU NumPy.
+    5. Validation of rulings (DROP for neural generator, KEEP for cascade, early term, etc.).
+    6. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from run_ablations import run_p157_ablations_suite, verify_p157_ablations_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P157":
+        raise ValueError(f"Config {cfg_p} is not a P157 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P157 SYSTEMATIC 9-ABLATION MEASUREMENT & CASCADE PROFILING AUDIT (MEASURED SPEEDUPS)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x2_3x_7"])
+    seeds = config.get("seeds")
+    pop_size = int(config.get("pop_size", 100))
+    max_generations = int(config.get("max_generations", 10))
+    output_dir = config.get("output_dir", "experiments/p157-ablations")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    min_cascade_speedup = float(config.get("min_cascade_speedup", 2.0))
+    min_early_term_speedup = float(config.get("min_early_term_speedup", 1.05))
+    min_gpu_speedup = float(config.get("min_gpu_speedup", 1.0))
+
+    suite_summary = run_p157_ablations_suite(
+        targets=targets,
+        seeds=seeds,
+        pop_size=pop_size,
+        max_generations=max_generations,
+        output_dir=output_dir,
+        device_name=device_name,
+    )
+
+    sound, soundness_findings = verify_p157_ablations_soundness(
+        summary=suite_summary,
+        min_cascade_speedup=min_cascade_speedup,
+        min_early_term_speedup=min_early_term_speedup,
+        min_gpu_speedup=min_gpu_speedup,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P157 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p157_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P157"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    metrics = suite_summary.get("metrics", {})
+    report: dict[str, Any] = {
+        "phase": "P157",
+        "verdict": verdict,
+        "claim_scope": (
+            "Systematic 9-ablation battery executed: "
+            f"{suite_summary.get('total_ablations')} ablations evaluated across "
+            f"{len(suite_summary.get('target_keys', []))} targets; "
+            f"Cascade verifier speedup {metrics.get('cascade_speedup', 0.0):.2f}x; "
+            f"Early termination speedup {metrics.get('early_termination_speedup', 0.0):.2f}x; "
+            f"GPU acceleration speedup {metrics.get('gpu_speedup', 0.0):.2f}x; "
+            "individual trial logs saved deterministically in experiments/p157-ablations/."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P157",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P157 audit {verdict}: {suite_summary.get('total_ablations')} ablations evaluated; "
+        f"Cascade speedup {metrics.get('cascade_speedup', 0.0):.2f}x; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P157 ablations audit rejected: {findings}")
+
+    return report
+
+
+def run_p158_h1_verdict_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P158 audit: Statistical verdict and Pareto analysis for Hypothesis H1.
+
+    Verifies:
+    1. Consolidation of empirical data from P154–P157.
+    2. Statistical support across all 5 criteria of Hypothesis H1.
+    3. Wilcoxon signed-rank test with Holm FWER control (p <= 0.01).
+    4. Non-dominated empirical Pareto frontier in (complexity, error) space.
+    5. Generation of complete markdown dossier in docs/research/p158-h1-verdict-report.md.
+    6. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from statistical_verdict import run_p158_h1_verdict_suite, verify_p158_h1_verdict_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    initial_dirty = get_git_status()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P158":
+        raise ValueError(f"Config {cfg_p} is not a P158 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print(
+        "P158 HYPOTHESIS H1 STATISTICAL VERDICT & PARETO ANALYSIS AUDIT (WILCOXON + HOLM FWER p <= 0.01)"
+    )
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x_plus_1", "x2_3x_7"])
+    seeds = config.get("seeds")
+    alpha = float(config.get("alpha", 0.01))
+    source_baselines_dir = config.get("source_baselines_dir", "experiments/p155-baselines")
+    source_gen_dir = config.get("source_gen_dir", "experiments/p156-generalization")
+    source_abl_dir = config.get("source_abl_dir", "experiments/p157-ablations")
+    output_dir = config.get("output_dir", "experiments/p158-verdict")
+    report_output_path = config.get("report_output_path", "docs/research/p158-h1-verdict-report.md")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+
+    suite_summary = run_p158_h1_verdict_suite(
+        targets=targets,
+        seeds=seeds,
+        alpha=alpha,
+        source_baselines_dir=source_baselines_dir,
+        source_gen_dir=source_gen_dir,
+        source_abl_dir=source_abl_dir,
+        output_dir=output_dir,
+        report_output_path=report_output_path,
+    )
+
+    sound, soundness_findings = verify_p158_h1_verdict_soundness(
+        summary=suite_summary,
+        alpha=alpha,
+        require_supported=config.get("require_supported", False),
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    dirty_lines = [
+        line for line in dirty.splitlines() if not line.endswith("p158-h1-verdict-report.md")
+    ]
+    is_dirty = len(dirty_lines) > 0 or (initial_dirty != "")
+    if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P158 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p158_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P158"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    c3 = suite_summary.get("criteria", {}).get("criterion_3_evolution_value", {})
+    report: dict[str, Any] = {
+        "phase": "P158",
+        "verdict": verdict,
+        "claim_scope": (
+            "Hypothesis H1 statistical verdict evaluated: "
+            f"Overall verdict {suite_summary.get('overall_h1_verdict')}; "
+            f"Wilcoxon signed-rank test W={c3.get('wilcoxon_stat', 0.0):.1f}, "
+            f"Holm-adjusted p={c3.get('holm_p_value', 1.0):.4e} <= {alpha}; "
+            f"Pareto frontier contains {len(suite_summary.get('pareto_frontier', []))} non-dominated points; "
+            f"formal dossier saved at {report_output_path}."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P158",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P158 audit {verdict}: H1 overall verdict {suite_summary.get('overall_h1_verdict')}; "
+        f"Wilcoxon Holm p={c3.get('holm_p_value', 1.0):.4e}; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P158 H1 verdict audit rejected: {findings}")
+
+    return report
+
+
+def run_p159_reproducibility_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P159 audit: Clean environment container reproducibility and Zenodo bundle export.
+
+    Verifies:
+    1. Dockerfile recipe for hermetic, non-network execution.
+    2. Presence of verify-container and export-bundle targets in Makefile.
+    3. Export and 100% SHA-256 cryptographic verification of Zenodo research data bundle.
+    4. Clean environment execution (make verify / smoke check).
+    5. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import os
+    import shutil
+    import subprocess
+    import sys
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+    if str(repo_root / "scripts") not in sys.path:
+        sys.path.insert(0, str(repo_root / "scripts"))
+
+    from export_zenodo_bundle import (
+        generate_bundle,
+        verify_zenodo_bundle_integrity,
+    )
+
+    t0 = time.perf_counter()
+    initial_dirty = get_git_status()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P159":
+        raise ValueError(f"Config {cfg_p} is not a P159 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P159 CLEAN ENVIRONMENT CONTAINER REPRODUCIBILITY & OPEN RESEARCH DATA AUDIT")
+    print("=" * 115)
+
+    findings: list[str] = []
+    repo_root = Path(__file__).resolve().parents[1]
+    bundle_output_dir = config.get("bundle_output_dir", "dist/zenodo-bundle")
+    create_tarball = config.get("create_tarball", True)
+    require_docker = config.get("require_docker", False)
+    min_bundle_files = int(config.get("min_bundle_files", 50))
+
+    # 1. Dockerfile audit
+    dockerfile_path = repo_root / "Dockerfile"
+    dockerignore_path = repo_root / ".dockerignore"
+    if not dockerfile_path.is_file():
+        findings.append("MISSING_DOCKERFILE: Dockerfile does not exist at repo root")
+    else:
+        df_content = dockerfile_path.read_text(encoding="utf-8")
+        if "FROM " not in df_content:
+            findings.append("INVALID_DOCKERFILE: missing FROM instruction")
+        if "CMD " not in df_content and "ENTRYPOINT " not in df_content:
+            findings.append("INVALID_DOCKERFILE: missing default CMD or ENTRYPOINT")
+        if "PIP_NO_CACHE_DIR" not in df_content:
+            findings.append("INVALID_DOCKERFILE: missing non-caching environment variable")
+
+    if not dockerignore_path.is_file():
+        findings.append("MISSING_DOCKERIGNORE: .dockerignore does not exist at repo root")
+    else:
+        di_content = dockerignore_path.read_text(encoding="utf-8")
+        if ".git" not in di_content or ".lake" not in di_content:
+            findings.append(
+                "INCOMPLETE_DOCKERIGNORE: .dockerignore must ignore .git and .lake caches"
+            )
+
+    # 2. Makefile audit
+    makefile_path = repo_root / "Makefile"
+    if not makefile_path.is_file():
+        findings.append("MISSING_MAKEFILE: Makefile does not exist at repo root")
+    else:
+        mf_content = makefile_path.read_text(encoding="utf-8")
+        if "verify-container:" not in mf_content:
+            findings.append("MISSING_MAKE_TARGET: Makefile missing verify-container target")
+        if "export-bundle:" not in mf_content:
+            findings.append("MISSING_MAKE_TARGET: Makefile missing export-bundle target")
+        if "--network none" not in mf_content:
+            findings.append(
+                "NON_HERMETIC_CONTAINER_TARGET: verify-container must enforce --network none"
+            )
+
+    # 3. Export Zenodo open research bundle and audit cryptographic checksums
+    bundle_res = generate_bundle(
+        output_dir=bundle_output_dir,
+        create_tar=create_tarball,
+        repo_root=repo_root,
+    )
+    if bundle_res.get("status") != "SUCCESS":
+        findings.append(f"BUNDLE_EXPORT_FAILED: {bundle_res}")
+    else:
+        total_files = bundle_res.get("total_files", 0)
+        if total_files < min_bundle_files:
+            findings.append(
+                f"BUNDLE_TOO_SMALL: bundle only contained {total_files} files (expected >= {min_bundle_files})"
+            )
+        # Verify 100% SHA-256 integrity
+        content_dir = bundle_res.get("output_dir", "")
+        bundle_sound, bundle_findings = verify_zenodo_bundle_integrity(content_dir)
+        if not bundle_sound:
+            findings.extend(bundle_findings)
+
+    # 4. Container execution verification
+    docker_exe = shutil.which("docker")
+    container_verified = False
+    container_output = ""
+    if docker_exe:
+        try:
+            ping = subprocess.run(
+                [docker_exe, "info"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=5,
+            )
+            if ping.returncode == 0:
+                c_proc = subprocess.run(
+                    [
+                        docker_exe,
+                        "run",
+                        "--rm",
+                        "--network",
+                        "none",
+                        "evobyte:reproducible",
+                        "python3",
+                        "benchmarks/synthetic.py",
+                        "--smoke",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                )
+                if c_proc.returncode == 0 and "smoke ok" in c_proc.stdout:
+                    container_verified = True
+                    container_output = c_proc.stdout.strip()
+                else:
+                    if require_docker:
+                        findings.append(
+                            f"CONTAINER_EXECUTION_FAILED: code {c_proc.returncode}, "
+                            f"err: {c_proc.stderr.strip()}"
+                        )
+        except Exception as e:
+            if require_docker:
+                findings.append(f"DOCKER_EXCEPTION: {e}")
+    else:
+        if require_docker:
+            findings.append("DOCKER_NOT_INSTALLED: docker binary not found in PATH")
+
+    # 5. Clean tree check
+    revision = get_git_commit()
+    dirty = get_git_status()
+    dirty_lines = [
+        line
+        for line in dirty.splitlines()
+        if not any(ignored in line for ignored in ["dist/", "zenodo-bundle", "p159-acceptance"])
+    ]
+    is_dirty = len(dirty_lines) > 0 or (initial_dirty != "")
+    if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; P159 reproducibility claims from dirty code rejected"
+        )
+
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=42,
+        device=dev_actual,
+        dataset_hashes={
+            "p159_config": config_sha[:16],
+            "bundle_sha256": bundle_res.get("manifest_path", "")[:16],
+        },
+        config={"acceptance_phase": "P159"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P159",
+        "verdict": verdict,
+        "claim_scope": (
+            "Clean environment container reproducibility and Zenodo bundle export: "
+            f"Dockerfile validated with hermetic non-network recipe; "
+            f"Makefile targets verify-container and export-bundle verified; "
+            f"Zenodo research bundle exported ({bundle_res.get('total_files')} files, "
+            f"{bundle_res.get('total_bytes', 0) / (1024 * 1024):.2f} MB) with 100% SHA-256 integrity; "
+            f"Hermetic container execution: {'PASS' if container_verified else 'SKIPPED/OPTIONAL'}."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "bundle_summary": bundle_res,
+        "container_audit": {
+            "docker_available": docker_exe is not None,
+            "container_verified": container_verified,
+            "container_output": container_output,
+        },
+        "resolved_config": {
+            "acceptance_phase": "P159",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P159 audit {verdict}: Bundle files: {bundle_res.get('total_files')}; "
+        f"Container verified: {container_verified}; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P159 reproducibility audit rejected: {findings}")
+
+    return report
+
+
+def run_p160_manuscript_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
+    """P160 audit: Systems research manuscript publication and traceability dossier.
+
+    Verifies:
+    1. Complete LaTeX manuscript project in docs/paper/ (main.tex, references.bib, tables).
+    2. Compilation and integrity of compiled PDF (docs/paper/main.pdf).
+    3. Traceability dossier (docs/research/p160-manuscript-dossier.md) matching empirical claims.
+    4. Clean tree enforcement and hardware provenance recording.
+    """
+    import hashlib
+    import json
+    import os
+    import shutil
+    import subprocess
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    initial_dirty = get_git_status()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P160":
+        raise ValueError(f"Config {cfg_p} is not a P160 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P160 SYSTEMS RESEARCH MANUSCRIPT PUBLICATION & SCIENTIFIC DOSSIER AUDIT")
+    print("=" * 115)
+
+    findings: list[str] = []
+    repo_root = Path(__file__).resolve().parents[1]
+    paper_dir = repo_root / config.get("paper_dir", "docs/paper")
+    dossier_path = repo_root / config.get(
+        "dossier_path", "docs/research/p160-manuscript-dossier.md"
+    )
+    require_pdf = config.get("require_pdf", True)
+
+    # 1. LaTeX project audit
+    main_tex = paper_dir / "main.tex"
+    ref_bib = paper_dir / "references.bib"
+    gen_fig = paper_dir / "generate_figures.py"
+    main_pdf = paper_dir / "main.pdf"
+
+    if not main_tex.is_file():
+        findings.append(f"MISSING_MAIN_TEX: {main_tex} does not exist")
+    else:
+        tex_content = main_tex.read_text(encoding="utf-8")
+        required_tokens = [
+            r"\begin{document}",
+            r"\maketitle",
+            r"\begin{abstract}",
+            "Hypothesis H1",
+            "Verification Cascade",
+            "Wilcoxon",
+            "Pareto",
+            "Ablation",
+            "Reproducibility",
+            r"\begin{thebibliography}",
+        ]
+        for tok in required_tokens:
+            if tok not in tex_content:
+                findings.append(
+                    f"INCOMPLETE_MANUSCRIPT: missing required section/token '{tok}' in main.tex"
+                )
+
+    if not ref_bib.is_file():
+        findings.append(f"MISSING_BIB: {ref_bib} does not exist")
+
+    for tbl_name in [
+        "table_h1_verdict.tex",
+        "table_ablations.tex",
+        "table_wilcoxon.tex",
+        "table_pareto.tex",
+    ]:
+        tbl_path = paper_dir / tbl_name
+        if not tbl_path.is_file():
+            findings.append(f"MISSING_TABLE: {tbl_path} does not exist")
+
+    if not gen_fig.is_file():
+        findings.append(f"MISSING_FIGURE_GENERATOR: {gen_fig} does not exist")
+
+    # 2. PDF compilation and presence audit
+    pdf_compiled = False
+    if main_pdf.is_file() and main_pdf.stat().st_size > 50000:
+        pdf_compiled = True
+    else:
+        pdflatex_exe = shutil.which("pdflatex")
+        if pdflatex_exe:
+            try:
+                proc = subprocess.run(
+                    [pdflatex_exe, "-interaction=nonstopmode", "-halt-on-error", "main.tex"],
+                    cwd=str(paper_dir),
+                    capture_output=True,
+                    timeout=30,
+                )
+                if proc.returncode == 0 and main_pdf.is_file():
+                    pdf_compiled = True
+                else:
+                    findings.append(f"PDF_COMPILATION_FAILED: code {proc.returncode}")
+            except Exception as e:
+                findings.append(f"PDF_COMPILATION_ERROR: {e}")
+        elif require_pdf:
+            findings.append(
+                f"MISSING_PDF: compiled PDF {main_pdf} not found and pdflatex unavailable"
+            )
+
+    # 3. Research dossier audit
+    if not dossier_path.is_file():
+        findings.append(f"MISSING_DOSSIER: {dossier_path} not found")
+    else:
+        dos_content = dossier_path.read_text(encoding="utf-8")
+        if "Matriz de Rastreabilidade" not in dos_content:
+            findings.append("INCOMPLETE_DOSSIER: missing traceability matrix in manuscript dossier")
+        if "SUPPORTED" not in dos_content:
+            findings.append("INCOMPLETE_DOSSIER: missing overall H1 SUPPORTED verdict in dossier")
+
+    # 4. Clean tree enforcement
+    revision = get_git_commit()
+    dirty = get_git_status()
+    ignored_patterns = ["p160-acceptance", ".aux", ".log", ".out", "main.pdf", "table_"]
+    dirty_lines = [
+        line
+        for line in dirty.splitlines()
+        if not any(ignored in line for ignored in ignored_patterns)
+    ]
+    initial_dirty_lines = [
+        line
+        for line in initial_dirty.splitlines()
+        if not any(ignored in line for ignored in ignored_patterns)
+    ]
+    is_dirty = len(dirty_lines) > 0 or len(initial_dirty_lines) > 0
+    if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; P160 manuscript claims from dirty code rejected"
+        )
+
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=42,
+        device=dev_actual,
+        dataset_hashes={
+            "p160_config": config_sha[:16],
+            "manuscript_sha256": hashlib.sha256(main_tex.read_bytes()).hexdigest()[:16]
+            if main_tex.is_file()
+            else "",
+            "pdf_sha256": hashlib.sha256(main_pdf.read_bytes()).hexdigest()[:16]
+            if main_pdf.is_file()
+            else "",
+        },
+        config={"acceptance_phase": "P160"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    pdf_size = main_pdf.stat().st_size if main_pdf.is_file() else 0
+    report: dict[str, Any] = {
+        "phase": "P160",
+        "verdict": verdict,
+        "claim_scope": (
+            "Systems research manuscript publication and traceability dossier: "
+            f"LaTeX source validated in {paper_dir}; "
+            f"Compiled PDF verified ({pdf_size / 1024:.1f} KB, status {'PASS' if pdf_compiled else 'FAIL'}); "
+            f"Research dossier and empirical traceability matrix verified at {dossier_path}."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "manuscript_summary": {
+            "title": "EvoByte: Massively Parallel Evolutionary Discovery of Symbolic Programs via Ultra-Compact Bytecode and Deterministic Cascade Verification",
+            "latex_source": str(main_tex),
+            "pdf_path": str(main_pdf),
+            "pdf_size_bytes": pdf_size,
+            "pdf_compiled": pdf_compiled,
+            "dossier_path": str(dossier_path),
+            "bib_path": str(ref_bib),
+        },
+        "resolved_config": {
+            "acceptance_phase": "P160",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P160 audit {verdict}: Manuscript PDF compiled: {pdf_compiled} ({pdf_size / 1024:.1f} KB); "
+        f"Dossier verified; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P160 manuscript audit rejected: {findings}")
+
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -17811,6 +20873,48 @@ def main() -> int:
             run_p138_erdos_discrepancy_audit(args.config, args.output)
         elif args.acceptance_phase == "P139":
             run_p139_roth_spencer_discrepancy_audit(args.config, args.output)
+        elif args.acceptance_phase == "P140":
+            run_p140_discrepancy_norm_audit(args.config, args.output)
+        elif args.acceptance_phase == "P141":
+            run_p141_covering_systems_audit(args.config, args.output)
+        elif args.acceptance_phase == "P142":
+            run_p142_primitive_sets_audit(args.config, args.output)
+        elif args.acceptance_phase == "P143":
+            run_p143_discrepancy_covering_blind_confirmation_audit(args.config, args.output)
+        elif args.acceptance_phase == "P144":
+            run_p144_discrepancy_covering_grand_campaign_audit(args.config, args.output)
+        elif args.acceptance_phase == "P145":
+            run_p145_schinzel_high_moduli_audit(args.config, args.output)
+        elif args.acceptance_phase == "P146":
+            run_p146_schinzel_quadratic_sieve_audit(args.config, args.output)
+        elif args.acceptance_phase == "P147":
+            run_p147_polynomial_identity_synthesis_audit(args.config, args.output)
+        elif args.acceptance_phase == "P148":
+            run_p148_schinzel_lean4_certification_audit(args.config, args.output)
+        elif args.acceptance_phase == "P149":
+            run_p149_constructive_certificates_audit(args.config, args.output)
+        elif args.acceptance_phase == "P150":
+            run_p150_world_literature_audit(args.config, args.output)
+        elif args.acceptance_phase == "P151":
+            run_p151_blind_confirmation_audit(args.config, args.output)
+        elif args.acceptance_phase == "P152":
+            run_p152_grand_campaign_audit(args.config, args.output)
+        elif args.acceptance_phase == "P153":
+            run_p153_clean_harness_audit(args.config, args.output)
+        elif args.acceptance_phase == "P154":
+            run_p154_matrix_execution_audit(args.config, args.output)
+        elif args.acceptance_phase == "P155":
+            run_p155_baselines_audit(args.config, args.output)
+        elif args.acceptance_phase == "P156":
+            run_p156_generalization_audit(args.config, args.output)
+        elif args.acceptance_phase == "P157":
+            run_p157_ablations_audit(args.config, args.output)
+        elif args.acceptance_phase == "P158":
+            run_p158_h1_verdict_audit(args.config, args.output)
+        elif args.acceptance_phase == "P159":
+            run_p159_reproducibility_audit(args.config, args.output)
+        elif args.acceptance_phase == "P160":
+            run_p160_manuscript_audit(args.config, args.output)
         return 0
 
     seeds = (

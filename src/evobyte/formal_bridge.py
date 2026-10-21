@@ -7188,3 +7188,556 @@ def verify_discrete_geometry_grand_campaign_soundness(
         )
         sound = False
     return sound, findings
+
+
+# ==============================================================================
+# P144 — DISCREPANCY & COVERING GRAND FORMAL CAMPAIGN & DOSSIER AUDIT
+# ==============================================================================
+
+
+def audit_discrepancy_covering_grand_campaign(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    expected_modules: list[str] | None = None,
+    verify_lake: bool = True,
+) -> dict[str, Any]:
+    """Audit the complete 50-module Lean 4 formal library and compute cryptographic hash chain for P144.
+
+    Inspects all 50 formal modules in `lean_proofs/Generated/` (including the 6 discrepancy and covering
+    modules P137-P142), computes SHA-256 for each, verifies absence of `sorry` tokens, counts formal
+    `theorem` and `lemma` declarations (>= 3,800), computes an immutable cryptographic hash chain
+    rooted at `EvoByte Discrepancy Covering Grand Formal Campaign Root P144`, and validates Lake build.
+    """
+    import re
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+
+    if expected_modules is None:
+        expected_modules = [
+            "AdditiveCombinatoricsSignatures.lean",
+            "AdditiveEnergyTheorems.lean",
+            "AdditiveTacticTheorems.lean",
+            "AsymptoticDensityTheorems.lean",
+            "AutomatedTheorems.lean",
+            "BytecodeTheorems.lean",
+            "ConicParametrizations.lean",
+            "ConvexPolygonsHappyEndingTheorems.lean",
+            "CoveringSystemsTheorems.lean",
+            "CubicSurfaceFibrations.lean",
+            "CustomTacticTheorems.lean",
+            "DiophSurfaceTheorems.lean",
+            "DiscrepancyCoveringSignatures.lean",
+            "DiscrepancyTacticTheorems.lean",
+            "DiscreteGeometrySignatures.lean",
+            "DiscreteGeometryTacticTheorems.lean",
+            "DivisibilityLemmas.lean",
+            "ErdosDiscrepancyTheorems.lean",
+            "ErdosDistinctDistancesTheorems.lean",
+            "ErdosGrahamTheorems.lean",
+            "ErdosGyarfasChromaticTheorems.lean",
+            "ErdosStrausCertificates.lean",
+            "ErdosStrausIdentities.lean",
+            "ErdosTuranBasesTheorems.lean",
+            "ExtremalBoundsTheorems.lean",
+            "ExtremalGraphRamseySignatures.lean",
+            "GraphRamseyTacticTheorems.lean",
+            "HadwigerNelsonColoringTheorems.lean",
+            "HigherPowerTheorems.lean",
+            "InductiveLemmas.lean",
+            "MultitermTheorems.lean",
+            "ObstructionGraphTheorems.lean",
+            "OpenProblemSignatures.lean",
+            "OptimalCertificates.lean",
+            "PillaiCatalanTheorems.lean",
+            "PrimitiveSetsDivisorsTheorems.lean",
+            "QuadraticIdentities.lean",
+            "QuadraticRingTheorems.lean",
+            "QuaternionAlgebraTheorems.lean",
+            "RamseyPaleyTheorems.lean",
+            "RothSalemSpencerTheorems.lean",
+            "RothSpencerDiscrepancyTheorems.lean",
+            "SchinzelTheorems.lean",
+            "SidonSetsTheorems.lean",
+            "SierpinskiTheorems.lean",
+            "SolutionMomentsTheorems.lean",
+            "SumFreeTheorems.lean",
+            "UnitDistancesSzemerediTrotterTheorems.lean",
+            "UniversalMultitermTheorems.lean",
+            "ZarankiewiczKovariSosTuranTheorems.lean",
+        ]
+
+    discrepancy_covering_modules = {
+        "DiscrepancyCoveringSignatures.lean",
+        "ErdosDiscrepancyTheorems.lean",
+        "RothSpencerDiscrepancyTheorems.lean",
+        "DiscrepancyTacticTheorems.lean",
+        "CoveringSystemsTheorems.lean",
+        "PrimitiveSetsDivisorsTheorems.lean",
+    }
+
+    chain_state = hashlib.sha256(
+        b"EvoByte Discrepancy Covering Grand Formal Campaign Root P144"
+    ).hexdigest()
+    hash_chain: list[dict[str, Any]] = []
+    modules_summary: dict[str, Any] = {}
+    total_theorems = 0
+    discrepancy_covering_theorems = 0
+    has_any_sorry = False
+    missing_modules: list[str] = []
+
+    for mod_name in sorted(expected_modules):
+        mod_p = gen / mod_name
+        if not mod_p.exists():
+            missing_modules.append(mod_name)
+            continue
+
+        mod_bytes = mod_p.read_bytes()
+        mod_text = mod_bytes.decode("utf-8")
+        mod_sha = hashlib.sha256(mod_bytes).hexdigest()
+
+        thms_count = len(re.findall(r"^(?:theorem|lemma)\s+", mod_text, flags=re.MULTILINE))
+        sorry_present = bool(re.search(r"\bsorry\b", mod_text))
+        if sorry_present:
+            has_any_sorry = True
+
+        total_theorems += thms_count
+        if mod_name in discrepancy_covering_modules:
+            discrepancy_covering_theorems += thms_count
+
+        step_payload = f"{chain_state}:{mod_name}:{mod_sha}:{thms_count}".encode()
+        chain_state = hashlib.sha256(step_payload).hexdigest()
+
+        entry = {
+            "module": mod_name,
+            "path": str(mod_p),
+            "sha256": mod_sha,
+            "theorem_count": thms_count,
+            "has_sorry": sorry_present,
+            "chain_hash": chain_state,
+        }
+        hash_chain.append(entry)
+        modules_summary[mod_name] = entry
+
+    lake_passed = True
+    lake_reasons: list[str] = []
+    if verify_lake:
+        bins = lean_resolve_binaries(proj)
+        lake_proc = subprocess.run(
+            [bins["lake"], "-d", str(proj), "build", "Generated"],
+            capture_output=True,
+            text=True,
+            cwd=str(proj),
+            timeout=180,
+            check=False,
+        )
+        if lake_proc.returncode != 0:
+            lake_passed = False
+            lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "project_dir": str(proj),
+        "generated_dir": str(gen),
+        "total_modules": len(hash_chain),
+        "total_theorems": total_theorems,
+        "discrepancy_covering_theorems": discrepancy_covering_theorems,
+        "has_sorry": has_any_sorry,
+        "missing_modules": missing_modules,
+        "hash_chain": hash_chain,
+        "final_chain_hash": chain_state,
+        "modules": modules_summary,
+        "lake_passed": lake_passed,
+        "lake_reasons": lake_reasons,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_discrepancy_covering_grand_campaign_soundness(
+    campaign_summary: dict[str, Any],
+    min_theorems: int = 3800,
+    min_modules: int = 50,
+) -> tuple[bool, list[str]]:
+    """Audit P144 discrepancy and covering grand formal campaign summary for complete acceptance, zero sorry, and soundness."""
+    sound, findings = verify_open_problems_grand_campaign_soundness(
+        campaign_summary,
+        min_theorems=min_theorems,
+        min_modules=min_modules,
+    )
+    if campaign_summary.get("discrepancy_covering_theorems", 0) < 500:
+        findings.append(
+            f"INSUFFICIENT_DISCREPANCY_COVERING_THEOREMS: expected >= 500, got {campaign_summary.get('discrepancy_covering_theorems')}"
+        )
+        sound = False
+    return sound, findings
+
+
+def compile_schinzel_high_moduli_theorems_module(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    max_classes_per_pair: int = 5,
+) -> dict[str, Any]:
+    """Synthesize and compile Lean 4 module SchinzelHighModuliTheorems.lean with verified parametric identities (P148)."""
+    import re
+    from evobyte.algebraic import synthesize_schinzel_polynomial_database
+
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+    gen.mkdir(parents=True, exist_ok=True)
+
+    db = synthesize_schinzel_polynomial_database(max_classes_per_pair=max_classes_per_pair)
+    lines = [
+        "-- EvoByte Certified Parametric Polynomial Identities for Schinzel Resistant Classes (P148)",
+        "-- Verified mechanically in Lean 4 kernel via `ring` and `norm_num` tactics.",
+        "import Mathlib.Tactic.Ring",
+        "import Mathlib.Tactic.NormNum",
+        "",
+        "theorem schinzel_poly_identity_sub (a n X Y Z : ℚ) (h : a * X * Y * Z = n * (X * Y + Y * Z + Z * X)) :",
+        "    a * X * Y * Z - n * (X * Y + Y * Z + Z * X) = 0 := by",
+        "  rw [h]",
+        "  ring",
+        "",
+    ]
+
+    for ident in db["identities"]:
+        pair = ident["pair"]
+        r = ident["residue"]
+        a = ident["a"]
+        M = ident["modulus"]
+        X_str = ident["X_poly"].replace("**", "^")
+        Y_str = ident["Y_poly"].replace("**", "^")
+        Z_str = ident["Z_poly"].replace("**", "^")
+
+        thm1 = f"""theorem schinzel_identity_{pair}_r{r} (k : ℚ) :
+    let n : ℚ := {M} * k + {r}
+    let X : ℚ := {X_str}
+    let Y : ℚ := {Y_str}
+    let Z : ℚ := {Z_str}
+    {a} * X * Y * Z = n * (X * Y + Y * Z + Z * X) := by
+  intro n X Y Z
+  dsimp [n, X, Y, Z]
+  ring
+"""
+        k_val = 1
+        X_k = X_str.replace("k", f"({k_val} : ℚ)")
+        Y_k = Y_str.replace("k", f"({k_val} : ℚ)")
+        Z_k = Z_str.replace("k", f"({k_val} : ℚ)")
+        thm2 = f"""theorem schinzel_ordering_{pair}_r{r} :
+    let X : ℚ := {X_k}
+    let Y : ℚ := {Y_k}
+    let Z : ℚ := {Z_k}
+    0 < X ∧ X < Y ∧ Y < Z := by
+  intro X Y Z
+  dsimp [X, Y, Z]
+  norm_num
+"""
+        lines.append(thm1)
+        lines.append(thm2)
+
+    code = "\n".join(lines)
+    target_p = gen / "SchinzelHighModuliTheorems.lean"
+    target_p.write_text(code, encoding="utf-8")
+
+    thms = re.findall(r"^(?:theorem|lemma)\s+([a-zA-Z0-9_]+)", code, flags=re.MULTILINE)
+    sha = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    has_sorry = bool(re.search(r"\bsorry\b", code))
+
+    return {
+        "module": "SchinzelHighModuliTheorems.lean",
+        "path": str(target_p),
+        "sha256": sha,
+        "total_theorems": len(thms),
+        "has_sorry": has_sorry,
+    }
+
+
+def audit_schinzel_high_moduli_certification_baseline(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    verify_lake: bool = True,
+) -> dict[str, Any]:
+    """Audit P148: formal certification in Lean 4 kernel of synthesized parametric polynomial identities."""
+    import re
+    import subprocess
+    import time
+    from pathlib import Path
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+
+    module_name = "SchinzelHighModuliTheorems.lean"
+    mod_p = gen / module_name
+    if not mod_p.exists():
+        raise FileNotFoundError(f"Formal module not found: {mod_p}")
+
+    mod_bytes = mod_p.read_bytes()
+    mod_text = mod_bytes.decode("utf-8")
+    mod_sha = hashlib.sha256(mod_bytes).hexdigest()
+
+    thms = re.findall(r"^(?:theorem|lemma)\s+([a-zA-Z0-9_]+)", mod_text, flags=re.MULTILINE)
+    has_sorry = bool(re.search(r"\bsorry\b", mod_text))
+
+    lake_passed = True
+    lake_reasons: list[str] = []
+    if verify_lake:
+        bins = lean_resolve_binaries(proj)
+        lake_proc = subprocess.run(
+            [bins["lake"], "-d", str(proj), "build", "Generated"],
+            capture_output=True,
+            text=True,
+            cwd=str(proj),
+            timeout=180,
+            check=False,
+        )
+        if lake_proc.returncode != 0:
+            lake_passed = False
+            lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "module": module_name,
+        "path": str(mod_p),
+        "sha256": mod_sha,
+        "total_theorems": len(thms),
+        "has_sorry": has_sorry,
+        "lake_passed": lake_passed,
+        "lake_reasons": lake_reasons,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_schinzel_high_moduli_certification_baseline_soundness(
+    audit_data: dict[str, Any],
+    min_theorems: int = 100,
+) -> tuple[bool, list[str]]:
+    """Validate soundness of P148 Schinzel formal certification baseline audit."""
+    findings: list[str] = []
+
+    if audit_data.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: formal module contains unproven sorry tokens")
+
+    tot_thms = audit_data.get("total_theorems", 0)
+    if tot_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {tot_thms}")
+
+    if not audit_data.get("lake_passed", False):
+        findings.append(f"LAKE_BUILD_FAILED: {audit_data.get('lake_reasons')}")
+
+    return len(findings) == 0, findings
+
+
+# ==============================================================================
+# P152: CONSTRUCTIVE ALGEBRAIC GRAND FORMAL CAMPAIGN & LITERATURE DOSSIER
+# ==============================================================================
+
+
+def audit_constructive_algebraic_grand_campaign(
+    project_dir: Path | str = "lean_proofs",
+    generated_dir: Path | str = "lean_proofs/Generated",
+    expected_modules: list[str] | None = None,
+    verify_lake: bool = True,
+) -> dict[str, Any]:
+    """Audit the complete 54-module Lean 4 formal library and compute cryptographic hash chain for P152.
+
+    Inspects all 54 formal modules in `lean_proofs/Generated/` (including the 4 constructive algebraic
+    discovery modules P145-P149: SchinzelHighModuliSignatures, SchinzelQuadraticRingSieveTheorems,
+    SchinzelHighModuliTheorems, and ExtremalConstructiveCertificates), computes SHA-256 for each,
+    verifies absence of `sorry` tokens, counts formal `theorem` and `lemma` declarations (>= 4,800),
+    computes an immutable cryptographic hash chain rooted at
+    `EvoByte Constructive Algebraic Discovery Grand Campaign Root P152`, and validates Lake build.
+    """
+    import re
+
+    t0 = time.perf_counter()
+    proj = Path(project_dir).resolve()
+    gen = Path(generated_dir)
+    if not gen.is_absolute():
+        gen = proj / "Generated" if gen == Path("lean_proofs/Generated") else proj.parent / gen
+
+    if expected_modules is None:
+        expected_modules = [
+            "AdditiveCombinatoricsSignatures.lean",
+            "AdditiveEnergyTheorems.lean",
+            "AdditiveTacticTheorems.lean",
+            "AsymptoticDensityTheorems.lean",
+            "AutomatedTheorems.lean",
+            "BytecodeTheorems.lean",
+            "ConicParametrizations.lean",
+            "ConvexPolygonsHappyEndingTheorems.lean",
+            "CoveringSystemsTheorems.lean",
+            "CubicSurfaceFibrations.lean",
+            "CustomTacticTheorems.lean",
+            "DiophSurfaceTheorems.lean",
+            "DiscrepancyCoveringSignatures.lean",
+            "DiscrepancyTacticTheorems.lean",
+            "DiscreteGeometrySignatures.lean",
+            "DiscreteGeometryTacticTheorems.lean",
+            "DivisibilityLemmas.lean",
+            "ErdosDiscrepancyTheorems.lean",
+            "ErdosDistinctDistancesTheorems.lean",
+            "ErdosGrahamTheorems.lean",
+            "ErdosGyarfasChromaticTheorems.lean",
+            "ErdosStrausCertificates.lean",
+            "ErdosStrausIdentities.lean",
+            "ErdosTuranBasesTheorems.lean",
+            "ExtremalBoundsTheorems.lean",
+            "ExtremalConstructiveCertificates.lean",
+            "ExtremalGraphRamseySignatures.lean",
+            "GraphRamseyTacticTheorems.lean",
+            "HadwigerNelsonColoringTheorems.lean",
+            "HigherPowerTheorems.lean",
+            "InductiveLemmas.lean",
+            "MultitermTheorems.lean",
+            "ObstructionGraphTheorems.lean",
+            "OpenProblemSignatures.lean",
+            "OptimalCertificates.lean",
+            "PillaiCatalanTheorems.lean",
+            "PrimitiveSetsDivisorsTheorems.lean",
+            "QuadraticIdentities.lean",
+            "QuadraticRingTheorems.lean",
+            "QuaternionAlgebraTheorems.lean",
+            "RamseyPaleyTheorems.lean",
+            "RothSalemSpencerTheorems.lean",
+            "RothSpencerDiscrepancyTheorems.lean",
+            "SchinzelHighModuliSignatures.lean",
+            "SchinzelHighModuliTheorems.lean",
+            "SchinzelQuadraticRingSieveTheorems.lean",
+            "SchinzelTheorems.lean",
+            "SidonSetsTheorems.lean",
+            "SierpinskiTheorems.lean",
+            "SolutionMomentsTheorems.lean",
+            "SumFreeTheorems.lean",
+            "UnitDistancesSzemerediTrotterTheorems.lean",
+            "UniversalMultitermTheorems.lean",
+            "ZarankiewiczKovariSosTuranTheorems.lean",
+        ]
+
+    constructive_algebraic_modules = {
+        "SchinzelHighModuliSignatures.lean",
+        "SchinzelQuadraticRingSieveTheorems.lean",
+        "SchinzelHighModuliTheorems.lean",
+        "ExtremalConstructiveCertificates.lean",
+    }
+
+    chain_state = hashlib.sha256(
+        b"EvoByte Constructive Algebraic Discovery Grand Campaign Root P152"
+    ).hexdigest()
+    hash_chain: list[dict[str, Any]] = []
+    modules_summary: dict[str, Any] = {}
+    total_theorems = 0
+    constructive_algebraic_theorems = 0
+    has_any_sorry = False
+    missing_modules: list[str] = []
+
+    for mod_name in sorted(expected_modules):
+        mod_p = gen / mod_name
+        if not mod_p.exists():
+            missing_modules.append(mod_name)
+            continue
+
+        mod_bytes = mod_p.read_bytes()
+        mod_text = mod_bytes.decode("utf-8")
+        mod_sha = hashlib.sha256(mod_bytes).hexdigest()
+
+        thms_count = len(re.findall(r"^(?:theorem|lemma)\s+", mod_text, flags=re.MULTILINE))
+        sorry_present = bool(re.search(r"\bsorry\b", mod_text))
+        if sorry_present:
+            has_any_sorry = True
+
+        total_theorems += thms_count
+        if mod_name in constructive_algebraic_modules:
+            constructive_algebraic_theorems += thms_count
+
+        step_payload = f"{chain_state}:{mod_name}:{mod_sha}:{thms_count}".encode()
+        chain_state = hashlib.sha256(step_payload).hexdigest()
+
+        entry = {
+            "module": mod_name,
+            "path": str(mod_p),
+            "sha256": mod_sha,
+            "theorem_count": thms_count,
+            "has_sorry": sorry_present,
+            "chain_hash": chain_state,
+        }
+        hash_chain.append(entry)
+        modules_summary[mod_name] = entry
+
+    lake_passed = True
+    lake_reasons: list[str] = []
+    if verify_lake:
+        bins = lean_resolve_binaries(proj)
+        lake_proc = subprocess.run(
+            [bins["lake"], "-d", str(proj), "build", "Generated"],
+            capture_output=True,
+            text=True,
+            cwd=str(proj),
+            timeout=180,
+            check=False,
+        )
+        if lake_proc.returncode != 0:
+            lake_passed = False
+            lake_reasons.append(f"lake_build_failed: {lake_proc.stderr[:160]}")
+
+    elapsed = time.perf_counter() - t0
+
+    return {
+        "project_dir": str(proj),
+        "generated_dir": str(gen),
+        "total_modules": len(hash_chain),
+        "total_theorems": total_theorems,
+        "constructive_algebraic_theorems": constructive_algebraic_theorems,
+        "has_sorry": has_any_sorry,
+        "missing_modules": missing_modules,
+        "hash_chain": hash_chain,
+        "final_chain_hash": chain_state,
+        "modules": modules_summary,
+        "lake_passed": lake_passed,
+        "lake_reasons": lake_reasons,
+        "elapsed_sec": elapsed,
+    }
+
+
+def verify_constructive_algebraic_grand_campaign_soundness(
+    campaign_summary: dict[str, Any],
+    min_theorems: int = 4800,
+    min_modules: int = 54,
+    min_constructive_theorems: int = 500,
+) -> tuple[bool, list[str]]:
+    """Audit P152 constructive algebraic grand formal campaign summary for complete acceptance, zero sorry, and soundness."""
+    findings: list[str] = []
+
+    if campaign_summary.get("has_sorry", False):
+        findings.append("SORRY_DETECTED: one or more formal modules contain unproven sorry tokens")
+
+    missing = campaign_summary.get("missing_modules", [])
+    if missing:
+        findings.append(f"MISSING_MODULES: {missing}")
+
+    tot_mods = campaign_summary.get("total_modules", 0)
+    if tot_mods < min_modules:
+        findings.append(f"INSUFFICIENT_MODULES: expected >= {min_modules}, got {tot_mods}")
+
+    tot_thms = campaign_summary.get("total_theorems", 0)
+    if tot_thms < min_theorems:
+        findings.append(f"INSUFFICIENT_THEOREMS: expected >= {min_theorems}, got {tot_thms}")
+
+    constr_thms = campaign_summary.get("constructive_algebraic_theorems", 0)
+    if constr_thms < min_constructive_theorems:
+        findings.append(
+            f"INSUFFICIENT_CONSTRUCTIVE_ALGEBRAIC_THEOREMS: expected >= {min_constructive_theorems}, got {constr_thms}"
+        )
+
+    if not campaign_summary.get("lake_passed", False):
+        findings.append(f"LAKE_BUILD_FAILED: {campaign_summary.get('lake_reasons')}")
+
+    return len(findings) == 0, findings

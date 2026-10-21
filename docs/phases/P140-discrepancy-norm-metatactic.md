@@ -1,6 +1,6 @@
 # P140 — Meta-tática customizada discrepancy_norm e automação de discrepância em Lean 4
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P139 concluída; branch a partir de `codex/p139-roth-spencer-discrepancy-progressions`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P139 concluída com teoremas de Roth e Spencer aprovados no kernel do Lean 4.

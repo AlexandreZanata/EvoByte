@@ -165,3 +165,617 @@ def test_seeding_is_deterministic_across_numpy_and_torch():
     seed_all(123)
     t2 = torch.randn(4).tolist()
     assert t1 == t2
+
+
+def test_p153_hardware_integrity_and_vram_telemetry():
+    from hw_probe import check_hardware_integrity, get_vram_telemetry, measure_vram_peak
+
+    hw_ok, findings = check_hardware_integrity()
+    assert hw_ok is True
+    assert findings == []
+
+    vram = get_vram_telemetry(0)
+    assert isinstance(vram, dict)
+    assert "cuda_available" in vram
+    assert "allocated_mb" in vram
+    assert "reserved_mb" in vram
+
+    with measure_vram_peak(0) as tracker:
+        assert isinstance(tracker, dict)
+        assert "start_allocated_mb" in tracker
+
+
+def test_p153_clean_harness_audit_smoke(tmp_path: Path):
+    from benchmarks.full_matrix import audit_clean_reproduction_harness
+
+    out_file = tmp_path / "p153-test-audit.json"
+    res = audit_clean_reproduction_harness(output_path=out_file, seed=42)
+    assert out_file.exists()
+    assert res["phase"] == "P153"
+    assert res["verdict"] == "ACCEPTED"
+    assert res["checks"]["hot_loop_ok"] is True
+    assert res["checks"]["budget_measured_ok"] is True
+    assert res["checks"]["device_ok"] is True
+    assert res["checks"]["counter_ok"] is True
+    assert res["checks"]["deadline_ok"] is True
+    assert res["checks"]["pysr_ok"] is True
+    assert res["checks"]["ablation_path_ok"] is True
+    assert res["checks"]["manifest_ok"] is True
+    assert res["checks"]["hardware_integrity_ok"] is True
+
+
+def test_p153_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p153_clean_harness_audit
+
+    # Rejection of wrong phase
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P153 configuration"):
+        run_p153_clean_harness_audit(bad_cfg, tmp_path / "out.json")
+
+    # Smoke acceptance run
+    good_cfg = tmp_path / "p153-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P153",
+                "seed": 42,
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p153-out.json"
+    report = run_p153_clean_harness_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P153"
+    assert report["verdict"] == "ACCEPTED"
+
+
+def test_p154_matrix_suite_and_soundness(tmp_path: Path):
+    from benchmarks.full_matrix import (
+        run_p154_benchmark_matrix_suite,
+        verify_p154_matrix_soundness,
+    )
+
+    out_d = tmp_path / "p154-test-matrix"
+    summary = run_p154_benchmark_matrix_suite(
+        targets=["x_plus_1"],
+        budgets=["0.2s"],
+        seeds=[42, 101],
+        output_dir=out_d,
+        pop_size=40,
+        max_generations=4,
+    )
+    assert summary["total_trials"] == 2
+    assert summary["vram_ok"] is True
+    assert (out_d / "summary_matrix.json").exists()
+
+    sound, findings = verify_p154_matrix_soundness(
+        summary, min_trials=2, min_primary_rate=0.50, min_cvps=100.0
+    )
+    assert sound is True
+    assert findings == []
+
+    # Failure cases
+    unsound, bad_findings = verify_p154_matrix_soundness(
+        summary, min_trials=10, min_primary_rate=1.01, max_vram_mb=0.0
+    )
+    assert unsound is False
+    assert any("INSUFFICIENT_TRIALS" in f for f in bad_findings)
+    assert any("LOW_REDISCOVERY_RATE" in f for f in bad_findings)
+    assert any("VRAM_EXCEEDED" in f for f in bad_findings)
+
+
+def test_p154_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p154_matrix_execution_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P154 configuration"):
+        run_p154_matrix_execution_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p154-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P154",
+                "targets": ["x_plus_1"],
+                "budgets": ["0.2s"],
+                "seeds": [42, 101],
+                "min_trials": 2,
+                "min_primary_rate": 0.50,
+                "min_cvps": 100.0,
+                "pop_size": 40,
+                "max_generations": 4,
+                "output_dir": str(tmp_path / "matrix"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p154-out.json"
+    report = run_p154_matrix_execution_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P154"
+    assert report["verdict"] == "ACCEPTED"
+
+
+def test_p155_baselines_suite_and_soundness(tmp_path: Path):
+    from benchmarks.full_matrix import run_p155_baselines_suite, verify_p155_baselines_soundness
+
+    out_dir = tmp_path / "baselines_test"
+    summary = run_p155_baselines_suite(
+        targets=["x_plus_1"],
+        budgets=["0.15s"],
+        seeds=[42, 101],
+        methods=["Random", "Classical-SR", "PySR-Adapter", "EvoByte"],
+        output_dir=out_dir,
+    )
+    assert summary["suite"] == "P155-honest-baselines"
+    assert summary["total_trials"] == 8
+    assert (out_dir / "summary_baselines.json").exists()
+
+    # Honest PySR check
+    pysr_info = summary["comparison"]["PySR-Adapter"]
+    assert pysr_info["completed_runs"] == 0
+    assert pysr_info["success_rate"] == 0.0
+
+    # Soundness verification
+    sound, findings = verify_p155_baselines_soundness(
+        summary, min_trials=8, evobyte_must_beat_random=False
+    )
+    assert sound is True
+    assert findings == []
+
+    # Failure cases
+    unsound, bad_trials = verify_p155_baselines_soundness(summary, min_trials=20)
+    assert unsound is False
+    assert any("INSUFFICIENT_TRIALS" in f for f in bad_trials)
+
+    # Dishonest PySR tampering
+    tampered_pysr = dict(summary)
+    tampered_pysr["comparison"] = dict(summary["comparison"])
+    tampered_pysr["comparison"]["PySR-Adapter"] = {
+        "completed_runs": 0,
+        "success_rate": 1.0,
+    }
+    unsound, bad_pysr = verify_p155_baselines_soundness(tampered_pysr, min_trials=8)
+    assert unsound is False
+    assert any("DISHONEST_PYSR" in f for f in bad_pysr)
+
+    # EvoByte underperformed random
+    tampered_evo = dict(summary)
+    tampered_evo["comparison"] = dict(summary["comparison"])
+    tampered_evo["comparison"]["EvoByte"] = {"success_rate": 0.0}
+    tampered_evo["comparison"]["Random"] = {"success_rate": 1.0}
+    unsound, bad_evo = verify_p155_baselines_soundness(
+        tampered_evo, min_trials=8, evobyte_must_beat_random=True
+    )
+    assert unsound is False
+    assert any("EVOBYTE_UNDERPERFORMED_RANDOM" in f for f in bad_evo)
+
+
+def test_p155_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p155_baselines_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P155 configuration"):
+        run_p155_baselines_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p155-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P155",
+                "targets": ["x_plus_1"],
+                "budgets": ["0.15s"],
+                "seeds": [42],
+                "methods": ["Random", "Classical-SR"],
+                "min_trials": 2,
+                "evobyte_must_beat_random": False,
+                "output_dir": str(tmp_path / "baselines_runner"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p155-out.json"
+    report = run_p155_baselines_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P155"
+    assert report["verdict"] == "ACCEPTED"
+
+
+def test_p156_splits_leakage_audit():
+    from benchmarks.evaluate_generalization import audit_splits_leakage
+    from benchmarks.full_matrix import generate_target_dataset, TargetDataset
+
+    ds = generate_target_dataset("x_plus_1")
+    sound, findings = audit_splits_leakage(ds)
+    assert sound is True
+    assert findings == []
+
+    # Test synthetic leakage detection
+    bad_splits = dict(ds.splits)
+    bad_splits["hidden"] = (ds.splits["train"][0].copy(), ds.splits["train"][1].copy())
+    bad_ds = TargetDataset(
+        key="leaky",
+        name="Leaky Dataset",
+        suite="Synthetic",
+        formula_desc="y = x",
+        splits=bad_splits,
+        data_hash="dummy",
+        domain_range=(-5.0, 5.0),
+    )
+    unsound, leak_findings = audit_splits_leakage(bad_ds)
+    assert unsound is False
+    assert any("LEAKAGE_TRAIN_HIDDEN" in f for f in leak_findings)
+
+
+def test_p156_generalization_suite_and_soundness(tmp_path: Path):
+    from benchmarks.evaluate_generalization import (
+        run_p156_generalization_suite,
+        verify_p156_generalization_soundness,
+    )
+
+    out_dir = tmp_path / "gen_test"
+    summary = run_p156_generalization_suite(
+        source_trials_dir="experiments/p155-baselines/trials",
+        output_dir=out_dir,
+    )
+    assert summary["suite"] == "P156-generalization-extrapolation"
+    assert summary["total_evaluations"] >= 8
+    assert (out_dir / "summary_generalization.json").exists()
+
+    # Honest PySR check
+    pysr_info = summary["comparison"]["PySR-Adapter"]
+    assert pysr_info["completed_runs"] == 0
+    assert pysr_info["extrap_success_rate"] == 0.0
+
+    # Soundness verification
+    sound, findings = verify_p156_generalization_soundness(
+        summary, min_trials=8, min_extrap_rate=0.50
+    )
+    assert sound is True
+    assert findings == []
+
+    # Failure cases
+    unsound, bad_trials = verify_p156_generalization_soundness(summary, min_trials=2000)
+    assert unsound is False
+    assert any("INSUFFICIENT_EVALUATIONS" in f for f in bad_trials)
+
+    # Tampered explosion
+    tampered_expl = dict(summary)
+    tampered_expl["comparison"] = dict(summary["comparison"])
+    tampered_expl["comparison"]["EvoByte"] = dict(summary["comparison"]["EvoByte"])
+    tampered_expl["comparison"]["EvoByte"]["explosion_rate"] = 0.50
+    unsound, bad_expl = verify_p156_generalization_soundness(tampered_expl, min_trials=8)
+    assert unsound is False
+    assert any("ASYMPTOTIC_EXPLOSION_EXCEEDED" in f for f in bad_expl)
+
+
+def test_p156_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p156_generalization_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P156 configuration"):
+        run_p156_generalization_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p156-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P156",
+                "targets": ["x_plus_1", "x2_3x_7"],
+                "source_trials_dir": "experiments/p155-baselines/trials",
+                "min_trials": 10,
+                "min_extrap_rate": 0.50,
+                "max_explosion_rate": 0.05,
+                "output_dir": str(tmp_path / "gen_runner"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p156-out.json"
+    report = run_p156_generalization_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P156"
+    assert report["verdict"] == "ACCEPTED"
+
+
+def test_p157_ablations_suite_and_soundness(tmp_path: Path):
+    from benchmarks.run_ablations import (
+        run_p157_ablations_suite,
+        verify_p157_ablations_soundness,
+    )
+
+    out_dir = tmp_path / "abl_test"
+    summary = run_p157_ablations_suite(
+        targets=["x2_3x_7"],
+        seeds=[42],
+        pop_size=20,
+        max_generations=2,
+        output_dir=out_dir,
+    )
+    assert summary["suite"] == "P157-full-cascade-gpu-ablations"
+    assert summary["total_ablations"] == 9
+    assert (out_dir / "summary_ablations.json").exists()
+
+    sound, findings = verify_p157_ablations_soundness(
+        summary, min_cascade_speedup=1.0, min_early_term_speedup=1.0, min_gpu_speedup=1.0
+    )
+    assert sound is True
+    assert findings == []
+
+    # Failure cases: missing ablations
+    tampered_missing = dict(summary)
+    tampered_missing["ablations"] = summary["ablations"][:5]
+    unsound, bad_miss = verify_p157_ablations_soundness(tampered_missing)
+    assert unsound is False
+    assert any("INSUFFICIENT_ABLATIONS" in f for f in bad_miss)
+
+    # Failure cases: wrong ruling for neural generator
+    tampered_neural = dict(summary)
+    tampered_neural["ablations"] = [
+        dict(a) if a["ablation_id"] != 3 else {**a, "keep_or_drop": "KEEP"}
+        for a in summary["ablations"]
+    ]
+    unsound, bad_neural = verify_p157_ablations_soundness(tampered_neural, min_cascade_speedup=1.0)
+    assert unsound is False
+    assert any("INVALID_NEURAL_GENERATOR_RULING" in f for f in bad_neural)
+
+
+def test_p157_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p157_ablations_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P157 configuration"):
+        run_p157_ablations_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p157-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P157",
+                "targets": ["x2_3x_7"],
+                "seeds": [42],
+                "pop_size": 20,
+                "max_generations": 2,
+                "min_cascade_speedup": 1.0,
+                "min_early_term_speedup": 1.0,
+                "min_gpu_speedup": 1.0,
+                "output_dir": str(tmp_path / "abl_runner"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p157-out.json"
+    report = run_p157_ablations_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P157"
+    assert report["verdict"] == "ACCEPTED"
+
+
+def test_p158_h1_verdict_suite_and_soundness(tmp_path: Path):
+    from benchmarks.statistical_verdict import (
+        run_p158_h1_verdict_suite,
+        verify_p158_h1_verdict_soundness,
+    )
+
+    out_dir = tmp_path / "verdict_test"
+    rep_file = tmp_path / "p158-test-report.md"
+    summary = run_p158_h1_verdict_suite(
+        targets=["x_plus_1", "x2_3x_7"],
+        seeds=[42, 101, 202, 303, 404],
+        alpha=0.05,
+        source_baselines_dir="experiments/p155-baselines",
+        source_gen_dir="experiments/p156-generalization",
+        source_abl_dir="experiments/p157-ablations",
+        output_dir=out_dir,
+        report_output_path=rep_file,
+    )
+    assert summary["suite"] == "P158-h1-statistical-verdict"
+    assert summary["overall_h1_verdict"] in ("SUPPORTED", "REJECTED")
+    assert rep_file.exists()
+    assert (out_dir / "summary_h1_verdict.json").exists()
+
+    sound, findings = verify_p158_h1_verdict_soundness(summary, alpha=0.05)
+    assert sound is True
+    assert findings == []
+
+    # Failure cases: missing report
+    tampered_rep = dict(summary)
+    tampered_rep["report_path"] = str(tmp_path / "nonexistent.md")
+    unsound, bad_rep = verify_p158_h1_verdict_soundness(tampered_rep, alpha=0.05)
+    assert unsound is False
+    assert any("MISSING_DOSSIER" in f for f in bad_rep)
+
+    # Failure cases: invalid overall verdict
+    tampered_rej = dict(summary)
+    tampered_rej["overall_h1_verdict"] = "INVALID"
+    unsound, bad_rej = verify_p158_h1_verdict_soundness(tampered_rej, alpha=0.05)
+    assert unsound is False
+    assert any("INVALID_OVERALL_VERDICT" in f for f in bad_rej)
+
+
+def test_p158_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p158_h1_verdict_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P158 configuration"):
+        run_p158_h1_verdict_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p158-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P158",
+                "targets": ["x_plus_1", "x2_3x_7"],
+                "seeds": [42, 101, 202, 303, 404],
+                "alpha": 0.05,
+                "source_baselines_dir": "experiments/p155-baselines",
+                "source_gen_dir": "experiments/p156-generalization",
+                "source_abl_dir": "experiments/p157-ablations",
+                "output_dir": str(tmp_path / "verdict_runner"),
+                "report_output_path": str(tmp_path / "report_runner.md"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p158-out.json"
+    report = run_p158_h1_verdict_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P158"
+    assert report["verdict"] == "ACCEPTED"
+
+
+def test_p159_zenodo_bundle_export_and_integrity(tmp_path: Path):
+    from scripts.export_zenodo_bundle import (
+        generate_bundle,
+        verify_zenodo_bundle_integrity,
+    )
+
+    out_bundle_dir = tmp_path / "test_bundle"
+    summary = generate_bundle(
+        output_dir=out_bundle_dir,
+        create_tar=True,
+    )
+    assert summary["status"] == "SUCCESS"
+    assert summary["total_files"] >= 50
+    assert summary["tarball_path"] is not None
+    assert Path(summary["tarball_path"]).exists()
+
+    content_dir = Path(summary["output_dir"])
+    assert (content_dir / "bundle_metadata.json").is_file()
+    assert (content_dir / "manifest-sha256.json").is_file()
+    assert (content_dir / "checksums.sha256").is_file()
+
+    # Verify integrity passes
+    sound, findings = verify_zenodo_bundle_integrity(content_dir)
+    assert sound is True
+    assert len(findings) == 0
+
+    # Tamper with a file and verify it fails
+    target_doc = content_dir / "docs/HYPOTHESIS.md"
+    if target_doc.is_file():
+        target_doc.write_text("corrupted content", encoding="utf-8")
+        sound_tampered, findings_tampered = verify_zenodo_bundle_integrity(content_dir)
+        assert sound_tampered is False
+        assert any("CHECKSUM_MISMATCH" in f for f in findings_tampered)
+
+
+def test_p159_science_matrix_audit_runner(tmp_path: Path):
+    import json
+    import pytest
+    from benchmarks.science_matrix import run_p159_reproducibility_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P159 configuration"):
+        run_p159_reproducibility_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p159-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P159",
+                "bundle_output_dir": str(tmp_path / "bundle_runner"),
+                "create_tarball": False,
+                "require_docker": False,
+                "min_bundle_files": 10,
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p159-out.json"
+    report = run_p159_reproducibility_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P159"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["bundle_summary"]["status"] == "SUCCESS"
+
+
+def test_p160_manuscript_project_and_pdf_integrity():
+    repo_root = Path(__file__).resolve().parents[1]
+    paper_dir = repo_root / "docs/paper"
+    dossier_path = repo_root / "docs/research/p160-manuscript-dossier.md"
+
+    main_tex = paper_dir / "main.tex"
+    ref_bib = paper_dir / "references.bib"
+    main_pdf = paper_dir / "main.pdf"
+    gen_fig = paper_dir / "generate_figures.py"
+
+    assert main_tex.is_file()
+    assert ref_bib.is_file()
+    assert main_pdf.is_file()
+    assert gen_fig.is_file()
+    assert dossier_path.is_file()
+
+    # Content checks
+    tex_text = main_tex.read_text(encoding="utf-8")
+    assert "EvoByte" in tex_text
+    assert "Hypothesis H1" in tex_text
+    assert r"\begin{document}" in tex_text
+    assert r"\begin{thebibliography}" in tex_text
+
+    # PDF integrity check
+    assert main_pdf.stat().st_size > 50000
+
+    # Dossier checks
+    dos_text = dossier_path.read_text(encoding="utf-8")
+    assert "Matriz de Rastreabilidade" in dos_text
+    assert "SUPPORTED" in dos_text
+
+
+def test_p160_science_matrix_audit_runner(tmp_path: Path):
+    import json
+    import pytest
+    from benchmarks.science_matrix import run_p160_manuscript_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P160 configuration"):
+        run_p160_manuscript_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p160-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P160",
+                "paper_dir": "docs/paper",
+                "dossier_path": "docs/research/p160-manuscript-dossier.md",
+                "require_pdf": True,
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p160-out.json"
+    report = run_p160_manuscript_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P160"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["manuscript_summary"]["pdf_compiled"] is True

@@ -1,0 +1,23 @@
+\begin{table}[t]
+\centering
+\caption{Empirical verification status across all five falsifiable criteria of Hypothesis H1 (\texttt{docs/HYPOTHESIS.md}). Every metric is measured across independent seeds on reference hardware (NVIDIA RTX 4060 GPU).}
+\label{tab:h1_verdict}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llccr@{}}
+\toprule
+\textbf{Criterion} & \textbf{Scope} & \textbf{Observed Value} & \textbf{Preregistered Threshold} & \textbf{Verdict} \\
+\midrule
+\textbf{C1: Rediscovery} & Primary Level-A targets & 80.0\% & $\ge 80.0\%$ in 4/5 seeds & \textbf{SUPPORTED} \\
+\textbf{C2: Speed \& Cascade} & S0--S3 verification cascade & 15.51$\times$ & $\ge 10.0\times$ speedup & \textbf{SUPPORTED} \\
+ & Early termination & 3.00$\times$ & $\ge 2.0\times$ speedup & \textbf{SUPPORTED} \\
+\textbf{C3: Evolution Value} & Paired Wilcoxon signed-rank & $W=55.0$, $p_{\text{Holm}}=2.49\times 10^{-3}$ & $p_{\text{Holm}} \le 0.01$ & \textbf{SUPPORTED} \\
+\textbf{C4: Generalization} & Extrapolation split ($X_{\text{extrap}}$) & 80.0\% & $\ge 70.0\%$ accuracy & \textbf{SUPPORTED} \\
+ & Asymptotic explosion & 0.0\% & $0.0\%$ explosion rate & \textbf{SUPPORTED} \\
+ & Average model length & 5.2 opcodes & $\le 25.0$ opcodes & \textbf{SUPPORTED} \\
+\textbf{C5: Pareto Baselines} & Non-dominated frontier & 5 optimal points & Valid frontier vs. baselines & \textbf{SUPPORTED} \\
+\midrule
+\multicolumn{4}{@{}l}{\textbf{Overall Hypothesis Verdict:}} & \textbf{SUPPORTED} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

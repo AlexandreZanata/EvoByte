@@ -1,0 +1,11 @@
+{
+  "phase": "P151",
+  "seed": 42,
+  "device": "cpu",
+  "alpha": 0.01,
+  "min_total_instances": 100,
+  "min_wins": 80,
+  "partition_path": "experiments/p151-blind-split.json",
+  "expected_partition_checksum": "3edae916f6c5ae7248f486a14114938d76e625cb2f17626d771cb733defbec35",
+  "require_clean_tree": true
+}

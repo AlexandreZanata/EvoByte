@@ -1,0 +1,17 @@
+{
+  "phase": "P154",
+  "targets": ["x_plus_1", "x2_3x_7"],
+  "budgets": ["0.5s", "1.5s"],
+  "seeds": [
+    42, 101, 202, 303, 404, 505, 606, 707, 808, 909,
+    1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010
+  ],
+  "min_trials": 20,
+  "min_primary_rate": 0.70,
+  "min_cvps": 500.0,
+  "max_vram_mb": 6000.0,
+  "pop_size": 300,
+  "max_generations": 40,
+  "output_dir": "experiments/p154-matrix",
+  "require_clean_tree": true
+}

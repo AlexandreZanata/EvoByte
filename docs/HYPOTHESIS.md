@@ -85,3 +85,5 @@ a disclosed nontrivial opcode/length distribution and an explicit uniqueness
 window. P20 also reports full-cascade and end-to-end throughput plus quality.
 This target is not a promise, a point-evaluation count, or a replacement for
 H1 rediscovery/generalization. A missed goal must be reported as such.
+
+> **Status note (D040, P161):** H1 is NOT SUPPORTED by the P155–P158 data (classical SR dominates; PySR not run; budgets 0.4–0.8 s). The P158 verdict is retracted.

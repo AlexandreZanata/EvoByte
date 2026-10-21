@@ -16,11 +16,13 @@ from benchmarks.science_matrix import (
     run_p118_sum_free_density_audit,
     run_p119_additive_blind_confirmation_audit,
     run_p120_additive_grand_campaign_audit,
+    run_p149_constructive_certificates_audit,
 )
 from evobyte.additive import (
     DEFAULT_ADDITIVE_ENERGY_LEAN_FILE,
     DEFAULT_ADDITIVE_TACTIC_LEAN_FILE,
     DEFAULT_ERDOS_TURAN_BASES_LEAN_FILE,
+    DEFAULT_EXTREMAL_CONSTRUCTIVE_CERTIFICATES_LEAN_FILE,
     DEFAULT_LEAN_FILE,
     DEFAULT_SIDON_THEOREMS_LEAN_FILE,
     DEFAULT_SUM_FREE_THEOREMS_LEAN_FILE,
@@ -29,9 +31,11 @@ from evobyte.additive import (
     audit_additive_energy_balog_szemeredi,
     audit_additive_norm_metatactic,
     audit_erdos_turan_additive_bases,
+    audit_extremal_constructive_certificates_baseline,
     audit_sidon_sets_extremal_search,
     audit_sum_free_schnirelmann_density,
     bose_chowla_sidon_set,
+    compile_extremal_constructive_certificates_lean,
     doubling_constant,
     erdos_turan_sidon_upper_bound,
     extract_bsg_popular_difference_subset,
@@ -39,6 +43,7 @@ from evobyte.additive import (
     generate_additive_energy_theorems_lean_code,
     generate_additive_tactic_theorems_lean_code,
     generate_erdos_turan_bases_theorems_lean_code,
+    generate_extremal_sidon_certificates,
     generate_sidon_sets_theorems_lean_code,
     generate_sum_free_theorems_lean_code,
     is_b2g_set,
@@ -62,6 +67,7 @@ from evobyte.additive import (
     verify_additive_norm_soundness,
     verify_cauchy_schwarz_additive_bound,
     verify_erdos_turan_bases_soundness,
+    verify_extremal_constructive_certificates_baseline_soundness,
     verify_minkowski_monotonicity_and_algebra,
     verify_plunnecke_ruzsa_bound,
     verify_schnirelmann_mann_inequality,
@@ -729,5 +735,81 @@ def test_p120_audit_smoke(tmp_path: Path):
     assert report["total_modules"] == 32
     assert report["total_theorems"] == 2392
     assert report["additive_theorems"] == 463
+    assert report["has_sorry"] is False
+    assert report["lake_passed"] is True
+
+
+def test_p149_sidon_generator_and_certificates():
+    certs_data = generate_extremal_sidon_certificates()
+    assert certs_data["total_certificates"] == 50
+    assert certs_data["all_valid"] is True
+    assert (
+        certs_data["checksum"] == "b95c5d8541c08cce8f646de35bf05febf42d280369b39962c64254bf56d19a64"
+    )
+    families = {c["family"] for c in certs_data["certificates"]}
+    assert {"ruzsa", "mian_chowla", "singer", "bnb_dense"} <= families
+    for c in certs_data["certificates"]:
+        assert c["is_sidon"] is True
+        assert c["max_element"] <= 2000
+
+
+def test_p149_constructive_soundness():
+    audit_data = audit_extremal_constructive_certificates_baseline(verify_lake=False)
+    assert audit_data["total_theorems"] == 114
+    assert audit_data["has_sorry"] is False
+    assert audit_data["certificates_summary"]["all_valid"] is True
+
+    valid, findings = verify_extremal_constructive_certificates_baseline_soundness(audit_data)
+    assert valid is True
+    assert findings == []
+
+    # Test tampering detection on sorry
+    corrupted_sorry = dict(audit_data, has_sorry=True)
+    valid, findings = verify_extremal_constructive_certificates_baseline_soundness(corrupted_sorry)
+    assert valid is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    # Test tampering detection on invalid certificates
+    corrupted_certs = dict(audit_data, certificates_summary={"all_valid": False})
+    valid, findings = verify_extremal_constructive_certificates_baseline_soundness(corrupted_certs)
+    assert valid is False
+    assert any("INVALID_SIDON_CERTIFICATES" in f for f in findings)
+
+    # Test insufficient theorems
+    corrupted_thms = dict(audit_data, total_theorems=10)
+    valid, findings = verify_extremal_constructive_certificates_baseline_soundness(corrupted_thms)
+    assert valid is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+
+def test_p149_acceptance_rejects_wrong_phase(tmp_path: Path):
+    cfg_p = tmp_path / "bad-p149-cfg.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P149 configuration"):
+        run_p149_constructive_certificates_audit(cfg_p, tmp_path / "out.json")
+
+
+@needs_lean
+def test_p149_audit_smoke(tmp_path: Path):
+    cfg = {
+        "phase": "P149",
+        "seed": 42,
+        "device": "cpu",
+        "project_dir": "lean_proofs",
+        "generated_dir": "lean_proofs/Generated",
+        "min_theorems": 100,
+        "verify_lake": True,
+        "allow_dirty": True,
+        "require_clean_tree": False,
+    }
+    cfg_p = tmp_path / "p149-smoke-config.json"
+    cfg_p.write_text(json.dumps(cfg))
+    out_p = tmp_path / "p149-out.json"
+
+    report = run_p149_constructive_certificates_audit(cfg_p, out_p)
+    assert out_p.exists()
+    assert report["phase"] == "P149"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_theorems"] == 114
     assert report["has_sorry"] is False
     assert report["lake_passed"] is True

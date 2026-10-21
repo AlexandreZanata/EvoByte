@@ -1,6 +1,6 @@
 # P141 — Sistemas de recobrimento de congruências e teorema de Hough do módulo mínimo
 
-**Status:** Proposed.
+**Status:** Done.
 **Dependência:** P140 concluída; branch a partir de `codex/p140-discrepancy-norm-metatactic`.
 **Owner:** agente executor; revisor formal/matemático nos gates indicados.
 **Pré-requisito:** P140 concluída com meta-tática `discrepancy_norm` funcional e testada.

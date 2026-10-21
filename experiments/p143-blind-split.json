@@ -1,0 +1,1704 @@
+{
+  "alpha": 0.01,
+  "checksum": "f4cc191c4744929b7cd292e28882b86286e9e1e0f1c21b667cd9fce60358a2f7",
+  "count_per_track": 25,
+  "description": "Sealed blind partition of 100 discrepancy and covering systems instances (Erd\u0151s Discrepancy Problem, Roth-Spencer AP Bounds, Covering Systems, Primitive Sets) for P143 confirmation under Bonferroni-Holm family-wise error rate control (alpha=0.01).",
+  "leakage_detected": false,
+  "seed": 143,
+  "split_id": "p143-discrepancy-covering-blind-partition-v1",
+  "total_instances": 100,
+  "tracks": {
+    "covering_systems": {
+      "instances": [
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              7,
+              12
+            ]
+          ],
+          "index": 0,
+          "instance_id": "P143_COV_01",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              6
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              8,
+              12
+            ],
+            [
+              0,
+              24
+            ]
+          ],
+          "index": 1,
+          "instance_id": "P143_COV_02",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              9,
+              12
+            ]
+          ],
+          "index": 2,
+          "instance_id": "P143_COV_03",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              6,
+              8
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              2,
+              24
+            ]
+          ],
+          "index": 3,
+          "instance_id": "P143_COV_04",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              3,
+              6
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          "index": 4,
+          "instance_id": "P143_COV_05",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              0,
+              8
+            ],
+            [
+              0,
+              12
+            ],
+            [
+              4,
+              24
+            ]
+          ],
+          "index": 5,
+          "instance_id": "P143_COV_06",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              1,
+              12
+            ]
+          ],
+          "index": 6,
+          "instance_id": "P143_COV_07",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              0,
+              6
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              2,
+              12
+            ],
+            [
+              6,
+              24
+            ]
+          ],
+          "index": 7,
+          "instance_id": "P143_COV_08",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              3,
+              12
+            ]
+          ],
+          "index": 8,
+          "instance_id": "P143_COV_09",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              4,
+              12
+            ],
+            [
+              8,
+              24
+            ]
+          ],
+          "index": 9,
+          "instance_id": "P143_COV_10",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              6
+            ],
+            [
+              5,
+              12
+            ]
+          ],
+          "index": 10,
+          "instance_id": "P143_COV_11",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              6,
+              8
+            ],
+            [
+              6,
+              12
+            ],
+            [
+              10,
+              24
+            ]
+          ],
+          "index": 11,
+          "instance_id": "P143_COV_12",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              7,
+              12
+            ]
+          ],
+          "index": 12,
+          "instance_id": "P143_COV_13",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              6
+            ],
+            [
+              0,
+              8
+            ],
+            [
+              8,
+              12
+            ],
+            [
+              12,
+              24
+            ]
+          ],
+          "index": 13,
+          "instance_id": "P143_COV_14",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              9,
+              12
+            ]
+          ],
+          "index": 14,
+          "instance_id": "P143_COV_15",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              10,
+              12
+            ],
+            [
+              14,
+              24
+            ]
+          ],
+          "index": 15,
+          "instance_id": "P143_COV_16",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              3,
+              6
+            ],
+            [
+              11,
+              12
+            ]
+          ],
+          "index": 16,
+          "instance_id": "P143_COV_17",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              4,
+              8
+            ],
+            [
+              0,
+              12
+            ],
+            [
+              16,
+              24
+            ]
+          ],
+          "index": 17,
+          "instance_id": "P143_COV_18",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              1,
+              12
+            ]
+          ],
+          "index": 18,
+          "instance_id": "P143_COV_19",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              0,
+              6
+            ],
+            [
+              6,
+              8
+            ],
+            [
+              2,
+              12
+            ],
+            [
+              18,
+              24
+            ]
+          ],
+          "index": 19,
+          "instance_id": "P143_COV_20",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              3,
+              12
+            ]
+          ],
+          "index": 20,
+          "instance_id": "P143_COV_21",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              2,
+              6
+            ],
+            [
+              0,
+              8
+            ],
+            [
+              4,
+              12
+            ],
+            [
+              20,
+              24
+            ]
+          ],
+          "index": 21,
+          "instance_id": "P143_COV_22",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              6
+            ],
+            [
+              5,
+              12
+            ]
+          ],
+          "index": 22,
+          "instance_id": "P143_COV_23",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              2,
+              8
+            ],
+            [
+              6,
+              12
+            ],
+            [
+              22,
+              24
+            ]
+          ],
+          "index": 23,
+          "instance_id": "P143_COV_24",
+          "moduli_count": 7,
+          "track": "covering_systems"
+        },
+        {
+          "congruences": [
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              5,
+              6
+            ],
+            [
+              7,
+              12
+            ]
+          ],
+          "index": 24,
+          "instance_id": "P143_COV_25",
+          "moduli_count": 5,
+          "track": "covering_systems"
+        }
+      ],
+      "name": "Covering Systems of Congruences with Distinct Moduli"
+    },
+    "erdos_discrepancy": {
+      "instances": [
+        {
+          "d_step": 1,
+          "index": 0,
+          "instance_id": "P143_EDP_01",
+          "length": 12,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 2,
+          "index": 1,
+          "instance_id": "P143_EDP_02",
+          "length": 14,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 3,
+          "index": 2,
+          "instance_id": "P143_EDP_03",
+          "length": 16,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 4,
+          "index": 3,
+          "instance_id": "P143_EDP_04",
+          "length": 18,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 1,
+          "index": 4,
+          "instance_id": "P143_EDP_05",
+          "length": 20,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 2,
+          "index": 5,
+          "instance_id": "P143_EDP_06",
+          "length": 22,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 3,
+          "index": 6,
+          "instance_id": "P143_EDP_07",
+          "length": 24,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 4,
+          "index": 7,
+          "instance_id": "P143_EDP_08",
+          "length": 26,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 1,
+          "index": 8,
+          "instance_id": "P143_EDP_09",
+          "length": 28,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 2,
+          "index": 9,
+          "instance_id": "P143_EDP_10",
+          "length": 30,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 3,
+          "index": 10,
+          "instance_id": "P143_EDP_11",
+          "length": 32,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 4,
+          "index": 11,
+          "instance_id": "P143_EDP_12",
+          "length": 34,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 1,
+          "index": 12,
+          "instance_id": "P143_EDP_13",
+          "length": 36,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 2,
+          "index": 13,
+          "instance_id": "P143_EDP_14",
+          "length": 38,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 3,
+          "index": 14,
+          "instance_id": "P143_EDP_15",
+          "length": 40,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 4,
+          "index": 15,
+          "instance_id": "P143_EDP_16",
+          "length": 42,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 1,
+          "index": 16,
+          "instance_id": "P143_EDP_17",
+          "length": 44,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 2,
+          "index": 17,
+          "instance_id": "P143_EDP_18",
+          "length": 46,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 3,
+          "index": 18,
+          "instance_id": "P143_EDP_19",
+          "length": 48,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 4,
+          "index": 19,
+          "instance_id": "P143_EDP_20",
+          "length": 50,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 1,
+          "index": 20,
+          "instance_id": "P143_EDP_21",
+          "length": 52,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 2,
+          "index": 21,
+          "instance_id": "P143_EDP_22",
+          "length": 54,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 3,
+          "index": 22,
+          "instance_id": "P143_EDP_23",
+          "length": 56,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 4,
+          "index": 23,
+          "instance_id": "P143_EDP_24",
+          "length": 58,
+          "prime_signs": {
+            "2": -1,
+            "3": -1,
+            "5": -1,
+            "7": -1,
+            "11": -1,
+            "13": -1,
+            "17": -1,
+            "19": -1,
+            "23": -1,
+            "29": -1
+          },
+          "track": "erdos_discrepancy"
+        },
+        {
+          "d_step": 1,
+          "index": 24,
+          "instance_id": "P143_EDP_25",
+          "length": 60,
+          "prime_signs": {
+            "2": -1,
+            "3": 1,
+            "5": 1,
+            "7": 1,
+            "11": 1,
+            "13": 1,
+            "17": 1,
+            "19": 1,
+            "23": 1,
+            "29": 1
+          },
+          "track": "erdos_discrepancy"
+        }
+      ],
+      "name": "Erd\u0151s Discrepancy Problem & Multiplicative Prefixes"
+    },
+    "primitive_sets": {
+      "instances": [
+        {
+          "index": 0,
+          "instance_id": "P143_PRM_01",
+          "is_interval": true,
+          "n": 5,
+          "primes_cutoff": 15,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 1,
+          "instance_id": "P143_PRM_02",
+          "is_interval": false,
+          "n": 7,
+          "primes_cutoff": 18,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 2,
+          "instance_id": "P143_PRM_03",
+          "is_interval": true,
+          "n": 9,
+          "primes_cutoff": 21,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 3,
+          "instance_id": "P143_PRM_04",
+          "is_interval": false,
+          "n": 11,
+          "primes_cutoff": 24,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 4,
+          "instance_id": "P143_PRM_05",
+          "is_interval": true,
+          "n": 13,
+          "primes_cutoff": 27,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 5,
+          "instance_id": "P143_PRM_06",
+          "is_interval": false,
+          "n": 15,
+          "primes_cutoff": 30,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 6,
+          "instance_id": "P143_PRM_07",
+          "is_interval": true,
+          "n": 17,
+          "primes_cutoff": 33,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 7,
+          "instance_id": "P143_PRM_08",
+          "is_interval": false,
+          "n": 19,
+          "primes_cutoff": 36,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 8,
+          "instance_id": "P143_PRM_09",
+          "is_interval": true,
+          "n": 21,
+          "primes_cutoff": 39,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 9,
+          "instance_id": "P143_PRM_10",
+          "is_interval": false,
+          "n": 23,
+          "primes_cutoff": 42,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 10,
+          "instance_id": "P143_PRM_11",
+          "is_interval": true,
+          "n": 25,
+          "primes_cutoff": 45,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 11,
+          "instance_id": "P143_PRM_12",
+          "is_interval": false,
+          "n": 27,
+          "primes_cutoff": 48,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 12,
+          "instance_id": "P143_PRM_13",
+          "is_interval": true,
+          "n": 29,
+          "primes_cutoff": 51,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 13,
+          "instance_id": "P143_PRM_14",
+          "is_interval": false,
+          "n": 31,
+          "primes_cutoff": 54,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 14,
+          "instance_id": "P143_PRM_15",
+          "is_interval": true,
+          "n": 33,
+          "primes_cutoff": 57,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 15,
+          "instance_id": "P143_PRM_16",
+          "is_interval": false,
+          "n": 35,
+          "primes_cutoff": 60,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 16,
+          "instance_id": "P143_PRM_17",
+          "is_interval": true,
+          "n": 37,
+          "primes_cutoff": 63,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 17,
+          "instance_id": "P143_PRM_18",
+          "is_interval": false,
+          "n": 39,
+          "primes_cutoff": 66,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 18,
+          "instance_id": "P143_PRM_19",
+          "is_interval": true,
+          "n": 41,
+          "primes_cutoff": 69,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 19,
+          "instance_id": "P143_PRM_20",
+          "is_interval": false,
+          "n": 43,
+          "primes_cutoff": 72,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 20,
+          "instance_id": "P143_PRM_21",
+          "is_interval": true,
+          "n": 45,
+          "primes_cutoff": 75,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 21,
+          "instance_id": "P143_PRM_22",
+          "is_interval": false,
+          "n": 47,
+          "primes_cutoff": 78,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 22,
+          "instance_id": "P143_PRM_23",
+          "is_interval": true,
+          "n": 49,
+          "primes_cutoff": 81,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 23,
+          "instance_id": "P143_PRM_24",
+          "is_interval": false,
+          "n": 51,
+          "primes_cutoff": 84,
+          "track": "primitive_sets"
+        },
+        {
+          "index": 24,
+          "instance_id": "P143_PRM_25",
+          "is_interval": true,
+          "n": 53,
+          "primes_cutoff": 87,
+          "track": "primitive_sets"
+        }
+      ],
+      "name": "Primitive Sets Antichains & Lichtman-Erd\u0151s Series Bounds"
+    },
+    "roth_spencer_progressions": {
+      "instances": [
+        {
+          "c_roth": 0.25,
+          "index": 0,
+          "instance_id": "P143_RSP_01",
+          "n": 16,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 1,
+          "instance_id": "P143_RSP_02",
+          "n": 20,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 2,
+          "instance_id": "P143_RSP_03",
+          "n": 24,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 3,
+          "instance_id": "P143_RSP_04",
+          "n": 28,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 4,
+          "instance_id": "P143_RSP_05",
+          "n": 32,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 5,
+          "instance_id": "P143_RSP_06",
+          "n": 36,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 6,
+          "instance_id": "P143_RSP_07",
+          "n": 40,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 7,
+          "instance_id": "P143_RSP_08",
+          "n": 44,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 8,
+          "instance_id": "P143_RSP_09",
+          "n": 48,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 9,
+          "instance_id": "P143_RSP_10",
+          "n": 52,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 10,
+          "instance_id": "P143_RSP_11",
+          "n": 56,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 11,
+          "instance_id": "P143_RSP_12",
+          "n": 60,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 12,
+          "instance_id": "P143_RSP_13",
+          "n": 64,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 13,
+          "instance_id": "P143_RSP_14",
+          "n": 68,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 14,
+          "instance_id": "P143_RSP_15",
+          "n": 72,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 15,
+          "instance_id": "P143_RSP_16",
+          "n": 76,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 16,
+          "instance_id": "P143_RSP_17",
+          "n": 80,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 17,
+          "instance_id": "P143_RSP_18",
+          "n": 84,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 18,
+          "instance_id": "P143_RSP_19",
+          "n": 88,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 19,
+          "instance_id": "P143_RSP_20",
+          "n": 92,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 20,
+          "instance_id": "P143_RSP_21",
+          "n": 96,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 21,
+          "instance_id": "P143_RSP_22",
+          "n": 100,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 22,
+          "instance_id": "P143_RSP_23",
+          "n": 104,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 23,
+          "instance_id": "P143_RSP_24",
+          "n": 108,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        },
+        {
+          "c_roth": 0.25,
+          "index": 24,
+          "instance_id": "P143_RSP_25",
+          "n": 112,
+          "sigma_spencer": 6.0,
+          "track": "roth_spencer_progressions"
+        }
+      ],
+      "name": "Roth-Spencer Discrepancy on Arithmetic Progressions"
+    }
+  },
+  "zero_leakage_verified": true
+}

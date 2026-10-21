@@ -46,3 +46,10 @@ import Generated.HadwigerNelsonColoringTheorems
 import Generated.DiscrepancyCoveringSignatures
 import Generated.ErdosDiscrepancyTheorems
 import Generated.RothSpencerDiscrepancyTheorems
+import Generated.DiscrepancyTacticTheorems
+import Generated.CoveringSystemsTheorems
+import Generated.PrimitiveSetsDivisorsTheorems
+import Generated.SchinzelHighModuliSignatures
+import Generated.SchinzelQuadraticRingSieveTheorems
+import Generated.SchinzelHighModuliTheorems
+import Generated.ExtremalConstructiveCertificates

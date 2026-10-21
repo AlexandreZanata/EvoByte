@@ -1,0 +1,14 @@
+{
+  "phase": "P143",
+  "acceptance_phase": "P143",
+  "seed": 143,
+  "device": "cpu",
+  "alpha": 0.01,
+  "count_per_track": 25,
+  "min_total_instances": 100,
+  "min_wins": 80,
+  "split_path": "experiments/p143-blind-split.json",
+  "split_sha256": "a452a8ccf8591bd4afe2bd52a50d2e7dcc95958e92cb25160d111f7c3be01065",
+  "require_clean_tree": true,
+  "allow_dirty": false
+}

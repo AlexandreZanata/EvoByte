@@ -1160,3 +1160,610 @@ def test_p95_confirmation_rejects_wrong_phase(tmp_path: Path):
     cfg_p.write_text(json.dumps({"phase": "INVALID"}))
     with pytest.raises(ValueError, match="not a P95 configuration"):
         run_p95_extreme_scale_audit(cfg_p, tmp_path / "out.json")
+
+
+# ==============================================================================
+# P145 TESTS: SCHINZEL HIGH-ORDER MODULI CONGRUENCE DATABASE & RESISTANT ORBITS
+# ==============================================================================
+
+
+def test_p145_schinzel_high_moduli_database() -> None:
+    """Test P145 Schinzel high moduli database construction, lifting towers, and soundness."""
+    from evobyte.algebraic import (
+        build_schinzel_high_moduli_database,
+        compute_schinzel_coprime_residues,
+        compute_schinzel_quadratic_residues,
+        verify_schinzel_high_moduli_database_soundness,
+    )
+
+    qr840 = compute_schinzel_quadratic_residues(840)
+    assert len(qr840) == 6
+    assert qr840 == [1, 121, 169, 289, 361, 529]
+
+    qr2520 = compute_schinzel_quadratic_residues(2520)
+    assert len(qr2520) == 18
+
+    qr5040 = compute_schinzel_quadratic_residues(5040)
+    assert len(qr5040) == 36
+
+    db = build_schinzel_high_moduli_database()
+    assert len(db["pairs"]) == 12
+    assert db["lifting_towers"]["2520_to_840_valid"] is True
+    assert db["lifting_towers"]["5040_to_2520_valid"] is True
+
+    sound, findings = verify_schinzel_high_moduli_database_soundness(db)
+    assert sound is True
+    assert findings == []
+
+
+def test_p145_schinzel_high_moduli_baseline_audit() -> None:
+    """Test P145 formal module audit, theorem count (>= 80), and absence of sorry."""
+    from evobyte.algebraic import (
+        audit_schinzel_high_moduli_baseline,
+        verify_schinzel_high_moduli_baseline_soundness,
+    )
+
+    audit = audit_schinzel_high_moduli_baseline(verify_lake=False)
+    assert audit["total_theorems"] >= 80
+    assert audit["has_sorry"] is False
+    assert audit["database_sound"] is True
+    assert audit["sha256"] == "d260059205969979f4e0c5b25718502c8cb4d7c8a78f5bb9955c68d6fba770aa"
+
+    sound, findings = verify_schinzel_high_moduli_baseline_soundness(audit, min_theorems=80)
+    assert sound is True
+    assert findings == []
+
+
+def test_p145_soundness_validator_rejections() -> None:
+    """Test that P145 soundness validator rejects defective formal baselines."""
+    from evobyte.algebraic import verify_schinzel_high_moduli_baseline_soundness
+
+    # Defect: sorry present
+    bad_audit = {
+        "total_theorems": 100,
+        "has_sorry": True,
+        "database_sound": True,
+        "lake_passed": True,
+    }
+    sound, findings = verify_schinzel_high_moduli_baseline_soundness(bad_audit)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    # Defect: insufficient theorems
+    low_thms = {
+        "total_theorems": 20,
+        "has_sorry": False,
+        "database_sound": True,
+        "lake_passed": True,
+    }
+    sound, findings = verify_schinzel_high_moduli_baseline_soundness(low_thms, min_theorems=80)
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    # Defect: database unsound
+    bad_db = {
+        "total_theorems": 100,
+        "has_sorry": False,
+        "database_sound": False,
+        "database_findings": ["TEST_CORRUPTION"],
+        "lake_passed": True,
+    }
+    sound, findings = verify_schinzel_high_moduli_baseline_soundness(bad_db)
+    assert sound is False
+    assert "TEST_CORRUPTION" in findings
+
+
+def test_p145_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P145 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p145_schinzel_high_moduli_audit
+
+    cfg_p = tmp_path / "bad-p145.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P145 configuration"):
+        run_p145_schinzel_high_moduli_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p145_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P145 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p145_schinzel_high_moduli_audit
+
+    cfg_file = repo_root / "experiments/p145-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p145-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p145-smoke-out.json"
+
+    report = run_p145_schinzel_high_moduli_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P145"
+    assert report["total_theorems"] >= 80
+    assert report["has_sorry"] is False
+    assert report["database_sound"] is True
+    assert out_file.exists()
+
+
+def test_accelerated_schinzel_quadratic_sieve() -> None:
+    """Test accelerated quadratic sieve for Schinzel resistant instances across numerators."""
+    from evobyte.algebraic import accelerated_schinzel_quadratic_sieve
+
+    # Invalid inputs
+    assert accelerated_schinzel_quadratic_sieve(1, a=5)[0] is None
+    assert accelerated_schinzel_quadratic_sieve(10, a=0)[0] is None
+
+    # Test resistant instances for a in {5, 6, 7, 8} with M=840
+    test_cases = [
+        (840 * 1 + 1, 5),
+        (840 * 1 + 121, 5),
+        (840 * 1 + 1, 6),
+        (840 * 1 + 121, 6),
+        (840 * 1 + 1, 7),
+        (840 * 1 + 121, 7),
+        (840 * 1 + 1, 8),
+        (840 * 1 + 121, 8),
+    ]
+    for n, a in test_cases:
+        sol, telemetry = accelerated_schinzel_quadratic_sieve(n, a=a, max_x_steps=50)
+        assert sol is not None, f"Failed to solve for a={a}, n={n}"
+        x, y, z = sol
+        assert x > 0 and y > 0 and z > 0
+        assert a * x * y * z == n * (x * y + y * z + z * x)
+        assert telemetry["verified"] is True
+        assert telemetry["modular_pruned"] >= 0
+
+
+def test_p146_soundness_and_lake() -> None:
+    """Test soundness verification and error detection for P146 baseline audit."""
+    from evobyte.algebraic import (
+        audit_schinzel_quadratic_sieve_baseline,
+        verify_schinzel_quadratic_sieve_baseline_soundness,
+    )
+
+    audit_res = audit_schinzel_quadratic_sieve_baseline(verify_lake=False)
+    assert audit_res["total_theorems"] >= 80
+    assert audit_res["has_sorry"] is False
+    assert audit_res["all_resistant_solved"] is True
+    assert audit_res["all_solutions_valid"] is True
+
+    # Test error detection
+    corrupted = dict(audit_res)
+    corrupted["has_sorry"] = True
+    sound, findings = verify_schinzel_quadratic_sieve_baseline_soundness(corrupted)
+    assert sound is False
+    assert any("SORRY_DETECTED" in f for f in findings)
+
+    corrupted_thms = dict(audit_res)
+    corrupted_thms["total_theorems"] = 10
+    sound, findings = verify_schinzel_quadratic_sieve_baseline_soundness(
+        corrupted_thms, min_theorems=80
+    )
+    assert sound is False
+    assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
+
+    corrupted_unsolved = dict(audit_res)
+    corrupted_unsolved["all_resistant_solved"] = False
+    sound, findings = verify_schinzel_quadratic_sieve_baseline_soundness(corrupted_unsolved)
+    assert sound is False
+    assert any("UNSOLVED_RESISTANT_INSTANCES" in f for f in findings)
+
+
+def test_p146_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P146 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p146_schinzel_quadratic_sieve_audit
+
+    cfg_p = tmp_path / "bad-p146.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P146 configuration"):
+        run_p146_schinzel_quadratic_sieve_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p146_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P146 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p146_schinzel_quadratic_sieve_audit
+
+    cfg_file = repo_root / "experiments/p146-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p146-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p146-smoke-out.json"
+
+    report = run_p146_schinzel_quadratic_sieve_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P146"
+    assert report["total_theorems"] >= 80
+    assert report["has_sorry"] is False
+    assert report["all_resistant_solved"] is True
+    assert report["all_solutions_valid"] is True
+    assert out_file.exists()
+
+
+def test_synthesize_polynomial_identity_for_class() -> None:
+    """Test synthesis of exact parametric polynomial identities in Q[k]."""
+    from evobyte.algebraic import synthesize_polynomial_identity_for_class
+
+    res5 = synthesize_polynomial_identity_for_class(a=5, M=840, r=1, k0=1)
+    assert res5 is not None
+    assert res5["verified_algebraic"] is True
+    assert res5["strictly_ordered"] is True
+    assert res5["degrees"] == [1, 2, 3]
+    assert len(res5["samples"]) == 4
+
+    res7 = synthesize_polynomial_identity_for_class(a=7, M=840, r=121, k0=1)
+    assert res7 is not None
+    assert res7["verified_algebraic"] is True
+    assert res7["strictly_ordered"] is True
+
+
+def test_p147_database_and_soundness() -> None:
+    """Test soundness verification and error detection for P147 baseline audit."""
+    from evobyte.algebraic import (
+        synthesize_schinzel_polynomial_database,
+        verify_schinzel_polynomial_identity_synthesis_baseline_soundness,
+    )
+
+    db = synthesize_schinzel_polynomial_database(max_classes_per_pair=2)
+    assert db["total_synthesized"] >= 20
+    assert db["all_algebraic_valid"] is True
+    assert db["all_strictly_ordered"] is True
+
+    sound, findings = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
+        db, min_identities=20
+    )
+    assert sound is True
+    assert findings == []
+
+    # Test error detection
+    corrupted_alg = dict(db)
+    corrupted_alg["all_algebraic_valid"] = False
+    s_alg, f_alg = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(corrupted_alg)
+    assert s_alg is False
+    assert any("INVALID_ALGEBRAIC_IDENTITIES" in f for f in f_alg)
+
+    corrupted_ord = dict(db)
+    corrupted_ord["all_strictly_ordered"] = False
+    s_ord, f_ord = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(corrupted_ord)
+    assert s_ord is False
+    assert any("DEGENERATE_OR_DISORDERED_POLYNOMIALS" in f for f in f_ord)
+
+    corrupted_count = dict(db)
+    corrupted_count["total_synthesized"] = 5
+    s_cnt, f_cnt = verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
+        corrupted_count, min_identities=20
+    )
+    assert s_cnt is False
+    assert any("INSUFFICIENT_IDENTITIES" in f for f in f_cnt)
+
+
+def test_p147_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P147 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p147_polynomial_identity_synthesis_audit
+
+    cfg_p = tmp_path / "bad-p147.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P147 configuration"):
+        run_p147_polynomial_identity_synthesis_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p147_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P147 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p147_polynomial_identity_synthesis_audit
+
+    cfg_file = repo_root / "experiments/p147-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["max_classes_per_pair"] = 1
+    cfg_data["min_identities"] = 5
+    cfg_data["expected_checksum"] = None
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p147-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p147-smoke-out.json"
+
+    report = run_p147_polynomial_identity_synthesis_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P147"
+    assert report["total_synthesized"] >= 5
+    assert report["all_algebraic_valid"] is True
+    assert report["all_strictly_ordered"] is True
+    assert out_file.exists()
+
+
+def test_p148_compiler_and_theorems() -> None:
+    """Test synthesis and compilation of P148 Lean 4 module."""
+    from evobyte.formal_bridge import compile_schinzel_high_moduli_theorems_module
+
+    res = compile_schinzel_high_moduli_theorems_module(max_classes_per_pair=5)
+    assert res["total_theorems"] >= 100
+    assert res["has_sorry"] is False
+    assert Path(res["path"]).exists()
+
+
+def test_p148_soundness_and_lake() -> None:
+    """Test soundness verification and error detection for P148 certification baseline audit."""
+    from evobyte.formal_bridge import (
+        audit_schinzel_high_moduli_certification_baseline,
+        verify_schinzel_high_moduli_certification_baseline_soundness,
+    )
+
+    audit_res = audit_schinzel_high_moduli_certification_baseline(verify_lake=False)
+    assert audit_res["total_theorems"] >= 100
+    assert audit_res["has_sorry"] is False
+
+    sound, findings = verify_schinzel_high_moduli_certification_baseline_soundness(
+        audit_res, min_theorems=100
+    )
+    assert sound is True
+    assert findings == []
+
+    # Test error detection
+    corrupted = dict(audit_res)
+    corrupted["has_sorry"] = True
+    s, f = verify_schinzel_high_moduli_certification_baseline_soundness(corrupted)
+    assert s is False
+    assert any("SORRY_DETECTED" in x for x in f)
+
+    corrupted_thms = dict(audit_res)
+    corrupted_thms["total_theorems"] = 10
+    s_thms, f_thms = verify_schinzel_high_moduli_certification_baseline_soundness(
+        corrupted_thms, min_theorems=100
+    )
+    assert s_thms is False
+    assert any("INSUFFICIENT_THEOREMS" in x for x in f_thms)
+
+    corrupted_lake = dict(audit_res)
+    corrupted_lake["lake_passed"] = False
+    s_lake, f_lake = verify_schinzel_high_moduli_certification_baseline_soundness(corrupted_lake)
+    assert s_lake is False
+    assert any("LAKE_BUILD_FAILED" in x for x in f_lake)
+
+
+def test_p148_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P148 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p148_schinzel_lean4_certification_audit
+
+    cfg_p = tmp_path / "bad-p148.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P148 configuration"):
+        run_p148_schinzel_lean4_certification_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p148_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P148 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p148_schinzel_lean4_certification_audit
+
+    cfg_file = repo_root / "experiments/p148-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p148-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p148-smoke-out.json"
+
+    report = run_p148_schinzel_lean4_certification_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P148"
+    assert report["total_theorems"] >= 100
+    assert report["has_sorry"] is False
+    assert out_file.exists()
+
+
+def test_p150_corpora_and_classification() -> None:
+    """Test P150 world literature corpora index and classification taxonomy."""
+    from evobyte.algebraic import build_world_literature_corpora, classify_instance_novelty
+
+    corpora = build_world_literature_corpora()
+    assert "corpora" in corpora
+    indexed = corpora["corpora"]
+    for ref in [
+        "Erdos-Straus-1948",
+        "Schinzel-Sierpinski-1956",
+        "Mordell-1967",
+        "Elsholtz-Tao-2013",
+        "Mian-Chowla-1944",
+        "Singer-1938",
+        "Ruzsa-1993",
+    ]:
+        assert ref in indexed
+
+    # Test classification for Schinzel
+    res_novel = classify_instance_novelty(
+        "schinzel",
+        {
+            "a": 5,
+            "modulus": 840,
+            "residue": 1,
+            "verified_algebraic": True,
+            "strictly_ordered": True,
+        },
+    )
+    assert res_novel["verdict"] == "novel-extension"
+
+    res_known = classify_instance_novelty(
+        "schinzel",
+        {
+            "a": 4,
+            "modulus": 24,
+            "residue": 1,
+            "verified_algebraic": True,
+            "strictly_ordered": True,
+        },
+    )
+    assert res_known["verdict"] == "known-rediscovery"
+
+    res_inconclusive = classify_instance_novelty(
+        "schinzel",
+        {
+            "a": 5,
+            "modulus": 840,
+            "residue": 1,
+            "verified_algebraic": False,
+            "strictly_ordered": True,
+        },
+    )
+    assert res_inconclusive["verdict"] == "inconclusive-instance"
+
+    # Test classification for Sidon
+    res_sidon_novel = classify_instance_novelty(
+        "sidon",
+        {
+            "family": "bnb_dense",
+            "is_sidon": True,
+            "cardinality": 42,
+            "max_element": 1764,
+        },
+    )
+    assert res_sidon_novel["verdict"] == "novel-extension"
+
+    res_sidon_known = classify_instance_novelty(
+        "sidon",
+        {
+            "family": "singer",
+            "param": 2,
+            "is_sidon": True,
+            "cardinality": 3,
+            "max_element": 4,
+        },
+    )
+    assert res_sidon_known["verdict"] == "known-rediscovery"
+
+
+def test_p150_world_literature_dual_audit_soundness() -> None:
+    """Test P150 dual audit execution and soundness verification."""
+    from evobyte.algebraic import (
+        audit_world_literature_novelty_dual,
+        verify_world_literature_novelty_soundness,
+    )
+
+    audit_res = audit_world_literature_novelty_dual(verify_lake=False)
+    assert audit_res["total_instances_audited"] == 108
+    assert audit_res["schinzel_identities_count"] == 58
+    assert audit_res["sidon_certificates_count"] == 50
+    assert audit_res["dual_checker_agreement_rate"] == 1.0
+    assert audit_res["zero_inconclusive"] is True
+    assert audit_res["classification_counts"]["novel-extension"] >= 50
+    assert audit_res["classification_counts"]["known-rediscovery"] >= 20
+
+    sound, findings = verify_world_literature_novelty_soundness(audit_res, min_instances=100)
+    assert sound is True
+    assert findings == []
+
+    # Test error detection: discordance
+    corrupted_rate = dict(audit_res, dual_checker_agreement_rate=0.95)
+    s_rate, f_rate = verify_world_literature_novelty_soundness(corrupted_rate)
+    assert s_rate is False
+    assert any("DUAL_CHECKER_DISCORDANCE" in x for x in f_rate)
+
+    # Test error detection: sorry
+    corrupted_sorry = dict(audit_res, has_sorry=True)
+    s_sorry, f_sorry = verify_world_literature_novelty_soundness(corrupted_sorry)
+    assert s_sorry is False
+    assert any("SORRY_DETECTED" in x for x in f_sorry)
+
+    # Test error detection: inconclusive
+    corrupted_inconcl = dict(
+        audit_res,
+        classification_counts={
+            "novel-extension": 70,
+            "known-rediscovery": 20,
+            "inconclusive-instance": 1,
+        },
+    )
+    s_inc, f_inc = verify_world_literature_novelty_soundness(corrupted_inconcl)
+    assert s_inc is False
+    assert any("INCONCLUSIVE_INSTANCES_DETECTED" in x for x in f_inc)
+
+    # Test error detection: insufficient instances
+    corrupted_inst = dict(audit_res, total_instances_audited=50)
+    s_inst, f_inst = verify_world_literature_novelty_soundness(corrupted_inst, min_instances=100)
+    assert s_inst is False
+    assert any("INSUFFICIENT_INSTANCES" in x for x in f_inst)
+
+
+def test_p150_acceptance_rejects_wrong_phase(tmp_path: Path) -> None:
+    """Test that P150 audit rejects invalid configuration phase."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p150_world_literature_audit
+
+    cfg_p = tmp_path / "bad-p150.json"
+    cfg_p.write_text(json.dumps({"phase": "INVALID"}))
+    with pytest.raises(ValueError, match="not a P150 configuration"):
+        run_p150_world_literature_audit(cfg_p, tmp_path / "out.json")
+
+
+def test_p150_audit_smoke(tmp_path: Path) -> None:
+    """Test smoke run of P150 audit on valid config."""
+    import sys
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root / "benchmarks") not in sys.path:
+        sys.path.insert(0, str(repo_root / "benchmarks"))
+    from benchmarks.science_matrix import run_p150_world_literature_audit
+
+    cfg_file = repo_root / "experiments/p150-config.json"
+    with open(cfg_file, encoding="utf-8") as f:
+        cfg_data = json.load(f)
+    cfg_data["verify_lake"] = False
+    cfg_data["allow_dirty"] = True
+
+    tmp_cfg = tmp_path / "p150-smoke-config.json"
+    tmp_cfg.write_text(json.dumps(cfg_data))
+    out_file = tmp_path / "p150-smoke-out.json"
+
+    report = run_p150_world_literature_audit(tmp_cfg, out_file)
+    assert report["phase"] == "P150"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["total_instances_audited"] == 108
+    assert report["dual_checker_agreement_rate"] == 1.0
+    assert report["zero_inconclusive"] is True
+    assert report["has_sorry"] is False
+    assert out_file.exists()

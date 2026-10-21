@@ -1,0 +1,12 @@
+{
+  "phase": "P158",
+  "targets": ["x_plus_1", "x2_3x_7"],
+  "seeds": [42, 101, 202, 303, 404],
+  "alpha": 0.01,
+  "source_baselines_dir": "experiments/p155-baselines",
+  "source_gen_dir": "experiments/p156-generalization",
+  "source_abl_dir": "experiments/p157-ablations",
+  "output_dir": "experiments/p158-verdict",
+  "report_output_path": "docs/research/p158-h1-verdict-report.md",
+  "require_clean_tree": true
+}

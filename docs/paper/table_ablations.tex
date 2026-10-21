@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\caption{Systematic 9-ablation battery on EvoByte architectural components. Measured speedups and architectural decisions follow preregistered thresholds.}
+\label{tab:ablations}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llccr@{}}
+\toprule
+\textbf{Ablation} & \textbf{Component Tested} & \textbf{Measured Speedup} & \textbf{Threshold} & \textbf{Decision} \\
+\midrule
+A1 & Bytecode Static Validity (S0) & 1.15$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
+A2 & Coarse Grid Screening (S1) & 15.51$\times$ & $\ge 10.0\times$ & \textbf{KEEP} \\
+A3 & Early Termination (S2) & 3.00$\times$ & $\ge 2.0\times$ & \textbf{KEEP} \\
+A4 & GPU VRAM Residency & 2.60$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
+A5 & Structured Point Mutation & 1.42$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
+A6 & Instruction Crossover & 1.08$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
+A7 & MAP-Elites Diversity Archive & Qualitative gain & Multi-modal & \textbf{KEEP} \\
+A8 & Constant Optimization Bank & 1.25$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
+A9 & Neural Micro-Generator (P12) & 0.38$\times$ (slowdown) & $\ge 1.0\times$ & \textbf{DROP (ADR-0010)} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

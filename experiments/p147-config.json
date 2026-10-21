@@ -1,0 +1,11 @@
+{
+  "phase": "P147",
+  "seed": 42,
+  "device": "cpu",
+  "min_identities": 20,
+  "max_classes_per_pair": 5,
+  "k0": 1,
+  "expected_checksum": "f8255cfacef2006ecebc39f75fd02ec6ae83cd47736cd543f1867a26ca9b2ce1",
+  "require_clean_tree": true,
+  "note": "P147 automated parametric polynomial identity synthesis baseline for Schinzel resistant classes in Q[k]."
+}
