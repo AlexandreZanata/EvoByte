@@ -386,3 +386,107 @@ def test_p155_science_matrix_audit_runner(tmp_path: Path):
     assert out_file.exists()
     assert report["phase"] == "P155"
     assert report["verdict"] == "ACCEPTED"
+
+
+def test_p156_splits_leakage_audit():
+    from benchmarks.evaluate_generalization import audit_splits_leakage
+    from benchmarks.full_matrix import generate_target_dataset, TargetDataset
+
+    ds = generate_target_dataset("x_plus_1")
+    sound, findings = audit_splits_leakage(ds)
+    assert sound is True
+    assert findings == []
+
+    # Test synthetic leakage detection
+    bad_splits = dict(ds.splits)
+    bad_splits["hidden"] = (ds.splits["train"][0].copy(), ds.splits["train"][1].copy())
+    bad_ds = TargetDataset(
+        key="leaky",
+        name="Leaky Dataset",
+        suite="Synthetic",
+        formula_desc="y = x",
+        splits=bad_splits,
+        data_hash="dummy",
+        domain_range=(-5.0, 5.0),
+    )
+    unsound, leak_findings = audit_splits_leakage(bad_ds)
+    assert unsound is False
+    assert any("LEAKAGE_TRAIN_HIDDEN" in f for f in leak_findings)
+
+
+def test_p156_generalization_suite_and_soundness(tmp_path: Path):
+    from benchmarks.evaluate_generalization import (
+        run_p156_generalization_suite,
+        verify_p156_generalization_soundness,
+    )
+
+    out_dir = tmp_path / "gen_test"
+    summary = run_p156_generalization_suite(
+        targets=["x_plus_1"],
+        budgets=["0.15s"],
+        seeds=[42, 101],
+        methods=["Random", "Classical-SR", "PySR-Adapter", "EvoByte"],
+        output_dir=out_dir,
+    )
+    assert summary["suite"] == "P156-generalization-extrapolation"
+    assert summary["total_evaluations"] == 8
+    assert (out_dir / "summary_generalization.json").exists()
+
+    # Honest PySR check
+    pysr_info = summary["comparison"]["PySR-Adapter"]
+    assert pysr_info["completed_runs"] == 0
+    assert pysr_info["extrap_success_rate"] == 0.0
+
+    # Soundness verification
+    sound, findings = verify_p156_generalization_soundness(
+        summary, min_trials=8, min_extrap_rate=0.50
+    )
+    assert sound is True
+    assert findings == []
+
+    # Failure cases
+    unsound, bad_trials = verify_p156_generalization_soundness(summary, min_trials=20)
+    assert unsound is False
+    assert any("INSUFFICIENT_EVALUATIONS" in f for f in bad_trials)
+
+    # Tampered explosion
+    tampered_expl = dict(summary)
+    tampered_expl["comparison"] = dict(summary["comparison"])
+    tampered_expl["comparison"]["EvoByte"] = dict(summary["comparison"]["EvoByte"])
+    tampered_expl["comparison"]["EvoByte"]["explosion_rate"] = 0.50
+    unsound, bad_expl = verify_p156_generalization_soundness(tampered_expl, min_trials=8)
+    assert unsound is False
+    assert any("ASYMPTOTIC_EXPLOSION_EXCEEDED" in f for f in bad_expl)
+
+
+def test_p156_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p156_generalization_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P156 configuration"):
+        run_p156_generalization_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p156-config.json"
+    good_cfg.write_text(
+        json.dumps({
+            "phase": "P156",
+            "targets": ["x_plus_1"],
+            "budgets": ["0.15s"],
+            "seeds": [42],
+            "methods": ["Random", "Classical-SR", "EvoByte"],
+            "min_trials": 3,
+            "min_extrap_rate": 0.50,
+            "max_explosion_rate": 0.05,
+            "output_dir": str(tmp_path / "gen_runner"),
+            "allow_dirty": True,
+            "require_clean_tree": False,
+        }),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p156-out.json"
+    report = run_p156_generalization_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P156"
+    assert report["verdict"] == "ACCEPTED"

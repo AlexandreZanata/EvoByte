@@ -794,6 +794,7 @@ ACCEPTANCE_PHASES = (
     "P153",
     "P154",
     "P155",
+    "P156",
 )
 
 
@@ -15884,6 +15885,141 @@ def run_p155_baselines_audit(
 
 
 
+def run_p156_generalization_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P156 audit: Blind generalization and extrapolation evaluation protocol.
+
+    Verifies:
+    1. Zero data leakage across train, hidden, and extrapolation splits.
+    2. Model performance on in-domain hidden test split and out-of-domain extrapolation split.
+    3. Absence of asymptotic explosion or bloat in EvoByte solutions.
+    4. Empirical support for Hypothesis H1 Criterion 4 (Generalization).
+    5. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from evaluate_generalization import run_p156_generalization_suite, verify_p156_generalization_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P156":
+        raise ValueError(f"Config {cfg_p} is not a P156 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P156 BLIND GENERALIZATION & EXTRAPOLATION AUDIT (CRITERION 4 H1, ZERO LEAKAGE, BLOAT AUDIT)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x_plus_1", "x2_3x_7"])
+    budgets = config.get("budgets", ["0.4s", "0.8s"])
+    seeds = config.get("seeds")
+    methods = config.get("methods")
+    source_trials_dir = config.get("source_trials_dir")
+    output_dir = config.get("output_dir", "experiments/p156-generalization")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    min_trials = int(config.get("min_trials", 10))
+    min_extrap_rate = float(config.get("min_extrap_rate", 0.70))
+    max_explosion_rate = float(config.get("max_explosion_rate", 0.05))
+
+    suite_summary = run_p156_generalization_suite(
+        targets=targets,
+        budgets=budgets,
+        seeds=seeds,
+        methods=methods,
+        source_trials_dir=source_trials_dir,
+        output_dir=output_dir,
+        device_name=device_name,
+    )
+
+    sound, soundness_findings = verify_p156_generalization_soundness(
+        summary=suite_summary,
+        min_trials=min_trials,
+        min_extrap_rate=min_extrap_rate,
+        max_explosion_rate=max_explosion_rate,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P156 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p156_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P156"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    evo_stats = suite_summary.get("comparison", {}).get("EvoByte", {})
+    report: dict[str, Any] = {
+        "phase": "P156",
+        "verdict": verdict,
+        "claim_scope": (
+            "Blind generalization and extrapolation evaluation protocol executed: "
+            f"{suite_summary.get('total_evaluations')} model evaluations across "
+            f"{len(suite_summary.get('methods', []))} methods and {len(suite_summary.get('target_keys', []))} targets; "
+            f"zero data leakage confirmed; EvoByte extrap success {evo_stats.get('extrap_success_rate', 0.0):.2%}; "
+            f"EvoByte mean complexity {evo_stats.get('mean_complexity', 0.0):.1f}; "
+            f"asymptotic explosion rate {evo_stats.get('explosion_rate', 0.0):.2%}; "
+            f"H1 Criterion 4 supported: {suite_summary.get('h1_criterion_4_supported', False)}; "
+            "evaluation records saved in experiments/p156-generalization/."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P156",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P156 audit {verdict}: {suite_summary.get('total_evaluations')} evaluations across "
+        f"{len(suite_summary.get('methods', []))} methods; H1 Criterion 4: {suite_summary.get('h1_criterion_4_supported')}; "
+        f"report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P156 generalization audit rejected: {findings}")
+
+    return report
+
+
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -20046,6 +20182,8 @@ def main() -> int:
             run_p154_matrix_execution_audit(args.config, args.output)
         elif args.acceptance_phase == "P155":
             run_p155_baselines_audit(args.config, args.output)
+        elif args.acceptance_phase == "P156":
+            run_p156_generalization_audit(args.config, args.output)
         return 0
 
     seeds = (

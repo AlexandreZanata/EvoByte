@@ -25,6 +25,7 @@ checkpoints/
 runs/
 experiments/*-matrix/
 experiments/*-baselines/
+experiments/*-generalization/
 data/raw/
 data/processed/
 *.pt
