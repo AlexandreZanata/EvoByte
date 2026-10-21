@@ -565,3 +565,78 @@ def test_p157_science_matrix_audit_runner(tmp_path: Path):
     assert out_file.exists()
     assert report["phase"] == "P157"
     assert report["verdict"] == "ACCEPTED"
+
+
+def test_p158_h1_verdict_suite_and_soundness(tmp_path: Path):
+    from benchmarks.statistical_verdict import (
+        run_p158_h1_verdict_suite,
+        verify_p158_h1_verdict_soundness,
+    )
+
+    out_dir = tmp_path / "verdict_test"
+    rep_file = tmp_path / "p158-test-report.md"
+    summary = run_p158_h1_verdict_suite(
+        targets=["x_plus_1", "x2_3x_7"],
+        seeds=[42, 101, 202, 303, 404],
+        alpha=0.05,
+        source_baselines_dir=None,
+        source_gen_dir=None,
+        source_abl_dir=None,
+        output_dir=out_dir,
+        report_output_path=rep_file,
+    )
+    assert summary["suite"] == "P158-h1-statistical-verdict"
+    assert summary["overall_h1_verdict"] == "SUPPORTED"
+    assert rep_file.exists()
+    assert (out_dir / "summary_h1_verdict.json").exists()
+
+    sound, findings = verify_p158_h1_verdict_soundness(summary, alpha=0.05)
+    assert sound is True
+    assert findings == []
+
+    # Failure cases: missing report
+    tampered_rep = dict(summary)
+    tampered_rep["report_path"] = str(tmp_path / "nonexistent.md")
+    unsound, bad_rep = verify_p158_h1_verdict_soundness(tampered_rep, alpha=0.05)
+    assert unsound is False
+    assert any("MISSING_DOSSIER" in f for f in bad_rep)
+
+    # Failure cases: rejected overall
+    tampered_rej = dict(summary)
+    tampered_rej["overall_h1_verdict"] = "REJECTED"
+    unsound, bad_rej = verify_p158_h1_verdict_soundness(tampered_rej, alpha=0.05)
+    assert unsound is False
+    assert any("H1_NOT_SUPPORTED" in f for f in bad_rej)
+
+
+def test_p158_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p158_h1_verdict_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P158 configuration"):
+        run_p158_h1_verdict_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p158-config.json"
+    good_cfg.write_text(
+        json.dumps({
+            "phase": "P158",
+            "targets": ["x_plus_1", "x2_3x_7"],
+            "seeds": [42, 101, 202, 303, 404],
+            "alpha": 0.05,
+            "source_baselines_dir": None,
+            "source_gen_dir": None,
+            "source_abl_dir": None,
+            "output_dir": str(tmp_path / "verdict_runner"),
+            "report_output_path": str(tmp_path / "report_runner.md"),
+            "allow_dirty": True,
+            "require_clean_tree": False,
+        }),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p158-out.json"
+    report = run_p158_h1_verdict_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P158"
+    assert report["verdict"] == "ACCEPTED"

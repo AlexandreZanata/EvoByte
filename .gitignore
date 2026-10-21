@@ -27,6 +27,7 @@ experiments/*-matrix/
 experiments/*-baselines/
 experiments/*-generalization/
 experiments/*-ablations/
+experiments/*-verdict/
 data/raw/
 data/processed/
 *.pt

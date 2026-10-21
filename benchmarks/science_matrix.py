@@ -796,6 +796,7 @@ ACCEPTANCE_PHASES = (
     "P155",
     "P156",
     "P157",
+    "P158",
 )
 
 
@@ -16153,6 +16154,137 @@ def run_p157_ablations_audit(
 
 
 
+def run_p158_h1_verdict_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P158 audit: Statistical verdict and Pareto analysis for Hypothesis H1.
+
+    Verifies:
+    1. Consolidation of empirical data from P154–P157.
+    2. Statistical support across all 5 criteria of Hypothesis H1.
+    3. Wilcoxon signed-rank test with Holm FWER control (p <= 0.01).
+    4. Non-dominated empirical Pareto frontier in (complexity, error) space.
+    5. Generation of complete markdown dossier in docs/research/p158-h1-verdict-report.md.
+    6. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from statistical_verdict import run_p158_h1_verdict_suite, verify_p158_h1_verdict_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P158":
+        raise ValueError(f"Config {cfg_p} is not a P158 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P158 HYPOTHESIS H1 STATISTICAL VERDICT & PARETO ANALYSIS AUDIT (WILCOXON + HOLM FWER p <= 0.01)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x_plus_1", "x2_3x_7"])
+    seeds = config.get("seeds")
+    alpha = float(config.get("alpha", 0.01))
+    source_baselines_dir = config.get("source_baselines_dir", "experiments/p155-baselines")
+    source_gen_dir = config.get("source_gen_dir", "experiments/p156-generalization")
+    source_abl_dir = config.get("source_abl_dir", "experiments/p157-ablations")
+    output_dir = config.get("output_dir", "experiments/p158-verdict")
+    report_output_path = config.get("report_output_path", "docs/research/p158-h1-verdict-report.md")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+
+    suite_summary = run_p158_h1_verdict_suite(
+        targets=targets,
+        seeds=seeds,
+        alpha=alpha,
+        source_baselines_dir=source_baselines_dir,
+        source_gen_dir=source_gen_dir,
+        source_abl_dir=source_abl_dir,
+        output_dir=output_dir,
+        report_output_path=report_output_path,
+    )
+
+    sound, soundness_findings = verify_p158_h1_verdict_soundness(
+        summary=suite_summary,
+        alpha=alpha,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P158 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p158_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P158"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    c3 = suite_summary.get("criteria", {}).get("criterion_3_evolution_value", {})
+    report: dict[str, Any] = {
+        "phase": "P158",
+        "verdict": verdict,
+        "claim_scope": (
+            "Hypothesis H1 statistical verdict evaluated: "
+            f"Overall verdict {suite_summary.get('overall_h1_verdict')}; "
+            f"Wilcoxon signed-rank test W={c3.get('wilcoxon_stat', 0.0):.1f}, "
+            f"Holm-adjusted p={c3.get('holm_p_value', 1.0):.4e} <= {alpha}; "
+            f"Pareto frontier contains {len(suite_summary.get('pareto_frontier', []))} non-dominated points; "
+            f"formal dossier saved at {report_output_path}."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P158",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P158 audit {verdict}: H1 overall verdict {suite_summary.get('overall_h1_verdict')}; "
+        f"Wilcoxon Holm p={c3.get('holm_p_value', 1.0):.4e}; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P158 H1 verdict audit rejected: {findings}")
+
+    return report
+
+
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -20319,6 +20451,8 @@ def main() -> int:
             run_p156_generalization_audit(args.config, args.output)
         elif args.acceptance_phase == "P157":
             run_p157_ablations_audit(args.config, args.output)
+        elif args.acceptance_phase == "P158":
+            run_p158_h1_verdict_audit(args.config, args.output)
         return 0
 
     seeds = (
