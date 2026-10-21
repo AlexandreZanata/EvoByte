@@ -287,6 +287,9 @@ def run_p157_ablations_suite(
         # ----------------------------------------------------------------------
         # Abl-8: No Cascade (Full data scoring vs Multi-stage cascade)
         # ----------------------------------------------------------------------
+        ds_dense = generate_target_dataset(t_key, n_points=512)
+        xs_dense, ys_dense = ds_dense.splits["train"]
+
         full_scoring_times: list[float] = []
         cascade_times: list[float] = []
         for s in target_seeds:
@@ -296,12 +299,12 @@ def run_p157_ablations_suite(
 
             t0 = time.perf_counter()
             for p in sample:
-                evaluate(p, xs_tr, ys_tr)
+                evaluate(p, xs_dense, ys_dense)
             full_scoring_times.append(time.perf_counter() - t0)
 
             t1 = time.perf_counter()
             for p in sample:
-                cascade_evaluate(p, xs_tr, ys_tr, elite_err=1e-3, k=4.0)
+                cascade_evaluate(p, xs_dense, ys_dense, elite_err=1e-3, k=4.0)
             cascade_times.append(time.perf_counter() - t1)
 
         mean_t_full = float(np.mean(full_scoring_times))
