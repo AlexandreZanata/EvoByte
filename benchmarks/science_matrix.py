@@ -795,6 +795,7 @@ ACCEPTANCE_PHASES = (
     "P154",
     "P155",
     "P156",
+    "P157",
 )
 
 
@@ -16020,6 +16021,138 @@ def run_p156_generalization_audit(
 
 
 
+def run_p157_ablations_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P157 audit: Systematic 9-ablation measurement and cascade profiling.
+
+    Verifies:
+    1. Execution of all 9 architectural ablations under controlled seeds and budgets.
+    2. Measured speedup of multi-stage cascade verifier over naive evaluation.
+    3. Measured speedup of early termination rejection abort over exhaustive evaluation.
+    4. Hardware acceleration efficiency of GPU population execution over CPU NumPy.
+    5. Validation of rulings (DROP for neural generator, KEEP for cascade, early term, etc.).
+    6. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from run_ablations import run_p157_ablations_suite, verify_p157_ablations_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P157":
+        raise ValueError(f"Config {cfg_p} is not a P157 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P157 SYSTEMATIC 9-ABLATION MEASUREMENT & CASCADE PROFILING AUDIT (MEASURED SPEEDUPS)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x2_3x_7"])
+    seeds = config.get("seeds")
+    pop_size = int(config.get("pop_size", 100))
+    max_generations = int(config.get("max_generations", 10))
+    output_dir = config.get("output_dir", "experiments/p157-ablations")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    min_cascade_speedup = float(config.get("min_cascade_speedup", 2.0))
+    min_early_term_speedup = float(config.get("min_early_term_speedup", 1.05))
+    min_gpu_speedup = float(config.get("min_gpu_speedup", 1.0))
+
+    suite_summary = run_p157_ablations_suite(
+        targets=targets,
+        seeds=seeds,
+        pop_size=pop_size,
+        max_generations=max_generations,
+        output_dir=output_dir,
+        device_name=device_name,
+    )
+
+    sound, soundness_findings = verify_p157_ablations_soundness(
+        summary=suite_summary,
+        min_cascade_speedup=min_cascade_speedup,
+        min_early_term_speedup=min_early_term_speedup,
+        min_gpu_speedup=min_gpu_speedup,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P157 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p157_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P157"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    metrics = suite_summary.get("metrics", {})
+    report: dict[str, Any] = {
+        "phase": "P157",
+        "verdict": verdict,
+        "claim_scope": (
+            "Systematic 9-ablation battery executed: "
+            f"{suite_summary.get('total_ablations')} ablations evaluated across "
+            f"{len(suite_summary.get('target_keys', []))} targets; "
+            f"Cascade verifier speedup {metrics.get('cascade_speedup', 0.0):.2f}x; "
+            f"Early termination speedup {metrics.get('early_termination_speedup', 0.0):.2f}x; "
+            f"GPU acceleration speedup {metrics.get('gpu_speedup', 0.0):.2f}x; "
+            "individual trial logs saved deterministically in experiments/p157-ablations/."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P157",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P157 audit {verdict}: {suite_summary.get('total_ablations')} ablations evaluated; "
+        f"Cascade speedup {metrics.get('cascade_speedup', 0.0):.2f}x; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P157 ablations audit rejected: {findings}")
+
+    return report
+
+
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -20184,6 +20317,8 @@ def main() -> int:
             run_p155_baselines_audit(args.config, args.output)
         elif args.acceptance_phase == "P156":
             run_p156_generalization_audit(args.config, args.output)
+        elif args.acceptance_phase == "P157":
+            run_p157_ablations_audit(args.config, args.output)
         return 0
 
     seeds = (

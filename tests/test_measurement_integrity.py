@@ -490,3 +490,78 @@ def test_p156_science_matrix_audit_runner(tmp_path: Path):
     assert out_file.exists()
     assert report["phase"] == "P156"
     assert report["verdict"] == "ACCEPTED"
+
+
+def test_p157_ablations_suite_and_soundness(tmp_path: Path):
+    from benchmarks.run_ablations import (
+        run_p157_ablations_suite,
+        verify_p157_ablations_soundness,
+    )
+
+    out_dir = tmp_path / "abl_test"
+    summary = run_p157_ablations_suite(
+        targets=["x2_3x_7"],
+        seeds=[42],
+        pop_size=20,
+        max_generations=2,
+        output_dir=out_dir,
+    )
+    assert summary["suite"] == "P157-full-cascade-gpu-ablations"
+    assert summary["total_ablations"] == 9
+    assert (out_dir / "summary_ablations.json").exists()
+
+    sound, findings = verify_p157_ablations_soundness(
+        summary, min_cascade_speedup=1.0, min_early_term_speedup=1.0, min_gpu_speedup=1.0
+    )
+    assert sound is True
+    assert findings == []
+
+    # Failure cases: missing ablations
+    tampered_missing = dict(summary)
+    tampered_missing["ablations"] = summary["ablations"][:5]
+    unsound, bad_miss = verify_p157_ablations_soundness(tampered_missing)
+    assert unsound is False
+    assert any("INSUFFICIENT_ABLATIONS" in f for f in bad_miss)
+
+    # Failure cases: wrong ruling for neural generator
+    tampered_neural = dict(summary)
+    tampered_neural["ablations"] = [
+        dict(a) if a["ablation_id"] != 3 else {**a, "keep_or_drop": "KEEP"}
+        for a in summary["ablations"]
+    ]
+    unsound, bad_neural = verify_p157_ablations_soundness(tampered_neural, min_cascade_speedup=1.0)
+    assert unsound is False
+    assert any("INVALID_NEURAL_GENERATOR_RULING" in f for f in bad_neural)
+
+
+def test_p157_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p157_ablations_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P157 configuration"):
+        run_p157_ablations_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p157-config.json"
+    good_cfg.write_text(
+        json.dumps({
+            "phase": "P157",
+            "targets": ["x2_3x_7"],
+            "seeds": [42],
+            "pop_size": 20,
+            "max_generations": 2,
+            "min_cascade_speedup": 1.0,
+            "min_early_term_speedup": 1.0,
+            "min_gpu_speedup": 1.0,
+            "output_dir": str(tmp_path / "abl_runner"),
+            "allow_dirty": True,
+            "require_clean_tree": False,
+        }),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p157-out.json"
+    report = run_p157_ablations_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P157"
+    assert report["verdict"] == "ACCEPTED"
