@@ -1346,7 +1346,9 @@ def test_p146_soundness_and_lake() -> None:
 
     corrupted_thms = dict(audit_res)
     corrupted_thms["total_theorems"] = 10
-    sound, findings = verify_schinzel_quadratic_sieve_baseline_soundness(corrupted_thms, min_theorems=80)
+    sound, findings = verify_schinzel_quadratic_sieve_baseline_soundness(
+        corrupted_thms, min_theorems=80
+    )
     assert sound is False
     assert any("INSUFFICIENT_THEOREMS" in f for f in findings)
 
@@ -1522,7 +1524,9 @@ def test_p148_soundness_and_lake() -> None:
     assert audit_res["total_theorems"] >= 100
     assert audit_res["has_sorry"] is False
 
-    sound, findings = verify_schinzel_high_moduli_certification_baseline_soundness(audit_res, min_theorems=100)
+    sound, findings = verify_schinzel_high_moduli_certification_baseline_soundness(
+        audit_res, min_theorems=100
+    )
     assert sound is True
     assert findings == []
 
@@ -1535,7 +1539,9 @@ def test_p148_soundness_and_lake() -> None:
 
     corrupted_thms = dict(audit_res)
     corrupted_thms["total_theorems"] = 10
-    s_thms, f_thms = verify_schinzel_high_moduli_certification_baseline_soundness(corrupted_thms, min_theorems=100)
+    s_thms, f_thms = verify_schinzel_high_moduli_certification_baseline_soundness(
+        corrupted_thms, min_theorems=100
+    )
     assert s_thms is False
     assert any("INSUFFICIENT_THEOREMS" in x for x in f_thms)
 
@@ -1702,7 +1708,11 @@ def test_p150_world_literature_dual_audit_soundness() -> None:
     # Test error detection: inconclusive
     corrupted_inconcl = dict(
         audit_res,
-        classification_counts={"novel-extension": 70, "known-rediscovery": 20, "inconclusive-instance": 1},
+        classification_counts={
+            "novel-extension": 70,
+            "known-rediscovery": 20,
+            "inconclusive-instance": 1,
+        },
     )
     s_inc, f_inc = verify_world_literature_novelty_soundness(corrupted_inconcl)
     assert s_inc is False

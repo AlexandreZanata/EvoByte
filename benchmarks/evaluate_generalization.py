@@ -20,7 +20,13 @@ from typing import Any
 
 import numpy as np
 
-from full_matrix import TargetDataset, generate_target_dataset, parse_budget_str, probe, run_p155_baselines_suite
+from full_matrix import (
+    TargetDataset,
+    generate_target_dataset,
+    parse_budget_str,
+    probe,
+    run_p155_baselines_suite,
+)
 
 
 def audit_splits_leakage(target: TargetDataset) -> tuple[bool, list[str]]:
@@ -36,11 +42,15 @@ def audit_splits_leakage(target: TargetDataset) -> tuple[bool, list[str]]:
 
     overlap_tr_hid = set_tr.intersection(set_hid)
     if len(overlap_tr_hid) > 0:
-        findings.append(f"LEAKAGE_TRAIN_HIDDEN: {len(overlap_tr_hid)} overlapping points for {target.key}")
+        findings.append(
+            f"LEAKAGE_TRAIN_HIDDEN: {len(overlap_tr_hid)} overlapping points for {target.key}"
+        )
 
     overlap_tr_ext = set_tr.intersection(set_ext)
     if len(overlap_tr_ext) > 0:
-        findings.append(f"LEAKAGE_TRAIN_EXTRAP: {len(overlap_tr_ext)} overlapping points for {target.key}")
+        findings.append(
+            f"LEAKAGE_TRAIN_EXTRAP: {len(overlap_tr_ext)} overlapping points for {target.key}"
+        )
 
     tr_min, tr_max = float(np.min(xs_tr)), float(np.max(xs_tr))
     ext_min, ext_max = float(np.min(xs_ext)), float(np.max(xs_ext))
@@ -105,12 +115,16 @@ def evaluate_trial_generalization(
     ext_r2 = compute_r2_from_mse(target_dataset, "extrapolation", ext_mse)
 
     asymptotic_explosion = bool(
-        ext_mse > 1e6 or not np.isfinite(ext_mse) or (train_mse is not None and ext_mse > 1e6 * (train_mse + 1.0))
+        ext_mse > 1e6
+        or not np.isfinite(ext_mse)
+        or (train_mse is not None and ext_mse > 1e6 * (train_mse + 1.0))
     )
     constant_bloat = bool(size is not None and size > 50)
     hidden_success = bool(hid_mse <= 1e-3 and hid_r2 >= 0.99)
     extrap_success = bool(ext_mse <= 1e-3 and ext_r2 >= 0.99)
-    gen_gap = float(ext_mse - train_mse) if (train_mse is not None and np.isfinite(train_mse)) else None
+    gen_gap = (
+        float(ext_mse - train_mse) if (train_mse is not None and np.isfinite(train_mse)) else None
+    )
 
     return {
         **trial,
@@ -141,7 +155,7 @@ def run_p156_generalization_suite(
 
     target_keys = targets or ["x_plus_1", "x2_3x_7"]
     parsed_budgets: list[float] = []
-    for b in (budgets or ["0.4s", "0.8s"]):
+    for b in budgets or ["0.4s", "0.8s"]:
         if isinstance(b, (int, float)):
             parsed_budgets.append(float(b))
         else:
@@ -174,7 +188,9 @@ def run_p156_generalization_suite(
             except Exception:
                 pass
 
-    if len(raw_trials) < len(target_methods) * len(target_keys) * len(parsed_budgets) * len(target_seeds):
+    if len(raw_trials) < len(target_methods) * len(target_keys) * len(parsed_budgets) * len(
+        target_seeds
+    ):
         # Generate fresh trials using honest baselines runner
         baselines_out = out_d / "raw_baselines"
         baselines_summary = run_p155_baselines_suite(
@@ -220,8 +236,12 @@ def run_p156_generalization_suite(
         completed = [r for r in m_recs if r.get("status") == "completed"]
         n_comp = len(completed)
 
-        hid_r2s = [r["hidden_r2"] for r in completed if np.isfinite(r.get("hidden_r2", -float("inf")))]
-        ext_r2s = [r["extrap_r2"] for r in completed if np.isfinite(r.get("extrap_r2", -float("inf")))]
+        hid_r2s = [
+            r["hidden_r2"] for r in completed if np.isfinite(r.get("hidden_r2", -float("inf")))
+        ]
+        ext_r2s = [
+            r["extrap_r2"] for r in completed if np.isfinite(r.get("extrap_r2", -float("inf")))
+        ]
 
         mean_hid_r2 = float(np.mean(hid_r2s)) if hid_r2s else -float("inf")
         median_hid_r2 = float(np.median(hid_r2s)) if hid_r2s else -float("inf")
@@ -233,7 +253,9 @@ def run_p156_generalization_suite(
         explosions = sum(1 for r in completed if r.get("asymptotic_explosion") is True)
         bloats = sum(1 for r in completed if r.get("constant_bloat") is True)
 
-        sizes = [r["program_size"] for r in completed if isinstance(r.get("program_size"), (int, float))]
+        sizes = [
+            r["program_size"] for r in completed if isinstance(r.get("program_size"), (int, float))
+        ]
         mean_size = float(np.mean(sizes)) if sizes else 0.0
 
         comparison[m] = {
@@ -310,7 +332,9 @@ def verify_p156_generalization_soundness(
         pysr_info = comp["PySR-Adapter"]
         if pysr_info.get("completed_runs", 0) == 0:
             if pysr_info.get("extrap_success_rate", 0.0) > 0.0:
-                findings.append("DISHONEST_PYSR_GENERALIZATION: PySR claimed generalization while missing")
+                findings.append(
+                    "DISHONEST_PYSR_GENERALIZATION: PySR claimed generalization while missing"
+                )
 
     if "EvoByte" in comp:
         evo = comp["EvoByte"]
@@ -327,7 +351,9 @@ def verify_p156_generalization_soundness(
                 f"ASYMPTOTIC_EXPLOSION_EXCEEDED: EvoByte explosion rate ({expl_rate:.2%}) > {max_explosion_rate:.2%}"
             )
         if comp_size > 25.0:
-            findings.append(f"COMPLEXITY_BLOAT: EvoByte mean size ({comp_size:.1f}) exceeds compact bound (25.0)")
+            findings.append(
+                f"COMPLEXITY_BLOAT: EvoByte mean size ({comp_size:.1f}) exceeds compact bound (25.0)"
+            )
 
         if "Random" in comp:
             rand_ext_rate = comp["Random"].get("extrap_success_rate", 0.0)

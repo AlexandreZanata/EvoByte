@@ -13753,9 +13753,7 @@ def run_p140_discrepancy_norm_audit(
 
     tactic_audit = audit_discrepancy_tactic_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get(
-            "lean_file", "lean_proofs/Generated/DiscrepancyTacticTheorems.lean"
-        ),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/DiscrepancyTacticTheorems.lean"),
         verify_lake=verify_lake,
     )
 
@@ -13885,9 +13883,7 @@ def run_p141_covering_systems_audit(
 
     covering_audit = audit_covering_systems_baseline(
         project_dir=config.get("project_dir", "lean_proofs"),
-        lean_file=config.get(
-            "lean_file", "lean_proofs/Generated/CoveringSystemsTheorems.lean"
-        ),
+        lean_file=config.get("lean_file", "lean_proofs/Generated/CoveringSystemsTheorems.lean"),
         verify_lake=verify_lake,
     )
 
@@ -14436,7 +14432,9 @@ def run_p145_schinzel_high_moduli_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P145 SCHINZEL HIGH MODULI CONGRUENCE DATABASE AUDIT (Lean 4, M in {840, 2520, 5040}, a in {5,6,7,8})")
+    print(
+        "P145 SCHINZEL HIGH MODULI CONGRUENCE DATABASE AUDIT (Lean 4, M in {840, 2520, 5040}, a in {5,6,7,8})"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -14569,7 +14567,9 @@ def run_p146_schinzel_quadratic_sieve_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P146 ACCELERATED QUADRATIC SIEVE SCHINZEL AUDIT (Lean 4, M in {840, 2520, 5040}, a in {5,6,7,8})")
+    print(
+        "P146 ACCELERATED QUADRATIC SIEVE SCHINZEL AUDIT (Lean 4, M in {840, 2520, 5040}, a in {5,6,7,8})"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -14704,7 +14704,9 @@ def run_p147_polynomial_identity_synthesis_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P147 AUTOMATED POLYNOMIAL IDENTITY SYNTHESIS AUDIT (Q[k], M in {840, 2520, 5040}, a in {5,6,7,8})")
+    print(
+        "P147 AUTOMATED POLYNOMIAL IDENTITY SYNTHESIS AUDIT (Q[k], M in {840, 2520, 5040}, a in {5,6,7,8})"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -14964,7 +14966,9 @@ def run_p149_constructive_certificates_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P149 EXTREMAL CONSTRUCTIVE CERTIFICATES AUDIT (ExtremalConstructiveCertificates.lean, 0 sorry)")
+    print(
+        "P149 EXTREMAL CONSTRUCTIVE CERTIFICATES AUDIT (ExtremalConstructiveCertificates.lean, 0 sorry)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -15422,7 +15426,9 @@ def run_p152_grand_campaign_audit(
             f"CHAIN_HASH_MISMATCH: expected {expected_chain_hash}, computed {campaign_audit.get('final_chain_hash')}"
         )
 
-    dossier_path = config.get("dossier_path", "docs/research/p152-constructive-algebraic-dossier.md")
+    dossier_path = config.get(
+        "dossier_path", "docs/research/p152-constructive-algebraic-dossier.md"
+    )
     dossier_p = Path(dossier_path)
     dossier_sha = ""
     if not dossier_p.exists():
@@ -15539,7 +15545,9 @@ def run_p153_clean_harness_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P153 CLEAN REPRODUCTION HARNESS AUDIT (WALL-CLOCK TIMED, VRAM MEASURED, ZERO SIMULATIONS)")
+    print(
+        "P153 CLEAN REPRODUCTION HARNESS AUDIT (WALL-CLOCK TIMED, VRAM MEASURED, ZERO SIMULATIONS)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -15559,7 +15567,9 @@ def run_p153_clean_harness_audit(
     )
 
     if audit_res.get("verdict") != "ACCEPTED":
-        findings.append(f"HARNESS_AUDIT_FAILED: audit checks failed with checks={audit_res.get('checks')}")
+        findings.append(
+            f"HARNESS_AUDIT_FAILED: audit checks failed with checks={audit_res.get('checks')}"
+        )
 
     checks = audit_res.get("checks", {})
     for check_name, check_val in checks.items():
@@ -15761,11 +15771,7 @@ def run_p154_matrix_execution_audit(
     return report
 
 
-
-
-def run_p155_baselines_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p155_baselines_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P155 audit: Paired competitive baselines execution under equal wall-clock budgets.
 
     Verifies:
@@ -15887,8 +15893,6 @@ def run_p155_baselines_audit(
     return report
 
 
-
-
 def run_p156_generalization_audit(
     config_path: str | Path, output_path: str | Path
 ) -> dict[str, Any]:
@@ -15907,7 +15911,10 @@ def run_p156_generalization_audit(
     from pathlib import Path
 
     import torch as _torch
-    from evaluate_generalization import run_p156_generalization_suite, verify_p156_generalization_soundness
+    from evaluate_generalization import (
+        run_p156_generalization_suite,
+        verify_p156_generalization_soundness,
+    )
     from evobyte.provenance import (
         collect_provenance,
         get_git_commit,
@@ -15923,7 +15930,9 @@ def run_p156_generalization_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P156 BLIND GENERALIZATION & EXTRAPOLATION AUDIT (CRITERION 4 H1, ZERO LEAKAGE, BLOAT AUDIT)")
+    print(
+        "P156 BLIND GENERALIZATION & EXTRAPOLATION AUDIT (CRITERION 4 H1, ZERO LEAKAGE, BLOAT AUDIT)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -16022,11 +16031,7 @@ def run_p156_generalization_audit(
     return report
 
 
-
-
-def run_p157_ablations_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p157_ablations_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P157 audit: Systematic 9-ablation measurement and cascade profiling.
 
     Verifies:
@@ -16154,11 +16159,7 @@ def run_p157_ablations_audit(
     return report
 
 
-
-
-def run_p158_h1_verdict_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p158_h1_verdict_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P158 audit: Statistical verdict and Pareto analysis for Hypothesis H1.
 
     Verifies:
@@ -16192,7 +16193,9 @@ def run_p158_h1_verdict_audit(
     config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
 
     print("=" * 115)
-    print("P158 HYPOTHESIS H1 STATISTICAL VERDICT & PARETO ANALYSIS AUDIT (WILCOXON + HOLM FWER p <= 0.01)")
+    print(
+        "P158 HYPOTHESIS H1 STATISTICAL VERDICT & PARETO ANALYSIS AUDIT (WILCOXON + HOLM FWER p <= 0.01)"
+    )
     print("=" * 115)
 
     findings: list[str] = []
@@ -16227,8 +16230,7 @@ def run_p158_h1_verdict_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     dirty_lines = [
-        line for line in dirty.splitlines()
-        if not line.endswith("p158-h1-verdict-report.md")
+        line for line in dirty.splitlines() if not line.endswith("p158-h1-verdict-report.md")
     ]
     is_dirty = len(dirty_lines) > 0 or (initial_dirty != "")
     if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
@@ -16369,7 +16371,9 @@ def run_p159_reproducibility_audit(
     else:
         di_content = dockerignore_path.read_text(encoding="utf-8")
         if ".git" not in di_content or ".lake" not in di_content:
-            findings.append("INCOMPLETE_DOCKERIGNORE: .dockerignore must ignore .git and .lake caches")
+            findings.append(
+                "INCOMPLETE_DOCKERIGNORE: .dockerignore must ignore .git and .lake caches"
+            )
 
     # 2. Makefile audit
     makefile_path = repo_root / "Makefile"
@@ -16382,7 +16386,9 @@ def run_p159_reproducibility_audit(
         if "export-bundle:" not in mf_content:
             findings.append("MISSING_MAKE_TARGET: Makefile missing export-bundle target")
         if "--network none" not in mf_content:
-            findings.append("NON_HERMETIC_CONTAINER_TARGET: verify-container must enforce --network none")
+            findings.append(
+                "NON_HERMETIC_CONTAINER_TARGET: verify-container must enforce --network none"
+            )
 
     # 3. Export Zenodo open research bundle and audit cryptographic checksums
     bundle_res = generate_bundle(
@@ -16453,12 +16459,15 @@ def run_p159_reproducibility_audit(
     revision = get_git_commit()
     dirty = get_git_status()
     dirty_lines = [
-        line for line in dirty.splitlines()
+        line
+        for line in dirty.splitlines()
         if not any(ignored in line for ignored in ["dist/", "zenodo-bundle", "p159-acceptance"])
     ]
     is_dirty = len(dirty_lines) > 0 or (initial_dirty != "")
     if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
-        findings.append("DIRTY_SOURCE: tree not clean; P159 reproducibility claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; P159 reproducibility claims from dirty code rejected"
+        )
 
     device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
     dev_actual = _torch.device(
@@ -16484,7 +16493,7 @@ def run_p159_reproducibility_audit(
             f"Dockerfile validated with hermetic non-network recipe; "
             f"Makefile targets verify-container and export-bundle verified; "
             f"Zenodo research bundle exported ({bundle_res.get('total_files')} files, "
-            f"{bundle_res.get('total_bytes', 0) / (1024*1024):.2f} MB) with 100% SHA-256 integrity; "
+            f"{bundle_res.get('total_bytes', 0) / (1024 * 1024):.2f} MB) with 100% SHA-256 integrity; "
             f"Hermetic container execution: {'PASS' if container_verified else 'SKIPPED/OPTIONAL'}."
         ),
         "run_id": run_id,
@@ -16521,9 +16530,7 @@ def run_p159_reproducibility_audit(
     return report
 
 
-def run_p160_manuscript_audit(
-    config_path: str | Path, output_path: str | Path
-) -> dict[str, Any]:
+def run_p160_manuscript_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P160 audit: Systems research manuscript publication and traceability dossier.
 
     Verifies:
@@ -16563,7 +16570,9 @@ def run_p160_manuscript_audit(
     findings: list[str] = []
     repo_root = Path(__file__).resolve().parents[1]
     paper_dir = repo_root / config.get("paper_dir", "docs/paper")
-    dossier_path = repo_root / config.get("dossier_path", "docs/research/p160-manuscript-dossier.md")
+    dossier_path = repo_root / config.get(
+        "dossier_path", "docs/research/p160-manuscript-dossier.md"
+    )
     require_pdf = config.get("require_pdf", True)
 
     # 1. LaTeX project audit
@@ -16590,12 +16599,19 @@ def run_p160_manuscript_audit(
         ]
         for tok in required_tokens:
             if tok not in tex_content:
-                findings.append(f"INCOMPLETE_MANUSCRIPT: missing required section/token '{tok}' in main.tex")
+                findings.append(
+                    f"INCOMPLETE_MANUSCRIPT: missing required section/token '{tok}' in main.tex"
+                )
 
     if not ref_bib.is_file():
         findings.append(f"MISSING_BIB: {ref_bib} does not exist")
 
-    for tbl_name in ["table_h1_verdict.tex", "table_ablations.tex", "table_wilcoxon.tex", "table_pareto.tex"]:
+    for tbl_name in [
+        "table_h1_verdict.tex",
+        "table_ablations.tex",
+        "table_wilcoxon.tex",
+        "table_pareto.tex",
+    ]:
         tbl_path = paper_dir / tbl_name
         if not tbl_path.is_file():
             findings.append(f"MISSING_TABLE: {tbl_path} does not exist")
@@ -16624,7 +16640,9 @@ def run_p160_manuscript_audit(
             except Exception as e:
                 findings.append(f"PDF_COMPILATION_ERROR: {e}")
         elif require_pdf:
-            findings.append(f"MISSING_PDF: compiled PDF {main_pdf} not found and pdflatex unavailable")
+            findings.append(
+                f"MISSING_PDF: compiled PDF {main_pdf} not found and pdflatex unavailable"
+            )
 
     # 3. Research dossier audit
     if not dossier_path.is_file():
@@ -16641,16 +16659,20 @@ def run_p160_manuscript_audit(
     dirty = get_git_status()
     ignored_patterns = ["p160-acceptance", ".aux", ".log", ".out", "main.pdf", "table_"]
     dirty_lines = [
-        line for line in dirty.splitlines()
+        line
+        for line in dirty.splitlines()
         if not any(ignored in line for ignored in ignored_patterns)
     ]
     initial_dirty_lines = [
-        line for line in initial_dirty.splitlines()
+        line
+        for line in initial_dirty.splitlines()
         if not any(ignored in line for ignored in ignored_patterns)
     ]
     is_dirty = len(dirty_lines) > 0 or len(initial_dirty_lines) > 0
     if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
-        findings.append("DIRTY_SOURCE: tree not clean; P160 manuscript claims from dirty code rejected")
+        findings.append(
+            "DIRTY_SOURCE: tree not clean; P160 manuscript claims from dirty code rejected"
+        )
 
     device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
     dev_actual = _torch.device(
@@ -16661,8 +16683,12 @@ def run_p160_manuscript_audit(
         device=dev_actual,
         dataset_hashes={
             "p160_config": config_sha[:16],
-            "manuscript_sha256": hashlib.sha256(main_tex.read_bytes()).hexdigest()[:16] if main_tex.is_file() else "",
-            "pdf_sha256": hashlib.sha256(main_pdf.read_bytes()).hexdigest()[:16] if main_pdf.is_file() else "",
+            "manuscript_sha256": hashlib.sha256(main_tex.read_bytes()).hexdigest()[:16]
+            if main_tex.is_file()
+            else "",
+            "pdf_sha256": hashlib.sha256(main_pdf.read_bytes()).hexdigest()[:16]
+            if main_pdf.is_file()
+            else "",
         },
         config={"acceptance_phase": "P160"},
     )

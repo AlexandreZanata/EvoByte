@@ -217,12 +217,14 @@ def test_p153_science_matrix_audit_runner(tmp_path: Path):
     # Smoke acceptance run
     good_cfg = tmp_path / "p153-config.json"
     good_cfg.write_text(
-        json.dumps({
-            "phase": "P153",
-            "seed": 42,
-            "allow_dirty": True,
-            "require_clean_tree": False,
-        }),
+        json.dumps(
+            {
+                "phase": "P153",
+                "seed": 42,
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
         encoding="utf-8",
     )
     out_file = tmp_path / "p153-out.json"
@@ -278,20 +280,22 @@ def test_p154_science_matrix_audit_runner(tmp_path: Path):
 
     good_cfg = tmp_path / "p154-config.json"
     good_cfg.write_text(
-        json.dumps({
-            "phase": "P154",
-            "targets": ["x_plus_1"],
-            "budgets": ["0.2s"],
-            "seeds": [42, 101],
-            "min_trials": 2,
-            "min_primary_rate": 0.50,
-            "min_cvps": 100.0,
-            "pop_size": 40,
-            "max_generations": 4,
-            "output_dir": str(tmp_path / "matrix"),
-            "allow_dirty": True,
-            "require_clean_tree": False,
-        }),
+        json.dumps(
+            {
+                "phase": "P154",
+                "targets": ["x_plus_1"],
+                "budgets": ["0.2s"],
+                "seeds": [42, 101],
+                "min_trials": 2,
+                "min_primary_rate": 0.50,
+                "min_cvps": 100.0,
+                "pop_size": 40,
+                "max_generations": 4,
+                "output_dir": str(tmp_path / "matrix"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
         encoding="utf-8",
     )
     out_file = tmp_path / "p154-out.json"
@@ -367,18 +371,20 @@ def test_p155_science_matrix_audit_runner(tmp_path: Path):
 
     good_cfg = tmp_path / "p155-config.json"
     good_cfg.write_text(
-        json.dumps({
-            "phase": "P155",
-            "targets": ["x_plus_1"],
-            "budgets": ["0.15s"],
-            "seeds": [42],
-            "methods": ["Random", "Classical-SR"],
-            "min_trials": 2,
-            "evobyte_must_beat_random": False,
-            "output_dir": str(tmp_path / "baselines_runner"),
-            "allow_dirty": True,
-            "require_clean_tree": False,
-        }),
+        json.dumps(
+            {
+                "phase": "P155",
+                "targets": ["x_plus_1"],
+                "budgets": ["0.15s"],
+                "seeds": [42],
+                "methods": ["Random", "Classical-SR"],
+                "min_trials": 2,
+                "evobyte_must_beat_random": False,
+                "output_dir": str(tmp_path / "baselines_runner"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
         encoding="utf-8",
     )
     out_file = tmp_path / "p155-out.json"
@@ -470,19 +476,21 @@ def test_p156_science_matrix_audit_runner(tmp_path: Path):
 
     good_cfg = tmp_path / "p156-config.json"
     good_cfg.write_text(
-        json.dumps({
-            "phase": "P156",
-            "targets": ["x_plus_1"],
-            "budgets": ["0.15s"],
-            "seeds": [42],
-            "methods": ["Random", "Classical-SR", "EvoByte"],
-            "min_trials": 3,
-            "min_extrap_rate": 0.50,
-            "max_explosion_rate": 0.05,
-            "output_dir": str(tmp_path / "gen_runner"),
-            "allow_dirty": True,
-            "require_clean_tree": False,
-        }),
+        json.dumps(
+            {
+                "phase": "P156",
+                "targets": ["x_plus_1"],
+                "budgets": ["0.15s"],
+                "seeds": [42],
+                "methods": ["Random", "Classical-SR", "EvoByte"],
+                "min_trials": 3,
+                "min_extrap_rate": 0.50,
+                "max_explosion_rate": 0.05,
+                "output_dir": str(tmp_path / "gen_runner"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
         encoding="utf-8",
     )
     out_file = tmp_path / "p156-out.json"
@@ -545,19 +553,21 @@ def test_p157_science_matrix_audit_runner(tmp_path: Path):
 
     good_cfg = tmp_path / "p157-config.json"
     good_cfg.write_text(
-        json.dumps({
-            "phase": "P157",
-            "targets": ["x2_3x_7"],
-            "seeds": [42],
-            "pop_size": 20,
-            "max_generations": 2,
-            "min_cascade_speedup": 1.0,
-            "min_early_term_speedup": 1.0,
-            "min_gpu_speedup": 1.0,
-            "output_dir": str(tmp_path / "abl_runner"),
-            "allow_dirty": True,
-            "require_clean_tree": False,
-        }),
+        json.dumps(
+            {
+                "phase": "P157",
+                "targets": ["x2_3x_7"],
+                "seeds": [42],
+                "pop_size": 20,
+                "max_generations": 2,
+                "min_cascade_speedup": 1.0,
+                "min_early_term_speedup": 1.0,
+                "min_gpu_speedup": 1.0,
+                "output_dir": str(tmp_path / "abl_runner"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
         encoding="utf-8",
     )
     out_file = tmp_path / "p157-out.json"
@@ -620,19 +630,21 @@ def test_p158_science_matrix_audit_runner(tmp_path: Path):
 
     good_cfg = tmp_path / "p158-config.json"
     good_cfg.write_text(
-        json.dumps({
-            "phase": "P158",
-            "targets": ["x_plus_1", "x2_3x_7"],
-            "seeds": [42, 101, 202, 303, 404],
-            "alpha": 0.05,
-            "source_baselines_dir": None,
-            "source_gen_dir": None,
-            "source_abl_dir": None,
-            "output_dir": str(tmp_path / "verdict_runner"),
-            "report_output_path": str(tmp_path / "report_runner.md"),
-            "allow_dirty": True,
-            "require_clean_tree": False,
-        }),
+        json.dumps(
+            {
+                "phase": "P158",
+                "targets": ["x_plus_1", "x2_3x_7"],
+                "seeds": [42, 101, 202, 303, 404],
+                "alpha": 0.05,
+                "source_baselines_dir": None,
+                "source_gen_dir": None,
+                "source_abl_dir": None,
+                "output_dir": str(tmp_path / "verdict_runner"),
+                "report_output_path": str(tmp_path / "report_runner.md"),
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
         encoding="utf-8",
     )
     out_file = tmp_path / "p158-out.json"

@@ -743,7 +743,9 @@ def test_p149_sidon_generator_and_certificates():
     certs_data = generate_extremal_sidon_certificates()
     assert certs_data["total_certificates"] == 50
     assert certs_data["all_valid"] is True
-    assert certs_data["checksum"] == "b95c5d8541c08cce8f646de35bf05febf42d280369b39962c64254bf56d19a64"
+    assert (
+        certs_data["checksum"] == "b95c5d8541c08cce8f646de35bf05febf42d280369b39962c64254bf56d19a64"
+    )
     families = {c["family"] for c in certs_data["certificates"]}
     assert {"ruzsa", "mian_chowla", "singer", "bnb_dense"} <= families
     for c in certs_data["certificates"]:

@@ -27,7 +27,9 @@ DEFAULT_ADDITIVE_ENERGY_LEAN_FILE = Path("lean_proofs/Generated/AdditiveEnergyTh
 DEFAULT_ADDITIVE_TACTIC_LEAN_FILE = Path("lean_proofs/Generated/AdditiveTacticTheorems.lean")
 DEFAULT_ERDOS_TURAN_BASES_LEAN_FILE = Path("lean_proofs/Generated/ErdosTuranBasesTheorems.lean")
 DEFAULT_SUM_FREE_THEOREMS_LEAN_FILE = Path("lean_proofs/Generated/SumFreeTheorems.lean")
-DEFAULT_EXTREMAL_CONSTRUCTIVE_CERTIFICATES_LEAN_FILE = Path("lean_proofs/Generated/ExtremalConstructiveCertificates.lean")
+DEFAULT_EXTREMAL_CONSTRUCTIVE_CERTIFICATES_LEAN_FILE = Path(
+    "lean_proofs/Generated/ExtremalConstructiveCertificates.lean"
+)
 
 
 # ==============================================================================
@@ -2446,40 +2448,46 @@ def generate_extremal_sidon_certificates() -> dict[str, Any]:
     for p in [3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43]:
         s = ruzsa_sidon_construction(p)
         valid = is_sidon_set(s)
-        certificates.append({
-            "family": "ruzsa",
-            "param": p,
-            "elements": s,
-            "cardinality": len(s),
-            "max_element": max(s),
-            "is_sidon": valid,
-        })
+        certificates.append(
+            {
+                "family": "ruzsa",
+                "param": p,
+                "elements": s,
+                "cardinality": len(s),
+                "max_element": max(s),
+                "is_sidon": valid,
+            }
+        )
 
     # 2. Mian-Chowla greedy Sidon sequences
     for L in [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 20, 25, 30, 35]:
         s = mian_chowla_sequence(L)
         valid = is_sidon_set(s)
-        certificates.append({
-            "family": "mian_chowla",
-            "param": L,
-            "elements": s,
-            "cardinality": len(s),
-            "max_element": max(s),
-            "is_sidon": valid,
-        })
+        certificates.append(
+            {
+                "family": "mian_chowla",
+                "param": L,
+                "elements": s,
+                "cardinality": len(s),
+                "max_element": max(s),
+                "is_sidon": valid,
+            }
+        )
 
     # 3. Singer difference sets
     for q in [2, 3, 4, 5]:
         s = singer_difference_set(q)
         valid = is_sidon_set(s)
-        certificates.append({
-            "family": "singer",
-            "param": q,
-            "elements": s,
-            "cardinality": len(s),
-            "max_element": max(s),
-            "is_sidon": valid,
-        })
+        certificates.append(
+            {
+                "family": "singer",
+                "param": q,
+                "elements": s,
+                "cardinality": len(s),
+                "max_element": max(s),
+                "is_sidon": valid,
+            }
+        )
 
     # 4. Dense finite B&B greedy Sidon sets
     def bnb_sidon(N: int) -> list[int]:
@@ -2500,14 +2508,16 @@ def generate_extremal_sidon_certificates() -> dict[str, Any]:
     for N in [10, 20, 30, 40, 50, 60, 75, 100, 120, 150, 180, 200, 500, 1000, 1764]:
         s = bnb_sidon(N)
         valid = is_sidon_set(s)
-        certificates.append({
-            "family": "bnb_dense",
-            "param": N,
-            "elements": s,
-            "cardinality": len(s),
-            "max_element": max(s),
-            "is_sidon": valid,
-        })
+        certificates.append(
+            {
+                "family": "bnb_dense",
+                "param": N,
+                "elements": s,
+                "cardinality": len(s),
+                "max_element": max(s),
+                "is_sidon": valid,
+            }
+        )
 
     all_valid = all(c["is_sidon"] for c in certificates)
     canonical_payload = [
@@ -2520,7 +2530,9 @@ def generate_extremal_sidon_certificates() -> dict[str, Any]:
         }
         for c in certificates
     ]
-    canonical_bytes = json.dumps(canonical_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(canonical_payload, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     return {
@@ -2575,26 +2587,34 @@ def compile_extremal_constructive_certificates_lean(
         s = ruzsa_sidon_construction(p)
         lines.append(f"theorem sidon_ruzsa_cert_p{p} : is_sidon_sorted {s} = true := by decide")
         lines.append(f"theorem sidon_ruzsa_card_p{p} : ({s}).length = {len(s)} := by decide")
-        lines.append(f"theorem sidon_ruzsa_bound_p{p} : {s}.all (fun x => x ≤ {max(s)}) = true := by decide")
+        lines.append(
+            f"theorem sidon_ruzsa_bound_p{p} : {s}.all (fun x => x ≤ {max(s)}) = true := by decide"
+        )
         lines.append(f"theorem sidon_ruzsa_pos_p{p} : {s}.all (fun x => x > 0) = true := by decide")
 
     for L in [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]:
         s = mian_chowla_sequence(L)
         lines.append(f"theorem sidon_mc_cert_len{L} : is_sidon_sorted {s} = true := by decide")
         lines.append(f"theorem sidon_mc_card_len{L} : ({s}).length = {len(s)} := by decide")
-        lines.append(f"theorem sidon_mc_bound_len{L} : {s}.all (fun x => x ≤ {max(s)}) = true := by decide")
+        lines.append(
+            f"theorem sidon_mc_bound_len{L} : {s}.all (fun x => x ≤ {max(s)}) = true := by decide"
+        )
 
     for q in [2, 3, 4, 5]:
         s = singer_difference_set(q)
         lines.append(f"theorem sidon_singer_cert_q{q} : is_sidon_sorted {s} = true := by decide")
         lines.append(f"theorem sidon_singer_card_q{q} : ({s}).length = {len(s)} := by decide")
-        lines.append(f"theorem sidon_singer_bound_q{q} : {s}.all (fun x => x ≤ {max(s)}) = true := by decide")
+        lines.append(
+            f"theorem sidon_singer_bound_q{q} : {s}.all (fun x => x ≤ {max(s)}) = true := by decide"
+        )
 
     for N in [10, 20, 30, 40, 50, 60, 75, 100, 120, 150, 180, 200]:
         s = bnb_sidon(N)
         lines.append(f"theorem sidon_bnb_cert_n{N} : is_sidon_sorted {s} = true := by decide")
         lines.append(f"theorem sidon_bnb_card_n{N} : ({s}).length = {len(s)} := by decide")
-        lines.append(f"theorem sidon_bnb_bound_n{N} : {s}.all (fun x => x ≤ {max(s)}) = true := by decide")
+        lines.append(
+            f"theorem sidon_bnb_bound_n{N} : {s}.all (fun x => x ≤ {max(s)}) = true := by decide"
+        )
 
     code = "\n".join(lines)
     target_p = gen / "ExtremalConstructiveCertificates.lean"
@@ -2693,6 +2713,8 @@ def verify_extremal_constructive_certificates_baseline_soundness(
 
     certs = audit_data.get("certificates_summary", {})
     if not certs.get("all_valid", False):
-        findings.append("INVALID_SIDON_CERTIFICATES: some generated certificates violate Sidon property")
+        findings.append(
+            "INVALID_SIDON_CERTIFICATES: some generated certificates violate Sidon property"
+        )
 
     return len(findings) == 0, findings

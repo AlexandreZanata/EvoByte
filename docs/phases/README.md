@@ -319,6 +319,19 @@ blind FWER confirmation, and 3,800+ Lean 4 theorems.
 - [P143 — Confirmação cega em larga escala em discrepância e recobrimentos sob controle FWER](P143-discrepancy-covering-blind-confirmation.md).
 - [P144 — Grande campanha formal de discrepância e recobrimentos com dossiê certificado em Lean 4](P144-discrepancy-covering-grand-dossier.md).
 
+## Programa de Descoberta Validada (P161–P170, D038)
+
+- [P161 — Retratação de alegações refutadas e guarda mecânica de integralidade](P161-claim-retraction-integrality-guard.md).
+- [P162 — Gate de fidelidade de enunciados Lean e registro de revisão humana](P162-lean-statement-fidelity-gate.md).
+- [P163 — Catálogo de alvos de recorde e conjecturas com verificadores independentes](P163-record-target-catalogue.md).
+- [P164 — Baselines combinatórios honestos pareados (Simulated Annealing, Tabu, Random)](P164-honest-combinatorial-baselines.md).
+- [P165 — Protocolo de redescoberta cega de recordes conhecidos da literatura](P165-blind-rediscovery-protocol.md).
+- [P166 — Campanha pré-registrada de busca por novos recordes mundiais sob orçamento fixo](P166-preregistered-record-campaign.md).
+- [P167 — Dossiê de validação externa e exportação de certificados autônomos](P167-external-validation-dossier.md).
+- [P168 — Certificados formais com fidelidade verificada em Lean 4](P168-faithful-formal-certificates.md).
+- [P169 — Veredito estatístico consolidado com controle FWER e registro de resultados nulos](P169-statistical-verdict-negative-results.md).
+- [P170 — Manuscrito de publicação auditado, pacote arquivável Zenodo e conclusão do programa](P170-publication-manuscript-archive.md).
+
 Execute one micro-task at a time. All phases remain Proposed until their explicit
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.

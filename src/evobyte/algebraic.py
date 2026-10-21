@@ -4729,7 +4729,9 @@ def classify_schinzel_residue_class(a: int, modulus: int, r: int) -> dict[str, A
     if r < 0 or r >= modulus:
         raise ValueError(f"Residue {r} out of bounds for modulus {modulus}")
     if a not in SCHINZEL_NUMERATORS:
-        raise ValueError(f"Numerator {a} not in supported Schinzel numerators: {SCHINZEL_NUMERATORS}")
+        raise ValueError(
+            f"Numerator {a} not in supported Schinzel numerators: {SCHINZEL_NUMERATORS}"
+        )
 
     g_mod = math.gcd(r, modulus)
     g_a = math.gcd(r, a)
@@ -5001,7 +5003,9 @@ def verify_schinzel_high_moduli_database_soundness(
         res_list = pair_data.get("resistant_classes", [])
 
         if cov + res != tot or tot != m:
-            findings.append(f"PARTITION_MISMATCH_{pair_key}: covered ({cov}) + resistant ({res}) != total ({tot})")
+            findings.append(
+                f"PARTITION_MISMATCH_{pair_key}: covered ({cov}) + resistant ({res}) != total ({tot})"
+            )
 
         # Resistant residues must be coprime to modulus
         for r in res_list:
@@ -5258,32 +5262,36 @@ def audit_schinzel_quadratic_sieve_baseline(
             if sol is None:
                 all_resistant_solved = False
                 all_solutions_valid = False
-                sieve_results.append({
-                    "pair": pair_key,
-                    "a": a,
-                    "modulus": m,
-                    "residue": r,
-                    "n": n,
-                    "solved": False,
-                    "telemetry": telemetry,
-                })
+                sieve_results.append(
+                    {
+                        "pair": pair_key,
+                        "a": a,
+                        "modulus": m,
+                        "residue": r,
+                        "n": n,
+                        "solved": False,
+                        "telemetry": telemetry,
+                    }
+                )
             else:
                 x, y, z = sol
-                valid = (a * x * y * z == n * (x * y + y * z + z * x))
+                valid = a * x * y * z == n * (x * y + y * z + z * x)
                 if not valid:
                     all_solutions_valid = False
-                sieve_results.append({
-                    "pair": pair_key,
-                    "a": a,
-                    "modulus": m,
-                    "residue": r,
-                    "n": n,
-                    "solved": True,
-                    "solution": (x, y, z),
-                    "step": telemetry.get("step"),
-                    "pruned": telemetry.get("modular_pruned"),
-                    "valid": valid,
-                })
+                sieve_results.append(
+                    {
+                        "pair": pair_key,
+                        "a": a,
+                        "modulus": m,
+                        "residue": r,
+                        "n": n,
+                        "solved": True,
+                        "solution": (x, y, z),
+                        "step": telemetry.get("step"),
+                        "pruned": telemetry.get("modular_pruned"),
+                        "valid": valid,
+                    }
+                )
 
     elapsed = time.perf_counter() - t0
 
@@ -5321,10 +5329,14 @@ def verify_schinzel_quadratic_sieve_baseline_soundness(
         findings.append(f"LAKE_BUILD_FAILED: {audit_data.get('lake_reasons')}")
 
     if not audit_data.get("all_resistant_solved", False):
-        findings.append("UNSOLVED_RESISTANT_INSTANCES: some resistant classes were not solved by quadratic sieve")
+        findings.append(
+            "UNSOLVED_RESISTANT_INSTANCES: some resistant classes were not solved by quadratic sieve"
+        )
 
     if not audit_data.get("all_solutions_valid", False):
-        findings.append("INVALID_SOLUTIONS: some generated solutions do not satisfy the Diophantine equation")
+        findings.append(
+            "INVALID_SOLUTIONS: some generated solutions do not satisfy the Diophantine equation"
+        )
 
     return len(findings) == 0, findings
 
@@ -5370,15 +5382,17 @@ def synthesize_polynomial_identity_for_class(
                 if not (0 < xv < yv < zv):
                     ordered = False
                     break
-                samples.append({
-                    "k": k_val,
-                    "n": nv,
-                    "X": xv,
-                    "Y": yv,
-                    "Z": zv,
-                    "sum_reciprocals": 1.0 / xv + 1.0 / yv + 1.0 / zv,
-                    "target": float(a) / nv,
-                })
+                samples.append(
+                    {
+                        "k": k_val,
+                        "n": nv,
+                        "X": xv,
+                        "Y": yv,
+                        "Z": zv,
+                        "sum_reciprocals": 1.0 / xv + 1.0 / yv + 1.0 / zv,
+                        "target": float(a) / nv,
+                    }
+                )
             if not ordered:
                 continue
 
@@ -5414,7 +5428,9 @@ def synthesize_schinzel_polynomial_database(
         a = pair["a"]
         M = pair["modulus"]
         resistant = pair["resistant_classes"]
-        classes_to_process = resistant[:max_classes_per_pair] if max_classes_per_pair > 0 else resistant
+        classes_to_process = (
+            resistant[:max_classes_per_pair] if max_classes_per_pair > 0 else resistant
+        )
         for r in classes_to_process:
             total_classes_processed += 1
             res = synthesize_polynomial_identity_for_class(a, M, r, k0=k0)
@@ -5443,7 +5459,9 @@ def synthesize_schinzel_polynomial_database(
             for item in identities
         ],
     }
-    canonical_bytes = json.dumps(canonical_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(canonical_payload, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     return {
@@ -5487,10 +5505,14 @@ def verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
         findings.append(f"INSUFFICIENT_IDENTITIES: expected >= {min_identities}, got {tot}")
 
     if not audit_data.get("all_algebraic_valid", False):
-        findings.append("INVALID_ALGEBRAIC_IDENTITIES: some identities failed symbolic verification")
+        findings.append(
+            "INVALID_ALGEBRAIC_IDENTITIES: some identities failed symbolic verification"
+        )
 
     if not audit_data.get("all_strictly_ordered", False):
-        findings.append("DEGENERATE_OR_DISORDERED_POLYNOMIALS: some polynomial triples violate 0 < X < Y < Z")
+        findings.append(
+            "DEGENERATE_OR_DISORDERED_POLYNOMIALS: some polynomial triples violate 0 < X < Y < Z"
+        )
 
     return len(findings) == 0, findings
 
@@ -5500,7 +5522,9 @@ def verify_schinzel_polynomial_identity_synthesis_baseline_soundness(
 # ==============================================================================
 
 DEFAULT_SCHINZEL_THEOREMS_LEAN_FILE = Path("lean_proofs/Generated/SchinzelHighModuliTheorems.lean")
-DEFAULT_EXTREMAL_CERTIFICATES_LEAN_FILE = Path("lean_proofs/Generated/ExtremalConstructiveCertificates.lean")
+DEFAULT_EXTREMAL_CERTIFICATES_LEAN_FILE = Path(
+    "lean_proofs/Generated/ExtremalConstructiveCertificates.lean"
+)
 
 
 def build_world_literature_corpora() -> dict[str, Any]:
@@ -5731,7 +5755,11 @@ def audit_world_literature_novelty_dual(
         ch1_passed = False
         try:
             samples = ident.get("samples", [])
-            if ident.get("verified_algebraic", False) and ident.get("strictly_ordered", False) and len(samples) > 0:
+            if (
+                ident.get("verified_algebraic", False)
+                and ident.get("strictly_ordered", False)
+                and len(samples) > 0
+            ):
                 all_samples_valid = True
                 for s in samples:
                     if not (0 < s["X"] < s["Y"] < s["Z"]):
@@ -5745,13 +5773,9 @@ def audit_world_literature_novelty_dual(
             ch1_passed = False
 
         # Checker 2: Lean 4 formal kernel check
-        ch2_passed = (
-            mod_schinzel_p.exists()
-            and not has_sorry_schinzel
-            and lake_passed
-        )
+        ch2_passed = mod_schinzel_p.exists() and not has_sorry_schinzel and lake_passed
 
-        agreed = (ch1_passed == ch2_passed)
+        agreed = ch1_passed == ch2_passed
         if agreed:
             dual_agreements += 1
 
@@ -5759,16 +5783,18 @@ def audit_world_literature_novelty_dual(
         verdict = cls_res["verdict"] if agreed and ch1_passed else "inconclusive-instance"
         classification_counts[verdict] = classification_counts.get(verdict, 0) + 1
 
-        audited_instances.append({
-            "category": "schinzel",
-            "id": f"schinzel_a{ident['a']}_m{ident['modulus']}_r{ident['residue']}",
-            "checker_1_symbolic": ch1_passed,
-            "checker_2_lean4": ch2_passed,
-            "dual_agreement": agreed,
-            "verdict": verdict,
-            "rationale": cls_res["rationale"],
-            "literature_ref": cls_res["literature_ref"],
-        })
+        audited_instances.append(
+            {
+                "category": "schinzel",
+                "id": f"schinzel_a{ident['a']}_m{ident['modulus']}_r{ident['residue']}",
+                "checker_1_symbolic": ch1_passed,
+                "checker_2_lean4": ch2_passed,
+                "dual_agreement": agreed,
+                "verdict": verdict,
+                "rationale": cls_res["rationale"],
+                "literature_ref": cls_res["literature_ref"],
+            }
+        )
 
     # Audit Sidon certificates
     for cert in sidon_certs:
@@ -5776,13 +5802,9 @@ def audit_world_literature_novelty_dual(
         ch1_passed = is_sidon_set(cert["elements"])
 
         # Checker 2: Lean 4 formal kernel check
-        ch2_passed = (
-            mod_sidon_p.exists()
-            and not has_sorry_sidon
-            and lake_passed
-        )
+        ch2_passed = mod_sidon_p.exists() and not has_sorry_sidon and lake_passed
 
-        agreed = (ch1_passed == ch2_passed)
+        agreed = ch1_passed == ch2_passed
         if agreed:
             dual_agreements += 1
 
@@ -5790,16 +5812,18 @@ def audit_world_literature_novelty_dual(
         verdict = cls_res["verdict"] if agreed and ch1_passed else "inconclusive-instance"
         classification_counts[verdict] = classification_counts.get(verdict, 0) + 1
 
-        audited_instances.append({
-            "category": "sidon",
-            "id": f"sidon_{cert['family']}_{cert.get('param', cert.get('max_element'))}",
-            "checker_1_symbolic": ch1_passed,
-            "checker_2_lean4": ch2_passed,
-            "dual_agreement": agreed,
-            "verdict": verdict,
-            "rationale": cls_res["rationale"],
-            "literature_ref": cls_res["literature_ref"],
-        })
+        audited_instances.append(
+            {
+                "category": "sidon",
+                "id": f"sidon_{cert['family']}_{cert.get('param', cert.get('max_element'))}",
+                "checker_1_symbolic": ch1_passed,
+                "checker_2_lean4": ch2_passed,
+                "dual_agreement": agreed,
+                "verdict": verdict,
+                "rationale": cls_res["rationale"],
+                "literature_ref": cls_res["literature_ref"],
+            }
+        )
 
     tot_instances = len(audited_instances)
     agreement_rate = (dual_agreements / tot_instances) if tot_instances > 0 else 0.0
@@ -5820,7 +5844,9 @@ def audit_world_literature_novelty_dual(
             for inst in audited_instances
         ],
     }
-    canonical_bytes = json.dumps(canonical_payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    canonical_bytes = json.dumps(canonical_payload, sort_keys=True, separators=(",", ":")).encode(
+        "utf-8"
+    )
     checksum = hashlib.sha256(canonical_bytes).hexdigest()
 
     elapsed = time.perf_counter() - t0
@@ -5863,7 +5889,9 @@ def verify_world_literature_novelty_soundness(
 
     counts = audit_data.get("classification_counts", {})
     if counts.get("inconclusive-instance", 0) > 0:
-        findings.append(f"INCONCLUSIVE_INSTANCES_DETECTED: {counts.get('inconclusive-instance')} instances")
+        findings.append(
+            f"INCONCLUSIVE_INSTANCES_DETECTED: {counts.get('inconclusive-instance')} instances"
+        )
 
     if counts.get("novel-extension", 0) == 0:
         findings.append("NO_NOVEL_EXTENSIONS: expected at least one novel-extension")

@@ -1747,7 +1747,7 @@ def generate_discrepancy_covering_blind_split(
     for i in range(count_per_track):
         iid = f"P143_PRM_{i + 1:02d}"
         n_val = 5 + i * 2
-        is_interval = (i % 2 == 0)
+        is_interval = i % 2 == 0
         primes_cutoff = 15 + i * 3
         prm_instances.append(
             {
@@ -1889,7 +1889,33 @@ def evaluate_discrepancy_covering_blind_confirmation(
                     c_base = max(90, 2 * n_val * n_val)
                 else:
                     cutoff = int(inst["primes_cutoff"])
-                    all_p = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97]
+                    all_p = [
+                        2,
+                        3,
+                        5,
+                        7,
+                        11,
+                        13,
+                        17,
+                        19,
+                        23,
+                        29,
+                        31,
+                        37,
+                        41,
+                        43,
+                        47,
+                        53,
+                        59,
+                        61,
+                        67,
+                        71,
+                        73,
+                        79,
+                        83,
+                        89,
+                        97,
+                    ]
                     primes_sub = [p for p in all_p if p <= cutoff]
                     bound_res = lichtman_erdos_reciprocal_log_sum_bound(primes_sub)
                     is_prim = is_primitive_set(primes_sub)
@@ -2054,15 +2080,17 @@ def generate_p151_schinzel_sidon_blind_split(
         iid = f"P151_SCH840_{i + 1:02d}"
         if dev_pool and iid in dev_pool:
             leakage_detected = True
-        m840_instances.append({
-            "instance_id": iid,
-            "track": "schinzel_m840",
-            "index": i,
-            "a": a,
-            "modulus": 840,
-            "residue": r,
-            "k_val": k_val,
-        })
+        m840_instances.append(
+            {
+                "instance_id": iid,
+                "track": "schinzel_m840",
+                "index": i,
+                "a": a,
+                "modulus": 840,
+                "residue": r,
+                "k_val": k_val,
+            }
+        )
         all_ids.append(iid)
     tracks["schinzel_m840"] = {
         "name": "Schinzel Resistant Classes Modulo 840",
@@ -2080,15 +2108,17 @@ def generate_p151_schinzel_sidon_blind_split(
         iid = f"P151_SCH2520_{i + 1:02d}"
         if dev_pool and iid in dev_pool:
             leakage_detected = True
-        m2520_instances.append({
-            "instance_id": iid,
-            "track": "schinzel_m2520",
-            "index": i,
-            "a": a,
-            "modulus": 2520,
-            "residue": r,
-            "k_val": k_val,
-        })
+        m2520_instances.append(
+            {
+                "instance_id": iid,
+                "track": "schinzel_m2520",
+                "index": i,
+                "a": a,
+                "modulus": 2520,
+                "residue": r,
+                "k_val": k_val,
+            }
+        )
         all_ids.append(iid)
     tracks["schinzel_m2520"] = {
         "name": "Schinzel Resistant Classes Modulo 2520",
@@ -2106,15 +2136,17 @@ def generate_p151_schinzel_sidon_blind_split(
         iid = f"P151_SCH5040_{i + 1:02d}"
         if dev_pool and iid in dev_pool:
             leakage_detected = True
-        m5040_instances.append({
-            "instance_id": iid,
-            "track": "schinzel_m5040",
-            "index": i,
-            "a": a,
-            "modulus": 5040,
-            "residue": r,
-            "k_val": k_val,
-        })
+        m5040_instances.append(
+            {
+                "instance_id": iid,
+                "track": "schinzel_m5040",
+                "index": i,
+                "a": a,
+                "modulus": 5040,
+                "residue": r,
+                "k_val": k_val,
+            }
+        )
         all_ids.append(iid)
     tracks["schinzel_m5040"] = {
         "name": "Schinzel Resistant Classes Modulo 5040",
@@ -2128,13 +2160,15 @@ def generate_p151_schinzel_sidon_blind_split(
         iid = f"P151_SIDON_{i + 1:02d}"
         if dev_pool and iid in dev_pool:
             leakage_detected = True
-        sidon_instances.append({
-            "instance_id": iid,
-            "track": "extremal_sidon_packing",
-            "index": i,
-            "n_val": n_val,
-            "min_cardinality": int(n_val ** 0.45),
-        })
+        sidon_instances.append(
+            {
+                "instance_id": iid,
+                "track": "extremal_sidon_packing",
+                "index": i,
+                "n_val": n_val,
+                "min_cardinality": int(n_val**0.45),
+            }
+        )
         all_ids.append(iid)
     tracks["extremal_sidon_packing"] = {
         "name": "Extremal Sidon Difference Packing Certificates",
@@ -2204,7 +2238,11 @@ def evaluate_p151_schinzel_sidon_blind_confirmation(
                 r = int(inst["residue"])
                 k_val = int(inst["k_val"])
                 ident = synthesize_polynomial_identity_for_class(a, m, r, k0=k_val)
-                if ident is None or not ident.get("verified_algebraic", False) or not ident.get("strictly_ordered", False):
+                if (
+                    ident is None
+                    or not ident.get("verified_algebraic", False)
+                    or not ident.get("strictly_ordered", False)
+                ):
                     is_valid = False
                     track_verified = False
                     all_engine_verified = False
@@ -2245,16 +2283,18 @@ def evaluate_p151_schinzel_sidon_blind_confirmation(
 
             total_engine_cands += c_engine
             total_base_cands += c_base
-            pairs.append({
-                "instance_id": iid,
-                "engine_cost": c_engine,
-                "base_cost": c_base,
-                "is_valid": is_valid,
-                "status": status,
-            })
+            pairs.append(
+                {
+                    "instance_id": iid,
+                    "engine_cost": c_engine,
+                    "base_cost": c_base,
+                    "is_valid": is_valid,
+                    "status": status,
+                }
+            )
 
         n_track = len(instances)
-        binom_pval = float(0.5 ** wins) if wins > 0 else 1.0
+        binom_pval = float(0.5**wins) if wins > 0 else 1.0
         track_pvalues[track_key] = binom_pval
         confirmed = track_verified and (wins > losses) and (wins >= int(n_track * 0.8))
 
@@ -2285,7 +2325,9 @@ def evaluate_p151_schinzel_sidon_blind_confirmation(
         t_info["adjusted_p_value"] = holm_res["adjusted_p_values"].get(t_key, 1.0)
         t_info["fwer_rejected"] = t_key in holm_res["significant_tracks"]
         if not t_info["fwer_rejected"]:
-            findings.append(f"FWER_NOT_REJECTED_{t_key}: adjusted p={t_info['adjusted_p_value']:.4e} >= {alpha}")
+            findings.append(
+                f"FWER_NOT_REJECTED_{t_key}: adjusted p={t_info['adjusted_p_value']:.4e} >= {alpha}"
+            )
 
     soundness, soundness_findings = verify_multiproblem_confirmation_soundness(
         {

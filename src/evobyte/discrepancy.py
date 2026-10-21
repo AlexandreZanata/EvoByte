@@ -26,15 +26,9 @@ DEFAULT_DISCREPANCY_COVERING_SIGNATURES_LEAN_FILE = Path(
 )
 DEFAULT_ERDOS_DISCREPANCY_LEAN_FILE = Path("lean_proofs/Generated/ErdosDiscrepancyTheorems.lean")
 DEFAULT_ROTH_SPENCER_LEAN_FILE = Path("lean_proofs/Generated/RothSpencerDiscrepancyTheorems.lean")
-DEFAULT_DISCREPANCY_TACTIC_LEAN_FILE = Path(
-    "lean_proofs/Generated/DiscrepancyTacticTheorems.lean"
-)
-DEFAULT_COVERING_SYSTEMS_LEAN_FILE = Path(
-    "lean_proofs/Generated/CoveringSystemsTheorems.lean"
-)
-DEFAULT_PRIMITIVE_SETS_LEAN_FILE = Path(
-    "lean_proofs/Generated/PrimitiveSetsDivisorsTheorems.lean"
-)
+DEFAULT_DISCREPANCY_TACTIC_LEAN_FILE = Path("lean_proofs/Generated/DiscrepancyTacticTheorems.lean")
+DEFAULT_COVERING_SYSTEMS_LEAN_FILE = Path("lean_proofs/Generated/CoveringSystemsTheorems.lean")
+DEFAULT_PRIMITIVE_SETS_LEAN_FILE = Path("lean_proofs/Generated/PrimitiveSetsDivisorsTheorems.lean")
 
 
 # ==============================================================================
@@ -1910,9 +1904,7 @@ def verify_discrepancy_tactic_baseline_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append(
-            "SORRY_DETECTED: DiscrepancyTacticTheorems contains unproven sorry tokens"
-        )
+        findings.append("SORRY_DETECTED: DiscrepancyTacticTheorems contains unproven sorry tokens")
 
     if not audit_summary.get("has_syntax_def", False):
         findings.append("MISSING_SYNTAX_DEF: discrepancy_norm tactic syntax not found")
@@ -2014,7 +2006,11 @@ def covering_systems_benchmarks() -> list[dict[str, Any]]:
     # 4. Incomplete candidate / odd moduli defect: (0, 3), (0, 5), (0, 7)
     odd_sys = [(0, 3), (0, 5), (0, 7)]
     res4 = verify_covering_system(odd_sys)
-    b4_passed = (not res4["is_covering"]) and (res4["uncovered_witness"] == 1) and (res4["reciprocal_sum"] < 1.0)
+    b4_passed = (
+        (not res4["is_covering"])
+        and (res4["uncovered_witness"] == 1)
+        and (res4["reciprocal_sum"] < 1.0)
+    )
     benchmarks.append(
         {
             "name": "odd_moduli_defect_noncovering",
@@ -2027,11 +2023,10 @@ def covering_systems_benchmarks() -> list[dict[str, Any]]:
 
     # 5. Bob Hough (2015) Minimum Modulus Bound validation: m1 <= 10^16
     hough_constant = 10**16
-    hough_valid = all(
-        s["min_modulus"] <= hough_constant
-        for s in (res1, res2, res3)
-        if s["is_covering"]
-    ) and hough_constant == 10000000000000000
+    hough_valid = (
+        all(s["min_modulus"] <= hough_constant for s in (res1, res2, res3) if s["is_covering"])
+        and hough_constant == 10000000000000000
+    )
     benchmarks.append(
         {
             "name": "hough_minimum_modulus_bound",
@@ -2433,9 +2428,7 @@ def verify_covering_systems_baseline_soundness(
     findings: list[str] = []
 
     if audit_summary.get("has_sorry", False):
-        findings.append(
-            "SORRY_DETECTED: CoveringSystemsTheorems contains unproven sorry tokens"
-        )
+        findings.append("SORRY_DETECTED: CoveringSystemsTheorems contains unproven sorry tokens")
 
     total_thms = audit_summary.get("total_theorems", 0)
     if total_thms < min_theorems:
@@ -2602,7 +2595,31 @@ def primitive_sets_benchmarks() -> list[dict[str, Any]]:
 
     # Benchmark 5: Lichtman-Erdos reciprocal log sum bound on primes
     first_primes = [
-        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97
+        2,
+        3,
+        5,
+        7,
+        11,
+        13,
+        17,
+        19,
+        23,
+        29,
+        31,
+        37,
+        41,
+        43,
+        47,
+        53,
+        59,
+        61,
+        67,
+        71,
+        73,
+        79,
+        83,
+        89,
+        97,
     ]
     bound_eval = lichtman_erdos_reciprocal_log_sum_bound(first_primes)
     benchmarks.append(
@@ -2621,6 +2638,7 @@ def primitive_sets_benchmarks() -> list[dict[str, Any]]:
 def generate_primitive_sets_lean_code() -> str:
     """Generate the full Lean 4 formal module PrimitiveSetsDivisorsTheorems.lean."""
     from pathlib import Path
+
     f = Path("lean_proofs/Generated/PrimitiveSetsDivisorsTheorems.lean")
     if f.exists():
         return f.read_text(encoding="utf-8")
@@ -2939,19 +2957,23 @@ def generate_primitive_sets_lean_code() -> str:
     ]
 
     for k in range(1, 41):
-        lines.extend([
-            f"theorem interval_primitive_param_{k} (a b : Nat) (ha : {k} + 1 ≤ a ∧ a ≤ 2 * {k})",
-            f"    (hb : {k} + 1 ≤ b ∧ b ≤ 2 * {k}) (hdiv : a ∣ b) : a = b := by",
-            f"  apply interval_primitive {k} a b ha.1 ha.2 hb.1 hb.2 hdiv",
-            "",
-        ])
+        lines.extend(
+            [
+                f"theorem interval_primitive_param_{k} (a b : Nat) (ha : {k} + 1 ≤ a ∧ a ≤ 2 * {k})",
+                f"    (hb : {k} + 1 ≤ b ∧ b ≤ 2 * {k}) (hdiv : a ∣ b) : a = b := by",
+                f"  apply interval_primitive {k} a b ha.1 ha.2 hb.1 hb.2 hdiv",
+                "",
+            ]
+        )
 
     for k in range(1, 41):
         num = 1636616 - k * 1000
-        lines.extend([
-            f"theorem lichtman_scaled_k_{k} : ({num} : Nat) ≤ 1636616 := by decide",
-            "",
-        ])
+        lines.extend(
+            [
+                f"theorem lichtman_scaled_k_{k} : ({num} : Nat) ≤ 1636616 := by decide",
+                "",
+            ]
+        )
 
     lines.append("end EvoByte.PrimitiveSets\n")
     return "\n".join(lines)

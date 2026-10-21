@@ -24,7 +24,12 @@ import numpy as np
 from scipy.stats import wilcoxon
 
 from evaluate_generalization import run_p156_generalization_suite
-from full_matrix import compute_pareto_front, generate_target_dataset, probe, run_p155_baselines_suite
+from full_matrix import (
+    compute_pareto_front,
+    generate_target_dataset,
+    probe,
+    run_p155_baselines_suite,
+)
 from run_ablations import run_p157_ablations_suite
 
 
@@ -38,7 +43,9 @@ def compute_bootstrap_ci(
     if len(arr) == 1:
         return float(arr[0]), float(arr[0])
     rng = np.random.default_rng(seed)
-    means = [float(np.mean(rng.choice(arr, size=len(arr), replace=True))) for _ in range(n_resamples)]
+    means = [
+        float(np.mean(rng.choice(arr, size=len(arr), replace=True))) for _ in range(n_resamples)
+    ]
     low = float(np.percentile(means, 100 * (alpha / 2.0)))
     high = float(np.percentile(means, 100 * (1.0 - alpha / 2.0)))
     return low, high
@@ -82,7 +89,9 @@ def run_p158_h1_verdict_suite(
     target_seeds = seeds or [42, 101, 202, 303, 404]
 
     # 1. Load or run baseline trials (P155)
-    baselines_summary_file = Path(source_baselines_dir) / "summary_baselines.json" if source_baselines_dir else None
+    baselines_summary_file = (
+        Path(source_baselines_dir) / "summary_baselines.json" if source_baselines_dir else None
+    )
     if baselines_summary_file and baselines_summary_file.exists():
         with open(baselines_summary_file, encoding="utf-8") as f:
             baselines_summary = json.load(f)
@@ -94,7 +103,9 @@ def run_p158_h1_verdict_suite(
         )
 
     # 2. Load or run generalization trials (P156)
-    gen_summary_file = Path(source_gen_dir) / "summary_generalization.json" if source_gen_dir else None
+    gen_summary_file = (
+        Path(source_gen_dir) / "summary_generalization.json" if source_gen_dir else None
+    )
     if gen_summary_file and gen_summary_file.exists():
         with open(gen_summary_file, encoding="utf-8") as f:
             gen_summary = json.load(f)
@@ -151,7 +162,11 @@ def run_p158_h1_verdict_suite(
     # --------------------------------------------------------------------------
     # Statistical Evaluation of Criterion 3: Value of Evolution vs Random
     # --------------------------------------------------------------------------
-    trials_dir = Path(source_baselines_dir) / "trials" if source_baselines_dir else out_d / "baselines" / "trials"
+    trials_dir = (
+        Path(source_baselines_dir) / "trials"
+        if source_baselines_dir
+        else out_d / "baselines" / "trials"
+    )
     all_trials = []
     if trials_dir.exists():
         for tf in trials_dir.glob("*.json"):
@@ -160,15 +175,28 @@ def run_p158_h1_verdict_suite(
 
     # Match paired trials (EvoByte vs Random) by (target, budget, seed)
     pairs: list[tuple[float, float]] = []
-    evo_map = {(t["target"], t["budget_sec"], t["seed"]): t for t in all_trials if t.get("method") == "EvoByte"}
-    rand_map = {(t["target"], t["budget_sec"], t["seed"]): t for t in all_trials if t.get("method") == "Random"}
+    evo_map = {
+        (t["target"], t["budget_sec"], t["seed"]): t
+        for t in all_trials
+        if t.get("method") == "EvoByte"
+    }
+    rand_map = {
+        (t["target"], t["budget_sec"], t["seed"]): t
+        for t in all_trials
+        if t.get("method") == "Random"
+    }
 
     for key, e_trial in evo_map.items():
         if key in rand_map:
             r_trial = rand_map[key]
             e_mse = e_trial.get("hidden_mse", float("inf"))
             r_mse = r_trial.get("hidden_mse", float("inf"))
-            if e_mse is not None and r_mse is not None and np.isfinite(e_mse) and np.isfinite(r_mse):
+            if (
+                e_mse is not None
+                and r_mse is not None
+                and np.isfinite(e_mse)
+                and np.isfinite(r_mse)
+            ):
                 pairs.append((float(e_mse), float(r_mse)))
 
     # Wilcoxon signed-rank test: Random MSE > EvoByte MSE (diff = Random - EvoByte > 0)
@@ -290,19 +318,19 @@ def run_p158_h1_verdict_suite(
 
 | Critério | Descrição | Métrica Observada | Limiar Exigido | Status |
 |---|---|---|---|---|
-| **C1: Redescoberta** | Re-encontrar alvos Level-A em $\\ge 4/5$ sementes sob $<6$ GB VRAM | {evo_succ_rate:.2%} redescoberta | $\\ge 80.0\\%$ | **{c1_verdict['verdict']}** |
-| **C2: Velocidade & Cascata** | Aceleração por verificador em cascata e terminação precoce | Cascata: {casc_speedup:.2f}x / Early: {et_speedup:.2f}x | Cascata $\\ge 10\\times$ / Early $\\ge 2\\times$ | **{c2_verdict['verdict']}** |
-| **C3: Valor da Evolução** | Genético + QD supera busca aleatória pareada sob mesmo tempo | Wilcoxon $W={wilcoxon_stat:.1f}$, $p_{{\\text{{Holm}}}}={holm_p:.4e}$ | $p_{{\\text{{Holm}}}} \\le {alpha}$ | **{c3_verdict['verdict']}** |
-| **C4: Generalização** | Modelos generalizam em splits ocultos e de extrapolação | Extrap: {ext_rate:.2%}, Explosão: {expl_rate:.2%}, Tamanho: {mean_comp:.1f} | Extrap $\\ge 70\\%$, Expl $0\\%$, Tam $\\le 25$ | **{c4_verdict['verdict']}** |
-| **C5: Baselines & Pareto** | Fronteira não-dominada (MSE vs. Tamanho) sobre baselines honestos | {len(pareto_pts)} pontos de Pareto não-dominados | Fronteira válida não-dominada | **{c5_verdict['verdict']}** |
+| **C1: Redescoberta** | Re-encontrar alvos Level-A em $\\ge 4/5$ sementes sob $<6$ GB VRAM | {evo_succ_rate:.2%} redescoberta | $\\ge 80.0\\%$ | **{c1_verdict["verdict"]}** |
+| **C2: Velocidade & Cascata** | Aceleração por verificador em cascata e terminação precoce | Cascata: {casc_speedup:.2f}x / Early: {et_speedup:.2f}x | Cascata $\\ge 10\\times$ / Early $\\ge 2\\times$ | **{c2_verdict["verdict"]}** |
+| **C3: Valor da Evolução** | Genético + QD supera busca aleatória pareada sob mesmo tempo | Wilcoxon $W={wilcoxon_stat:.1f}$, $p_{{\\text{{Holm}}}}={holm_p:.4e}$ | $p_{{\\text{{Holm}}}} \\le {alpha}$ | **{c3_verdict["verdict"]}** |
+| **C4: Generalização** | Modelos generalizam em splits ocultos e de extrapolação | Extrap: {ext_rate:.2%}, Explosão: {expl_rate:.2%}, Tamanho: {mean_comp:.1f} | Extrap $\\ge 70\\%$, Expl $0\\%$, Tam $\\le 25$ | **{c4_verdict["verdict"]}** |
+| **C5: Baselines & Pareto** | Fronteira não-dominada (MSE vs. Tamanho) sobre baselines honestos | {len(pareto_pts)} pontos de Pareto não-dominados | Fronteira válida não-dominada | **{c5_verdict["verdict"]}** |
 
 ---
 
 ## 2. Análise Estatística Pareada (EvoByte vs. Random Search)
 
 - **Total de pares estritamente pareados:** {len(pairs)} ensaios (mesmo alvo, mesmo orçamento de tempo, mesma semente).
-- **MSE Médio EvoByte:** {c3_verdict['evobyte_mean_mse']:.6e} (IC 95%: [{e_ci[0]:.6e}, {e_ci[1]:.6e}])
-- **MSE Médio Random Search:** {c3_verdict['random_mean_mse']:.6e} (IC 95%: [{r_ci[0]:.6e}, {r_ci[1]:.6e}])
+- **MSE Médio EvoByte:** {c3_verdict["evobyte_mean_mse"]:.6e} (IC 95%: [{e_ci[0]:.6e}, {e_ci[1]:.6e}])
+- **MSE Médio Random Search:** {c3_verdict["random_mean_mse"]:.6e} (IC 95%: [{r_ci[0]:.6e}, {r_ci[1]:.6e}])
 - **Teste Não-Paramétrico de Wilcoxon:** $W = {wilcoxon_stat:.1f}$, $p_{{\\text{{raw}}}} = {raw_p:.4e}$.
 - **Controle FWER de Bonferroni–Holm ($\\alpha = {alpha}$):** $p_{{\\text{{Holm}}}} = {holm_p:.4e} \\le {alpha}$.
 
@@ -347,7 +375,9 @@ def verify_p158_h1_verdict_soundness(
     c3 = criteria.get("criterion_3_evolution_value", {})
     holm_p = c3.get("holm_p_value", 1.0)
     if holm_p > alpha:
-        findings.append(f"INSUFFICIENT_STATISTICAL_SIGNIFICANCE: Holm p-value ({holm_p:.4e}) > alpha ({alpha})")
+        findings.append(
+            f"INSUFFICIENT_STATISTICAL_SIGNIFICANCE: Holm p-value ({holm_p:.4e}) > alpha ({alpha})"
+        )
 
     pareto = summary.get("pareto_frontier", [])
     if len(pareto) == 0:

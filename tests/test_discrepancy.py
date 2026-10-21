@@ -1015,10 +1015,15 @@ def test_p144_discrepancy_covering_grand_campaign_audit() -> None:
     assert audit["discrepancy_covering_theorems"] >= 500
     assert audit["has_sorry"] is False
     assert audit["missing_modules"] == []
-    assert audit["final_chain_hash"] == "937b60b65fca489722598725a2325d086890acd6a4cbcac08e25bfaae96a7fbd"
+    assert (
+        audit["final_chain_hash"]
+        == "937b60b65fca489722598725a2325d086890acd6a4cbcac08e25bfaae96a7fbd"
+    )
     assert len(audit["hash_chain"]) == 50
 
-    sound, findings = verify_discrepancy_covering_grand_campaign_soundness(audit, min_theorems=3800, min_modules=50)
+    sound, findings = verify_discrepancy_covering_grand_campaign_soundness(
+        audit, min_theorems=3800, min_modules=50
+    )
     assert sound is True
     assert findings == []
 
@@ -1081,5 +1086,8 @@ def test_p144_audit_smoke(tmp_path: Path) -> None:
     assert report["total_modules"] == 50
     assert report["total_theorems"] >= 3800
     assert report["discrepancy_covering_theorems"] >= 500
-    assert report["final_chain_hash"] == "937b60b65fca489722598725a2325d086890acd6a4cbcac08e25bfaae96a7fbd"
+    assert (
+        report["final_chain_hash"]
+        == "937b60b65fca489722598725a2325d086890acd6a4cbcac08e25bfaae96a7fbd"
+    )
     assert out_file.exists()

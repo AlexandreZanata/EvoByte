@@ -102,7 +102,9 @@ def test_generate_discrepancy_covering_blind_split():
     from evobyte.statistical import generate_discrepancy_covering_blind_split
 
     dev_pool = {"DEV_01", "DEV_02"}
-    part = generate_discrepancy_covering_blind_split(seed=143, count_per_track=25, dev_pool=dev_pool)
+    part = generate_discrepancy_covering_blind_split(
+        seed=143, count_per_track=25, dev_pool=dev_pool
+    )
     assert part["total_instances"] == 100
     assert part["count_per_track"] == 25
     assert len(part["tracks"]) == 4
@@ -169,7 +171,9 @@ def test_verify_discrepancy_covering_blind_confirmation_soundness():
     # Test rejection on leakage
     leaky_res = dict(eval_res)
     leaky_res["leakage_detected"] = True
-    sound_leaky, findings_leaky = verify_discrepancy_covering_blind_confirmation_soundness(leaky_res)
+    sound_leaky, findings_leaky = verify_discrepancy_covering_blind_confirmation_soundness(
+        leaky_res
+    )
     assert sound_leaky is False
     assert any("LEAKAGE" in f for f in findings_leaky)
 
@@ -273,7 +277,9 @@ def test_p151_evaluate_schinzel_sidon_blind_confirmation():
 
     # Test insufficient wins corruption
     corrupted_wins = dict(eval_res, total_wins=50)
-    s_wins, f_wins = verify_p151_schinzel_sidon_blind_confirmation_soundness(corrupted_wins, min_wins=80)
+    s_wins, f_wins = verify_p151_schinzel_sidon_blind_confirmation_soundness(
+        corrupted_wins, min_wins=80
+    )
     assert s_wins is False
     assert any("INSUFFICIENT_WINS" in f for f in f_wins)
 

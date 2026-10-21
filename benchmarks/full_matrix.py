@@ -1739,9 +1739,7 @@ def audit_clean_reproduction_harness(
     rec_pysr = run_baseline_pysr_adapter(target, max_time_sec=0.2, seed=seed)
     wall_elapsed = time.perf_counter() - t0_wall
     hot_loop_ok = (
-        rec_evo["time_sec"] > 0.0
-        and rec_evo["cvps"] > 0.0
-        and wall_elapsed >= rec_evo["time_sec"]
+        rec_evo["time_sec"] > 0.0 and rec_evo["cvps"] > 0.0 and wall_elapsed >= rec_evo["time_sec"]
     )
 
     # 3. Counter contract check
@@ -1842,7 +1840,10 @@ def audit_clean_reproduction_harness(
         },
         {
             "claim": "vram_telemetry_live_and_measured",
-            "evidence": "raw" if (vram.get("cuda_available") and vram.get("total_mb", 0) > 0) or not torch.cuda.is_available() else "unverified",
+            "evidence": "raw"
+            if (vram.get("cuda_available") and vram.get("total_mb", 0) > 0)
+            or not torch.cuda.is_available()
+            else "unverified",
             "detail": f"device={vram.get('device_name')} total_mb={vram.get('total_mb')} free_mb={vram.get('free_mb')}",
         },
         {
@@ -1920,7 +1921,9 @@ def audit_clean_reproduction_harness(
     if output_path:
         out_p = Path(output_path)
         out_p.parent.mkdir(parents=True, exist_ok=True)
-        out_p.write_text(_json.dumps(report, indent=2, sort_keys=True, default=str), encoding="utf-8")
+        out_p.write_text(
+            _json.dumps(report, indent=2, sort_keys=True, default=str), encoding="utf-8"
+        )
 
     return report
 
@@ -2531,15 +2534,33 @@ def run_p154_benchmark_matrix_suite(
 
     target_keys = targets or ["x_plus_1", "x2_3x_7"]
     parsed_budgets: list[float] = []
-    for b in (budgets or ["0.5s", "1.0s"]):
+    for b in budgets or ["0.5s", "1.0s"]:
         if isinstance(b, (int, float)):
             parsed_budgets.append(float(b))
         else:
             parsed_budgets.append(parse_budget_str(str(b)))
 
     target_seeds = seeds or [
-        42, 101, 202, 303, 404, 505, 606, 707, 808, 909,
-        1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010,
+        42,
+        101,
+        202,
+        303,
+        404,
+        505,
+        606,
+        707,
+        808,
+        909,
+        1001,
+        1002,
+        1003,
+        1004,
+        1005,
+        1006,
+        1007,
+        1008,
+        1009,
+        1010,
     ]
 
     target_datasets = {k: generate_target_dataset(k) for k in target_keys}
@@ -2607,9 +2628,7 @@ def run_p154_benchmark_matrix_suite(
         else float(np.mean(list(rates_by_target.values())))
     )
     cvps_values = [
-        float(r["cvps"])
-        for r in trials
-        if r.get("cvps") is not None and np.isfinite(r["cvps"])
+        float(r["cvps"]) for r in trials if r.get("cvps") is not None and np.isfinite(r["cvps"])
     ]
     mean_cvps = float(np.mean(cvps_values)) if cvps_values else 0.0
     median_cvps = float(np.median(cvps_values)) if cvps_values else 0.0
@@ -2711,7 +2730,7 @@ def run_p155_baselines_suite(
 
     target_keys = targets or ["x_plus_1", "x2_3x_7"]
     parsed_budgets: list[float] = []
-    for b in (budgets or ["0.4s", "0.8s"]):
+    for b in budgets or ["0.4s", "0.8s"]:
         if isinstance(b, (int, float)):
             parsed_budgets.append(float(b))
         else:

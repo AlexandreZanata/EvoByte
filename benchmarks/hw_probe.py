@@ -28,8 +28,12 @@ def get_vram_telemetry(device_idx: int = 0) -> dict[str, Any]:
         if torch.cuda.is_available() and device_idx < torch.cuda.device_count():
             telemetry["cuda_available"] = True
             telemetry["device_name"] = torch.cuda.get_device_name(device_idx)
-            telemetry["allocated_mb"] = round(torch.cuda.memory_allocated(device_idx) / (1024 * 1024), 2)
-            telemetry["reserved_mb"] = round(torch.cuda.memory_reserved(device_idx) / (1024 * 1024), 2)
+            telemetry["allocated_mb"] = round(
+                torch.cuda.memory_allocated(device_idx) / (1024 * 1024), 2
+            )
+            telemetry["reserved_mb"] = round(
+                torch.cuda.memory_reserved(device_idx) / (1024 * 1024), 2
+            )
             telemetry["max_allocated_mb"] = round(
                 torch.cuda.max_memory_allocated(device_idx) / (1024 * 1024), 2
             )
@@ -140,7 +144,9 @@ def check_hardware_integrity(
     if expected_gpu_substr:
         cuda_ok = p.get("cuda_available", False)
         if not cuda_ok:
-            findings.append(f"CUDA_UNAVAILABLE: expected GPU with '{expected_gpu_substr}' but CUDA is unavailable")
+            findings.append(
+                f"CUDA_UNAVAILABLE: expected GPU with '{expected_gpu_substr}' but CUDA is unavailable"
+            )
         else:
             gpu_found = False
             for k, v in p.items():
@@ -153,7 +159,9 @@ def check_hardware_integrity(
                                 f"INSUFFICIENT_VRAM: {name} has {v.get('total_memory_MB')}MB < min {min_vram_mb}MB"
                             )
             if not gpu_found:
-                findings.append(f"GPU_MISMATCH: expected substring '{expected_gpu_substr}' not found in probed GPUs")
+                findings.append(
+                    f"GPU_MISMATCH: expected substring '{expected_gpu_substr}' not found in probed GPUs"
+                )
 
     return len(findings) == 0, findings
 

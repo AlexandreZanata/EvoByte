@@ -92,7 +92,9 @@ def run_p157_ablations_suite(
         # ----------------------------------------------------------------------
         res_1 = [
             evaluate_cfg(
-                EvolutionConfig(pop_size=pop_size, max_generations=max_generations, complexity_weight=0.001),
+                EvolutionConfig(
+                    pop_size=pop_size, max_generations=max_generations, complexity_weight=0.001
+                ),
                 s,
             )
             for s in target_seeds
@@ -116,7 +118,12 @@ def run_p157_ablations_suite(
         # ----------------------------------------------------------------------
         res_2 = [
             evaluate_cfg(
-                EvolutionConfig(pop_size=pop_size, max_generations=max_generations, crossover_p=0.0, gene_mut_p=0.15),
+                EvolutionConfig(
+                    pop_size=pop_size,
+                    max_generations=max_generations,
+                    crossover_p=0.0,
+                    gene_mut_p=0.15,
+                ),
                 s,
             )
             for s in target_seeds
@@ -170,7 +177,12 @@ def run_p157_ablations_suite(
         # ----------------------------------------------------------------------
         res_4 = [
             evaluate_cfg(
-                EvolutionConfig(pop_size=pop_size, max_generations=max_generations, tournament_size=2, crossover_p=0.4),
+                EvolutionConfig(
+                    pop_size=pop_size,
+                    max_generations=max_generations,
+                    tournament_size=2,
+                    crossover_p=0.4,
+                ),
                 s,
             )
             for s in target_seeds
@@ -194,7 +206,9 @@ def run_p157_ablations_suite(
         # ----------------------------------------------------------------------
         res_5 = [
             evaluate_cfg(
-                EvolutionConfig(pop_size=pop_size, max_generations=max_generations, complexity_weight=0.005),
+                EvolutionConfig(
+                    pop_size=pop_size, max_generations=max_generations, complexity_weight=0.005
+                ),
                 s,
             )
             for s in target_seeds
@@ -314,7 +328,9 @@ def run_p157_ablations_suite(
 
         res_8 = [
             evaluate_cfg(
-                EvolutionConfig(pop_size=pop_size, max_generations=max_generations, early_stop_fitness=1e-9),
+                EvolutionConfig(
+                    pop_size=pop_size, max_generations=max_generations, early_stop_fitness=1e-9
+                ),
                 s,
             )
             for s in target_seeds
@@ -430,22 +446,32 @@ def verify_p157_ablations_soundness(
     metrics = summary.get("metrics", {})
     casc_sp = metrics.get("cascade_speedup", 0.0)
     if casc_sp < min_cascade_speedup:
-        findings.append(f"LOW_CASCADE_SPEEDUP: cascade speedup {casc_sp:.2f}x < required {min_cascade_speedup:.2f}x")
+        findings.append(
+            f"LOW_CASCADE_SPEEDUP: cascade speedup {casc_sp:.2f}x < required {min_cascade_speedup:.2f}x"
+        )
 
     et_sp = metrics.get("early_termination_speedup", 0.0)
     if et_sp < min_early_term_speedup:
-        findings.append(f"LOW_EARLY_TERM_SPEEDUP: early termination speedup {et_sp:.2f}x < required {min_early_term_speedup:.2f}x")
+        findings.append(
+            f"LOW_EARLY_TERM_SPEEDUP: early termination speedup {et_sp:.2f}x < required {min_early_term_speedup:.2f}x"
+        )
 
     gpu_sp = metrics.get("gpu_speedup", 0.0)
     if gpu_sp < min_gpu_speedup:
-        findings.append(f"LOW_GPU_SPEEDUP: GPU speedup {gpu_sp:.2f}x < required {min_gpu_speedup:.2f}x")
+        findings.append(
+            f"LOW_GPU_SPEEDUP: GPU speedup {gpu_sp:.2f}x < required {min_gpu_speedup:.2f}x"
+        )
 
     by_id = {a["ablation_id"]: a for a in ablations}
     if 3 in by_id and by_id[3].get("keep_or_drop") != "DROP":
-        findings.append("INVALID_NEURAL_GENERATOR_RULING: Abl-3 (Neural Generator) must be DROP per ADR-0010")
+        findings.append(
+            "INVALID_NEURAL_GENERATOR_RULING: Abl-3 (Neural Generator) must be DROP per ADR-0010"
+        )
 
     for aid in [1, 2, 4, 5, 6, 7, 8, 9]:
         if aid in by_id and by_id[aid].get("keep_or_drop") != "KEEP":
-            findings.append(f"INVALID_RULING_FOR_ABLATION_{aid}: Expected KEEP, got {by_id[aid].get('keep_or_drop')}")
+            findings.append(
+                f"INVALID_RULING_FOR_ABLATION_{aid}: Expected KEEP, got {by_id[aid].get('keep_or_drop')}"
+            )
 
     return len(findings) == 0, findings
