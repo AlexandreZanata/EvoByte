@@ -640,3 +640,71 @@ def test_p158_science_matrix_audit_runner(tmp_path: Path):
     assert out_file.exists()
     assert report["phase"] == "P158"
     assert report["verdict"] == "ACCEPTED"
+
+
+def test_p159_zenodo_bundle_export_and_integrity(tmp_path: Path):
+    from scripts.export_zenodo_bundle import (
+        generate_bundle,
+        verify_zenodo_bundle_integrity,
+    )
+
+    out_bundle_dir = tmp_path / "test_bundle"
+    summary = generate_bundle(
+        output_dir=out_bundle_dir,
+        create_tar=True,
+    )
+    assert summary["status"] == "SUCCESS"
+    assert summary["total_files"] >= 50
+    assert summary["tarball_path"] is not None
+    assert Path(summary["tarball_path"]).exists()
+
+    content_dir = Path(summary["output_dir"])
+    assert (content_dir / "bundle_metadata.json").is_file()
+    assert (content_dir / "manifest-sha256.json").is_file()
+    assert (content_dir / "checksums.sha256").is_file()
+
+    # Verify integrity passes
+    sound, findings = verify_zenodo_bundle_integrity(content_dir)
+    assert sound is True
+    assert len(findings) == 0
+
+    # Tamper with a file and verify it fails
+    target_doc = content_dir / "docs/HYPOTHESIS.md"
+    if target_doc.is_file():
+        target_doc.write_text("corrupted content", encoding="utf-8")
+        sound_tampered, findings_tampered = verify_zenodo_bundle_integrity(content_dir)
+        assert sound_tampered is False
+        assert any("CHECKSUM_MISMATCH" in f for f in findings_tampered)
+
+
+def test_p159_science_matrix_audit_runner(tmp_path: Path):
+    import json
+    import pytest
+    from benchmarks.science_matrix import run_p159_reproducibility_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P159 configuration"):
+        run_p159_reproducibility_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p159-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P159",
+                "bundle_output_dir": str(tmp_path / "bundle_runner"),
+                "create_tarball": False,
+                "require_docker": False,
+                "min_bundle_files": 10,
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p159-out.json"
+    report = run_p159_reproducibility_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P159"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["bundle_summary"]["status"] == "SUCCESS"
