@@ -16223,6 +16223,7 @@ def run_p158_h1_verdict_audit(config_path: str | Path, output_path: str | Path) 
     sound, soundness_findings = verify_p158_h1_verdict_soundness(
         summary=suite_summary,
         alpha=alpha,
+        require_supported=config.get("require_supported", False),
     )
     if not sound:
         findings.extend(soundness_findings)

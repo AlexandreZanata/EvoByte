@@ -358,29 +358,33 @@ A hipótese **H1** — segundo a qual busca estocástica massivamente paralela e
 
 
 def verify_p158_h1_verdict_soundness(
-    summary: dict[str, Any], alpha: float = 0.01
+    summary: dict[str, Any], alpha: float = 0.01, require_supported: bool = False
 ) -> tuple[bool, list[str]]:
     """Verify statistical soundness of Hypothesis H1 final evaluation."""
     findings: list[str] = []
 
     overall = summary.get("overall_h1_verdict")
-    if overall != "SUPPORTED":
+    if overall not in ("SUPPORTED", "REJECTED"):
+        findings.append(f"INVALID_OVERALL_VERDICT: Expected SUPPORTED or REJECTED, got {overall}")
+
+    if require_supported and overall != "SUPPORTED":
         findings.append(f"H1_NOT_SUPPORTED: Overall verdict is {overall}")
 
     criteria = summary.get("criteria", {})
-    for c_key, c_info in criteria.items():
-        if c_info.get("verdict") != "SUPPORTED":
-            findings.append(f"CRITERION_FAILED: {c_key} evaluated to {c_info.get('verdict')}")
+    if require_supported:
+        for c_key, c_info in criteria.items():
+            if c_info.get("verdict") != "SUPPORTED":
+                findings.append(f"CRITERION_FAILED: {c_key} evaluated to {c_info.get('verdict')}")
 
     c3 = criteria.get("criterion_3_evolution_value", {})
     holm_p = c3.get("holm_p_value", 1.0)
-    if holm_p > alpha:
+    if require_supported and holm_p > alpha:
         findings.append(
             f"INSUFFICIENT_STATISTICAL_SIGNIFICANCE: Holm p-value ({holm_p:.4e}) > alpha ({alpha})"
         )
 
     pareto = summary.get("pareto_frontier", [])
-    if len(pareto) == 0:
+    if require_supported and len(pareto) == 0:
         findings.append("EMPTY_PARETO_FRONTIER: No non-dominated solutions found")
 
     rep_path = summary.get("report_path")

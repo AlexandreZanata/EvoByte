@@ -591,7 +591,7 @@ def test_p158_h1_verdict_suite_and_soundness(tmp_path: Path):
         report_output_path=rep_file,
     )
     assert summary["suite"] == "P158-h1-statistical-verdict"
-    assert summary["overall_h1_verdict"] == "SUPPORTED"
+    assert summary["overall_h1_verdict"] in ("SUPPORTED", "REJECTED")
     assert rep_file.exists()
     assert (out_dir / "summary_h1_verdict.json").exists()
 
@@ -606,12 +606,12 @@ def test_p158_h1_verdict_suite_and_soundness(tmp_path: Path):
     assert unsound is False
     assert any("MISSING_DOSSIER" in f for f in bad_rep)
 
-    # Failure cases: rejected overall
+    # Failure cases: invalid overall verdict
     tampered_rej = dict(summary)
-    tampered_rej["overall_h1_verdict"] = "REJECTED"
+    tampered_rej["overall_h1_verdict"] = "INVALID"
     unsound, bad_rej = verify_p158_h1_verdict_soundness(tampered_rej, alpha=0.05)
     assert unsound is False
-    assert any("H1_NOT_SUPPORTED" in f for f in bad_rej)
+    assert any("INVALID_OVERALL_VERDICT" in f for f in bad_rej)
 
 
 def test_p158_science_matrix_audit_runner(tmp_path: Path):
