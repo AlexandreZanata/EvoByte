@@ -16307,6 +16307,7 @@ def run_p159_reproducibility_audit(
     import os
     import shutil
     import subprocess
+    import sys
     import time
     from pathlib import Path
 
@@ -16316,7 +16317,14 @@ def run_p159_reproducibility_audit(
         get_git_commit,
         get_git_status,
     )
-    from scripts.export_zenodo_bundle import (
+
+    repo_root = Path(__file__).resolve().parents[1]
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+    if str(repo_root / "scripts") not in sys.path:
+        sys.path.insert(0, str(repo_root / "scripts"))
+
+    from export_zenodo_bundle import (
         generate_bundle,
         verify_zenodo_bundle_integrity,
     )
