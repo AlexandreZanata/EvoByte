@@ -230,3 +230,72 @@ def test_p153_science_matrix_audit_runner(tmp_path: Path):
     assert out_file.exists()
     assert report["phase"] == "P153"
     assert report["verdict"] == "ACCEPTED"
+
+
+def test_p154_matrix_suite_and_soundness(tmp_path: Path):
+    from benchmarks.full_matrix import (
+        run_p154_benchmark_matrix_suite,
+        verify_p154_matrix_soundness,
+    )
+
+    out_d = tmp_path / "p154-test-matrix"
+    summary = run_p154_benchmark_matrix_suite(
+        targets=["x_plus_1"],
+        budgets=["0.2s"],
+        seeds=[42, 101],
+        output_dir=out_d,
+        pop_size=40,
+        max_generations=4,
+    )
+    assert summary["total_trials"] == 2
+    assert summary["vram_ok"] is True
+    assert (out_d / "summary_matrix.json").exists()
+
+    sound, findings = verify_p154_matrix_soundness(
+        summary, min_trials=2, min_primary_rate=0.50, min_cvps=100.0
+    )
+    assert sound is True
+    assert findings == []
+
+    # Failure cases
+    unsound, bad_findings = verify_p154_matrix_soundness(
+        summary, min_trials=10, min_primary_rate=1.01, max_vram_mb=0.0
+    )
+    assert unsound is False
+    assert any("INSUFFICIENT_TRIALS" in f for f in bad_findings)
+    assert any("LOW_REDISCOVERY_RATE" in f for f in bad_findings)
+    assert any("VRAM_EXCEEDED" in f for f in bad_findings)
+
+
+def test_p154_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p154_matrix_execution_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P154 configuration"):
+        run_p154_matrix_execution_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p154-config.json"
+    good_cfg.write_text(
+        json.dumps({
+            "phase": "P154",
+            "targets": ["x_plus_1"],
+            "budgets": ["0.2s"],
+            "seeds": [42, 101],
+            "min_trials": 2,
+            "min_primary_rate": 0.50,
+            "min_cvps": 100.0,
+            "pop_size": 40,
+            "max_generations": 4,
+            "output_dir": str(tmp_path / "matrix"),
+            "allow_dirty": True,
+            "require_clean_tree": False,
+        }),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p154-out.json"
+    report = run_p154_matrix_execution_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P154"
+    assert report["verdict"] == "ACCEPTED"

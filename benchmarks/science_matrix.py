@@ -792,6 +792,7 @@ ACCEPTANCE_PHASES = (
     "P151",
     "P152",
     "P153",
+    "P154",
 )
 
 
@@ -15622,6 +15623,138 @@ def run_p153_clean_harness_audit(
     return report
 
 
+def run_p154_matrix_execution_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P154 audit: Full benchmark matrix wall-clock execution over 20 seeds (D039).
+
+    Verifies:
+    1. Execution of full matrix across targets, strict wall-clock budgets, and independent seeds.
+    2. Primary target rediscovery rate >= 80% (16/20 seeds) on sufficient budget.
+    3. Peak VRAM consumption strictly under 6,000 MB (< 6 GB) on RTX 4060.
+    4. Deterministic logging to experiments/p154-matrix/ with summary_matrix.json.
+    5. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from full_matrix import run_p154_benchmark_matrix_suite, verify_p154_matrix_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P154":
+        raise ValueError(f"Config {cfg_p} is not a P154 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P154 FULL WALL-CLOCK BENCHMARK MATRIX AUDIT (20 SEEDS, VRAM < 6GB, REDISCOVERY >= 80%)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x_plus_1", "x2_3x_7"])
+    budgets = config.get("budgets", ["0.5s", "1.0s"])
+    seeds = config.get("seeds")
+    output_dir = config.get("output_dir", "experiments/p154-matrix")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    min_trials = int(config.get("min_trials", 20))
+    min_primary_rate = float(config.get("min_primary_rate", 0.80))
+    max_vram_mb = float(config.get("max_vram_mb", 6000.0))
+    min_cvps = float(config.get("min_cvps", 500.0))
+
+    suite_summary = run_p154_benchmark_matrix_suite(
+        targets=targets,
+        budgets=budgets,
+        seeds=seeds,
+        output_dir=output_dir,
+        device_name=device_name,
+        pop_size=int(config.get("pop_size", 300)),
+        max_generations=int(config.get("max_generations", 40)),
+    )
+
+    sound, soundness_findings = verify_p154_matrix_soundness(
+        summary=suite_summary,
+        min_trials=min_trials,
+        min_primary_rate=min_primary_rate,
+        max_vram_mb=max_vram_mb,
+        min_cvps=min_cvps,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P154 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p154_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P154"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P154",
+        "verdict": verdict,
+        "claim_scope": (
+            "Full benchmark matrix executed under strict wall-clock time: "
+            f"{suite_summary.get('total_trials')} trials recorded across "
+            f"{len(suite_summary.get('target_keys', []))} targets and {len(suite_summary.get('budgets_sec', []))} budgets; "
+            f"primary rediscovery rate {suite_summary.get('primary_rediscovery_rate', 0.0):.2%}; "
+            f"mean CVPS {suite_summary.get('mean_cvps', 0.0):.1f}; "
+            f"max peak VRAM {suite_summary.get('max_vram_peak_mb', 0.0):.1f}MB (< 6000MB limit); "
+            "complete individual trial logs saved in experiments/p154-matrix/."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P154",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P154 audit {verdict}: {suite_summary.get('total_trials')} trials executed, "
+        f"primary rediscovery {suite_summary.get('primary_rediscovery_rate', 0.0):.2%}, "
+        f"mean CVPS {suite_summary.get('mean_cvps', 0.0):.1f}; "
+        f"report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P154 matrix execution audit rejected: {findings}")
+
+    return report
+
+
 
 
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
@@ -19782,6 +19915,8 @@ def main() -> int:
             run_p152_grand_campaign_audit(args.config, args.output)
         elif args.acceptance_phase == "P153":
             run_p153_clean_harness_audit(args.config, args.output)
+        elif args.acceptance_phase == "P154":
+            run_p154_matrix_execution_audit(args.config, args.output)
         return 0
 
     seeds = (

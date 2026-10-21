@@ -2506,6 +2506,187 @@ def run_confirm_program(
     return _finish(report, {"trials": trials, "proposer": proposer}, extra)
 
 
+def run_p154_benchmark_matrix_suite(
+    targets: list[str] | None = None,
+    budgets: list[str | float] | None = None,
+    seeds: list[int] | None = None,
+    output_dir: str | Path = "experiments/p154-matrix",
+    device_name: str | None = None,
+    pop_size: int = 300,
+    max_generations: int = 40,
+) -> dict[str, Any]:
+    """Execute the full P154 wall-clock benchmark matrix over multiple targets, budgets, and seeds.
+
+    All trials are strictly wall-clock timed, non-simulated, and recorded deterministically.
+    """
+    import datetime
+    import hashlib
+    import json
+    from pathlib import Path
+
+    t0_suite = time.perf_counter()
+    out_d = Path(output_dir)
+    trials_d = out_d / "trials"
+    trials_d.mkdir(parents=True, exist_ok=True)
+
+    target_keys = targets or ["x_plus_1", "x2_3x_7"]
+    parsed_budgets: list[float] = []
+    for b in (budgets or ["0.5s", "1.0s"]):
+        if isinstance(b, (int, float)):
+            parsed_budgets.append(float(b))
+        else:
+            parsed_budgets.append(parse_budget_str(str(b)))
+
+    target_seeds = seeds or [
+        42, 101, 202, 303, 404, 505, 606, 707, 808, 909,
+        1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010,
+    ]
+
+    target_datasets = {k: generate_target_dataset(k) for k in target_keys}
+    trials: list[dict[str, Any]] = []
+    by_target_budget: dict[str, dict[float, list[dict[str, Any]]]] = {
+        k: {b: [] for b in parsed_budgets} for k in target_keys
+    }
+
+    hw = probe()
+    max_vram_peak = 0.0
+
+    print(
+        f"P154 MATRIX SUITE: {len(target_keys)} targets x "
+        f"{len(parsed_budgets)} budgets x {len(target_seeds)} seeds"
+    )
+    for t_key in target_keys:
+        ds = target_datasets[t_key]
+        for b_sec in parsed_budgets:
+            for s in target_seeds:
+                with measure_vram_peak(0) as vram_tracker:
+                    rec = run_evobyte_full(
+                        target=ds,
+                        max_time_sec=b_sec,
+                        seed=s,
+                        pop_size=pop_size,
+                        max_generations=max_generations,
+                    )
+                peak_alloc = vram_tracker.get("peak_allocated_mb", 0.0)
+                if peak_alloc > max_vram_peak:
+                    max_vram_peak = peak_alloc
+
+                rec_entry = {
+                    **rec,
+                    "target": t_key,
+                    "suite": ds.suite,
+                    "budget_sec": b_sec,
+                    "seed": s,
+                    "synthesized": False,
+                    "status": "completed",
+                    "vram_peak_mb": peak_alloc,
+                    "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                }
+                trials.append(rec_entry)
+                by_target_budget[t_key][b_sec].append(rec_entry)
+
+                trial_filename = f"{t_key}_b{int(b_sec * 1000)}ms_s{s}.json"
+                trial_path = trials_d / trial_filename
+                with open(trial_path, "w", encoding="utf-8") as f:
+                    json.dump(rec_entry, f, indent=2, sort_keys=True, default=str)
+
+    # Compute aggregate statistics
+    rediscovery_by_target: dict[str, int] = {}
+    rates_by_target: dict[str, float] = {}
+    for t_key in target_keys:
+        max_b = max(parsed_budgets)
+        recs_at_max_b = by_target_budget[t_key][max_b]
+        successes = sum(1 for r in recs_at_max_b if r.get("success", False))
+        rediscovery_by_target[t_key] = successes
+        rates_by_target[t_key] = successes / max(1, len(recs_at_max_b))
+
+    primary_targets = [k for k in target_keys if k in ("x_plus_1", "x2_3x_7")]
+    primary_rate = (
+        float(np.mean([rates_by_target[k] for k in primary_targets]))
+        if primary_targets
+        else float(np.mean(list(rates_by_target.values())))
+    )
+    cvps_values = [
+        float(r["cvps"])
+        for r in trials
+        if r.get("cvps") is not None and np.isfinite(r["cvps"])
+    ]
+    mean_cvps = float(np.mean(cvps_values)) if cvps_values else 0.0
+    median_cvps = float(np.median(cvps_values)) if cvps_values else 0.0
+    peak_cvps = float(np.max(cvps_values)) if cvps_values else 0.0
+
+    scaling_curves = {}
+    for t_key in target_keys:
+        scaling_curves[t_key] = compute_scaling_curve(parsed_budgets, by_target_budget[t_key])
+
+    summary: dict[str, Any] = {
+        "suite": "P154-wall-clock-matrix",
+        "total_trials": len(trials),
+        "target_keys": target_keys,
+        "budgets_sec": parsed_budgets,
+        "seeds": target_seeds,
+        "primary_rediscovery_rate": primary_rate,
+        "rediscovery_by_target": rediscovery_by_target,
+        "rates_by_target": rates_by_target,
+        "mean_cvps": mean_cvps,
+        "median_cvps": median_cvps,
+        "peak_cvps": peak_cvps,
+        "max_vram_peak_mb": float(max_vram_peak),
+        "vram_limit_mb": 6000.0,
+        "vram_ok": bool(max_vram_peak < 6000.0),
+        "scaling_curves": scaling_curves,
+        "hardware": hw,
+        "elapsed_sec": time.perf_counter() - t0_suite,
+    }
+
+    summary_file = out_d / "summary_matrix.json"
+    with open(summary_file, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, sort_keys=True, default=str)
+    summary_sha = hashlib.sha256(summary_file.read_bytes()).hexdigest()
+    summary["summary_sha256"] = summary_sha
+
+    return summary
+
+
+def verify_p154_matrix_soundness(
+    summary: dict[str, Any],
+    min_trials: int = 20,
+    min_primary_rate: float = 0.80,
+    max_vram_mb: float = 6000.0,
+    min_cvps: float = 500.0,
+) -> tuple[bool, list[str]]:
+    """Audit P154 matrix summary for experimental soundness, non-simulation, and acceptance thresholds."""
+    findings: list[str] = []
+
+    total_trials = summary.get("total_trials", 0)
+    if total_trials < min_trials:
+        findings.append(f"INSUFFICIENT_TRIALS: expected >= {min_trials}, got {total_trials}")
+
+    primary_rate = summary.get("primary_rediscovery_rate", 0.0)
+    if primary_rate < min_primary_rate:
+        findings.append(
+            f"LOW_REDISCOVERY_RATE: primary target rate {primary_rate:.2%} < threshold {min_primary_rate:.2%}"
+        )
+
+    vram_peak = summary.get("max_vram_peak_mb", 0.0)
+    if vram_peak >= max_vram_mb:
+        findings.append(f"VRAM_EXCEEDED: peak {vram_peak:.1f}MB exceeds limit {max_vram_mb:.1f}MB")
+
+    mean_cvps = summary.get("mean_cvps", 0.0)
+    if mean_cvps < min_cvps:
+        findings.append(f"LOW_CVPS: mean CVPS {mean_cvps:.1f} < threshold {min_cvps:.1f}")
+
+    scaling_curves = summary.get("scaling_curves", {})
+    for t_key, curve in scaling_curves.items():
+        for pt in curve:
+            if pt.get("synthesized", True) or pt.get("status") != "measured":
+                findings.append(
+                    f"SYNTHESIZED_CURVE_DETECTED: target {t_key} budget {pt.get('budget_sec')} is synthesized"
+                )
+
+    return len(findings) == 0, findings
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P13 Full Benchmark Matrix (P15 audit & P21 reproduction included)"

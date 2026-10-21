@@ -23,6 +23,7 @@ coverage.xml
 # Experiments (large artifacts, never commit)
 checkpoints/
 runs/
+experiments/*-matrix/
 data/raw/
 data/processed/
 *.pt
