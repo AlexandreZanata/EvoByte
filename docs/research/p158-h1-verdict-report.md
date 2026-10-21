@@ -1,7 +1,7 @@
 # Relatório Formal de Veredito Estatístico da Hipótese H1
 
 **Status:** Concluído e Auditado (Fase P158)
-**Data de Emissão:** 2026-10-21T11:47:39.011098+00:00
+**Data de Emissão:** 2026-10-21 (Fase P158)
 **Veredito Global:** **SUPPORTED**
 
 ---

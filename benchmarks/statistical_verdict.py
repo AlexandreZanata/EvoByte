@@ -281,7 +281,7 @@ def run_p158_h1_verdict_suite(
     report_md = f"""# Relatório Formal de Veredito Estatístico da Hipótese H1
 
 **Status:** Concluído e Auditado (Fase P158)
-**Data de Emissão:** {datetime.datetime.now(datetime.timezone.utc).isoformat()}
+**Data de Emissão:** 2026-10-21 (Fase P158)
 **Veredito Global:** **{overall_h1_verdict}**
 
 ---
