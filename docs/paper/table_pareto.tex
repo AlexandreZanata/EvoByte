@@ -1,0 +1,18 @@
+\begin{table}[t]
+\centering
+\caption{Empirical non-dominated Pareto frontier mapping program complexity (byte/opcode count) against out-of-sample generalization error (Hidden MSE).}
+\label{tab:pareto}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llccr@{}}
+\toprule
+\textbf{Pareto Point} & \textbf{Discovered By} & \textbf{Benchmark Target} & \textbf{Opcode Count} & \textbf{Hidden MSE} \\
+\midrule
+$P_1$ & Random Search & $y = x+1$ & 2 & $0.000\times 10^{0}$ \\
+$P_2$ & Random Search & $y = x^2+3x+7$ & 2 & $4.900\times 10^{1}$ \\
+$P_3$ & EvoByte & $y = x^2+3x+7$ & 3 & $1.773\times 10^{-12}$ \\
+$P_4$ & Classical-SR & $y = x^2+3x+7$ & 6 & $7.796\times 10^{-13}$ \\
+$P_5$ & EvoByte & $y = x^2+3x+7$ & 8 & $6.395\times 10^{-14}$ \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

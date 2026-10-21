@@ -708,3 +708,67 @@ def test_p159_science_matrix_audit_runner(tmp_path: Path):
     assert report["phase"] == "P159"
     assert report["verdict"] == "ACCEPTED"
     assert report["bundle_summary"]["status"] == "SUCCESS"
+
+
+def test_p160_manuscript_project_and_pdf_integrity():
+    repo_root = Path(__file__).resolve().parents[1]
+    paper_dir = repo_root / "docs/paper"
+    dossier_path = repo_root / "docs/research/p160-manuscript-dossier.md"
+
+    main_tex = paper_dir / "main.tex"
+    ref_bib = paper_dir / "references.bib"
+    main_pdf = paper_dir / "main.pdf"
+    gen_fig = paper_dir / "generate_figures.py"
+
+    assert main_tex.is_file()
+    assert ref_bib.is_file()
+    assert main_pdf.is_file()
+    assert gen_fig.is_file()
+    assert dossier_path.is_file()
+
+    # Content checks
+    tex_text = main_tex.read_text(encoding="utf-8")
+    assert "EvoByte" in tex_text
+    assert "Hypothesis H1" in tex_text
+    assert r"\begin{document}" in tex_text
+    assert r"\begin{thebibliography}" in tex_text
+
+    # PDF integrity check
+    assert main_pdf.stat().st_size > 50000
+
+    # Dossier checks
+    dos_text = dossier_path.read_text(encoding="utf-8")
+    assert "Matriz de Rastreabilidade" in dos_text
+    assert "SUPPORTED" in dos_text
+
+
+def test_p160_science_matrix_audit_runner(tmp_path: Path):
+    import json
+    import pytest
+    from benchmarks.science_matrix import run_p160_manuscript_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P160 configuration"):
+        run_p160_manuscript_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p160-config.json"
+    good_cfg.write_text(
+        json.dumps(
+            {
+                "phase": "P160",
+                "paper_dir": "docs/paper",
+                "dossier_path": "docs/research/p160-manuscript-dossier.md",
+                "require_pdf": True,
+                "allow_dirty": True,
+                "require_clean_tree": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p160-out.json"
+    report = run_p160_manuscript_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P160"
+    assert report["verdict"] == "ACCEPTED"
+    assert report["manuscript_summary"]["pdf_compiled"] is True

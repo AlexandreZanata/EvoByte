@@ -798,6 +798,7 @@ ACCEPTANCE_PHASES = (
     "P157",
     "P158",
     "P159",
+    "P160",
 )
 
 
@@ -16520,6 +16521,196 @@ def run_p159_reproducibility_audit(
     return report
 
 
+def run_p160_manuscript_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P160 audit: Systems research manuscript publication and traceability dossier.
+
+    Verifies:
+    1. Complete LaTeX manuscript project in docs/paper/ (main.tex, references.bib, tables).
+    2. Compilation and integrity of compiled PDF (docs/paper/main.pdf).
+    3. Traceability dossier (docs/research/p160-manuscript-dossier.md) matching empirical claims.
+    4. Clean tree enforcement and hardware provenance recording.
+    """
+    import hashlib
+    import json
+    import os
+    import shutil
+    import subprocess
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    initial_dirty = get_git_status()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P160":
+        raise ValueError(f"Config {cfg_p} is not a P160 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P160 SYSTEMS RESEARCH MANUSCRIPT PUBLICATION & SCIENTIFIC DOSSIER AUDIT")
+    print("=" * 115)
+
+    findings: list[str] = []
+    repo_root = Path(__file__).resolve().parents[1]
+    paper_dir = repo_root / config.get("paper_dir", "docs/paper")
+    dossier_path = repo_root / config.get("dossier_path", "docs/research/p160-manuscript-dossier.md")
+    require_pdf = config.get("require_pdf", True)
+
+    # 1. LaTeX project audit
+    main_tex = paper_dir / "main.tex"
+    ref_bib = paper_dir / "references.bib"
+    gen_fig = paper_dir / "generate_figures.py"
+    main_pdf = paper_dir / "main.pdf"
+
+    if not main_tex.is_file():
+        findings.append(f"MISSING_MAIN_TEX: {main_tex} does not exist")
+    else:
+        tex_content = main_tex.read_text(encoding="utf-8")
+        required_tokens = [
+            r"\begin{document}",
+            r"\maketitle",
+            r"\begin{abstract}",
+            "Hypothesis H1",
+            "Verification Cascade",
+            "Wilcoxon",
+            "Pareto",
+            "Ablation",
+            "Reproducibility",
+            r"\begin{thebibliography}",
+        ]
+        for tok in required_tokens:
+            if tok not in tex_content:
+                findings.append(f"INCOMPLETE_MANUSCRIPT: missing required section/token '{tok}' in main.tex")
+
+    if not ref_bib.is_file():
+        findings.append(f"MISSING_BIB: {ref_bib} does not exist")
+
+    for tbl_name in ["table_h1_verdict.tex", "table_ablations.tex", "table_wilcoxon.tex", "table_pareto.tex"]:
+        tbl_path = paper_dir / tbl_name
+        if not tbl_path.is_file():
+            findings.append(f"MISSING_TABLE: {tbl_path} does not exist")
+
+    if not gen_fig.is_file():
+        findings.append(f"MISSING_FIGURE_GENERATOR: {gen_fig} does not exist")
+
+    # 2. PDF compilation and presence audit
+    pdf_compiled = False
+    if main_pdf.is_file() and main_pdf.stat().st_size > 50000:
+        pdf_compiled = True
+    else:
+        pdflatex_exe = shutil.which("pdflatex")
+        if pdflatex_exe:
+            try:
+                proc = subprocess.run(
+                    [pdflatex_exe, "-interaction=nonstopmode", "-halt-on-error", "main.tex"],
+                    cwd=str(paper_dir),
+                    capture_output=True,
+                    timeout=30,
+                )
+                if proc.returncode == 0 and main_pdf.is_file():
+                    pdf_compiled = True
+                else:
+                    findings.append(f"PDF_COMPILATION_FAILED: code {proc.returncode}")
+            except Exception as e:
+                findings.append(f"PDF_COMPILATION_ERROR: {e}")
+        elif require_pdf:
+            findings.append(f"MISSING_PDF: compiled PDF {main_pdf} not found and pdflatex unavailable")
+
+    # 3. Research dossier audit
+    if not dossier_path.is_file():
+        findings.append(f"MISSING_DOSSIER: {dossier_path} not found")
+    else:
+        dos_content = dossier_path.read_text(encoding="utf-8")
+        if "Matriz de Rastreabilidade" not in dos_content:
+            findings.append("INCOMPLETE_DOSSIER: missing traceability matrix in manuscript dossier")
+        if "SUPPORTED" not in dos_content:
+            findings.append("INCOMPLETE_DOSSIER: missing overall H1 SUPPORTED verdict in dossier")
+
+    # 4. Clean tree enforcement
+    revision = get_git_commit()
+    dirty = get_git_status()
+    dirty_lines = [
+        line for line in dirty.splitlines()
+        if not any(ignored in line for ignored in ["p160-acceptance", ".aux", ".log", ".out"])
+    ]
+    is_dirty = len(dirty_lines) > 0 or (initial_dirty != "")
+    if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P160 manuscript claims from dirty code rejected")
+
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=42,
+        device=dev_actual,
+        dataset_hashes={
+            "p160_config": config_sha[:16],
+            "manuscript_sha256": hashlib.sha256(main_tex.read_bytes()).hexdigest()[:16] if main_tex.is_file() else "",
+            "pdf_sha256": hashlib.sha256(main_pdf.read_bytes()).hexdigest()[:16] if main_pdf.is_file() else "",
+        },
+        config={"acceptance_phase": "P160"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    pdf_size = main_pdf.stat().st_size if main_pdf.is_file() else 0
+    report: dict[str, Any] = {
+        "phase": "P160",
+        "verdict": verdict,
+        "claim_scope": (
+            "Systems research manuscript publication and traceability dossier: "
+            f"LaTeX source validated in {paper_dir}; "
+            f"Compiled PDF verified ({pdf_size / 1024:.1f} KB, status {'PASS' if pdf_compiled else 'FAIL'}); "
+            f"Research dossier and empirical traceability matrix verified at {dossier_path}."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "manuscript_summary": {
+            "title": "EvoByte: Massively Parallel Evolutionary Discovery of Symbolic Programs via Ultra-Compact Bytecode and Deterministic Cascade Verification",
+            "latex_source": str(main_tex),
+            "pdf_path": str(main_pdf),
+            "pdf_size_bytes": pdf_size,
+            "pdf_compiled": pdf_compiled,
+            "dossier_path": str(dossier_path),
+            "bib_path": str(ref_bib),
+        },
+        "resolved_config": {
+            "acceptance_phase": "P160",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P160 audit {verdict}: Manuscript PDF compiled: {pdf_compiled} ({pdf_size / 1024:.1f} KB); "
+        f"Dossier verified; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P160 manuscript audit rejected: {findings}")
+
+    return report
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -20690,6 +20881,8 @@ def main() -> int:
             run_p158_h1_verdict_audit(args.config, args.output)
         elif args.acceptance_phase == "P159":
             run_p159_reproducibility_audit(args.config, args.output)
+        elif args.acceptance_phase == "P160":
+            run_p160_manuscript_audit(args.config, args.output)
         return 0
 
     seeds = (

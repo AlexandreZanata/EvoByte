@@ -1,0 +1,15 @@
+\begin{table}[t]
+\centering
+\caption{Strictly paired empirical comparison of EvoByte vs. Random Search under identical wall-clock timeouts and hardware seeds (20 paired trials).}
+\label{tab:wilcoxon}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lccccr@{}}
+\toprule
+\textbf{Search Method} & \textbf{Mean MSE} & \textbf{95\% Bootstrap CI} & \textbf{Wilcoxon $W$} & \textbf{Raw $p$-value} & \textbf{Holm-Adjusted $p$} \\
+\midrule
+EvoByte (Ours) & \textbf{0.9787} & [0.1724, 1.9573] & \multirow{2}{*}{\textbf{55.0}} & \multirow{2}{*}{\textbf{2.49}$\times 10^{-3}$} & \multirow{2}{*}{\textbf{2.49}$\times 10^{-3}$} \\
+Random Search & 36.4172 & [19.2030, 53.9985] & & & ($\le 0.01$) \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
