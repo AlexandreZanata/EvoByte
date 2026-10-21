@@ -1,3 +1,7 @@
+> **REVISADO (P161, D040).** "PROVED" significa apenas que o arquivo compila sem `sorry`. Não
+> implica que o enunciado seja o teorema nomeado (por exemplo, `degrey_chromatic_lower_bound`
+> prova `5 = 5`). A fidelidade é medida em P162.
+
 # Dossiê Formal Exaustivo de Descoberta Algébrica Construtiva e Literatura Internacional (P152)
 
 - **Fase:** P152 — Grande campanha formal de descoberta construtiva e dossiê de literatura (Fechamento da Frente 1 / D038)

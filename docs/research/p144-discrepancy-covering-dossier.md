@@ -1,3 +1,7 @@
+> **REVISADO (P161, D040).** "PROVED" significa apenas que o arquivo compila sem `sorry`. Não
+> implica que o enunciado seja o teorema nomeado (por exemplo, `degrey_chromatic_lower_bound`
+> prova `5 = 5`). A fidelidade é medida em P162.
+
 # Grande Dossiê de Teoria de Discrepância, EDP, Sistemas de Recobrimento e Conjuntos Primitivos (P144 — Lean 4 / Mathlib)
 
 **Fase:** P144 — Grande campanha formal de discrepância e recobrimentos com dossiê certificado em Lean 4<br>

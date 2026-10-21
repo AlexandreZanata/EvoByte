@@ -1,3 +1,8 @@
+> **RETRATADO (P161, D040).** O veredito global passa a ser **NOT SUPPORTED**. Pelos dados do
+> P155, o Classical-SR supera o EvoByte (sucesso 100% vs 80%, MSE oculto menor). O PySR não foi
+> executado. Os orçamentos foram 0,4 s/0,8 s, não 10 s–1 h. Ver
+> [p161-claim-retraction.md](p161-claim-retraction.md).
+
 # Relatório Formal de Veredito Estatístico da Hipótese H1
 
 **Status:** Concluído e Auditado (Fase P158)

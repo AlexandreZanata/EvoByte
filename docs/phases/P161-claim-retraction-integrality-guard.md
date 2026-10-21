@@ -1,6 +1,6 @@
 # P161 — Retratação de alegações refutadas e guarda de integralidade
 
-**Status:** Proposed.
+**Status:** Done (2026-10-21).
 **Dependência:** plano D038 mesclado; branch a partir de `codex/plan-p161-p170-validated-discovery`.
 **Owner:** agente executor; revisor humano (Alexandre) aprova o texto de retratação no PR.
 **Branch:** `codex/p161-claim-retraction-integrality-guard`.
@@ -314,3 +314,21 @@ gh pr create --base codex/plan-p161-p170-validated-discovery \
   --body-file /tmp/evobyte-p161-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-21):** Done.
+
+- Auditoria de integralidade executada: 58 identidades, 9 integrais em todo `k in 0..49`,
+  49 sem solução inteira — os números esperados do Passo 2.
+- Quatro avisos de retratação inseridos (P150, P158, P144, P152), sem apagar conteúdo
+  histórico.
+- Manuscrito P160 corrigido (`docs/paper/main.tex`) e `docs/paper/main.pdf` recompilado.
+- 7 testes de guarda verdes em `tests/test_claim_audit.py`.
+- Desvios em relação a esta especificação, registrados no PR: a decisão foi registrada como
+  `D040` (o ID `D039` já estava ocupado pela linha "Plano P153–P160" em `docs/DECISIONS.md`);
+  o teste 6 confere o abstract contra uma cópia commitada do resumo do P155, porque
+  `experiments/p155-baselines/` é ignorado pelo git e não existe em CI (quando o artefato bruto
+  está presente, os dois têm que concordar); e a tabela `docs/paper/table_h1_verdict.tex`
+  preserva o veredito pré-retratação do P158 como registro histórico, com aviso de retratação
+  no corpo do manuscrito — a consolidação da tabela fica para P169/P170.

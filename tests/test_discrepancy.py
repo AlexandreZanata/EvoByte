@@ -902,6 +902,7 @@ def test_generate_primitive_sets_lean_code() -> None:
     assert "sorry" not in code
 
 
+@needs_lean
 def test_audit_primitive_sets_baseline() -> None:
     """Test auditing primitive sets formal baseline against Lean 4 kernel."""
     from evobyte.discrepancy import (

@@ -1,3 +1,8 @@
+> **RETRATADO (P161, D040).** A classificação `novel-extension` está retirada. 49 das 58
+> identidades de Schinzel não dão solução inteira (só valem em ℚ). As 9 inteiras cobrem classes
+> de rotina, e os certificados Sidon são instâncias de construções conhecidas. Nenhuma novidade
+> é alegada. Ver [p161-claim-retraction.md](p161-claim-retraction.md).
+
 # Relatório de Auditoria Rigorosa de Novidade Matemática contra Literatura Internacional (P150)
 
 - **Fase:** P150 — Auditoria rigorosa de novidade contra literatura internacional e checadores duais

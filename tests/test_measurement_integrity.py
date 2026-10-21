@@ -428,14 +428,11 @@ def test_p156_generalization_suite_and_soundness(tmp_path: Path):
 
     out_dir = tmp_path / "gen_test"
     summary = run_p156_generalization_suite(
-        targets=["x_plus_1"],
-        budgets=["0.15s"],
-        seeds=[42, 101],
-        methods=["Random", "Classical-SR", "PySR-Adapter", "EvoByte"],
+        source_trials_dir="experiments/p155-baselines/trials",
         output_dir=out_dir,
     )
     assert summary["suite"] == "P156-generalization-extrapolation"
-    assert summary["total_evaluations"] == 8
+    assert summary["total_evaluations"] >= 8
     assert (out_dir / "summary_generalization.json").exists()
 
     # Honest PySR check
@@ -451,7 +448,7 @@ def test_p156_generalization_suite_and_soundness(tmp_path: Path):
     assert findings == []
 
     # Failure cases
-    unsound, bad_trials = verify_p156_generalization_soundness(summary, min_trials=20)
+    unsound, bad_trials = verify_p156_generalization_soundness(summary, min_trials=2000)
     assert unsound is False
     assert any("INSUFFICIENT_EVALUATIONS" in f for f in bad_trials)
 
@@ -479,11 +476,9 @@ def test_p156_science_matrix_audit_runner(tmp_path: Path):
         json.dumps(
             {
                 "phase": "P156",
-                "targets": ["x_plus_1"],
-                "budgets": ["0.15s"],
-                "seeds": [42],
-                "methods": ["Random", "Classical-SR", "EvoByte"],
-                "min_trials": 3,
+                "targets": ["x_plus_1", "x2_3x_7"],
+                "source_trials_dir": "experiments/p155-baselines/trials",
+                "min_trials": 10,
                 "min_extrap_rate": 0.50,
                 "max_explosion_rate": 0.05,
                 "output_dir": str(tmp_path / "gen_runner"),
@@ -589,9 +584,9 @@ def test_p158_h1_verdict_suite_and_soundness(tmp_path: Path):
         targets=["x_plus_1", "x2_3x_7"],
         seeds=[42, 101, 202, 303, 404],
         alpha=0.05,
-        source_baselines_dir=None,
-        source_gen_dir=None,
-        source_abl_dir=None,
+        source_baselines_dir="experiments/p155-baselines",
+        source_gen_dir="experiments/p156-generalization",
+        source_abl_dir="experiments/p157-ablations",
         output_dir=out_dir,
         report_output_path=rep_file,
     )
@@ -636,9 +631,9 @@ def test_p158_science_matrix_audit_runner(tmp_path: Path):
                 "targets": ["x_plus_1", "x2_3x_7"],
                 "seeds": [42, 101, 202, 303, 404],
                 "alpha": 0.05,
-                "source_baselines_dir": None,
-                "source_gen_dir": None,
-                "source_abl_dir": None,
+                "source_baselines_dir": "experiments/p155-baselines",
+                "source_gen_dir": "experiments/p156-generalization",
+                "source_abl_dir": "experiments/p157-ablations",
                 "output_dir": str(tmp_path / "verdict_runner"),
                 "report_output_path": str(tmp_path / "report_runner.md"),
                 "allow_dirty": True,
