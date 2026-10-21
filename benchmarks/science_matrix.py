@@ -793,6 +793,7 @@ ACCEPTANCE_PHASES = (
     "P152",
     "P153",
     "P154",
+    "P155",
 )
 
 
@@ -15757,6 +15758,132 @@ def run_p154_matrix_execution_audit(
 
 
 
+def run_p155_baselines_audit(
+    config_path: str | Path, output_path: str | Path
+) -> dict[str, Any]:
+    """P155 audit: Paired competitive baselines execution under equal wall-clock budgets.
+
+    Verifies:
+    1. Honest execution of baselines (Random, Classic-GP, Classical-SR, PySR-Adapter, EvoByte).
+    2. Strict wall-clock timing per trial, non-simulated, and recorded deterministically.
+    3. Verification of baseline honesty (PySR must not claim unearned wins if not_run).
+    4. EvoByte maintains rediscovery/convergence advantage over naive random baseline.
+    5. Clean tree enforcement and provenance recording.
+    """
+    import hashlib
+    import json
+    import time
+    from pathlib import Path
+
+    import torch as _torch
+    from full_matrix import run_p155_baselines_suite, verify_p155_baselines_soundness
+    from evobyte.provenance import (
+        collect_provenance,
+        get_git_commit,
+        get_git_status,
+    )
+
+    t0 = time.perf_counter()
+    cfg_p = Path(config_path)
+    with open(cfg_p, encoding="utf-8") as f:
+        config = json.load(f)
+    if config.get("phase") != "P155":
+        raise ValueError(f"Config {cfg_p} is not a P155 configuration")
+    config_sha = hashlib.sha256(cfg_p.read_bytes()).hexdigest()
+
+    print("=" * 115)
+    print("P155 HONEST COMPETITIVE BASELINES AUDIT (EQUAL WALL-CLOCK BUDGETS, STRICT AUDIT)")
+    print("=" * 115)
+
+    findings: list[str] = []
+    targets = config.get("targets", ["x_plus_1", "x2_3x_7"])
+    budgets = config.get("budgets", ["0.4s", "0.8s"])
+    seeds = config.get("seeds")
+    methods = config.get("methods")
+    output_dir = config.get("output_dir", "experiments/p155-baselines")
+    device_name = config.get("device", "cuda" if _torch.cuda.is_available() else "cpu")
+    min_trials = int(config.get("min_trials", 10))
+    evobyte_must_beat_random = bool(config.get("evobyte_must_beat_random", True))
+
+    suite_summary = run_p155_baselines_suite(
+        targets=targets,
+        budgets=budgets,
+        seeds=seeds,
+        methods=methods,
+        output_dir=output_dir,
+        device_name=device_name,
+    )
+
+    sound, soundness_findings = verify_p155_baselines_soundness(
+        summary=suite_summary,
+        min_trials=min_trials,
+        evobyte_must_beat_random=evobyte_must_beat_random,
+    )
+    if not sound:
+        findings.extend(soundness_findings)
+
+    revision = get_git_commit()
+    dirty = get_git_status()
+    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+        findings.append("DIRTY_SOURCE: tree not clean; P155 claims from dirty code rejected")
+
+    dev_actual = _torch.device(
+        device_name if _torch.cuda.is_available() and device_name.startswith("cuda") else "cpu"
+    )
+    prov = collect_provenance(
+        seed=suite_summary.get("seeds", [42])[0] if suite_summary.get("seeds") else 42,
+        device=dev_actual,
+        dataset_hashes={
+            "p155_config": config_sha[:16],
+            "summary_sha256": suite_summary.get("summary_sha256", "")[:16],
+        },
+        config={"acceptance_phase": "P155"},
+    )
+    run_id = hashlib.sha256(f"{config_sha}{revision}".encode()).hexdigest()[:16]
+
+    verdict = "ACCEPTED" if len(findings) == 0 else "REJECTED"
+
+    report: dict[str, Any] = {
+        "phase": "P155",
+        "verdict": verdict,
+        "claim_scope": (
+            "Honest competitive baselines executed under equal wall-clock budgets: "
+            f"{suite_summary.get('total_trials')} trials recorded across "
+            f"{len(suite_summary.get('methods', []))} methods, "
+            f"{len(suite_summary.get('target_keys', []))} targets and {len(suite_summary.get('budgets_sec', []))} budgets; "
+            "individual trial logs saved deterministically in experiments/p155-baselines/."
+        ),
+        "run_id": run_id,
+        "revision": revision,
+        "dirty": dirty,
+        "findings": findings,
+        "suite_summary": suite_summary,
+        "resolved_config": {
+            "acceptance_phase": "P155",
+            "config_path": str(config_path),
+            "config_sha256": config_sha,
+        },
+        "provenance": prov,
+        "elapsed_sec": time.perf_counter() - t0,
+    }
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_p, "w", encoding="utf-8") as f:
+        json.dump(report, f, indent=2, sort_keys=True, default=str)
+
+    print(
+        f"P155 audit {verdict}: {suite_summary.get('total_trials')} trials executed across "
+        f"{len(suite_summary.get('methods', []))} methods; report -> {out_p}"
+    )
+    if verdict != "ACCEPTED":
+        raise RuntimeError(f"P155 baselines execution audit rejected: {findings}")
+
+    return report
+
+
+
+
 def run_p57_campaign_audit(config_path: str | Path, output_path: str | Path) -> dict[str, Any]:
     """P57 audit: bounded instance campaign with frozen nomination and honest statuses.
 
@@ -19917,6 +20044,8 @@ def main() -> int:
             run_p153_clean_harness_audit(args.config, args.output)
         elif args.acceptance_phase == "P154":
             run_p154_matrix_execution_audit(args.config, args.output)
+        elif args.acceptance_phase == "P155":
+            run_p155_baselines_audit(args.config, args.output)
         return 0
 
     seeds = (

@@ -24,6 +24,7 @@ coverage.xml
 checkpoints/
 runs/
 experiments/*-matrix/
+experiments/*-baselines/
 data/raw/
 data/processed/
 *.pt

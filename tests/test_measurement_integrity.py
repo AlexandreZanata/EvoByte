@@ -299,3 +299,90 @@ def test_p154_science_matrix_audit_runner(tmp_path: Path):
     assert out_file.exists()
     assert report["phase"] == "P154"
     assert report["verdict"] == "ACCEPTED"
+
+
+def test_p155_baselines_suite_and_soundness(tmp_path: Path):
+    from benchmarks.full_matrix import run_p155_baselines_suite, verify_p155_baselines_soundness
+
+    out_dir = tmp_path / "baselines_test"
+    summary = run_p155_baselines_suite(
+        targets=["x_plus_1"],
+        budgets=["0.15s"],
+        seeds=[42, 101],
+        methods=["Random", "Classical-SR", "PySR-Adapter", "EvoByte"],
+        output_dir=out_dir,
+    )
+    assert summary["suite"] == "P155-honest-baselines"
+    assert summary["total_trials"] == 8
+    assert (out_dir / "summary_baselines.json").exists()
+
+    # Honest PySR check
+    pysr_info = summary["comparison"]["PySR-Adapter"]
+    assert pysr_info["completed_runs"] == 0
+    assert pysr_info["success_rate"] == 0.0
+
+    # Soundness verification
+    sound, findings = verify_p155_baselines_soundness(
+        summary, min_trials=8, evobyte_must_beat_random=False
+    )
+    assert sound is True
+    assert findings == []
+
+    # Failure cases
+    unsound, bad_trials = verify_p155_baselines_soundness(summary, min_trials=20)
+    assert unsound is False
+    assert any("INSUFFICIENT_TRIALS" in f for f in bad_trials)
+
+    # Dishonest PySR tampering
+    tampered_pysr = dict(summary)
+    tampered_pysr["comparison"] = dict(summary["comparison"])
+    tampered_pysr["comparison"]["PySR-Adapter"] = {
+        "completed_runs": 0,
+        "success_rate": 1.0,
+    }
+    unsound, bad_pysr = verify_p155_baselines_soundness(tampered_pysr, min_trials=8)
+    assert unsound is False
+    assert any("DISHONEST_PYSR" in f for f in bad_pysr)
+
+    # EvoByte underperformed random
+    tampered_evo = dict(summary)
+    tampered_evo["comparison"] = dict(summary["comparison"])
+    tampered_evo["comparison"]["EvoByte"] = {"success_rate": 0.0}
+    tampered_evo["comparison"]["Random"] = {"success_rate": 1.0}
+    unsound, bad_evo = verify_p155_baselines_soundness(
+        tampered_evo, min_trials=8, evobyte_must_beat_random=True
+    )
+    assert unsound is False
+    assert any("EVOBYTE_UNDERPERFORMED_RANDOM" in f for f in bad_evo)
+
+
+def test_p155_science_matrix_audit_runner(tmp_path: Path):
+    import pytest
+    from benchmarks.science_matrix import run_p155_baselines_audit
+
+    bad_cfg = tmp_path / "bad-phase.json"
+    bad_cfg.write_text(json.dumps({"phase": "P999"}), encoding="utf-8")
+    with pytest.raises(ValueError, match="not a P155 configuration"):
+        run_p155_baselines_audit(bad_cfg, tmp_path / "out.json")
+
+    good_cfg = tmp_path / "p155-config.json"
+    good_cfg.write_text(
+        json.dumps({
+            "phase": "P155",
+            "targets": ["x_plus_1"],
+            "budgets": ["0.15s"],
+            "seeds": [42],
+            "methods": ["Random", "Classical-SR"],
+            "min_trials": 2,
+            "evobyte_must_beat_random": False,
+            "output_dir": str(tmp_path / "baselines_runner"),
+            "allow_dirty": True,
+            "require_clean_tree": False,
+        }),
+        encoding="utf-8",
+    )
+    out_file = tmp_path / "p155-out.json"
+    report = run_p155_baselines_audit(good_cfg, out_file)
+    assert out_file.exists()
+    assert report["phase"] == "P155"
+    assert report["verdict"] == "ACCEPTED"

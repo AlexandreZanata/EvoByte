@@ -2687,6 +2687,185 @@ def verify_p154_matrix_soundness(
     return len(findings) == 0, findings
 
 
+def run_p155_baselines_suite(
+    targets: list[str] | None = None,
+    budgets: list[str | float] | None = None,
+    seeds: list[int] | None = None,
+    methods: list[str] | None = None,
+    output_dir: str | Path = "experiments/p155-baselines",
+    device_name: str | None = None,
+) -> dict[str, Any]:
+    """Execute paired baseline comparisons (Random, GP, Classical-SR, PySR, EvoByte) under strict wall-clock timeout.
+
+    All trials are strictly wall-clock timed, non-simulated, and recorded deterministically.
+    """
+    import datetime
+    import hashlib
+    import json
+    from pathlib import Path
+
+    t0_suite = time.perf_counter()
+    out_d = Path(output_dir)
+    trials_d = out_d / "trials"
+    trials_d.mkdir(parents=True, exist_ok=True)
+
+    target_keys = targets or ["x_plus_1", "x2_3x_7"]
+    parsed_budgets: list[float] = []
+    for b in (budgets or ["0.4s", "0.8s"]):
+        if isinstance(b, (int, float)):
+            parsed_budgets.append(float(b))
+        else:
+            parsed_budgets.append(parse_budget_str(str(b)))
+
+    target_seeds = seeds or [42, 101, 202, 303, 404]
+    target_methods = methods or ["Random", "Classic-GP", "Classical-SR", "PySR-Adapter", "EvoByte"]
+
+    target_datasets = {k: generate_target_dataset(k) for k in target_keys}
+    trials: list[dict[str, Any]] = []
+    by_method: dict[str, list[dict[str, Any]]] = {m: [] for m in target_methods}
+
+    hw = probe()
+    max_vram_peak = 0.0
+
+    print(
+        f"P155 BASELINES SUITE: {len(target_methods)} methods x {len(target_keys)} targets x "
+        f"{len(parsed_budgets)} budgets x {len(target_seeds)} seeds"
+    )
+
+    for m in target_methods:
+        for t_key in target_keys:
+            ds = target_datasets[t_key]
+            for b_sec in parsed_budgets:
+                for s in target_seeds:
+                    vram_mb = 0.0
+                    if m == "Random":
+                        rec = run_baseline_random(ds, b_sec, s)
+                    elif m == "Classic-GP":
+                        rec = run_baseline_gp(ds, b_sec, s)
+                    elif m == "Classical-SR":
+                        rec = run_baseline_classical(ds, b_sec, s)
+                    elif m == "PySR-Adapter":
+                        rec = run_baseline_pysr_adapter(ds, b_sec, s)
+                    elif m == "EvoByte":
+                        with measure_vram_peak(0) as vram_tracker:
+                            rec = run_evobyte_full(ds, b_sec, s)
+                        vram_mb = vram_tracker.get("peak_allocated_mb", 0.0)
+                        if vram_mb > max_vram_peak:
+                            max_vram_peak = vram_mb
+                    else:
+                        raise ValueError(f"Unknown baseline method: {m}")
+
+                    rec_entry = {
+                        **rec,
+                        "method": m,
+                        "target": t_key,
+                        "suite": ds.suite,
+                        "budget_sec": b_sec,
+                        "seed": s,
+                        "synthesized": False,
+                        "status": rec.get("status", "completed"),
+                        "vram_peak_mb": vram_mb,
+                        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                    }
+                    trials.append(rec_entry)
+                    by_method[m].append(rec_entry)
+
+                    clean_m = m.replace("-", "_").lower()
+                    trial_filename = f"{clean_m}_{t_key}_b{int(b_sec * 1000)}ms_s{s}.json"
+                    trial_path = trials_d / trial_filename
+                    with open(trial_path, "w", encoding="utf-8") as f:
+                        json.dump(rec_entry, f, indent=2, sort_keys=True, default=str)
+
+    # Compute comparative metrics across methods
+    comparison: dict[str, Any] = {}
+    for m in target_methods:
+        m_recs = by_method[m]
+        completed = [r for r in m_recs if r.get("status") == "completed"]
+        succ_recs = [r for r in completed if r.get("success") is True]
+        succ_rate = len(succ_recs) / max(1, len(completed)) if completed else 0.0
+
+        mses = [
+            r["hidden_mse"]
+            for r in completed
+            if r.get("hidden_mse") is not None and np.isfinite(r["hidden_mse"])
+        ]
+        mean_mse = float(np.mean(mses)) if mses else float("inf")
+        median_mse = float(np.median(mses)) if mses else float("inf")
+
+        cvps_list = [
+            r["cvps"] for r in completed if r.get("cvps") is not None and np.isfinite(r["cvps"])
+        ]
+        mean_cvps = float(np.mean(cvps_list)) if cvps_list else 0.0
+
+        sizes = [
+            r["program_size"]
+            for r in completed
+            if r.get("program_size") is not None and isinstance(r["program_size"], (int, float))
+        ]
+        mean_size = float(np.mean(sizes)) if sizes else 0.0
+
+        comparison[m] = {
+            "total_runs": len(m_recs),
+            "completed_runs": len(completed),
+            "success_rate": succ_rate,
+            "mean_hidden_mse": mean_mse,
+            "median_hidden_mse": median_mse,
+            "mean_cvps": mean_cvps,
+            "mean_complexity": mean_size,
+        }
+
+    summary: dict[str, Any] = {
+        "suite": "P155-honest-baselines",
+        "total_trials": len(trials),
+        "target_keys": target_keys,
+        "budgets_sec": parsed_budgets,
+        "seeds": target_seeds,
+        "methods": target_methods,
+        "comparison": comparison,
+        "max_vram_peak_mb": float(max_vram_peak),
+        "hardware": hw,
+        "elapsed_sec": time.perf_counter() - t0_suite,
+    }
+
+    summary_file = out_d / "summary_baselines.json"
+    with open(summary_file, "w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2, sort_keys=True, default=str)
+    summary_sha = hashlib.sha256(summary_file.read_bytes()).hexdigest()
+    summary["summary_sha256"] = summary_sha
+
+    return summary
+
+
+def verify_p155_baselines_soundness(
+    summary: dict[str, Any],
+    min_trials: int = 10,
+    evobyte_must_beat_random: bool = True,
+) -> tuple[bool, list[str]]:
+    """Audit P155 baselines summary for experimental honesty and soundness."""
+    findings: list[str] = []
+
+    total_trials = summary.get("total_trials", 0)
+    if total_trials < min_trials:
+        findings.append(f"INSUFFICIENT_TRIALS: expected >= {min_trials}, got {total_trials}")
+
+    comp = summary.get("comparison", {})
+    if "PySR-Adapter" in comp:
+        pysr_info = comp["PySR-Adapter"]
+        if pysr_info.get("completed_runs", 0) == 0:
+            if pysr_info.get("success_rate", 0.0) > 0.0:
+                findings.append("DISHONEST_PYSR: PySR claimed success while missing")
+
+    if evobyte_must_beat_random and "EvoByte" in comp and "Random" in comp:
+        evo_succ = comp["EvoByte"].get("success_rate", 0.0)
+        rand_succ = comp["Random"].get("success_rate", 0.0)
+        if evo_succ < rand_succ:
+            findings.append(
+                f"EVOBYTE_UNDERPERFORMED_RANDOM: EvoByte success rate ({evo_succ:.2%}) < Random ({rand_succ:.2%})"
+            )
+
+    return len(findings) == 0, findings
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="P13 Full Benchmark Matrix (P15 audit & P21 reproduction included)"

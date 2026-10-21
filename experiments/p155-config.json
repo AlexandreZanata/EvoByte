@@ -1,0 +1,11 @@
+{
+  "phase": "P155",
+  "targets": ["x_plus_1", "x2_3x_7"],
+  "budgets": ["0.4s", "0.8s"],
+  "seeds": [42, 101, 202, 303, 404],
+  "methods": ["Random", "Classic-GP", "Classical-SR", "PySR-Adapter", "EvoByte"],
+  "min_trials": 10,
+  "evobyte_must_beat_random": true,
+  "output_dir": "experiments/p155-baselines",
+  "require_clean_tree": true
+}
