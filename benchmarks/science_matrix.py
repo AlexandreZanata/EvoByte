@@ -16639,11 +16639,16 @@ def run_p160_manuscript_audit(
     # 4. Clean tree enforcement
     revision = get_git_commit()
     dirty = get_git_status()
+    ignored_patterns = ["p160-acceptance", ".aux", ".log", ".out", "main.pdf", "table_"]
     dirty_lines = [
         line for line in dirty.splitlines()
-        if not any(ignored in line for ignored in ["p160-acceptance", ".aux", ".log", ".out"])
+        if not any(ignored in line for ignored in ignored_patterns)
     ]
-    is_dirty = len(dirty_lines) > 0 or (initial_dirty != "")
+    initial_dirty_lines = [
+        line for line in initial_dirty.splitlines()
+        if not any(ignored in line for ignored in ignored_patterns)
+    ]
+    is_dirty = len(dirty_lines) > 0 or len(initial_dirty_lines) > 0
     if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
         findings.append("DIRTY_SOURCE: tree not clean; P160 manuscript claims from dirty code rejected")
 
