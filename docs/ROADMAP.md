@@ -60,6 +60,10 @@ P97–P104 Diophantine algebraic geometry, cubic surface fibrations & invariants
 P105–P112 open problems formal discovery & proof-guided model program (D028)
 P113–P120 additive combinatorics, Sidon sets & density program (D031)
 P121–P128 extremal graph theory, Ramsey numbers & arithmetic progressions program (D033)
+P129–P136 discrete geometry, Erdős distinct distances & point configurations program (D035)
+P137–P144 discrepancy theory, Erdős discrepancy problem & covering systems program (D037)
+P145–P152 constructive algebraic discovery & high-moduli Schinzel program (D038)
+P153–P160 P13 clean reproduction closing & systems publication program (D039)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -345,6 +349,42 @@ P142 formalizes Erdős primitive set divisor series $\sum \frac{1}{a \log a}$ an
 P143 confirms performance on a sealed blind split of 100 discrepancy and covering instances under Holm FWER control.
 P144 executes a grand discrepancy and covering systems campaign certifying 3,800+ Lean 4 theorems and the final dossier.
 All phases remain Proposed until measured and accepted.
+
+## Constructive algebraic discovery & high-moduli Schinzel program (D038)
+
+[P145–P152](phases/README.md#constructive-algebraic-discovery--high-moduli-schinzel-program-p145p152)
+define the formal research extension targeting narrow, computationally tractable constructive mathematical discovery under D038.
+Pivoting from shallow broad lema enumeration across distant domains, this program concentrates EvoByte's search engines on
+discovering new parameterized polynomial identities for open high-moduli ($M \ge 840$) congruence orbits in Schinzel's conjecture ($a/n$),
+accelerated quadratic ring sieves in $\mathbb{Z}[\sqrt{d}]$, extremal finite Sidon certificates, and dual-verifier novelty audit
+against world mathematical literature without spurious universal claims.
+
+P145 formalizes high-moduli ($M \in \{840, 2520, 5040\}$) Schinzel congruence signatures and resistant orbits in Lean 4.
+P146 develops quadratic ring factorizations and norm sieves in $\mathbb{Z}[\sqrt{d}]$ for resistant Schinzel numerators $a \in \{5, 6, 7\}$.
+P147 implements structured evolutionary polynomial synthesis in $\mathbb{Q}[k]$ for unproven residue classes.
+P148 certifies the discovered polynomial identities and integer positivity in the Lean 4 kernel with zero `sorry`.
+P149 synthesizes and verifies extremal finite constructive certificates (dense Sidon sets and conflict-free geometric graphs).
+P150 executes dual-verifier independent cross-checking and novelty auditing against world mathematical literature corpora.
+P151 confirms performance on a sealed blind split of 100 resistant instances under Holm FWER control ($p \le 0.01$).
+P152 executes a grand constructive algebraic campaign certifying the discovered identities, SHA-256 hash chain, and literature dossier.
+
+## P13 clean reproduction closing & systems publication program (D039)
+
+[P153–P160](phases/README.md#p13-clean-reproduction-closing--systems-publication-program-p153p160)
+define the systems research program closing the foundational H1 benchmark matrix with strict wall-clock time provenance under D039.
+Following the audit recommendations of D013, this program executes the complete, measured benchmark comparing EvoByte's
+GPU-resident compact bytecode and cascade verifier against honest baselines (Random, Classical GP, PySR) under identical wall-clock
+budgets (10 s, 1 min, 10 min, 1 h) across 20 independent seeds, measuring the 9 pipeline ablations, auditing strict out-of-domain
+generalization, and delivering a publication-ready systems research manuscript for submission to leading conferences/journals.
+
+P153 audits and isolates the clean P13 reproduction harness, removing any simulated or pre-calculated legacy data.
+P154 executes the full benchmark matrix under strict wall-clock time budgets (10 s, 1 min, 10 min, 1 h) across 20 independent seeds.
+P155 measures honest competitive baselines (Random, GP, PySR) under identical wall-clock budgets and seeds.
+P156 evaluates generalization on strict in-domain hidden splits and out-of-domain extrapolation splits without data leakage.
+P157 measures and audits all 9 architecture ablations (cascade $14\times$ CVPS speedup, early termination, GPU residency).
+P158 computes the formal statistical verdict for the 5 falsifiable H1 criteria and non-dominated Pareto frontiers.
+P159 validates end-to-end containerized hermetic reproduction (`make verify`) and packages open-science raw data bundles.
+P160 consolidates the comprehensive systems research manuscript (*"EvoByte: Massively Parallel Evolutionary Discovery of Symbolic Programs"*) for publication.
 
 ## Quantum track (experimental, deferred expansion)
 
