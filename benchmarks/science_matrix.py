@@ -16181,6 +16181,7 @@ def run_p158_h1_verdict_audit(
     )
 
     t0 = time.perf_counter()
+    initial_dirty = get_git_status()
     cfg_p = Path(config_path)
     with open(cfg_p, encoding="utf-8") as f:
         config = json.load(f)
@@ -16223,7 +16224,12 @@ def run_p158_h1_verdict_audit(
 
     revision = get_git_commit()
     dirty = get_git_status()
-    if config.get("require_clean_tree", True) and dirty and not config.get("allow_dirty", False):
+    dirty_lines = [
+        line for line in dirty.splitlines()
+        if not line.endswith("p158-h1-verdict-report.md")
+    ]
+    is_dirty = len(dirty_lines) > 0 or (initial_dirty != "")
+    if config.get("require_clean_tree", True) and is_dirty and not config.get("allow_dirty", False):
         findings.append("DIRTY_SOURCE: tree not clean; P158 claims from dirty code rejected")
 
     dev_actual = _torch.device(
