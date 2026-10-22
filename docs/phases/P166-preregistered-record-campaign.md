@@ -1,6 +1,6 @@
 # P166 — Campanha pré-registrada de busca por novos recordes mundiais sob orçamento fixo
 
-**Status:** Proposed.
+**Status:** Prepared (manifesto pré-registrado e congelado antes da execução).
 **Dependência:** P165 concluída; branch a partir de `codex/p165-blind-rediscovery-protocol`.
 **Owner:** agente executor; revisor formal nos gates de veredito.
 **Branch:** `codex/p166-preregistered-record-campaign`.
