@@ -386,6 +386,25 @@ P158 computes the formal statistical verdict for the 5 falsifiable H1 criteria a
 P159 validates end-to-end containerized hermetic reproduction (`make verify`) and packages open-science raw data bundles.
 P160 consolidates the comprehensive systems research manuscript (*"EvoByte: Massively Parallel Evolutionary Discovery of Symbolic Programs"*) for publication.
 
+## Validated discovery program (P161–P170, D041)
+
+[Programa de Descoberta Validada](phases/README.md#programa-de-descoberta-validada-p161p170-d038)
+re-audita cada alegação das fases anteriores com guardas mecânicas, retrata o que foi refutado
+e conclui com manuscrito auditado, pacote arquivável Zenodo e veredito estatístico consolidado.
+Estado final: **concluído** — H1 **NOT SUPPORTED**, descoberta matemática **NULL_RESULT**
+(1 empate publicado), 2 certificados Lean 4 **fiéis** com revisão humana explícita.
+
+P161 retrata alegações refutadas (49 de 58 identidades de Schinzel sem solução inteira; veredito H1 SUPPORTED contradito pelos baselines; manuscrito com orçamentos e comparações não medidos) e implanta a guarda de integralidade (`src/evobyte/claim_audit.py`) mais 7 testes.
+P162 implanta o gate de fidelidade de enunciados Lean (4888 teoremas: 51 `vacuous-constant`, 2012 `numeric-literal`, 2827 `needs-review`) e cria o registro vazio de revisão humana.
+P163 congela o catálogo de 4 alvos de recorde com verificadores independentes em Python puro.
+P164 implementa os baselines combinatórios honestos (Random, Simulated Annealing, Tabu) e o smoke pareado (nenhum recorde; 6/1/1 violações).
+P165 calibra a redescoberta cega (Tabu reencontra $W(3,3)=27$ em 4/5 sementes; confirmação exaustiva independente de $W(3,3)=27$ e $W(2,4)=35$).
+P166 executa a campanha pré-registrada (120 ensaios, 12.016.204 avaliações): 1 `DISCOVERY_TIED` (vdw_3_3, 10 certificados) e 2 `NULL_RESULT`, sem `DISCOVERY_BEATEN`.
+P167 entrega o verificador autônomo de certificados (só biblioteca padrão) e o dossiê de validação externa com minuta de comunicação.
+P168 prova 2 certificados Lean 4 fiéis no kernel (`decide`, zero `sorry`), registrados com revisão humana explícita.
+P169 consolida o veredito estatístico (6 comparações SA-vs-Tabu não significativas após Holm a 0.01; agrupada $N=60$ significativa a favor do SA; `NULL_RESULT` matemático confirmado).
+P170 publica o manuscrito auditado em PDF, o pacote arquivável Zenodo com cadeia SHA-256 e o dossiê de conclusão do programa.
+
 ## Quantum track (experimental, deferred expansion)
 
 

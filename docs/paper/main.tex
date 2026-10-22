@@ -41,7 +41,12 @@ early termination a further 3.00$\times$. Evolutionary search beats random searc
 $W = 55.0$, Holm-adjusted $p = 2.49 \times 10^{-3}$), but the classical symbolic-regression
 baseline reaches 100\% success versus 80\% for EvoByte, with lower hidden error and higher
 throughput. H1's honest-baseline criterion is therefore \emph{not supported}. We report this
-negative result together with all raw artifacts and reproduction commands.
+negative result together with all raw artifacts and reproduction commands. A P161--P170
+validation program re-audited every claim: a mechanical integrality audit retracted 49 of 58
+Schinzel identities, a Lean statement-fidelity gate found 2063 provably vacuous statements
+out of 4888, a preregistered 120-trial combinatorial record campaign (12{,}016{,}204
+evaluations) found no new record, and the consolidated statistical verdict is H1
+\emph{not supported} with \emph{null result} for mathematical record discovery.
 \end{abstract}
 
 \section{Introduction}
@@ -103,14 +108,18 @@ A critical bottleneck in symbolic regression is candidate fitness evaluation. Ev
 \input{table_ablations.tex}
 
 As detailed in Table~\ref{tab:ablations}, the $15.51\times$ entry is the measurement of the
-\emph{complete} multi-stage cascade (ablation A8, executed without the cascade) against naive
-full-dataset scoring; the per-stage attribution of that number is not separately measured.
-Early termination (ablation A9) contributes a further \textbf{3.00$\times$ speedup}. Executing
-the same bytecode on the GPU instead of the CPU (ablation A6) yields a \textbf{2.60$\times$}
-speedup; this ablation measures device execution, not population residency in VRAM. Under the
-strict budgets used here EvoByte verified between 500 and 25{,}017 candidates per run, with mean
-throughputs of 3{,}326 CVPS (P154 budget matrix) and 4{,}800 CVPS (P155 paired baselines) on
-reference consumer GPU hardware.
+\emph{complete} multi-stage cascade (ablation A8, ``No Cascade'', \texttt{speedup\_ratio} =
+$15.51$) against naive full-dataset scoring. Early termination (ablation A9, ``No Early
+Termination'', \texttt{speedup\_ratio} = $3.00$) contributes a further \textbf{3.00$\times$}
+speedup. Executing the same bytecode on the GPU instead of the CPU (ablation A6, ``CPU vs
+GPU Execution'', \texttt{speedup\_ratio} = $2.60$) yields a \textbf{2.60$\times$} speedup;
+this ablation measures device execution, not population residency in VRAM. The remaining
+ablations (A1, A2, A4, A5, A7) show no measured throughput speedup
+(\texttt{speedup\_ratio} = $1.00$) and were retained on the basis of their recorded
+qualitative rationales; ablation A3 (neural micro-generator) was dropped under ADR-0010.
+Under the strict budgets used here EvoByte verified between 500 and 25{,}017 candidates per
+run, with mean throughputs of 3{,}326 CVPS (P154 budget matrix) and 4{,}800 CVPS (P155 paired
+baselines) on reference consumer GPU hardware.
 
 \section{Experimental Protocol}
 
@@ -129,11 +138,15 @@ All experiments were conducted on reference hardware comprising an AMD/Intel x86
 
 \input{table_h1_verdict.tex}
 
-\noindent\emph{Retraction notice (D039, P161).} Table~\ref{tab:h1_verdict} reproduces the
-preregistered thresholds and the P158 verdicts as they stood before the D038 audit. That
-overall \textbf{SUPPORTED} verdict is retracted: the honest-baseline criterion C5 is not met,
-and the authoritative verdict of this paper is \textbf{NOT SUPPORTED}. See
-\S\ref{sec:h1-status}.
+\noindent\emph{Retraction notice (D040, P161).} Table~\ref{tab:h1_verdict} no longer shows the
+pre-retraction P158 verdicts: it records the \textbf{audited} post-retraction values. The
+original overall \textbf{SUPPORTED} verdict of P158 is retracted because the honest-baseline
+criterion C5 is not met (the classical symbolic-regression baseline dominates EvoByte and the
+PySR adapter was never executed). The authoritative verdict of this paper is
+\textbf{NOT SUPPORTED}. See \S\ref{sec:h1-status}.
+
+\noindent The consolidated P169 statistical verdict is reported in
+Section~\ref{sec:validated-program}.
 
 \section{Empirical Results \& Statistical Verdict}
 
@@ -217,18 +230,84 @@ To understand the exact contribution of each subsystem, we evaluated nine isolat
 \subsection{Verification and Acceleration Components}
 The cascade architecture demonstrated measurable efficiencies: the complete cascade against naive
 full-dataset scoring provides a $15.51\times$ speedup, early termination a $3.00\times$ speedup,
-and GPU instead of CPU execution of the same bytecode a $2.60\times$ speedup. Together with point
-mutation ($1.42\times$) and constant optimization ($1.25\times$), these components were retained
-in the primary system. All nine ablations were executed on the target $y = x^2+3x+7$ only.
+and GPU instead of CPU execution of the same bytecode a $2.60\times$ speedup (Table~\ref{tab:ablations},
+P157 battery, single target $y = x^2+3x+7$).
 
 \subsection{Negative Result: Neural Micro-Generator Rejection (ADR-0010)}
 Phase P12 investigated augmenting evolutionary search with a lightweight neural proposal network trained to predict promising bytecode tokens. Empirical measurement revealed that forward inference through the neural network introduced substantial overhead, reducing overall candidate evaluation throughput from $>2,000$ CVPS to $\approx 760$ CVPS (a 0.38$\times$ slowdown). Because the quality improvement per proposal failed to compensate for the $2.6\times$ reduction in evaluated candidates per wall-clock second, the neural generator was formally rejected and dropped from the architecture under Architectural Decision Record ADR-0010. We report this negative result to emphasize that in ultra-fast verification regimes, raw throughput and simple stochastic mutation frequently outperform neural guidance.
+
+\section{Validated Discovery Program (P161--P170)}
+\label{sec:validated-program}
+After the P160 manuscript, every published claim was mechanically re-audited and the research
+program continued under preregistration. The audited record is:
+
+\begin{itemize}
+    \item \textbf{Claim retraction (P161, D040).} A mechanical integrality audit of the 58
+    generated Schinzel identities re-evaluated each identity exactly in $\mathbb{Q}[k]$:
+    only 9 produce positive integers for all $k$; 49 admit only rational solutions
+    (in $\mathbb{Q}$ every fraction decomposes as a unit fraction, so those 49 are no
+    evidence). The \texttt{novel-extension} classification was retracted.
+    \item \textbf{Lean statement fidelity (P162).} A conservative classifier audited all 4888
+    generated Lean theorems: 51 are provably vacuous constants, 2012 are numeric literals,
+    and 2825 need human review (a lower bound on vacuity, never a certificate of meaning).
+    A human review registry gates any future claim of a result.
+    \item \textbf{Record-target catalogue (P163).} Four frozen extremal targets with
+    published bounds and independent polynomial-time certificate verifiers in pure Python
+    and NumPy.
+    \item \textbf{Honest combinatorial baselines (P164).} Fully implemented Random Search,
+    Simulated Annealing and Tabu Search under paired wall-clock budgets     (0.5\,s, two seeds):
+    best 6, 1 and 1 monochromatic violations on $[1..27]$; no certified solution.
+    \item \textbf{Blind rediscovery (P165).} Tabu Search re-found the published
+    $W(3,3) = 27$ optimum (valid 3-coloring of $[1..26]$) in 4/5 seeds within 10\,s
+    (mean 6.26\,s); Simulated Annealing found none. Independent exhaustive search confirmed
+    $W(3,3) = 27$ and $W(2,4) = 35$, and reproduction of random runs confirmed eligibility.
+    \item \textbf{Preregistered record campaign (P166).} Table~\ref{tab:campaign} reports the
+    frozen-manifest campaign: 120 trials, 12{,}016{,}204 real evaluations, 1{,}134.1\,s of
+    machine time. One target tied the published record (10 certified colorings of
+    $[1..26]$); two ended as \textbf{null results} (\texttt{NULL\_RESULT}). No baseline beat a
+    published bound; the best near-miss on $[1..27]$ had exactly 1 violation.
+    \item \textbf{External validation (P167).} A standalone verifier using only the Python
+    standard library certifies exported certificates in under 1\,s; the sample certificate
+    verifies end-to-end (SHA-256 \texttt{b77e1f59\ldots}).
+    \item \textbf{Faithful Lean certificates (P168).} Two kernel-verified theorems
+    ($\neg$ monochromatic 3-AP on $[1..8]$, $\neg$ Schur violation on $[1..4]$), compiled by
+    \texttt{lake build} with zero \texttt{sorry}, passing the P162 linter with 0
+    \texttt{vacuous-constant}, and recorded with explicit human review.
+    \item \textbf{Consolidated statistical verdict (P169).} Six paired method comparisons
+    (Simulated Annealing vs.\ Tabu Search, matched by target, size and seed) are all
+    non-significant after Holm FWER control at $\alpha = 0.01$; the pooled $N = 60$
+    comparison favors Simulated Annealing ($W = 285.0$, $p_{\text{Holm}} = 0.00108$).
+    Mathematical record discovery is \textbf{NULL\_RESULT} and bytecode evolutionary
+    advantage is \textbf{NOT\_SUPPORTED} (the campaign has no EvoByte arm by design).
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\caption{Preregistered record-search campaign (P166): 120 trials (3 targets $\times$ 2 sizes
+$\times$ 2 algorithms $\times$ 10 seeds, 10\,s each), certified by the independent P163
+verifiers. \texttt{Tie} = published bound, \texttt{beat} = bound $+ 1$.}
+\label{tab:campaign}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llccccc@{}}
+\toprule
+\textbf{Target} & \textbf{Size} & \textbf{Trials} & \textbf{Certified} & \textbf{Best violations} & \textbf{Verdict} \\
+\midrule
+\texttt{vanderwaerden\_w3\_3} & tie (26) & 20 & 10 & 0 & \multirow{2}{*}{\textbf{DISCOVERY\_TIED}} \\
+\texttt{vanderwaerden\_w3\_3} & beat (27) & 20 & 0 & 1 & \\
+\texttt{vanderwaerden\_w2\_6} & tie (1131) & 20 & 0 & 2{,}303 & \multirow{2}{*}{\textbf{NULL\_RESULT}} \\
+\texttt{vanderwaerden\_w2\_6} & beat (1132) & 20 & 0 & 2{,}285 & \\
+\texttt{schur\_s5} & tie (160) & 20 & 0 & 4 & \multirow{2}{*}{\textbf{NULL\_RESULT}} \\
+\texttt{schur\_s5} & beat (161) & 20 & 0 & 7 & \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
 
 \section{Reproducibility \& Open Science}
 To guarantee independent reproducibility, EvoByte provides:
 \begin{enumerate}
     \item \textbf{Hermetic Containerization:} A Dockerfile based on \texttt{python:3.11-slim} that installs all runtime dependencies and executes the verification suite under \texttt{--network none}, ensuring zero network leaks or unpinned dependencies.
-    \item \textbf{Open Research Data Bundle:} A complete open-access research archive formatted for Zenodo and OSF deposit (\texttt{scripts/export\_zenodo\_bundle.py}). Exported from commit \texttt{0b7fc20}, the package contains 461 files (3.40\,MB) including raw hardware execution logs, JSON telemetry, and formal Lean 4 certificates, validated with 100\% SHA-256 cryptographic checksums; the file count follows the exported tree and is regenerated by the export script.
+    \item \textbf{Open Research Data Bundle:} A complete open-access research archive formatted for Zenodo and OSF deposit (\texttt{scripts/export\_zenodo\_bundle.py}). Exported from the audited tree (544 files, 5.46\,MB), the package contains the manuscript and PDF, raw hardware execution logs, JSON telemetry, formal Lean 4 certificates, the P161--P170 evidence artifacts, the project source code and the standalone external verifier, validated with 100\% SHA-256 cryptographic checksums via \texttt{manifest-sha256.json}; the top-level \texttt{final-manifest-sha256.json} records the bundle, tarball and per-artifact hashes. The file count follows the exported tree and is regenerated by the export script.
 \end{enumerate}
 
 \section{Related Work}
@@ -239,7 +318,18 @@ To guarantee independent reproducibility, EvoByte provides:
 \textbf{Physics-Inspired and Modern Symbolic Regression:} AI Feynman \cite{udrescu2020ai} combines dimensional analysis with neural networks. PySR \cite{cranmer2023interpretable} utilizes multi-population evolutionary algorithms in Julia. EvoByte complements these approaches with a bytecode engine that verified between 500 and 25{,}017 candidates per run under the sub-second budgets measured here; a direct comparison against PySR was not performed because the dependency was unavailable.
 
 \section{Conclusion}
-We have presented \textbf{EvoByte}, an open-source, massively parallel symbolic discovery architecture based on fixed 64-byte linear bytecode and hierarchical verification cascades. Through multi-seed wall-clock experiments we measured that evolutionary search over compact bytecode with fast verification outperforms random search per unit of compute time ($W = 55.0$, $p_{\text{Holm}} = 2.49 \times 10^{-3}$), and that the verification cascade and early termination raise measured throughput by $15.51\times$ and $3.00\times$. We also measured that a classical symbolic-regression baseline reaches a higher success rate (100\% versus 80\%) with lower hidden error than EvoByte, and that the PySR adapter could not be executed in our environment. The honest-baseline criterion of Hypothesis H1 is therefore \textbf{not supported}, and we report this negative result together with the complete open research data, the hermetic container recipe, and the retraction notices that accompany the previously published verdicts.
+We have presented \textbf{EvoByte}, an open-source, massively parallel symbolic discovery architecture based on fixed 64-byte linear bytecode and hierarchical verification cascades. Through multi-seed wall-clock experiments we measured that evolutionary search over compact bytecode with fast verification outperforms random search per unit of compute time ($W = 55.0$, $p_{\text{Holm}} = 2.49 \times 10^{-3}$), and that the verification cascade and early termination raise measured throughput by $15.51\times$ and $3.00\times$. We also measured that a classical symbolic-regression baseline reaches a higher success rate (100\% versus 80\%) with lower hidden error than EvoByte, and that the PySR adapter could not be executed in our environment. The honest-baseline criterion of Hypothesis H1 is therefore \textbf{not supported}.
+
+The P161--P170 validated-discovery program re-audited every claim of this paper: a mechanical
+integrality guard retracted 49 Schinzel novelty claims, a Lean fidelity gate bounded the
+provably vacuous theorems (2063 of 4888), a preregistered 120-trial combinatorial campaign
+(12,016,204 evaluations) found no new mathematical record (one tied published record, two
+null results), and the consolidated statistical verdict confirms H1 \textbf{not supported}
+with \textbf{null result} for mathematical record discovery. Two faithful Lean 4 certificates
+are recorded with explicit human review, and a standard-library-only external verifier
+reproduces the sample certificate end to end. We report these negative results together with
+the complete open research data (SHA-256 chain of custody), the hermetic container recipe,
+and the retraction notices that accompany the previously published verdicts.
 
 \begin{thebibliography}{10}
 

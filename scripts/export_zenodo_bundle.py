@@ -74,17 +74,50 @@ def collect_bundle_files(repo_root: Path) -> list[tuple[Path, str]]:
             rel = script_path.relative_to(root).as_posix()
             entries.append((script_path, rel))
 
-    # Experiments: configs, runners, and result summaries for P153-P159
-    for exp_file in root.glob("experiments/p15*"):
-        if exp_file.is_file():
-            rel = exp_file.relative_to(root).as_posix()
-            entries.append((exp_file, rel))
-        elif exp_file.is_dir() and not exp_file.name.startswith("."):
-            # Include json / csv / log result files inside experiment run directories
-            for sub_file in exp_file.rglob("*"):
-                if sub_file.is_file() and sub_file.suffix in {".json", ".csv", ".txt", ".log", ".md"}:
-                    rel = sub_file.relative_to(root).as_posix()
-                    entries.append((sub_file, rel))
+    # Experiments: configs, runners, and result summaries for P153-P169 and the
+    # validated-discovery program (P161-P170 evidence stays inside experiments/)
+    for exp_pattern in ("experiments/p15*", "experiments/p16*"):
+        for exp_file in root.glob(exp_pattern):
+            if exp_file.is_file():
+                rel = exp_file.relative_to(root).as_posix()
+                entries.append((exp_file, rel))
+            elif exp_file.is_dir() and not exp_file.name.startswith("."):
+                # Include json / csv / log result files inside experiment run directories
+                for sub_file in exp_file.rglob("*"):
+                    if sub_file.is_file() and sub_file.suffix in {".json", ".csv", ".txt", ".log", ".md"}:
+                        rel = sub_file.relative_to(root).as_posix()
+                        entries.append((sub_file, rel))
+
+    # Audited publication manuscript and data tables (P160, P170)
+    for doc_rel in [
+        "docs/paper/main.tex",
+        "docs/paper/main.pdf",
+        "docs/paper/references.bib",
+        "docs/paper/table_ablations.tex",
+        "docs/paper/table_h1_verdict.tex",
+        "docs/paper/table_pareto.tex",
+        "docs/paper/table_wilcoxon.tex",
+        "docs/research/lean-fidelity-reviews.json",
+        "docs/research/targets/open_targets.json",
+    ]:
+        src = root / doc_rel
+        if src.is_file():
+            entries.append((src, doc_rel))
+
+    # Project source code (engine, baselines, verifiers, statistical evaluation)
+    for src_file in root.glob("src/**/*.py"):
+        if src_file.is_file() and "__pycache__" not in src_file.parts:
+            entries.append((src_file, src_file.relative_to(root).as_posix()))
+
+    # Standalone external-validation certificate (P167): must be verifiable
+    # without installing the package, so it ships as an explicit artifact.
+    for standalone_rel in [
+        "scripts/verify_certificate_standalone.py",
+        "dist/external-validation/sample_certificate.json",
+    ]:
+        src = root / standalone_rel
+        if src.is_file():
+            entries.append((src, standalone_rel))
 
     # Formal Lean 4 sources (excluding build artifacts and mathlib lake cache)
     lean_dir = root / "lean_proofs"
