@@ -1,21 +1,21 @@
 \begin{table}[t]
 \centering
-\caption{Systematic 9-ablation battery on EvoByte architectural components. Measured speedups and architectural decisions follow preregistered thresholds.}
+\caption{Measured 9-ablation battery: each architectural component removed once against the full system on the target $y = x^2+3x+7$ (P157, 5 seeds). The \textbf{Measured Speedup} column reports the throughput speedup of the full system over the variant without the component (from \texttt{experiments/p157-ablations/summary\_ablations.json}, field \texttt{speedup\_ratio}); a value of $1.00\times$ means no throughput speedup was measured for that component, and the keep/drop decision follows the recorded rationale. The $15.51\times$ entry is the complete cascade (A8, executed without the cascade), not a single stage.}
 \label{tab:ablations}
 \resizebox{\linewidth}{!}{%
 \begin{tabular}{@{}llccr@{}}
 \toprule
-\textbf{Ablation} & \textbf{Component Tested} & \textbf{Measured Speedup} & \textbf{Threshold} & \textbf{Decision} \\
+\textbf{Ablation} & \textbf{Component Removed} & \textbf{Measured Speedup} & \textbf{Decision} \\
 \midrule
-A1 & Bytecode Static Validity (S0) & 1.15$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
-A2 & Coarse Grid Screening (S1) & 15.51$\times$ & $\ge 10.0\times$ & \textbf{KEEP} \\
-A3 & Early Termination (S2) & 3.00$\times$ & $\ge 2.0\times$ & \textbf{KEEP} \\
-A4 & GPU VRAM Residency & 2.60$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
-A5 & Structured Point Mutation & 1.42$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
-A6 & Instruction Crossover & 1.08$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
-A7 & MAP-Elites Diversity Archive & Qualitative gain & Multi-modal & \textbf{KEEP} \\
-A8 & Constant Optimization Bank & 1.25$\times$ & $> 1.0\times$ & \textbf{KEEP} \\
-A9 & Neural Micro-Generator (P12) & 0.38$\times$ (slowdown) & $\ge 1.0\times$ & \textbf{DROP (ADR-0010)} \\
+A1 & MAP-Elites \& Novelty Fitness & $1.00\times$ & \textbf{KEEP} \\
+A2 & Single-Point Crossover & $1.00\times$ & \textbf{KEEP} \\
+A3 & Micro Bytecode Sampler (ADR-0010) & $1.00\times$ & \textbf{DROP} \\
+A4 & 4-Island Ring Migration & $1.00\times$ & \textbf{KEEP} \\
+A5 & Tunable Slots + Local Search & $1.00\times$ & \textbf{KEEP} \\
+A6 & Resident PyTorch GPU VM (CPU instead of GPU) & \textbf{2.60}$\times$ & \textbf{KEEP} \\
+A7 & Massive Population Batching & $1.00\times$ & \textbf{KEEP} \\
+A8 & Multi-Stage Verifier Cascade (S1--S3) & \textbf{15.51}$\times$ & \textbf{KEEP} \\
+A9 & Early Stop Rejection on Overflow/NaN & \textbf{3.00}$\times$ & \textbf{KEEP} \\
 \bottomrule
 \end{tabular}%
 }

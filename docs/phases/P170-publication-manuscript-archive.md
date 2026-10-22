@@ -1,6 +1,6 @@
 # P170 — Manuscrito de publicação auditado, pacote arquivável Zenodo e conclusão do programa
 
-**Status:** Proposed.
+**Status:** Done (2026-10-22).
 **Dependência:** P169 concluída; branch a partir de `codex/p169-statistical-verdict-negative-results`.
 **Owner:** agente executor; revisor final e autor correspondente (Alexandre).
 **Branch:** `codex/p170-publication-manuscript-archive`.
@@ -116,3 +116,43 @@ gh pr create --base codex/p169-statistical-verdict-negative-results \
   --body-file /tmp/evobyte-p170-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-22):** Done.
+
+- Manuscrito sincronizado: `table_h1_verdict.tex` registra o veredito auditado
+  (overall NOT SUPPORTED, C5 não atendido com os valores medidos do P155);
+  `table_ablations.tex` lista as 9 ablações medidas do P157 com nomes e `speedup_ratio`
+  exatos (1.0× onde não houve speedup); `table_pareto.tex` e `table_wilcoxon.tex`
+  conferem com o JSON da P158/P155; nova seção "Validated Discovery Program (P161–P170)"
+  com a tabela da campanha P166; abstract e conclusão atualizados.
+- `docs/paper/main.pdf` recompilado (10 páginas, 264 KB, zero warnings/erros).
+- Pacote Zenodo exportado (544 arquivos, 5,46 MB, tarball + autoverificação OK) com
+  `scripts/export_zenodo_bundle.py` estendido para incluir manuscrito, evidências
+  P160–P170, código-fonte e verificador autônomo; `final-manifest-sha256.json` criado
+  com a cadeia completa (bundle + 17 artefatos de evidência).
+- `docs/ROADMAP.md` com a seção do programa concluído; `docs/DECISIONS.md` com a linha
+  D041 formalizando o fechamento.
+- `docs/research/p170-program-conclusion-dossier.md` com a jornada, as contribuições
+  genuínas, os resultados combinatórios e as limitações assumidas.
+- Gates: `git diff --check` limpo, `test -f` nos dois artefatos, `pytest tests` completo
+  verde, `make verify` verde.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- **D041 em vez de D040** para a decisão de fechamento (`D040` já era a retratação P161;
+  o log de decisões exige IDs únicos).
+- **`scripts/export_zenodo_bundle.py` estendido** (fora do escopo formal): sem a extensão,
+  o pacote omitiria o manuscrito, as evidências P160–P170 e o código-fonte. Mudança mínima
+  e testada (o teste P159 do bundle continua verde). O `.gitignore` ganhou exceções
+  cirúrgicas para `dist/external-validation/` (P167) e
+  `dist/zenodo-bundle/final-manifest-sha256.json` (esta fase); o resto de `dist/`
+  continua ignorado.
+- **LaTeX exigiu ajuste de quebra de linha**: um parágrafo do aviso de retratação com
+  referência cruzada para a nova seção disparava erro fatal de expansão de fonte do
+  microtype (`auto expansion is only possible with scalable fonts`); o apontamento para
+  P169 foi movido para parágrafo próprio, sem mudar o conteúdo. Investigação completa no PR.
+- **Dois commits em vez de um** (pré-registro + evidência): não aplicável aqui — ao
+  contrário da P166, esta fase não executa campanha; o ciclo compilação→exportação→manifesto
+  foi feito na árvore de trabalho e commitado atomicamente.

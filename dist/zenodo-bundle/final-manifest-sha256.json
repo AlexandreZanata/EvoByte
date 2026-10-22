@@ -1,0 +1,158 @@
+{
+  "format": "final-manifest-sha256",
+  "format_version": "1.0.0",
+  "phase": "P170",
+  "created_at": "2026-10-22T20:03:51Z",
+  "export_command": "python3 scripts/export_zenodo_bundle.py --output-dir dist/zenodo-bundle",
+  "repo_git_commit_at_export": "153d7076509c8693215ae95b39300aae2c5ea38d",
+  "bundle": {
+    "content_dir": "dist/zenodo-bundle/evobyte-research-bundle",
+    "tarball": "dist/zenodo-bundle/evobyte-zenodo-bundle.tar.gz",
+    "tarball_sha256": "98a10aab4e08138b148fac423d1899fef8888d7e0da55b46890e1fa49fd9902c",
+    "tarball_size_bytes": 1395945,
+    "bundle_manifest_sha256": "a93da1d240d6db466b14c4439c2b700162291a401f2c2ef9d5140906ceeed199",
+    "bundle_checksums_sha256": "7a7f7774a230abbed675fdd5b7c499f665d58fb9f744c9f2d1072400ef352c2f",
+    "bundle_metadata_sha256": "2d7f4e580b487bed2bab9f676db9434f768177fa9705bd831707f08984891573",
+    "total_files": 544,
+    "total_bytes": 5720161
+  },
+  "evidence": [
+    {
+      "path": "experiments/p154-matrix/summary_matrix.json",
+      "role": "P154 budget matrix (CVPS, budgets, VRAM)",
+      "sha256": "3b9b6a8e4a2768c478197b0e93ddb8808d54fd1e641fe9a2346a3195c88dee08",
+      "size_bytes": 2554,
+      "versioned_in_git": false,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p155-baselines/summary_baselines.json",
+      "role": "P155 paired baselines (success, MSE, CVPS)",
+      "sha256": "ca1994a4f91ed709077c2e4ce8343d7147974afb6a625652247fb98ee429f90e",
+      "size_bytes": 2454,
+      "versioned_in_git": false,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p156-generalization/summary_generalization.json",
+      "role": "P156 generalization (extrapolation, explosion, complexity)",
+      "sha256": "d2756ef9531459c0002a417c61670b5ccb674bd7300e3c0fd6f3594033a26aec",
+      "size_bytes": 3258,
+      "versioned_in_git": false,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p157-ablations/summary_ablations.json",
+      "role": "P157 ablations (15.51x, 3.00x, 2.60x, decisions)",
+      "sha256": "78ab72c3b3d760310a08ed784e8d9fedb477b7ee12d9f8b6e2b6eb9c84d35228",
+      "size_bytes": 5310,
+      "versioned_in_git": false,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p158-verdict/summary_h1_verdict.json",
+      "role": "P158 verdicts and Pareto frontier",
+      "sha256": "df5f6538a080e32ab578a823a3422529a743ed8b2e9fbb35495095006332f8f8",
+      "size_bytes": 7972,
+      "versioned_in_git": false,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p162-lean-fidelity.json",
+      "role": "P162 Lean statement fidelity (4888/51/2012/2827)",
+      "sha256": "a39e834619217aed6fee0ddb7560f149fefcae4b80a3dda1817222128fb02b64",
+      "size_bytes": 26702,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "docs/research/targets/open_targets.json",
+      "role": "P163 frozen record-target catalogue",
+      "sha256": "400eeb5a188564402dfbbd4cac9b6abcf51d63498b04c837a15d27d4ffd338d5",
+      "size_bytes": 1552,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p164-baseline-smoke.json",
+      "role": "P164 honest baselines smoke (violations, elapsed)",
+      "sha256": "0daeec278b685dc771ba91a6e7c59a8ce96d9d9f4eeb7cfddb9e266df17f6213",
+      "size_bytes": 5486,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p165-rediscovery-results.json",
+      "role": "P165 blind rediscovery (Tabu 4/5, SA, hits)",
+      "sha256": "bc22b9bba1c759972de9c0d23715a8961fb44048649b83ef98a14d521e3fe311",
+      "size_bytes": 24642,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p166-campaign-manifest.json",
+      "role": "P166 preregistered campaign manifest",
+      "sha256": "3b0c20dd28992766c6331c36c66aaf5f6ab40edd9908737cd8a53098613fedb4",
+      "size_bytes": 3161,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p166-campaign/summary.json",
+      "role": "P166 campaign results (120 trials, verdicts)",
+      "sha256": "cc6d756fb822514e4f61e7f6b5b0ea47a39e531329a3a9460c4be831209db306",
+      "size_bytes": 72352,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "experiments/p169-statistical-verdict.json",
+      "role": "P169 consolidated statistical verdict",
+      "sha256": "13225b42d75013ff7500186f061bb85f959eb2f0853aee4be70963c75dadc8b4",
+      "size_bytes": 2593,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "docs/research/lean-fidelity-reviews.json",
+      "role": "P162/P168 human review registry (2 faithful)",
+      "sha256": "24c98c0f7b783d826edaa1341b583a781876f546cb4d3c8d8a3cf3443b7442a6",
+      "size_bytes": 977,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "lean_proofs/Generated/FaithfulExtremalCertificates.lean",
+      "role": "P168 faithful Lean certificates",
+      "sha256": "e1b1131da6e65bdf783f62e3c42e129a5137cef8c3021917ff7710b9e9d1f31f",
+      "size_bytes": 2921,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "docs/paper/main.tex",
+      "role": "P170 audited manuscript source",
+      "sha256": "4c949ed82f366f933903cc4f94bf732c43a9427574fb0222414ca6e122d21461",
+      "size_bytes": 31258,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "docs/paper/main.pdf",
+      "role": "P170 audited manuscript PDF",
+      "sha256": "3df0b9196c69db5c25932958749d7e114f4e52880a53d42b2889b07a97ddba71",
+      "size_bytes": 264670,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    },
+    {
+      "path": "dist/external-validation/sample_certificate.json",
+      "role": "P167 external validation sample certificate",
+      "sha256": "b77e1f59ebb7679ce91c7ee28e19acc5f81503346dd2b39a63914205d6725a47",
+      "size_bytes": 893,
+      "versioned_in_git": true,
+      "in_zenodo_bundle": true
+    }
+  ],
+  "note": "Each manuscript number traces to exactly one evidence file above by SHA-256. Files flagged versioned_in_git=false live in the export tree but are git-ignored large run artifacts; their hashes are recorded here as measured at export time. All versioned files are additionally pinned by their git blob through the repo."
+}
