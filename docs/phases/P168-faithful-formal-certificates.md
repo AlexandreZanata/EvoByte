@@ -1,6 +1,6 @@
 # P168 — Certificados formais com fidelidade verificada em Lean 4
 
-**Status:** Proposed.
+**Status:** Done (2026-10-22).
 **Dependência:** P167 concluída; branch a partir de `codex/p167-external-validation-dossier`.
 **Owner:** agente executor; revisor formal humano (Alexandre) assina a revisão em `lean-fidelity-reviews.json`.
 **Branch:** `codex/p168-faithful-formal-certificates`.
@@ -162,3 +162,44 @@ gh pr create --base codex/p167-external-validation-dossier \
   --body-file /tmp/evobyte-p168-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-22):** Done.
+
+- `lean_proofs/Generated/FaithfulExtremalCertificates.lean` criado com os predicados
+  `HasMonoAP` e `HasSchurViolation`, as colorações/partição de calibração e os teoremas
+  `vdw_sample_8_valid` e `schur_sample_4_valid`, todos provados por `decide` no kernel.
+- `lake build` completo (3154 jobs) compila sem erros nem warnings; a linha
+  `import Generated.FaithfulExtremalCertificates` foi acrescentada a
+  `lean_proofs/Generated.lean` para que o módulo seja parte da biblioteca (sem ela o
+  arquivo nunca é visitado pelo build).
+- `sorry`: 0. Linter P162 sobre o arquivo: total 2, `vacuous-constant` **0** (exige
+  o gate da fase).
+- Duas entradas `faithful` assinadas (`human:Alexandre`, uma por teorema) adicionadas a
+  `docs/research/lean-fidelity-reviews.json`, transcrevendo a aprovação pré-registrada no
+  Passo 4 desta especificação, com a evidência mecânica anexada no relatório.
+- `tests/test_faithful_formal_certificates.py`: 5 testes verdes. `tests/test_lean_fidelity.py`
+  atualizado para comparar as linhas por arquivo do artefato congelado da P162 (o teste mantém
+  o nome); o artefato P162 não foi tocado.
+- `docs/research/p168-formal-certificates-report.md` com os enunciados, a evidência mecânica,
+  a verificação matemática do conteúdo, as entradas transcritas e as limitações.
+- `git diff --check` limpo, `pytest tests` completo verde, `make verify` verde.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- A coloração de exemplo (`[1, 1, 2, 1, 2, 2, 1, 2]`) é matematicamente falsa (contém a PA
+  monocromática 1, 4, 7) e foi corrigida para `[1, 1, 2, 2, 1, 1, 2, 2]` (uma das 6 válidas).
+  O build da versão especificada falha; o da corrigida passa.
+- Ajustes de elaboração necessários para `lake build` passar: `abbrev` em vez de `def`
+  (para `decide` sintetizar `Decidable`), quantificadores sobre `Fin` em vez de `Nat`
+  (`∃` sobre `Nat` não é decidível), hipóteses promovidas a binders do `∃` (o `omega`
+  dentro das conjunções não vê hipóteses irmãs) e a indexação com lema de
+  monotonicidade (`Nat.mul_le_mul_right`) em vez de `omega` (produto não linear).
+  Sem eles, o arquivo da especificação produzia 6 erros de elaboração e 2 falhas de
+  `Decidable`. Os nomes, o namespace, os tipos, os enunciados e o significado
+  combinatório foram preservados.
+- `lean_proofs/Generated.lean` recebeu a linha de `import` (uma linha, fora do escopo formal,
+  necessária para o gate de compilação não ser vacuoso; travada por teste).
+- O teste da P162 foi ajustado para comparação por arquivo (mesmo nome); o artefato
+  congelado da P162 não foi alterado.

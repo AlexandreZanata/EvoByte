@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from evobyte.lean_fidelity import (
-    audit_directory,
+    audit_file,
     classify_statement,
     extract_statements,
     local_numeric_defs,
@@ -81,8 +81,21 @@ def test_degrey_is_flagged():
 
 
 def test_directory_totals_match_recorded_json():
+    """The P162 snapshot pins the per-file rows it recorded.
+
+    Later phases may add new Lean files (P168 adds faithful certificates), so the
+    guard compares the recorded files' rows instead of the global totals. The
+    recorded defs context is reproduced from the files the snapshot covers.
+    """
     recorded = json.loads(FIDELITY_JSON.read_text(encoding="utf-8"))
-    assert audit_directory(GENERATED)["totals"] == recorded["totals"]
+    rows = {row["file"]: row for row in recorded["files"]}
+    all_defs: set[str] = set()
+    for name in rows:
+        all_defs |= local_numeric_defs((GENERATED / name).read_text(encoding="utf-8"))
+    for name, row in rows.items():
+        current = audit_file(GENERATED / name, all_defs)
+        for key in ("total", "vacuous-constant", "numeric-literal", "needs-review"):
+            assert current[key] == row[key], f"{name}.{key}: {current[key]} != {row[key]}"
 
 
 def test_reviews_registry_schema():
