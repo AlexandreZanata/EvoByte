@@ -127,5 +127,11 @@ def test_p169_artifacts_and_report_integrity():
     assert data.get("bytecode_evolutionary_advantage") == "NOT_SUPPORTED"
 
     report_content = report_path.read_text(encoding="utf-8")
-    assert "A hipótese de superioridade estrita de busca evolutiva em bytecode é REJECTED" in report_content
-    assert "A hipótese de descoberta de novos recordes matemáticos na campanha pré-registrada é NULL RESULT" in report_content
+    assert (
+        "A hipótese de superioridade estrita de busca evolutiva em bytecode é REJECTED"
+        in report_content
+    )
+    assert (
+        "A hipótese de descoberta de novos recordes matemáticos na campanha pré-registrada é NULL RESULT"
+        in report_content
+    )
