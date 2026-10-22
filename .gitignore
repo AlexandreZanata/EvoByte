@@ -8,7 +8,8 @@ venv/
 
 # Build / dist
 build/
-dist/
+dist/*
+!dist/external-validation/
 *.whl
 
 # Machine-local notes (never commit: paths, versions, measurements)

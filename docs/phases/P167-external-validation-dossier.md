@@ -1,6 +1,6 @@
 # P167 — Dossiê de validação externa e exportação de certificados autônomos
 
-**Status:** Proposed.
+**Status:** Done (2026-10-22).
 **Dependência:** P166 concluída; branch a partir de `codex/p166-preregistered-record-campaign`.
 **Owner:** agente executor; revisor humano nos gates de submissão.
 **Branch:** `codex/p167-external-validation-dossier`.
@@ -184,3 +184,41 @@ gh pr create --base codex/p166-preregistered-record-campaign \
   --body-file /tmp/evobyte-p167-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-22):** Done.
+
+- `scripts/verify_certificate_standalone.py` implementado com o código da especificação:
+  importa **apenas** `hashlib`, `json` e `sys` (regra de parada da fase verificada por teste
+  estático via AST), e roda em Python 3.9+ sem `evobyte`, `numpy` ou `scipy`.
+- `src/evobyte/certificate_exporter.py` implementado: exporta o certificado JSON padronizado
+  com `target_id`, `certificate_type`, `candidate_length`, `reference_literature`,
+  `sha256_checksum`, `reproduction_seed` (mais `sha256_scope` e `provenance`), recusando
+  qualquer candidato que não passe no verificador independente local.
+- `dist/external-validation/sample_certificate.json` gerado a partir de uma execução real
+  (Tabu Search, semente 42, 10,0 s, 27.517 avaliações) **idêntica** ao trial
+  `10.0s|vdw_3_3_26|TabuSearch|seed 42` da campanha P166: o hash do objeto
+  (`00775b4c5a10e239...`) é exatamente o `candidate_sha256` registrado no `summary.json` da
+  campanha, fechando a cadeia de custódia.
+- Verificação externa executada em diretório limpo, sem o pacote instalado: `SUCCESS`,
+  código de saída 0, em menos de 1 s.
+- `tests/test_standalone_verifier.py`: 6 testes verdes (os 3 exigidos pela especificação,
+  mais a checagem do certificado de exemplo pelas duas implementações, a recusa de candidato
+  inválido pelo exportador e a verificação estática de imports só-padrão).
+- `docs/research/p167-external-validation-dossier.md` com o guia de 3 comandos, a cadeia de
+  custódia, as limitações honestas e a minuta de comunicação em Markdown e texto puro.
+- `git diff --check` limpo, `pytest tests` completo verde, `make verify` verde.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- **`.gitignore` foi alterado** (fora da lista de arquivos editáveis da fase) porque
+  `dist/` estava ignorado e o gate da fase exige o certificado de exemplo em
+  `dist/external-validation/sample_certificate.json`, que precisa ser versionado para ser
+  distribuível. A mudança é mínima: `dist/` passou a `dist/*` com a exceção
+  `!dist/external-validation/`; o resto de `dist/` (bundle Zenodo, tarball) continua
+  ignorado, verificado com `git add -n dist/`.
+- **O certificado de exemplo é um empate com o recorde publicado** ($W(3,3) = 27$), não um
+  recorde novo; a minuta de comunicação declara isso explicitamente e não usa a palavra
+  "novo". A fase não produziu — nem poderia, com o catálogo da P163 — um certificado que
+  superasse um ótimo provado.
