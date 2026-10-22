@@ -1,6 +1,6 @@
 # P163 — Catálogo de alvos de recorde e conjecturas com verificadores independentes
 
-**Status:** Proposed.
+**Status:** Done (2026-10-21).
 **Dependência:** P162 concluída; branch a partir de `codex/p162-lean-statement-fidelity-gate`.
 **Owner:** agente executor; revisor humano (Alexandre) valida a lista de alvos no PR.
 **Branch:** `codex/p163-record-target-catalogue`.
@@ -288,3 +288,31 @@ gh pr create --base codex/p162-lean-statement-fidelity-gate \
   --body-file /tmp/evobyte-p163-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-21):** Done.
+
+- `src/evobyte/target_catalogue.py` implementado com os três oráculos independentes
+  (van der Waerden, Schur, espectral) e o catálogo congelado
+  `docs/research/targets/open_targets.json` (4 alvos, versão 1.0.0), conforme a estrutura
+  exata da especificação.
+- Calibração medida contra valores publicados exatos: a coloração válida de $[1..8]$
+  certifica $W(2,3) \ge 9$ (exato: 9) e a partição sum-free de $[1..4]$ certifica
+  $S(2) \ge 4$ (exato: 4).
+- `tests/test_target_catalogue.py`: 8 testes verdes (os 6 exigidos pela especificação mais
+  2 de ausência de falso positivo em entrada degenerada).
+- `docs/research/p163-target-catalogue-report.md` descreve a metodologia, a semântica de
+  `published_bound`, a calibração e as garantias do oráculo.
+- `git diff --check` limpo, `pytest tests` completo verde, `make verify` verde.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- O exemplo de coloração do Passo 4 (`[1, 1, 2, 1, 2, 2, 1, 2]`) **não é válido**: as
+  posições 1, 4 e 7 formam a progressão aritmética monocromática $1, 4, 7$, detectada pelo
+  verificador. O teste usa uma das 6 colorações válidas de $[1..8]$ (verificadas por força
+  bruta) e um teste dedicado fixa a rejeição do exemplo da especificação. O verificador não
+  foi alterado para acomodar o exemplo.
+- Acrescentadas guardas de entrada degenerada (`k < 2`, `r < 1`, matriz vazia, matriz
+  unidimensional) que antes causavam exceção em vez de veredito; o comportamento para
+  entradas válidas é idêntico ao da especificação.

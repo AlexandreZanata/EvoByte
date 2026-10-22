@@ -1,0 +1,42 @@
+{
+  "version": "1.0.0",
+  "catalogue_date": "2026-10-21",
+  "targets": [
+    {
+      "target_id": "vanderwaerden_w3_3",
+      "family": "ramsey_vanderwaerden",
+      "description": "Van der Waerden number W(3,3) lower bound certification (baseline calibration)",
+      "reference": "Chvatal (1970); known exact value W(3,3)=27",
+      "published_bound": 26.0,
+      "bound_type": "lower_bound",
+      "verification_fn": "verify_vanderwaerden_coloring"
+    },
+    {
+      "target_id": "vanderwaerden_w2_6",
+      "family": "ramsey_vanderwaerden",
+      "description": "Van der Waerden number W(2,6) lower bound certification",
+      "reference": "Kouril (2008); known exact value W(2,6)=1132",
+      "published_bound": 1131.0,
+      "bound_type": "lower_bound",
+      "verification_fn": "verify_vanderwaerden_coloring"
+    },
+    {
+      "target_id": "schur_s5",
+      "family": "additive_schur",
+      "description": "Schur number S(5) lower bound certificate",
+      "reference": "Exoo (1994), Heule (2018); known bound S(5) >= 160",
+      "published_bound": 160.0,
+      "bound_type": "lower_bound",
+      "verification_fn": "verify_schur_partition"
+    },
+    {
+      "target_id": "spectral_graph_diam_mu2",
+      "family": "spectral_graph_theory",
+      "description": "Diameter and algebraic connectivity relation in connected graphs",
+      "reference": "Aouchiche-Hansen (2010), Wagner (2021)",
+      "published_bound": 2.0,
+      "bound_type": "counterexample_threshold",
+      "verification_fn": "verify_graph_spectral_conjecture"
+    }
+  ]
+}
