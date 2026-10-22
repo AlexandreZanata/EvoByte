@@ -1,6 +1,6 @@
 # P166 — Campanha pré-registrada de busca por novos recordes mundiais sob orçamento fixo
 
-**Status:** Prepared (manifesto pré-registrado e congelado antes da execução).
+**Status:** Done (2026-10-22).
 **Dependência:** P165 concluída; branch a partir de `codex/p165-blind-rediscovery-protocol`.
 **Owner:** agente executor; revisor formal nos gates de veredito.
 **Branch:** `codex/p166-preregistered-record-campaign`.
@@ -113,3 +113,43 @@ gh pr create --base codex/p165-blind-rediscovery-protocol \
   --body-file /tmp/evobyte-p166-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-22):** Done.
+
+- **Pré-registro verificável:** manifesto `experiments/p166-campaign-manifest.json` congelado e
+  commitado **antes** da execução (commit `3e360be`), com alvos, parâmetros de espaço de busca,
+  tamanhos, orçamento (10,0 s por semente), 10 sementes, algoritmos, regra de veredito, regra de
+  integridade e o SHA-256 do catálogo. O executor lê todos esses parâmetros do manifesto.
+- **Campanha executada:** 120 ensaios (3 alvos × 2 tamanhos × 2 algoritmos × 10 sementes),
+  12.016.204 avaliações reais, 1.134,1 s (18,9 min) de tempo de máquina.
+- **Vereditos:** `vanderwaerden_w3_3` = **DISCOVERY_TIED** (10/20 certificados no tamanho de
+  empate; 9/10 pelo Tabu Search, 1/10 pelo Simulated Annealing); `vanderwaerden_w2_6` =
+  **NULL_RESULT**; `schur_s5` = **NULL_RESULT**; **nenhum `DISCOVERY_BEATEN`**.
+- **Integridade verificada:** hash do catálogo conferido antes de rodar; em todos os 120 ensaios
+  a busca local e o verificador independente concordaram; nenhum ensaio excedeu 3× o orçamento
+  (máximo 10,019 s contra 10,0 s). Cadeia de custódia SHA-256 no `summary.json`.
+- **Alvo excluído no manifesto:** `spectral_graph_diam_mu2`, por não possessuir espaço de busca
+  com candidatos alcançáveis (justificativa no manifesto).
+- `docs/research/p166-campaign-verdict.md` traz o resumo executivo, a tabela de vereditos, o
+  registro do empate com o certificado independente e a declaração de integridade dos
+  resultados nulos.
+- `git diff --check` limpo, `pytest tests` completo verde, `make verify` verde.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- **Dois commits em vez de um.** O manifesto e o executor foram commitados antes da execução
+  (pré-registro), e os resultados em um commit posterior. Sem isso, a pré-registração não seria
+  verificável no histórico do Git — a campanha poderia ter lido o manifesto já alterado. Os dois
+  commits estão no mesmo PR, e o resumo registra o SHA-256 do manifesto efetivamente usado.
+- **Orçamento de 10,0 s por semente** em vez do exemplo de 60,0 s da especificação (que a
+  própria especificação descreve como ajustável), para caber no orçamento de execução da fase.
+  A taxa de acerto reportada é específica desse orçamento e não é extrapolada.
+- **Escopo do alvo `spectral_graph_diam_mu2`**: a especificação manda listar os alvos do
+  catálogo; o alvo é excluído no próprio manifesto, com a justificativa matemática de que a
+  condição `diameter + mu_2 < 2.0` é inalcançável para todo grafo conexo com n >= 2. Ele não
+  aparece nos vereditos.
+- **Tamanhos de busca**: o manifesto congela a regra `empate = published_bound` e
+  `quebra = published_bound + 1`, e o executor corre os dois tamanhos por alvo, o que permite
+  exercitar as duasclasses de veredito (`DISCOVERY_TIED` e `NULL_RESULT`) com dados reais.
