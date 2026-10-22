@@ -1,6 +1,6 @@
 # P164 — Baselines combinatórios honestos pareados (Simulated Annealing, Tabu, Random)
 
-**Status:** Proposed.
+**Status:** Done (2026-10-21).
 **Dependência:** P163 concluída; branch a partir de `codex/p163-record-target-catalogue`.
 **Owner:** agente executor; revisor de sistemas nos gates de medição.
 **Branch:** `codex/p164-honest-combinatorial-baselines`.
@@ -301,3 +301,38 @@ gh pr create --base codex/p163-record-target-catalogue \
   --body-file /tmp/evobyte-p164-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-21):** Done.
+
+- `src/evobyte/combinatorial_baselines.py` implementado com o código da especificação
+  (Random Search, Simulated Annealing e Tabu Search), sob orçamento estrito de relógio de
+  parede com `time.perf_counter()` e contagem real de avaliações.
+- `benchmarks/combinatorial_benchmark.py` criado com `--target-id`, `--seconds`, `--seeds`
+  e `--output`; executa os três baselines no alvo do catálogo da P163 e certifica o melhor
+  candidato com o oráculo independente `verify_vanderwaerden_coloring`.
+- `experiments/p164-baseline-smoke.json` gerado com execução real: 6 execuções
+  (2 sementes × 3 métodos), todas com `evaluations > 0` e `elapsed_sec <= 0,500 s`.
+  Resultado medido: Random Search 6 e 7 violações; Simulated Annealing 1 e 2 violações;
+  Tabu Search 1 e 1 violações; **nenhuma solução e nenhum certificado pelo oráculo** —
+  nenhum recorde foi quebrado, reportado sem censura.
+- `tests/test_combinatorial_baselines.py`: 5 testes verdes (os 4 exigidos pela
+  especificação mais o cruzamento do contador local contra o oráculo independente da P163).
+- `docs/research/p164-baselines-report.md` documenta o protocolo de medição, o compromisso
+  de auditoria, os resultados medidos e as limitações.
+- `git diff --check` limpo, `pytest tests` completo verde, `make verify` verde.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- Nenhum desvio de escopo de código: o módulo dos baselines é o da especificação, sem
+  alteração. O que mudou foi o *benchmark*, que precisou implementar o espaço de busca
+  concreto do alvo do catálogo (`N = published_bound + 1`, minimização de progressões
+  aritméticas monocromáticas) e a certificação pelo oráculo da P163, pois a especificação
+  só fixava a interface de linha de comando.
+- Bug real encontrado e corrigido durante a execução: o contador local de progressões
+  aritméticas do benchmark usava `&` bitwise entre inteiros e máscara booleana (as cores 2
+  e 3 viravam 0), zerando contagens e produzindo um falso "0 violações" na primeira
+  execução. O oráculo independente da P163 detectou a discrepância; a correção está travada
+  pelo teste `test_local_counter_agrees_with_independent_oracle`. O artefato versionado
+  contém o resultado corrigido.
