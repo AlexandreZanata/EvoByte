@@ -1,6 +1,6 @@
 # P169 — Veredito estatístico consolidado com controle FWER e registro de resultados nulos
 
-**Status:** Proposed.
+**Status:** Done (2026-10-22).
 **Dependência:** P168 concluída; branch a partir de `codex/p168-faithful-formal-certificates`.
 **Owner:** agente executor; revisor formal/estatístico.
 **Branch:** `codex/p169-statistical-verdict-negative-results`.
@@ -198,3 +198,34 @@ gh pr create --base codex/p168-faithful-formal-certificates \
   --body-file /tmp/evobyte-p169-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-22):** Done.
+
+- `src/evobyte/statistical_evaluation.py` implementado (teste de Wilcoxon pareado com
+  controle FWER e `consolidate_campaign_verdicts` executando a bateria SA-vs-Tabu pareada
+  por alvo, tamanho e semente, mais o teste agrupado, sobre o `summary.json` da P166).
+- `experiments/p169-statistical-verdict.json` gerado: 6 comparações de subconjunto
+  (todas `NOT_SUPPORTED_NULL` após Holm com família 6) e 1 comparação agrupada
+  (`SA_vs_Tabu_pooled_campaign`, $N = 60$, $W = 285.0$, $p = 0.00108 \le 0.01$,
+  `SUPPORTED_METHOD_A_SUPERIOR`). Vereditos: `mathematical_record_discovery = NULL_RESULT`
+  (nenhum `DISCOVERY_BEATEN` nos alvos da P166), `bytecode_evolutionary_advantage =
+  NOT_SUPPORTED` (a campanha não tem braço EvoByte; ver lacuna registrada na P165/P166).
+- `tests/test_statistical_evaluation.py`: 7 testes verdes (3 exigidos pela especificação
+  mais guarda de limiar, consolidação vazia, consolidação sobre a P166 e integridade dos
+  artefatos/relatório).
+- `docs/research/p169-statistical-verdict.md` com a tabela de testes pareados, a análise
+  estatística e os dois vereditos honestos.
+- `git diff --check` limpo, `pytest tests` completo verde, `make verify` verde.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- `consolidate_campaign_verdicts` do módulo foi completado além do esqueleto da
+  especificação (que gravava apenas `{"status": "EVALUATED", ...}` sem nenhuma hipótese):
+  a função agora executa de fato a bateria pareada e emite os vereditos. Sem isso a fase
+  não teria conteúdo mensurável.
+- A correção de Holm implementada é a de passo único (Bonferroni, `p × m`), mais
+  conservadora que o step-down completo de Holm. Verificado independentemente que o
+  step-down também não declararia nenhuma comparação de subconjunto significativa ao
+  nível 0.01 — os vereditos `NOT_SUPPORTED_NULL` são robustos aos dois procedimentos.
