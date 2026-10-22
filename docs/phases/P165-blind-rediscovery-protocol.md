@@ -1,6 +1,6 @@
 # P165 — Protocolo de redescoberta cega de recordes conhecidos da literatura
 
-**Status:** Proposed.
+**Status:** Done (2026-10-21).
 **Dependência:** P164 concluída; branch a partir de `codex/p164-honest-combinatorial-baselines`.
 **Owner:** agente executor; revisor formal/estatístico nos gates de significância.
 **Branch:** `codex/p165-blind-rediscovery-protocol`.
@@ -223,3 +223,40 @@ gh pr create --base codex/p164-honest-combinatorial-baselines \
   --body-file /tmp/evobyte-p165-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-21):** Done.
+
+- `src/evobyte/rediscovery.py` implementado com o código da especificação, sem alteração:
+  protocolo de redescoberta cega, avaliador de van der Waerden e `run_single_calibration_trial`.
+- `benchmarks/run_rediscovery_campaign.py` criado (`--instances`, `--seconds`, `--seeds`,
+  `--output`) e executado: 60 trials (2 orçamentos × 2 instâncias × 3 métodos × 5 sementes),
+  todos com execução real.
+- **Regra de parada não disparada:** Tabu Search redescobre `vdw_3_3_26` em 4/5 sementes com
+  tempo médio de 6,26 s (mediana 5,43 s), abaixo do limiar de 10 s.
+- Verificação exaustiva independente dentro do harness: existe coloração válida de $[1..26]$
+  com 3 cores e **não** existe de $[1..27]$ (7,27 s de backtracking), e existe de $[1..34]$
+  com 2 cores e **não** existe de $[1..35]$ (0,12 s) — reproduzindo de forma independente
+  $W(3,3) = 27$ e $W(2,4) = 35$, com certificados aceitos pelo oráculo da P163.
+- `tests/test_rediscovery.py`: 3 testes verdes, com o certificado de $[1..26]$ conferido pelo
+  oráculo independente.
+- `docs/research/p165-blind-rediscovery-report.md` com a tabela de resultados, a declaração
+  explícita de melhor performance de redescoberta (Tabu Search) e as lacunas reais.
+- `git diff --check` limpo, `pytest tests` completo verde, `make verify` verde.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- A campanha foi executada com dois orçamentos (`1.0` e `10.0` s) e duas instâncias
+  (`vdw_3_3_26` e `vdw_2_4_34`). O comando de exemplo da especificação (`--seconds 1.0`)
+  **não produz nenhuma redescoberta** em `vdw_3_3_26`, o que dispararia a regra de parada da
+  própria fase; o orçamento de 10,0 s é o limiar definido por essa regra. O harness aceita
+  orçamentos múltiplos para registrar os dois pontos de medição no mesmo artefato.
+- O docstring do módulo mandated declara 4 alvos, mas `run_single_calibration_trial` só
+  implementa 2 (`schur_3_13` e `spectral_counter_sample` levantam `ValueError`). A frase da
+  fase "4 alvos conhecidos" **não é sustentada pelo código mandated**; o harness mede e
+  reporta apenas as 2 instâncias implementáveis.
+- **Não há braço EvoByte** nesta fase: o módulo mandated implementa apenas os três baselines
+  da P164 e o repositório ainda não tem codificação de coloração/partition para o bytecode do
+  EvoByte. A comparação pareada EvoByte-vs-baselines fica para a P166 e **não é afirmada**
+  neste relatório.
