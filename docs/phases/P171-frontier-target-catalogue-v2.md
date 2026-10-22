@@ -1,6 +1,6 @@
 # P171 — Catálogo de fronteira v2: alvos genuinamente abertos, snapshots datados e verificadores calibrados
 
-**Status:** Proposed.
+**Status:** Done (2026-10-22).
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P170 concluída; esta especificação vive no branch `codex/plan-p171-p190-frontier-discovery`.
 **Owner:** agente executor; revisor humano (Alexandre) valida a lista final de alvos no PR.
@@ -268,3 +268,16 @@ git status --short
 O corpo do PR (`/tmp/evobyte-p171-pr.md`) traz: problema, comportamento resultante, comandos de
 validação exatos, números medidos (pool, alvos, calibrações), limitações (fontes não obtidas, site
 fora do ar) e o link do relatório.
+
+---
+
+**Status da execução (2026-10-22):** Done.
+
+- Snapshots de proveniência baixados em `data/raw/frontier/` e registrados em `docs/research/targets/frontier_sources_v2.json` (10 fontes com URLs, datas ISO 8601, commits e SHA-256 de 64 hex).
+- `live_site_status` do LJCR aferido como `unreachable` (falha DNS e HTTP 404), estabelecendo o repositório Git commit `459bcaf` como única fonte recuperável.
+- Regra de seleção determinística implementada em `scripts/build_frontier_catalogue.py` e congelada em `docs/research/targets/ljcr_pool_v2.json` (3.827 entradas, 20 `stale_construction`, 10 `active_frontier`, 10 `random_control`, 3 calibrações de covering).
+- Alvos nomeados consolidados sob a regra do pior caso: Schur fraco ($N \in \{207, 650, 2146\}$), Schur forte ($N \in \{160, 536, 1680\}$) e cap sets ($N \in \{9, 20, 45, 112, 236, 512, 1082, 2240\}$).
+- Verificadores autônomos implementados em `src/evobyte/frontier_catalogue.py` estritamente com biblioteca padrão (aprovado por inspeção AST).
+- 12 certificados publicados e de calibração criados e validados em `docs/research/targets/certificates/`.
+- 10/10 testes aprovados em `tests/test_frontier_catalogue.py`, `python3 scripts/build_frontier_catalogue.py --check` verde, `make verify` verde.
+- Relatório formal consolidado em `docs/research/p171-frontier-catalogue-report.md`.
