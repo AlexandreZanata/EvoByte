@@ -33,7 +33,7 @@ def test_fano_covers_and_every_removal_fails() -> None:
     assert ok, f"Fano failed to cover C(7,3,2): {msg}"
 
     for i in range(len(fano)):
-        sub = fano[:i] + fano[i + 1:]
+        sub = fano[:i] + fano[i + 1 :]
         ok_sub, _ = verify_covering_design(sub, 7, 3, 2)
         assert not ok_sub, f"Removal of block {i} should fail to cover, but passed!"
 
@@ -62,7 +62,7 @@ def test_ag23_and_s348_cover() -> None:
     ok, msg = verify_covering_design(ag23, 9, 3, 2)
     assert ok, f"AG(2,3) failed: {msg}"
     for i in range(len(ag23)):
-        sub = ag23[:i] + ag23[i + 1:]
+        sub = ag23[:i] + ag23[i + 1 :]
         ok_sub, _ = verify_covering_design(sub, 9, 3, 2)
         assert not ok_sub, f"AG(2,3) removal of block {i} unexpectedly passed"
 
@@ -86,7 +86,7 @@ def test_ag23_and_s348_cover() -> None:
     ok, msg = verify_covering_design(s348, 8, 4, 3)
     assert ok, f"S(3,4,8) failed: {msg}"
     for i in range(len(s348)):
-        sub = s348[:i] + s348[i + 1:]
+        sub = s348[:i] + s348[i + 1 :]
         ok_sub, _ = verify_covering_design(sub, 8, 4, 3)
         assert not ok_sub, f"S(3,4,8) removal of block {i} unexpectedly passed"
 
@@ -137,13 +137,17 @@ def test_weak_schur_exhaustive_small() -> None:
     for p in itertools.product((1, 2), repeat=8):
         if verify_weak_schur_partition(list(p), 2)[0]:
             valid_8 += 1
-    assert valid_8 == 2, f"Expected exactly 2 valid weak Schur partitions for N=8, k=2, got {valid_8}"
+    assert valid_8 == 2, (
+        f"Expected exactly 2 valid weak Schur partitions for N=8, k=2, got {valid_8}"
+    )
 
     valid_9 = 0
     for p in itertools.product((1, 2), repeat=9):
         if verify_weak_schur_partition(list(p), 2)[0]:
             valid_9 += 1
-    assert valid_9 == 0, f"Expected exactly 0 valid weak Schur partitions for N=9, k=2, got {valid_9}"
+    assert valid_9 == 0, (
+        f"Expected exactly 0 valid weak Schur partitions for N=9, k=2, got {valid_9}"
+    )
 
 
 def test_cap_set_small() -> None:
@@ -196,7 +200,9 @@ def test_catalogue_schema_and_rules() -> None:
 
         # Check claimed sources exist and have valid SHA-256
         for claim in t.claimed_values:
-            assert claim.source_id in sources, f"Source ID {claim.source_id} missing in sources JSON"
+            assert claim.source_id in sources, (
+                f"Source ID {claim.source_id} missing in sources JSON"
+            )
             src = sources[claim.source_id]
             assert "sha256" in src
             assert len(src["sha256"]) == 64
@@ -296,7 +302,9 @@ def test_published_certificates_regression() -> None:
 
             verified_count += 1
 
-    assert verified_count >= 8, f"Expected at least 8 verified published objects, got {verified_count}"
+    assert verified_count >= 8, (
+        f"Expected at least 8 verified published objects, got {verified_count}"
+    )
 
 
 def _cov_name_to_id(name: str) -> str:

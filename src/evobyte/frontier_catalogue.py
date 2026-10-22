@@ -86,9 +86,7 @@ VALID_CERT_STATUSES = {
 }
 
 
-def verify_covering_design(
-    blocks: Any, v: Any, k: Any, t: Any
-) -> tuple[bool, str]:
+def verify_covering_design(blocks: Any, v: Any, k: Any, t: Any) -> tuple[bool, str]:
     """Verify that blocks form a valid C(v, k, t) covering design.
 
     Every t-subset of {1..v} must be contained in at least one block of size k.
@@ -154,9 +152,7 @@ def verify_covering_design(
     return False, f"only {covered}/{num_subsets} {t}-subsets covered"
 
 
-def verify_weak_schur_partition(
-    coloring: Any, k: Any
-) -> tuple[bool, str]:
+def verify_weak_schur_partition(coloring: Any, k: Any) -> tuple[bool, str]:
     """Verify that coloring is a valid weak sum-free k-partition of {1..N}.
 
     coloring[i-1] is the color of integer i.
@@ -184,7 +180,7 @@ def verify_weak_schur_partition(
         s = color_sets[c]
         sorted_s = sorted(s)
         for idx_x, x in enumerate(sorted_s):
-            for y in sorted_s[idx_x + 1:]:
+            for y in sorted_s[idx_x + 1 :]:
                 z = x + y
                 if z in s:
                     return (
