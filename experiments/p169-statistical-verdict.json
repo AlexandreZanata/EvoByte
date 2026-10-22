@@ -1,0 +1,92 @@
+{
+  "phase": "P169",
+  "status": "EVALUATED",
+  "family_alpha": 0.01,
+  "campaign_summary_source": "experiments/p166-campaign/summary.json",
+  "hypotheses": [
+    {
+      "comparison_name": "SA_vs_Tabu_schur_s5_beat",
+      "n_pairs": 10,
+      "w_stat": 9.5,
+      "p_value_raw": 0.2578125,
+      "p_value_holm": 1.0,
+      "alpha": 0.01,
+      "is_significant": false,
+      "direction": "method_a_superior",
+      "verdict": "NOT_SUPPORTED_NULL"
+    },
+    {
+      "comparison_name": "SA_vs_Tabu_schur_s5_tie",
+      "n_pairs": 10,
+      "w_stat": 8.5,
+      "p_value_raw": 0.052734375,
+      "p_value_holm": 0.31640625,
+      "alpha": 0.01,
+      "is_significant": false,
+      "direction": "method_b_superior",
+      "verdict": "NOT_SUPPORTED_NULL"
+    },
+    {
+      "comparison_name": "SA_vs_Tabu_vanderwaerden_w2_6_beat",
+      "n_pairs": 10,
+      "w_stat": 0.0,
+      "p_value_raw": 0.001953125,
+      "p_value_holm": 0.01171875,
+      "alpha": 0.01,
+      "is_significant": false,
+      "direction": "method_a_superior",
+      "verdict": "NOT_SUPPORTED_NULL"
+    },
+    {
+      "comparison_name": "SA_vs_Tabu_vanderwaerden_w2_6_tie",
+      "n_pairs": 10,
+      "w_stat": 0.0,
+      "p_value_raw": 0.001953125,
+      "p_value_holm": 0.01171875,
+      "alpha": 0.01,
+      "is_significant": false,
+      "direction": "method_a_superior",
+      "verdict": "NOT_SUPPORTED_NULL"
+    },
+    {
+      "comparison_name": "SA_vs_Tabu_vanderwaerden_w3_3_beat",
+      "n_pairs": 10,
+      "w_stat": 0.0,
+      "p_value_raw": 0.25,
+      "p_value_holm": 1.0,
+      "alpha": 0.01,
+      "is_significant": false,
+      "direction": "method_b_superior",
+      "verdict": "NOT_SUPPORTED_NULL"
+    },
+    {
+      "comparison_name": "SA_vs_Tabu_vanderwaerden_w3_3_tie",
+      "n_pairs": 10,
+      "w_stat": 0.0,
+      "p_value_raw": 0.0078125,
+      "p_value_holm": 0.046875,
+      "alpha": 0.01,
+      "is_significant": false,
+      "direction": "method_b_superior",
+      "verdict": "NOT_SUPPORTED_NULL"
+    },
+    {
+      "comparison_name": "SA_vs_Tabu_pooled_campaign",
+      "n_pairs": 60,
+      "w_stat": 285.0,
+      "p_value_raw": 0.001078201178149605,
+      "p_value_holm": 0.001078201178149605,
+      "alpha": 0.01,
+      "is_significant": true,
+      "direction": "method_a_superior",
+      "verdict": "SUPPORTED_METHOD_A_SUPERIOR"
+    }
+  ],
+  "mathematical_record_discovery": "NULL_RESULT",
+  "bytecode_evolutionary_advantage": "NOT_SUPPORTED",
+  "targets_summary": {
+    "vanderwaerden_w3_3": "DISCOVERY_TIED",
+    "vanderwaerden_w2_6": "NULL_RESULT",
+    "schur_s5": "NULL_RESULT"
+  }
+}

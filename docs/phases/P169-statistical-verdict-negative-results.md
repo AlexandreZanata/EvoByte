@@ -1,6 +1,6 @@
 # P169 — Veredito estatístico consolidado com controle FWER e registro de resultados nulos
 
-**Status:** Proposed.
+**Status:** Done (2026-10-22).
 **Dependência:** P168 concluída; branch a partir de `codex/p168-faithful-formal-certificates`.
 **Owner:** agente executor; revisor formal/estatístico.
 **Branch:** `codex/p169-statistical-verdict-negative-results`.
