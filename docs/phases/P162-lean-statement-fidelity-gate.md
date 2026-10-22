@@ -1,6 +1,6 @@
 # P162 — Gate de fidelidade de enunciados Lean
 
-**Status:** Proposed.
+**Status:** Done (2026-10-21).
 **Dependência:** P161 concluída; branch a partir de `codex/p161-claim-retraction-integrality-guard`.
 **Owner:** agente executor; revisor humano obrigatório para qualquer entrada `faithful` no registro.
 **Branch:** `codex/p162-lean-statement-fidelity-gate`.
@@ -284,3 +284,29 @@ gh pr create --base codex/p161-claim-retraction-integrality-guard \
   --title "feat(formal): add p162 lean statement fidelity gate" --body-file /tmp/evobyte-p162-pr.md
 git status --short
 ```
+
+---
+
+**Status da execução (2026-10-21):** Done.
+
+- Classificador `src/evobyte/lean_fidelity.py` implementado e executado sobre
+  `lean_proofs/Generated` (54 arquivos): `total 4888`, `vacuous-constant 51`,
+  `numeric-literal 2012`, `needs-review 2825` — exatamente os valores esperados no Passo 2.
+  `lean_proofs/` não mudou desde D038 (última alteração em `10ae8b7`, fase P149).
+- Artefato completo versionado em `experiments/p162-lean-fidelity.json`; o teste
+  `test_directory_totals_match_recorded_json` falha se o diretório divergir do JSON.
+- Registro de revisão humana `docs/research/lean-fidelity-reviews.json` criado **vazio** (`[]`).
+  Nenhum teorema foi classificado como `faithful`: essa decisão é humana e reversa.
+- Relatório `docs/research/p162-lean-fidelity-report.md` com a tabela por arquivo gerada do
+  JSON, os 3 exemplos de cada categoria e a regra vigente.
+- Avisos de P144 e P152 atualizados com os números medidos.
+- 7 testes de `tests/test_lean_fidelity.py` verdes; `make verify` e `python3 -m pytest tests -q`
+  verdes; `git diff --check` limpo.
+
+Desvios em relação a esta especificação, registrados no PR:
+
+- A branch de origem `codex/p161-claim-retraction-integrality-guard` foi removida do remoto
+  quando o PR #203 foi mergeado em `main`; a fase foi branched a partir de `main`, que já
+  contém a P161, e o PR foi aberto contra `main`.
+- Nenhuma linha foi acrescentada em `docs/DECISIONS.md`: a especificação da fase não inclui
+  esse arquivo no escopo de edição.

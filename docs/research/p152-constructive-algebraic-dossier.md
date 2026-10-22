@@ -1,6 +1,7 @@
 > **REVISADO (P161, D040).** "PROVED" significa apenas que o arquivo compila sem `sorry`. Não
 > implica que o enunciado seja o teorema nomeado (por exemplo, `degrey_chromatic_lower_bound`
 > prova `5 = 5`). A fidelidade é medida em P162.
+> P162 mediu: 2063 de 4888 teoremas são vacuous-constant ou numeric-literal (limite inferior). Ver [p162-lean-fidelity-report.md](p162-lean-fidelity-report.md).
 
 # Dossiê Formal Exaustivo de Descoberta Algébrica Construtiva e Literatura Internacional (P152)
 
