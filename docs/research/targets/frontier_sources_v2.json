@@ -1,0 +1,83 @@
+{
+  "ljcr-coverdata-459bcaf": {
+    "source_id": "ljcr-coverdata-459bcaf",
+    "url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json",
+    "sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+    "accessed_at": "2026-10-22T18:07:43-04:00",
+    "pinned_commit": "459bcaf247bd8d34610d946b0465864f7d4dfa37",
+    "live_site_status": "unreachable",
+    "notes": "Gordon LJCR covering table JSON snapshot. Live sites ljcr.dmgordon.org and dmgordon.org/cover are unreachable (DNS failure / 404)."
+  },
+  "oeis-A118771": {
+    "source_id": "oeis-A118771",
+    "url": "https://oeis.org/search?q=id:A118771&fmt=text",
+    "sha256": "0ab6b7a4cf9a10f53c1b4a2b5aabb1e100bb0eccba513312d843bb998c83d606",
+    "accessed_at": "2026-10-22T18:08:07-04:00",
+    "pinned_commit": null,
+    "notes": "OEIS A118771: Weak Schur numbers (convention: smallest s without sum-free partition)."
+  },
+  "oeis-A072842": {
+    "source_id": "oeis-A072842",
+    "url": "https://oeis.org/search?q=id:A072842&fmt=text",
+    "sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+    "accessed_at": "2026-10-22T18:09:30-04:00",
+    "pinned_commit": null,
+    "notes": "OEIS A072842: Weak Schur numbers (convention: largest m with valid partition). Cites Rowley (2025) WS(5)>=207 and Rodrigo (2026) WS(6)>=650."
+  },
+  "oeis-A030126": {
+    "source_id": "oeis-A030126",
+    "url": "https://oeis.org/search?q=id:A030126&fmt=text",
+    "sha256": "3351d13b3f0ca477c30ffd407cb0ccb50afbd4df8dbe730b3a214a7e44e47f44",
+    "accessed_at": "2026-10-22T18:08:07-04:00",
+    "pinned_commit": null,
+    "notes": "OEIS A030126: Schur numbers (version 1, smallest s without partition). Cites Heule (2017) S(5)=160 exact partition."
+  },
+  "oeis-A090245": {
+    "source_id": "oeis-A090245",
+    "url": "https://oeis.org/search?q=id:A090245&fmt=text",
+    "sha256": "33faf08316d3fb4f493996908878cd549d54e859e1bfa479e518f349dfd7e940",
+    "accessed_at": "2026-10-22T18:08:07-04:00",
+    "pinned_commit": null,
+    "notes": "OEIS A090245: Maximum cap set size in F3^n. Cites Romera-Paredes et al. (2024) FunSearch cap set."
+  },
+  "zenodo-20633634": {
+    "source_id": "zenodo-20633634",
+    "url": "https://doi.org/10.5281/zenodo.20633634",
+    "sha256": "6d39fe1180e7e9d239f90940cc13ffead95b60f7f563a5bda6b435da9e49f4ce",
+    "accessed_at": "2026-10-22T18:10:20-04:00",
+    "pinned_commit": null,
+    "notes": "Sebasti\u00e1n E. Rodrigo (2026): A new lower bound for the sixth weak Schur number: WS(6) >= 650 with witness digits archive."
+  },
+  "fredricksen-sweet-2000": {
+    "source_id": "fredricksen-sweet-2000",
+    "url": "https://www.combinatorics.org/ojs/index.php/eljc/article/download/v7i1r32/pdf/",
+    "sha256": "ae8541c564efd65785a0e1d2c778108d58fec4c060707d7c277dd7f3eecad259",
+    "accessed_at": "2026-10-22T18:11:29-04:00",
+    "pinned_commit": null,
+    "notes": "Harold Fredricksen and Melvin M. Sweet (2000): Symmetric Sum-Free Partitions and Lower Bounds for Schur Numbers. Shows S(6)>=536 and S(7)>=1680."
+  },
+  "funsearch-nature-2024": {
+    "source_id": "funsearch-nature-2024",
+    "url": "https://raw.githubusercontent.com/google-deepmind/funsearch/main/cap_set/n8_size512.txt",
+    "sha256": "8d6df45c3039b6a7ee1aae7216b100c3f4c075179dc6471f4f51b968a26d8905",
+    "accessed_at": "2026-10-22T18:12:09-04:00",
+    "pinned_commit": null,
+    "notes": "Romera-Paredes et al. (Nature 2024): Mathematical discoveries from program search with LLMs. Cap set in F3^8 of size 512."
+  },
+  "edel-caps-tables": {
+    "source_id": "edel-caps-tables",
+    "url": "http://www.yvesedel.de/Matritzen/CAPs/CAPMatIndex.html",
+    "sha256": "8aa5a2837a51d261c7b030e500c2c99e396d9ce7a653ecce8bc9badf6c1e2817",
+    "accessed_at": "2026-10-22T18:14:38-04:00",
+    "pinned_commit": null,
+    "notes": "Yves Edel: Generator matrices for caps and table of lower bounds."
+  },
+  "edel-248-7-3": {
+    "source_id": "edel-248-7-3",
+    "url": "http://www.yvesedel.de/Matritzen/CAPs/Matrizen/(248,7,3).html",
+    "sha256": "056e5f40945cc26883034cab3037e552fe73f0dccb8d2626407dd6a623d1910a",
+    "accessed_at": "2026-10-22T18:17:50-04:00",
+    "pinned_commit": null,
+    "notes": "Yves Edel: Generator matrix of 248-cap in PG(7,3) containing Calderbank-Fishburn 236-cap in AG(7,3)."
+  }
+}
