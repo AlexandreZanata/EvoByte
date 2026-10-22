@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "theorem": "EvoByte.Faithful.vdw_sample_8_valid",
+    "file": "lean_proofs/Generated/FaithfulExtremalCertificates.lean",
+    "informal_statement": "A coloração concreta de [1..8] em 2 cores não possui nenhuma progressão aritmética monocromática de tamanho 3.",
+    "lean_statement": "¬ HasMonoAP 8 3 vdwSampleColoring8",
+    "mathlib_concepts": ["Fin", "HasMonoAP"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-22"
+  },
+  {
+    "theorem": "EvoByte.Faithful.schur_sample_4_valid",
+    "file": "lean_proofs/Generated/FaithfulExtremalCertificates.lean",
+    "informal_statement": "A partição concreta de [1..4] em 2 classes sum-free não contém nenhuma violação da condição de Schur.",
+    "lean_statement": "¬ HasSchurViolation 4 schurSamplePartition4",
+    "mathlib_concepts": ["Fin", "HasSchurViolation"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-22"
+  }
+]
