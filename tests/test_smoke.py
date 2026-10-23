@@ -12,4 +12,4 @@ def test_numpy_deterministic_seed():
 def test_package_imports():
     import evobyte
 
-    assert evobyte.OPCODE_VERSION == 0
+    assert evobyte.OPCODE_VERSION == 1

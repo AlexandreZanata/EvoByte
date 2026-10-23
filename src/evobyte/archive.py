@@ -242,9 +242,9 @@ def load_checkpoint(path: str | Path) -> dict[str, Any]:
         state = pickle.load(f)
 
     loaded_version = state.get("opcode_version", None)
-    if loaded_version != OPCODE_VERSION:
+    if loaded_version not in (0, 1):
         raise ValueError(
-            f"Checkpoint opcode version mismatch: expected {OPCODE_VERSION}, got {loaded_version}"
+            f"Checkpoint opcode version mismatch: expected 0 or 1, got {loaded_version}"
         )
     return state
 

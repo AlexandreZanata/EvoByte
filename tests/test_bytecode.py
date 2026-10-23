@@ -24,8 +24,28 @@ from evobyte.bytecode import (
 
 
 def test_opcode_table_has_16_entries():
-    assert len(OPCODES) == 16
+    assert len(OPCODES) == 18  # P173 v1: v0 (16) + CTX/FEAT superset
     assert OPCODES[0x00] == "NOP"
+    for op, name in {
+        0x01: "ADD",
+        0x02: "SUB",
+        0x03: "MUL",
+        0x04: "DIV",
+        0x05: "SIN",
+        0x06: "COS",
+        0x07: "EXP",
+        0x08: "LOG",
+        0x09: "POW",
+        0x0A: "ABS",
+        0x0B: "SQRT",
+        0x0C: "NEG",
+        0x0D: "MIN",
+        0x0E: "MAX",
+        0x0F: "CSEL",
+    }.items():
+        assert OPCODES[op] == name  # v0 numbering frozen
+    assert OPCODES[0x10] == "CTX"
+    assert OPCODES[0x11] == "FEAT"
     assert len(CONST_BANK) == 16
 
 
@@ -100,7 +120,8 @@ def test_p49_compact_profile_limits():
 
     profile = compact_candidate_profile()
     assert profile["profile"] == "p49-compact-polynomial"
-    assert profile["opcode_version"] == OPCODE_VERSION == 0
+    assert OPCODE_VERSION == 1  # P173 v1 superset
+    assert profile["opcode_version"] == 0  # P49 frozen profile stays v0-defined, v1-valid
     assert profile["program_bytes"] == 64
     assert profile["registers"] == 8 and profile["output_register"] == 7
     assert [o["code"] for o in profile["allowed_ops"]] == [0x00, 0x01, 0x02, 0x03, 0x0F]
@@ -194,7 +215,7 @@ def test_p67_mine_macros_deterministic_and_capped():
     assert first[0]["count"] >= 2
     assert first[0]["length"] in (2, 3, 4)
     assert all(r < 8 for r in first[0]["domain"]["registers"])
-    assert first[0]["domain"]["opcode_version"] == 0
+    assert first[0]["domain"]["opcode_version"] == 1
     assert [m["id"] for m in first] == [f"M{i:02d}" for i in range(len(first))]
 
 

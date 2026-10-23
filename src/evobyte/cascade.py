@@ -202,8 +202,8 @@ class StreamingGPUCascade:
         as_ = (programs >> 16) & 0xFF
         has_r7 = ((dsts == 7) & (ops != 0)).any(dim=1)
         valid_s0 = (
-            has_r7 & (ops <= 15).all(dim=1) & (dsts < N_REGS).all(dim=1) & (as_ < N_REGS).all(dim=1)
-        )
+            has_r7 & (ops <= 17).all(dim=1) & (dsts < N_REGS).all(dim=1) & (as_ < N_REGS).all(dim=1)
+        )  # P173 v1 superset (v0 0x00-0x0F frozen)
 
         s0_survivor_indices = torch.nonzero(valid_s0).squeeze(1)
         self.counters.s0_survivors = int(s0_survivor_indices.numel())
@@ -330,8 +330,8 @@ def audit_cascade_accuracy(
     as_ = (programs >> 16) & 0xFF
     has_r7 = ((dsts == 7) & (ops != 0)).any(dim=1)
     s0_valid = (
-        has_r7 & (ops <= 15).all(dim=1) & (dsts < N_REGS).all(dim=1) & (as_ < N_REGS).all(dim=1)
-    )
+        has_r7 & (ops <= 17).all(dim=1) & (dsts < N_REGS).all(dim=1) & (as_ < N_REGS).all(dim=1)
+    )  # P173 v1 superset
 
     full_mse, full_invalid = cascade._execute_stage_chunked(programs, xs, ys, x1s=x1s)
     c_ops = programs & 0xFF
