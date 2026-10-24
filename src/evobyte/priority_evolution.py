@@ -166,7 +166,12 @@ def evolve_priorities(
             best_score = float(scores[0])
             best_prog = population[0].copy()
         # If no offspring evaluated (budget/time exhausted), stop.
-        if len(offspring) == 0 or np.all(new_scores == float("-inf")) and len(offspring) > 0 and n_evals >= budget:
+        if (
+            len(offspring) == 0
+            or np.all(new_scores == float("-inf"))
+            and len(offspring) > 0
+            and n_evals >= budget
+        ):
             break
         if max_seconds is not None and (time.perf_counter() - t0) >= max_seconds:
             break

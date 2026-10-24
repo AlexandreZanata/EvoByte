@@ -34,7 +34,9 @@ def test_greedy_builds_cube_from_static_priority() -> None:
     def static_priority(pt: tuple[int, int, int], ctx: dict[str, Any]) -> float:
         return -float(pt[0] ** 2 + pt[1] ** 2 + pt[2] ** 2)
 
-    def is_feasible(cand: tuple[int, int, int], built: list[tuple[int, int, int]], ctx: dict[str, Any]) -> bool:
+    def is_feasible(
+        cand: tuple[int, int, int], built: list[tuple[int, int, int]], ctx: dict[str, Any]
+    ) -> bool:
         for i in range(len(built)):
             for j in range(i + 1, len(built)):
                 p1, p2 = built[i], built[j]
@@ -103,7 +105,11 @@ def test_manifest_schema() -> None:
     assert manifest["phase"] == "P174"
     assert manifest["target_id"] == "cap_set_8"
     assert manifest["reproduction_size"] == 512
-    assert set(manifest["algorithms"]) == {"BytecodeEvolution", "RandomSearch", "SimulatedAnnealing"}
+    assert set(manifest["algorithms"]) == {
+        "BytecodeEvolution",
+        "RandomSearch",
+        "SimulatedAnnealing",
+    }
     fe = manifest["funsearch_evaluations"]
     assert (isinstance(fe, int) and fe > 0) or fe == "not_obtained"
     vr = manifest["verdict_rule"]

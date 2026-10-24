@@ -42,9 +42,7 @@ def build_cap_from_scores(
     return built
 
 
-def evaluate_cap_size(
-    scores: list[float] | np.ndarray, candidates: list[tuple[int, ...]]
-) -> int:
+def evaluate_cap_size(scores: list[float] | np.ndarray, candidates: list[tuple[int, ...]]) -> int:
     return len(build_cap_from_scores(scores, candidates))
 
 
@@ -198,7 +196,9 @@ def main() -> None:
                     "best_cap_sha256": res["best_cap_sha256"],
                 }
             )
-            print(f"  {algo} seed={seed}: size={res['best_score']} evals={res['evaluations']} t={res['elapsed_sec']:.1f}s")
+            print(
+                f"  {algo} seed={seed}: size={res['best_score']} evals={res['evaluations']} t={res['elapsed_sec']:.1f}s"
+            )
 
     # Verdict per manifest rule.
     fe = manifest["funsearch_evaluations"]
@@ -212,7 +212,11 @@ def main() -> None:
     target = int(manifest["reproduction_size"])
     if isinstance(fe, int) and max_bytecode >= target and max_others < target:
         # Efficiency leg needs bytecode evals < funsearch evals.
-        bc_evals = min(tr["evaluations"] for tr in trials if tr["algorithm"] == "BytecodeEvolution" and tr["best_size"] >= target)
+        bc_evals = min(
+            tr["evaluations"]
+            for tr in trials
+            if tr["algorithm"] == "BytecodeEvolution" and tr["best_size"] >= target
+        )
         verdict = "H2_SUPPORTED" if bc_evals < fe else "H2_REPRODUCED"
     elif max_bytecode >= target:
         verdict = "H2_REPRODUCED"
