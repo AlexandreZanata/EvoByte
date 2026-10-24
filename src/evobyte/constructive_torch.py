@@ -187,11 +187,16 @@ def _score_batch_gpu(
                     rb = bs[rows].to(dtype=torch.float32)
                 else:
                     rb = regs[rows, (bs[rows] % N_REGS).to(torch.long)]
-                out, _flag = _safe_apply_torch(op, regs[rows, aas[rows].to(torch.long)], rb, bs[rows], const_bank)
+                out, _flag = _safe_apply_torch(
+                    op, regs[rows, aas[rows].to(torch.long)], rb, bs[rows], const_bank
+                )
                 regs[rows, dsts[rows].to(torch.long)] = out
 
     vals = regs[:, 7].to("cpu").tolist()
-    return [float(v) if bool(valid[i]) and math.isfinite(float(v)) else float("-inf") for i, v in enumerate(vals)]
+    return [
+        float(v) if bool(valid[i]) and math.isfinite(float(v)) else float("-inf")
+        for i, v in enumerate(vals)
+    ]
 
 
 def score_batch_torch(
@@ -237,9 +242,7 @@ def score_batch_torch(
         feat_parsed = [
             _as_float_list(feat_list[i]) if i < len(feat_list) else None for i in range(n)
         ]
-        ctx_parsed = [
-            _as_float_list(ctx_list[i]) if i < len(ctx_list) else None for i in range(n)
-        ]
+        ctx_parsed = [_as_float_list(ctx_list[i]) if i < len(ctx_list) else None for i in range(n)]
         return _score_batch_gpu(prog_words, feat_parsed, ctx_parsed, dev)
     except Exception:
         out = []

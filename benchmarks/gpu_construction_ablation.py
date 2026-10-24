@@ -22,7 +22,25 @@ from evobyte.constructive_torch import (
 
 def gen_triples(n: int, seed: int):
     rng = np.random.default_rng(seed)
-    ops = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11]
+    ops = [
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x08,
+        0x09,
+        0x0A,
+        0x0B,
+        0x0C,
+        0x0D,
+        0x0E,
+        0x0F,
+        0x10,
+        0x11,
+    ]
     progs, feats, ctxs = [], [], []
     attempts = 0
     while len(progs) < n and attempts < n * 50:
@@ -67,7 +85,15 @@ def main() -> None:
         "cuda_version": str(torch.version.cuda) if torch.cuda.is_available() else None,
     }
     if not gpu_available:
-        out.update({"gpu_available": False, "gpu_sec": None, "speedup": None, "peak_vram_mb": None, "max_abs_diff": None})
+        out.update(
+            {
+                "gpu_available": False,
+                "gpu_sec": None,
+                "speedup": None,
+                "peak_vram_mb": None,
+                "max_abs_diff": None,
+            }
+        )
         Path(args.output).parent.mkdir(parents=True, exist_ok=True)
         Path(args.output).write_text(json.dumps(out, indent=2), encoding="utf-8")
         print(f"no CUDA; cpu_sec={cpu_sec:.3f}s n={n}")
@@ -124,7 +150,9 @@ def main() -> None:
     )
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.output).write_text(json.dumps(out, indent=2), encoding="utf-8")
-    print(f"cpu={cpu_sec:.3f}s gpu={gpu_sec:.3f}s speedup={speedup:.2f}x peak={peak}MB maxdiff={max_diff:.2e}")
+    print(
+        f"cpu={cpu_sec:.3f}s gpu={gpu_sec:.3f}s speedup={speedup:.2f}x peak={peak}MB maxdiff={max_diff:.2e}"
+    )
 
 
 if __name__ == "__main__":
