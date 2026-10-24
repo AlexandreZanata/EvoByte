@@ -1,6 +1,6 @@
 # P177 — Campanha pré-registrada de Schur fraco com simetria cíclica (WS)
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P171 (catálogo v2 com `weak_schur_*`) e P172 (baselines) concluídas; branch a partir de `codex/p172-frontier-baselines-solver-harness`.
 **Owner:** agente executor; revisor de sistemas nos gates de medição.
