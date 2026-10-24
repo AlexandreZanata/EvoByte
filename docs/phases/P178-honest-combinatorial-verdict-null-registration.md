@@ -1,6 +1,6 @@
 # P178 — Veredito honesto das campanhas combinatórias e registro de nulos
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P176 e P177 concluídas **e mergeadas em `main`** (o executor precisa dos dois resumos commitados); branch a partir de `main`.
 **Owner:** agente executor; revisor estatístico nos gates de veredito.
