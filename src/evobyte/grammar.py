@@ -514,7 +514,7 @@ def _const_negation_map() -> torch.Tensor:
 
 _CONST_NEG_MAP = _const_negation_map()
 _CONST_CHOICES = torch.tensor(PREREGISTERED_CONST_INDICES, dtype=torch.int64)
-_RISKY_MASK = torch.zeros(16, dtype=torch.bool)
+_RISKY_MASK = torch.zeros(256, dtype=torch.bool)  # P173: size 256 to safely index any opcode byte
 for _op in RISKY_OPS:
     _RISKY_MASK[int(_op)] = True
 
@@ -526,7 +526,7 @@ def batch_is_valid_torch(population: torch.Tensor) -> torch.Tensor:
     dst = (w >> 8) & 0xFF
     n_pop = w.shape[0]
     ok = torch.ones((n_pop,), dtype=torch.bool, device=w.device)
-    ok &= (op <= 0x0F).all(dim=1)
+    ok &= (op <= 0x11).all(dim=1)  # P173 v1 superset (v0 0x00-0x0F frozen)
     ok &= (dst < N_REGS).all(dim=1)
     non_nop = op != 0x00
     ok &= non_nop.any(dim=1)

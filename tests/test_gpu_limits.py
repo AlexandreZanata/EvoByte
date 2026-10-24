@@ -65,7 +65,7 @@ def test_workload_grid_hash_frozen():
 def test_mix_specs_cover_full_and_arith():
     full_ops, full_w = mix_spec("full")
     arith_ops, arith_w = mix_spec("arith")
-    assert len(full_ops) == 16 and abs(float(full_w.sum()) - 1.0) < 1e-12
+    assert len(full_ops) == 18 and abs(float(full_w.sum()) - 1.0) < 1e-12  # P173 v1 superset
     assert set(arith_ops) <= set(full_ops) and len(arith_ops) < len(full_ops)
     assert abs(float(arith_w.sum()) - 1.0) < 1e-12
 

@@ -38,8 +38,8 @@ def test_gpu_sample_structured_validity(device: torch.device) -> None:
     as_ = (progs >> 16) & 0xFF
     bs = (progs >> 24) & 0xFF
 
-    # Opcodes within valid 0x00..0x0F range
-    assert (ops >= 0).all() and (ops <= 15).all()
+    # Opcodes within valid 0x00..0x11 range (P173 v1 superset; v0 0x00-0x0F frozen)
+    assert (ops >= 0).all() and (ops <= 17).all()
     # Dsts within 0..7
     assert (dsts >= 0).all() and (dsts <= 7).all()
     # As within 0..7
@@ -85,8 +85,8 @@ def test_gpu_crossover_and_mutation(device: torch.device) -> None:
     mut = gpu_mutate(c1, p_gene=0.2, p_block=0.2, p_byte=0.1)
     assert mut.shape == (20, 16)
     ops = mut & 0xFF
-    # Verify opcode table clamping
-    assert (ops >= 0).all() and (ops <= 15).all()
+    # Verify opcode table clamping (P173 v1: 0x00-0x11)
+    assert (ops >= 0).all() and (ops <= 17).all()
 
 
 @pytest.mark.parametrize("device", get_test_devices())
