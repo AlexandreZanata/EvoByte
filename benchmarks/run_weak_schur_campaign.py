@@ -33,6 +33,7 @@ from evobyte.frontier_catalogue import verify_weak_schur_partition  # noqa: E402
 # Pure helpers (importable by tests; no search here).
 # --------------------------------------------------------------------------
 
+
 def break_size(best_known_value: int) -> int:
     """Record-attempt size: exactly best_known_value + 1 (no goalpost moves)."""
     return int(best_known_value) + 1
@@ -88,6 +89,7 @@ def save_checkpoint(path: Path, state: dict) -> None:
 # --------------------------------------------------------------------------
 # Search state with incremental violation deltas: 1 eval = 1 delta.
 # --------------------------------------------------------------------------
+
 
 class WeakSchurState:
     """Coloring of {1..m} into k classes; incremental weak-violation count.
@@ -178,8 +180,9 @@ def _symmetric_positions(m: int, p: int, j: int) -> list[int]:
     return list(range(j, m, p))
 
 
-def run_sa_trial(m: int, k: int, mode: str, period: int, budget_sec: float,
-                 max_evals: int, seed: int) -> dict:
+def run_sa_trial(
+    m: int, k: int, mode: str, period: int, budget_sec: float, max_evals: int, seed: int
+) -> dict:
     import numpy as np
 
     rng = np.random.default_rng(seed)
@@ -249,13 +252,20 @@ def run_sa_trial(m: int, k: int, mode: str, period: int, budget_sec: float,
                     cert = {"size": m, "sha256": best_sha, "partition": list(st.color)}
                     break
         temp = max(temp * cooling, 1e-3)
-    return {"best_violations": best_viol, "evaluations": evals,
-            "verifications": verifs, "elapsed_sec": time.perf_counter() - t0,
-            "init_sec": init_sec, "best_sha256": best_sha, "certificate": cert}
+    return {
+        "best_violations": best_viol,
+        "evaluations": evals,
+        "verifications": verifs,
+        "elapsed_sec": time.perf_counter() - t0,
+        "init_sec": init_sec,
+        "best_sha256": best_sha,
+        "certificate": cert,
+    }
 
 
-def run_hc_trial(m: int, k: int, mode: str, period: int, budget_sec: float,
-                 max_evals: int, seed: int) -> dict:
+def run_hc_trial(
+    m: int, k: int, mode: str, period: int, budget_sec: float, max_evals: int, seed: int
+) -> dict:
     import numpy as np
 
     rng = np.random.default_rng(seed)
@@ -292,7 +302,9 @@ def run_hc_trial(m: int, k: int, mode: str, period: int, budget_sec: float,
                 if new_c == pat[int(pick)]:
                     continue
                 # Incremental whole-pattern move: apply, keep iff improving.
-                saved = [(pos0, st.color[pos0]) for pos0 in _symmetric_positions(m, period, int(pick))]
+                saved = [
+                    (pos0, st.color[pos0]) for pos0 in _symmetric_positions(m, period, int(pick))
+                ]
                 viol_before = st.viol
                 for pos0, _old in saved:
                     d = st.delta_recolor(pos0, new_c)
@@ -338,10 +350,16 @@ def run_hc_trial(m: int, k: int, mode: str, period: int, budget_sec: float,
                 best_viol = st.viol
                 best_sha = canonical_partition_sha(st.color)
                 best_color = list(st.color)
-    return {"best_violations": best_viol, "evaluations": evals,
-            "verifications": verifs, "elapsed_sec": time.perf_counter() - t0,
-            "init_sec": init_sec, "best_sha256": best_sha,
-            "best_partition_prefix": best_color[:32], "certificate": cert}
+    return {
+        "best_violations": best_viol,
+        "evaluations": evals,
+        "verifications": verifs,
+        "elapsed_sec": time.perf_counter() - t0,
+        "init_sec": init_sec,
+        "best_sha256": best_sha,
+        "best_partition_prefix": best_color[:32],
+        "certificate": cert,
+    }
 
 
 RUNNERS = {
@@ -353,6 +371,7 @@ RUNNERS = {
 # --------------------------------------------------------------------------
 # Campaign driver.
 # --------------------------------------------------------------------------
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()
@@ -402,23 +421,42 @@ def main() -> None:
                             certs_by_target.setdefault(target_id, []).append(rec["certificate"])
                         continue
                     runner = RUNNERS[algo]
-                    res = runner(attempt, k, "symmetric" if mode.startswith("symmetric") else "free",
-                                 period, float(manifest["budget_sec_per_seed"]),
-                                 int(manifest.get("max_evaluations_per_trial", 1_000_000)), int(seed))
-                    rec = {"trial_key": key, "target_id": target_id, "attempt_size": attempt,
-                           "k": k, "algorithm": algo, "seed": int(seed), "mode": mode,
-                           "best_known_value": best,
-                           "result": "BEATEN" if res["certificate"] else "UNBEATEN",
-                           **{kk: vv for kk, vv in res.items()
-                              if kk not in ("certificate", "best_partition_prefix")}}
+                    res = runner(
+                        attempt,
+                        k,
+                        "symmetric" if mode.startswith("symmetric") else "free",
+                        period,
+                        float(manifest["budget_sec_per_seed"]),
+                        int(manifest.get("max_evaluations_per_trial", 1_000_000)),
+                        int(seed),
+                    )
+                    rec = {
+                        "trial_key": key,
+                        "target_id": target_id,
+                        "attempt_size": attempt,
+                        "k": k,
+                        "algorithm": algo,
+                        "seed": int(seed),
+                        "mode": mode,
+                        "best_known_value": best,
+                        "result": "BEATEN" if res["certificate"] else "UNBEATEN",
+                        **{
+                            kk: vv
+                            for kk, vv in res.items()
+                            if kk not in ("certificate", "best_partition_prefix")
+                        },
+                    }
                     if res["certificate"]:
                         rec["certificate"] = res["certificate"]  # includes full partition
                     completed[key] = rec
                     save_checkpoint(ckpt_path, ckpt)
                     trials.append(rec)
                     new_trials += 1
-                    print(f"  {key}: viol={res['best_violations']} evals={res['evaluations']} "
-                          f"t={res['elapsed_sec']:.1f}s {rec['result']}", flush=True)
+                    print(
+                        f"  {key}: viol={res['best_violations']} evals={res['evaluations']} "
+                        f"t={res['elapsed_sec']:.1f}s {rec['result']}",
+                        flush=True,
+                    )
                     if args.max_new_trials is not None and new_trials >= args.max_new_trials:
                         outer_break = True
                         break
@@ -440,10 +478,14 @@ def main() -> None:
             verdict = "INCOMPLETE"
         else:
             verdict = verdict_for_target(best, certs)
-        entry: dict = {"target_id": target_id, "k": int(spec["params"]["k"]),
-                       "best_known_value": best,
-                       "attempt_size": break_size(best), "verdict": verdict,
-                       "n_trials": len(t_trials)}
+        entry: dict = {
+            "target_id": target_id,
+            "k": int(spec["params"]["k"]),
+            "best_known_value": best,
+            "attempt_size": break_size(best),
+            "verdict": verdict,
+            "n_trials": len(t_trials),
+        }
         if certs:
             entry["certificate"] = certs[0]
         else:
@@ -457,13 +499,20 @@ def main() -> None:
         per_target.append(entry)
 
     finished_at = time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime())
-    results = {"phase": "P177", "started_at": started_at, "finished_at": finished_at,
-               "manifest_sha256": manifest_sha,
-               "manifest_created_at": manifest.get("created_at"),
-               "verdict_counts": {v: sum(1 for e in per_target if e["verdict"] == v)
-                                  for v in ("DISCOVERY_BEATEN", "NULL_RESULT", "INCOMPLETE")},
-               "targets": per_target, "trials": trials,
-               "total_sec": time.perf_counter() - t_start}
+    results = {
+        "phase": "P177",
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "manifest_sha256": manifest_sha,
+        "manifest_created_at": manifest.get("created_at"),
+        "verdict_counts": {
+            v: sum(1 for e in per_target if e["verdict"] == v)
+            for v in ("DISCOVERY_BEATEN", "NULL_RESULT", "INCOMPLETE")
+        },
+        "targets": per_target,
+        "trials": trials,
+        "total_sec": time.perf_counter() - t_start,
+    }
     out_p = Path(args.output)
     out_p.parent.mkdir(parents=True, exist_ok=True)
     out_p.write_text(json.dumps(results, indent=1), encoding="utf-8")
