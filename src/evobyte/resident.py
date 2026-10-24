@@ -180,8 +180,8 @@ def gpu_mutate(
             r3 = torch.randint(0, 256, (k, N_INSTR), device=dev, dtype=torch.int64)
 
             new_b0 = torch.where(byte_mask[..., 0], r0, b0)
-            # Clamp opcodes into valid [0x00..0x0F] table
-            new_b0 = torch.where(new_b0 > 15, torch.zeros_like(new_b0), new_b0)
+            # Clamp opcodes into valid [0x00..0x11] table (P173 v1 superset)
+            new_b0 = torch.where(new_b0 > 17, torch.zeros_like(new_b0), new_b0)
             new_b1 = torch.where(byte_mask[..., 1], r1, b1)
             new_b2 = torch.where(byte_mask[..., 2], r2, b2)
             new_b3 = torch.where(byte_mask[..., 3], r3, b3)

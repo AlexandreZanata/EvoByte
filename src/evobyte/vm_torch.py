@@ -119,12 +119,41 @@ def _safe_apply_torch(
     return out, invalid
 
 
+def _scalar_from_bank(
+    bank: list[float] | np.ndarray | torch.Tensor | None, idx: int
+) -> tuple[float, bool]:
+    """Read bank[idx] as float; out-of-range -> 0.0; non-finite -> 0.0 + invalid."""
+    if bank is None:
+        return 0.0, False
+    try:
+        if isinstance(bank, torch.Tensor):
+            flat = bank.detach().to("cpu").flatten()
+            if 0 <= idx < flat.numel():
+                val = float(flat[idx].item())
+            else:
+                return 0.0, False
+        else:
+            if 0 <= idx < len(bank):  # type: ignore[arg-type]
+                val = float(bank[idx])  # type: ignore[index]
+            else:
+                return 0.0, False
+    except Exception:
+        return 0.0, False
+    import math as _math
+
+    if not _math.isfinite(val):
+        return 0.0, True
+    return val, False
+
+
 def execute_batch_torch(
     program: np.ndarray | torch.Tensor,
     xs: np.ndarray | torch.Tensor,
     x1s: np.ndarray | torch.Tensor | None = None,
     device: torch.device | str | None = None,
     const_bank: torch.Tensor | np.ndarray | None = None,
+    ctx: list[float] | np.ndarray | torch.Tensor | None = None,
+    feat: list[float] | np.ndarray | torch.Tensor | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Execute one program over a batch of input points fully in PyTorch."""
     if device is None:
@@ -177,6 +206,18 @@ def execute_batch_torch(
         if dst >= N_REGS or a >= N_REGS:
             overall_invalid = overall_invalid | True
             continue
+        if op == 0x10:  # CTX: r[dst] = ctx[b & 0x0F] (P173 v1, broadcast over batch)
+            val, bad = _scalar_from_bank(ctx, int(b) & 0x0F)
+            regs[dst] = torch.full_like(regs[dst], val)
+            if bad:
+                overall_invalid = overall_invalid | True
+            continue
+        if op == 0x11:  # FEAT: r[dst] = feat[b & 0x0F] (P173 v1, broadcast over batch)
+            val, bad = _scalar_from_bank(feat, int(b) & 0x0F)
+            regs[dst] = torch.full_like(regs[dst], val)
+            if bad:
+                overall_invalid = overall_invalid | True
+            continue
         if op in BINARY_OPS and b >= N_REGS:
             overall_invalid = overall_invalid | True
 
@@ -197,6 +238,8 @@ def execute_torch(
     x0: float | torch.Tensor,
     x1: float | torch.Tensor = 0.0,
     device: torch.device | str | None = None,
+    ctx: list[float] | np.ndarray | torch.Tensor | None = None,
+    feat: list[float] | np.ndarray | torch.Tensor | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Execute one program on a single input point in PyTorch."""
     if not isinstance(x0, torch.Tensor):
@@ -207,7 +250,7 @@ def execute_torch(
         x1s = torch.tensor([float(x1)], dtype=torch.float32)
     else:
         x1s = x1.view(1)
-    out, flag = execute_batch_torch(program, xs, x1s, device=device)
+    out, flag = execute_batch_torch(program, xs, x1s, device=device, ctx=ctx, feat=feat)
     return out[0], flag[0]
 
 
@@ -232,6 +275,31 @@ class PopulationVMBuffer:
         self.p_arange = torch.arange(max_pop, device=self.device)
 
 
+def _bank_to_list(
+    bank: list[float] | np.ndarray | torch.Tensor | None,
+) -> list[float] | None:
+    """Normalize ctx/feat bank to a Python float list (non-finite -> 0.0)."""
+    if bank is None:
+        return None
+    try:
+        if isinstance(bank, torch.Tensor):
+            flat = bank.detach().to("cpu").flatten().tolist()
+        else:
+            flat = list(bank)  # type: ignore[arg-type]
+        import math as _math
+
+        out: list[float] = []
+        for v in flat:
+            try:
+                f = float(v)  # type: ignore[arg-type]
+            except Exception:
+                f = 0.0
+            out.append(f if _math.isfinite(f) else 0.0)
+        return out
+    except Exception:
+        return None
+
+
 def execute_population_torch(
     programs: np.ndarray | torch.Tensor,
     xs: np.ndarray | torch.Tensor,
@@ -239,6 +307,8 @@ def execute_population_torch(
     device: torch.device | str | None = None,
     const_bank: torch.Tensor | np.ndarray | None = None,
     buffer: PopulationVMBuffer | None = None,
+    ctx: list[float] | np.ndarray | torch.Tensor | None = None,
+    feat: list[float] | np.ndarray | torch.Tensor | None = None,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Execute a population of P programs across B data points in parallel on device.
 
@@ -324,6 +394,8 @@ def execute_population_torch(
         ra_all = regs[p_arange, safe_a]
         rb_all = regs[p_arange, safe_b]
 
+        ctx_list = _bank_to_list(ctx)
+        feat_list = _bank_to_list(feat)
         unique_ops = torch.unique(ops)
         for op_t in unique_ops:
             op = int(op_t.item())
@@ -349,6 +421,28 @@ def execute_population_torch(
 
             good_idx = idx[good_mask]
             good_dst = dst_sub[good_mask]
+            if op == 0x10:  # CTX broadcast (P173 v1)
+                bs_cpu = bs[good_idx].to("cpu").tolist()
+                for gi, gd, braw in zip(
+                    good_idx.to("cpu").tolist(), good_dst.to("cpu").tolist(), bs_cpu
+                ):
+                    nib = int(braw) & 0x0F
+                    val = 0.0
+                    if ctx_list is not None and 0 <= nib < len(ctx_list):
+                        val = ctx_list[nib]
+                    regs[int(gi), int(gd), :] = float(val)
+                continue
+            if op == 0x11:  # FEAT broadcast (P173 v1)
+                bs_cpu = bs[good_idx].to("cpu").tolist()
+                for gi, gd, braw in zip(
+                    good_idx.to("cpu").tolist(), good_dst.to("cpu").tolist(), bs_cpu
+                ):
+                    nib = int(braw) & 0x0F
+                    val = 0.0
+                    if feat_list is not None and 0 <= nib < len(feat_list):
+                        val = feat_list[nib]
+                    regs[int(gi), int(gd), :] = float(val)
+                continue
             ra_sub = ra_all[good_idx]
             rb_sub = rb_all[good_idx]
             b_raw_sub = bs[good_idx]

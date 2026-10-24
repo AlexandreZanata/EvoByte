@@ -32,6 +32,8 @@ STRUCTURED_OP_RATIOS = np.array(
         0.03,
         0.03,
         0.08,
+        0.01,  # 0x10 CTX (P173 v1, small mass; v0 distribution preserved up to renorm)
+        0.01,  # 0x11 FEAT (P173 v1, small mass; v0 distribution preserved up to renorm)
     ],
     dtype=np.float64,
 )

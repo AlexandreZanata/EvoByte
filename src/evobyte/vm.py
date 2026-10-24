@@ -91,6 +91,8 @@ def execute(
     x0: np.float32,
     x1: np.float32 | None = None,
     const_bank: np.ndarray | None = None,
+    ctx: list[float] | np.ndarray | None = None,
+    feat: list[float] | np.ndarray | None = None,
 ) -> tuple[np.float32, bool]:
     """Execute one program on one input point. Returns (output, invalid_flag)."""
     regs = np.zeros((N_REGS,), dtype=np.float32)
@@ -114,6 +116,35 @@ def execute(
         if dst >= N_REGS or a >= N_REGS:
             invalid = True
             continue
+        if op == 0x10:  # CTX: r[dst] = ctx[b & 0x0F]
+            idx = b & 0x0F
+            val = 0.0
+            if ctx is not None:
+                try:
+                    if 0 <= idx < len(ctx):
+                        val = float(ctx[idx])
+                except Exception:
+                    val = 0.0
+            if not np.isfinite(val):
+                val = 0.0
+                invalid = True
+            regs[dst] = np.float32(val)
+            continue
+        elif op == 0x11:  # FEAT: r[dst] = feat[b & 0x0F]
+            idx = b & 0x0F
+            val = 0.0
+            if feat is not None:
+                try:
+                    if 0 <= idx < len(feat):
+                        val = float(feat[idx])
+                except Exception:
+                    val = 0.0
+            if not np.isfinite(val):
+                val = 0.0
+                invalid = True
+            regs[dst] = np.float32(val)
+            continue
+
         if op != 0x0F:
             if op in (0x01, 0x02, 0x03, 0x04, 0x09, 0x0D, 0x0E) and b >= N_REGS:
                 invalid = True
@@ -244,6 +275,8 @@ def execute_f64(
     x0: float | np.float64,
     x1: float | np.float64 | None = None,
     const_bank: np.ndarray | None = None,
+    ctx: list[float] | np.ndarray | None = None,
+    feat: list[float] | np.ndarray | None = None,
 ) -> tuple[np.float64, bool]:
     """Execute one program on one input point in pure float64 precision."""
     regs = np.zeros((N_REGS,), dtype=np.float64)
@@ -267,6 +300,35 @@ def execute_f64(
         if dst >= N_REGS or a >= N_REGS:
             invalid = True
             continue
+        if op == 0x10:  # CTX: r[dst] = ctx[b & 0x0F]
+            idx = b & 0x0F
+            val = 0.0
+            if ctx is not None:
+                try:
+                    if 0 <= idx < len(ctx):
+                        val = float(ctx[idx])
+                except Exception:
+                    val = 0.0
+            if not np.isfinite(val):
+                val = 0.0
+                invalid = True
+            regs[dst] = np.float64(val)
+            continue
+        elif op == 0x11:  # FEAT: r[dst] = feat[b & 0x0F]
+            idx = b & 0x0F
+            val = 0.0
+            if feat is not None:
+                try:
+                    if 0 <= idx < len(feat):
+                        val = float(feat[idx])
+                except Exception:
+                    val = 0.0
+            if not np.isfinite(val):
+                val = 0.0
+                invalid = True
+            regs[dst] = np.float64(val)
+            continue
+
         if op != 0x0F:
             if op in (0x01, 0x02, 0x03, 0x04, 0x09, 0x0D, 0x0E) and b >= N_REGS:
                 invalid = True
