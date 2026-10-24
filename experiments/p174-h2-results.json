@@ -1,0 +1,88 @@
+{
+  "phase": "P174",
+  "target_id": "cap_set_8",
+  "started_at": "2026-10-23T23:04:48+00:00",
+  "finished_at": "2026-10-23T23:13:50+00:00",
+  "manifest_created_at": "2026-10-23T23:02:58+00:00",
+  "n_candidates": 6561,
+  "n_dim": 8,
+  "verdict": "H2_NOT_SUPPORTED",
+  "max_bytecode": 288,
+  "max_random": 275,
+  "max_sa": 278,
+  "funsearch_evaluations": "not_obtained",
+  "trials": [
+    {
+      "algorithm": "BytecodeEvolution",
+      "seed": 42,
+      "best_size": 256,
+      "evaluations": 185,
+      "elapsed_sec": 60.36449485900812,
+      "best_cap_sha256": "326b38a0529e4e4d"
+    },
+    {
+      "algorithm": "BytecodeEvolution",
+      "seed": 101,
+      "best_size": 256,
+      "evaluations": 235,
+      "elapsed_sec": 60.2092286219995,
+      "best_cap_sha256": "aca0da83ab72740e"
+    },
+    {
+      "algorithm": "BytecodeEvolution",
+      "seed": 202,
+      "best_size": 288,
+      "evaluations": 237,
+      "elapsed_sec": 60.06026726399432,
+      "best_cap_sha256": "b008cd4c723e7c68"
+    },
+    {
+      "algorithm": "RandomSearch",
+      "seed": 42,
+      "best_size": 275,
+      "evaluations": 1950,
+      "elapsed_sec": 60.022219220991246,
+      "best_cap_sha256": "fc9d5f476b3d6b0d"
+    },
+    {
+      "algorithm": "RandomSearch",
+      "seed": 101,
+      "best_size": 273,
+      "evaluations": 1943,
+      "elapsed_sec": 60.002526263997424,
+      "best_cap_sha256": "dfbe29ddb5ec5522"
+    },
+    {
+      "algorithm": "RandomSearch",
+      "seed": 202,
+      "best_size": 275,
+      "evaluations": 1948,
+      "elapsed_sec": 60.02636301398161,
+      "best_cap_sha256": "4da17f99c16b56cc"
+    },
+    {
+      "algorithm": "SimulatedAnnealing",
+      "seed": 42,
+      "best_size": 276,
+      "evaluations": 1931,
+      "elapsed_sec": 60.024987217999296,
+      "best_cap_sha256": "0653b6125d5f5574"
+    },
+    {
+      "algorithm": "SimulatedAnnealing",
+      "seed": 101,
+      "best_size": 278,
+      "evaluations": 1866,
+      "elapsed_sec": 60.01015373499831,
+      "best_cap_sha256": "4d3170b131e1e9a4"
+    },
+    {
+      "algorithm": "SimulatedAnnealing",
+      "seed": 202,
+      "best_size": 276,
+      "evaluations": 1845,
+      "elapsed_sec": 60.00452379800845,
+      "best_cap_sha256": "80b8a59b09317a0e"
+    }
+  ]
+}

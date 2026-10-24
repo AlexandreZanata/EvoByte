@@ -1,6 +1,6 @@
 # P173 — Motor construtivo em bytecode: prioridades sintetizadas e construtor guloso
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P172 concluída (baselines calibrados); branch a partir de `codex/p172-frontier-baselines-solver-harness`.
 **Owner:** agente executor; revisor de sistemas (compatibilidade de bytecode é irreversível).

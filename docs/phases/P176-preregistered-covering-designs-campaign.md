@@ -1,6 +1,6 @@
 # P176 — Campanha pré-registrada de covering designs (40 alvos LJCR, objetivo: recorde)
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P171 (catálogo v2 com 40 alvos) e P172 (baselines calibrados) concluídas; branch a partir de `codex/p172-frontier-baselines-solver-harness`.
 **Owner:** agente executor; revisor estatístico nos gates de veredito.

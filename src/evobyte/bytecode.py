@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-OPCODE_VERSION = 0
+OPCODE_VERSION = 1
 
 N_INSTR = 16
 N_REGS = 8
@@ -27,6 +27,8 @@ OPCODES = {
     0x0D: "MIN",
     0x0E: "MAX",
     0x0F: "CSEL",
+    0x10: "CTX",
+    0x11: "FEAT",
 }
 NAME_TO_OP = {v: k for k, v in OPCODES.items()}
 
@@ -139,13 +141,17 @@ def compact_candidate_profile() -> dict:
     ops, register refs, bounded rational constants), so no codec change, no
     OPCODE_VERSION bump and no interpreter fork. Announced coverage is the
     defined grammar only, never universal mathematics.
+
+    P173: frozen at opcode_version 0. Global OPCODE_VERSION is now 1
+    (strict v0 superset with CTX/FEAT); the P49 profile remains v0-defined
+    and v1-valid via validate_compact_candidate accepting {0, 1}.
     """
     bank = [float(c) for c in list(CONST_BANK)]
     approximate = {i for i, c in enumerate(bank) if i in (5, 6)}
     return {
         "profile": "p49-compact-polynomial",
         "profile_revision": COMPACT_PROFILE_REVISION,
-        "opcode_version": int(OPCODE_VERSION),
+        "opcode_version": 0,
         "word_count": int(N_INSTR),
         "word_bits": 32,
         "program_bytes": int(BYTES_PER_CANDIDATE),
@@ -186,9 +192,9 @@ def compact_decode(blob: bytes) -> np.ndarray:
 def validate_compact_candidate(program: np.ndarray, opcode_version: int = OPCODE_VERSION) -> dict:
     """Validate a compact candidate: version, shape, refs, S0 rules."""
     reasons: list[str] = []
-    if int(opcode_version) != int(OPCODE_VERSION):
+    if int(opcode_version) not in (0, int(OPCODE_VERSION)):
         reasons.append(
-            f"unknown_opcode_version: got {opcode_version!r}, frozen codec is {int(OPCODE_VERSION)}"
+            f"unknown_opcode_version: got {opcode_version!r}, supported versions are 0 and {int(OPCODE_VERSION)}"
         )
         return {"ok": False, "reasons": reasons}
     words = np.asarray(program)
