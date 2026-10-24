@@ -1,0 +1,38 @@
+{
+ "phase": "P177",
+ "targets": [
+  "weak_schur_5",
+  "weak_schur_6",
+  "weak_schur_7"
+ ],
+ "targets_source": "docs/research/targets/frontier_targets_v2.json",
+ "attempt_sizes": [
+  "best_known_value + 1"
+ ],
+ "attempt_rule": "Tentativa de recorde usa exatamente best_known_value + 1 inteiros particionados; sem redefinicao de meta.",
+ "symmetry": {
+  "kind": "cyclic_shift_period_p",
+  "periods": [
+   3
+  ],
+  "note": "Heuristica de reducao: cor[i] = pat[(i-1) mod p]. Nao e teorema; NULL no modo simetrico nao prova inexistencia."
+ },
+ "budget_sec_per_seed": 10.0,
+ "budget_note": "Orcamento de sondagem por ensaio (alvo,algoritmo,semente,modo): tempo OU max_evaluations_per_trial. Inicializacao medida a parte (init_sec).",
+ "max_evaluations_per_trial": 100000,
+ "seeds": [
+  42,
+  101,
+  202
+ ],
+ "algorithms": [
+  "SimulatedAnnealing",
+  "HillClimbing"
+ ],
+ "verifier": "frontier_catalogue.verify_weak_schur_partition",
+ "verdict_rule": {
+  "DISCOVERY_BEATEN": "particao fraca valida de tamanho best_known_value + 1, certificada",
+  "NULL_RESULT": "orcamento esgotado sem certificado acima de best_known_value"
+ },
+ "created_at": "2026-10-24T00:26:36.724984+00:00"
+}
