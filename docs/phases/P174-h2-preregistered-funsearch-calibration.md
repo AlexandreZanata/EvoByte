@@ -1,6 +1,6 @@
 # P174 — Calibração pré-registrada da hipótese H2 (bytecode vs FunSearch em cap sets)
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P173 concluída (motor de prioridade + ISA v1); branch a partir de `codex/p173-constructive-bytecode-priority-engine`.
 **Owner:** agente executor; revisor estatístico nos gates de veredito.
