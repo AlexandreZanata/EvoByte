@@ -29,8 +29,7 @@ def test_verdict_rule_beaten_vs_null() -> None:
 
 def test_checkpoint_resume_roundtrip(tmp_path: Path) -> None:
     ckpt = tmp_path / "ckpt.json"
-    state = {"manifest_sha256": "deadbeef",
-             "completed": {"a|B1|SA|seed1": {"result": "UNBEATEN"}}}
+    state = {"manifest_sha256": "deadbeef", "completed": {"a|B1|SA|seed1": {"result": "UNBEATEN"}}}
     save_checkpoint(ckpt, state)
     back = load_checkpoint(ckpt)
     assert back["completed"]["a|B1|SA|seed1"]["result"] == "UNBEATEN"
@@ -42,9 +41,20 @@ def test_checkpoint_resume_roundtrip(tmp_path: Path) -> None:
 
 
 def test_manifest_schema() -> None:
-    manifest = json.loads((REPO / "experiments" / "p176-covering-manifest.json").read_text(encoding="utf-8"))
-    for field in ("phase", "targets", "targets_source", "attempt_sizes", "budget_sec_per_seed",
-                  "seeds", "algorithms", "verifier", "verdict_rule"):
+    manifest = json.loads(
+        (REPO / "experiments" / "p176-covering-manifest.json").read_text(encoding="utf-8")
+    )
+    for field in (
+        "phase",
+        "targets",
+        "targets_source",
+        "attempt_sizes",
+        "budget_sec_per_seed",
+        "seeds",
+        "algorithms",
+        "verifier",
+        "verdict_rule",
+    ):
         assert field in manifest, f"missing manifest field: {field}"
     assert manifest["phase"] == "P176"
     assert len(manifest["targets"]) == 40
@@ -58,10 +68,14 @@ def test_manifest_schema() -> None:
 
 
 def test_break_size_is_published_minus_one() -> None:
-    catalogue = json.loads((REPO / "docs/research/targets/frontier_targets_v2.json").read_text(encoding="utf-8"))
+    catalogue = json.loads(
+        (REPO / "docs/research/targets/frontier_targets_v2.json").read_text(encoding="utf-8")
+    )
     cov = [t for t in catalogue["targets"] if t["target_id"].startswith("covering_")][:3]
     assert len(cov) == 3
     for t in cov:
         assert break_size(int(t["best_known_value"])) == int(t["best_known_value"]) - 1
-    assert trial_key("covering_C_7_3_2", 6, "SimulatedAnnealing", 42) == \
-        "covering_C_7_3_2|B6|SimulatedAnnealing|seed42"
+    assert (
+        trial_key("covering_C_7_3_2", 6, "SimulatedAnnealing", 42)
+        == "covering_C_7_3_2|B6|SimulatedAnnealing|seed42"
+    )

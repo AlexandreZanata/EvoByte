@@ -38,6 +38,7 @@ except Exception:  # pragma: no cover
 # Pure helpers (importable by tests; no search here).
 # --------------------------------------------------------------------------
 
+
 def break_size(published_size: int) -> int:
     """Record-attempt size: exactly published_size - 1 (no goalpost moves)."""
     return int(published_size) - 1
@@ -80,6 +81,7 @@ def canonical_blocks_sha(blocks: list[tuple[int, ...]]) -> str:
 # Covering search state with incremental delta evaluation.
 # --------------------------------------------------------------------------
 
+
 class CoveringState:
     """B blocks over {1..v}; incremental cover-count array over C(v,t) ranks."""
 
@@ -92,8 +94,10 @@ class CoveringState:
         self.blocks: list[tuple[int, ...]] = []
         # binom table for colex ranking (matches P171 verifier).
         self._tab = _np.array(
-            [[math.comb(nn, rr) if rr <= nn else 0 for rr in range(self.t + 1)]
-             for nn in range(self.v + 1)],
+            [
+                [math.comb(nn, rr) if rr <= nn else 0 for rr in range(self.t + 1)]
+                for nn in range(self.v + 1)
+            ],
             dtype=_np.int64,
         )
         self._rhs = _np.arange(1, self.t + 1, dtype=_np.int64)
@@ -155,13 +159,15 @@ class CoveringState:
 # Trial runners. 1 eval = 1 delta (move/candidate) evaluation.
 # --------------------------------------------------------------------------
 
+
 def _certify(blocks: list[tuple[int, ...]], v: int, k: int, t: int) -> tuple[bool, str]:
     ok, msg = verify_covering_design([list(b) for b in blocks], v, k, t)
     return bool(ok), str(msg)
 
 
-def run_sa_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
-                 max_evals: int, seed: int) -> dict:
+def run_sa_trial(
+    v: int, k: int, t: int, n_blocks: int, budget_sec: float, max_evals: int, seed: int
+) -> dict:
     rng = __import__("numpy").random.default_rng(seed)
     t0 = time.perf_counter()
     st = CoveringState(v, k, t, n_blocks, rng)
@@ -178,8 +184,11 @@ def run_sa_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
         verifs += 1
         ok, _ = _certify(st.blocks, v, k, t)
         if ok:
-            cert = {"n_blocks": len(st.blocks), "sha256": canonical_blocks_sha(st.blocks),
-                    "blocks": [list(b) for b in st.blocks]}
+            cert = {
+                "n_blocks": len(st.blocks),
+                "sha256": canonical_blocks_sha(st.blocks),
+                "blocks": [list(b) for b in st.blocks],
+            }
     while evals < max_evals and (time.perf_counter() - t0) < budget_sec:
         idx = int(rng.integers(0, n_blocks))
         cand = st.random_block()
@@ -196,18 +205,27 @@ def run_sa_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
                     verifs += 1
                     ok, _ = _certify(st.blocks, v, k, t)
                     if ok:
-                        cert = {"n_blocks": len(st.blocks),
-                                "sha256": canonical_blocks_sha(st.blocks),
-                                "blocks": [list(b) for b in st.blocks]}
+                        cert = {
+                            "n_blocks": len(st.blocks),
+                            "sha256": canonical_blocks_sha(st.blocks),
+                            "blocks": [list(b) for b in st.blocks],
+                        }
                         break
         temp = max(temp * cooling, 1e-3)
-    return {"best_uncovered": best_uncovered, "evaluations": evals,
-            "verifications": verifs, "elapsed_sec": time.perf_counter() - t0,
-            "init_sec": init_sec, "best_sha256": best_sha, "certificate": cert}
+    return {
+        "best_uncovered": best_uncovered,
+        "evaluations": evals,
+        "verifications": verifs,
+        "elapsed_sec": time.perf_counter() - t0,
+        "init_sec": init_sec,
+        "best_sha256": best_sha,
+        "certificate": cert,
+    }
 
 
-def run_hc_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
-                 max_evals: int, seed: int) -> dict:
+def run_hc_trial(
+    v: int, k: int, t: int, n_blocks: int, budget_sec: float, max_evals: int, seed: int
+) -> dict:
     rng = __import__("numpy").random.default_rng(seed)
     t0 = time.perf_counter()
     st = CoveringState(v, k, t, n_blocks, rng)
@@ -223,8 +241,11 @@ def run_hc_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
         verifs += 1
         ok, _ = _certify(st.blocks, v, k, t)
         if ok:
-            cert = {"n_blocks": len(st.blocks), "sha256": canonical_blocks_sha(st.blocks),
-                    "blocks": [list(b) for b in st.blocks]}
+            cert = {
+                "n_blocks": len(st.blocks),
+                "sha256": canonical_blocks_sha(st.blocks),
+                "blocks": [list(b) for b in st.blocks],
+            }
     restarts = 0
     while evals < max_evals and (time.perf_counter() - t0) < budget_sec:
         improved = False
@@ -246,13 +267,20 @@ def run_hc_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
                         verifs += 1
                         ok, _ = _certify(st.blocks, v, k, t)
                         if ok:
-                            cert = {"n_blocks": len(st.blocks),
-                                    "sha256": canonical_blocks_sha(st.blocks),
-                                    "blocks": [list(b) for b in st.blocks]}
-                            return {"best_uncovered": best_uncovered, "evaluations": evals,
-                                    "verifications": verifs, "elapsed_sec": time.perf_counter() - t0,
-                                    "init_sec": init_sec,
-                                    "best_sha256": best_sha, "certificate": cert}
+                            cert = {
+                                "n_blocks": len(st.blocks),
+                                "sha256": canonical_blocks_sha(st.blocks),
+                                "blocks": [list(b) for b in st.blocks],
+                            }
+                            return {
+                                "best_uncovered": best_uncovered,
+                                "evaluations": evals,
+                                "verifications": verifs,
+                                "elapsed_sec": time.perf_counter() - t0,
+                                "init_sec": init_sec,
+                                "best_sha256": best_sha,
+                                "certificate": cert,
+                            }
                 break
         if not improved:
             restarts += 1
@@ -264,14 +292,20 @@ def run_hc_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
             if u < best_uncovered:
                 best_uncovered = u
                 best_sha = canonical_blocks_sha(st.blocks)
-    return {"best_uncovered": best_uncovered, "evaluations": evals,
-            "verifications": verifs, "elapsed_sec": time.perf_counter() - t0,
-            "init_sec": init_sec,
-            "best_sha256": best_sha, "certificate": cert}
+    return {
+        "best_uncovered": best_uncovered,
+        "evaluations": evals,
+        "verifications": verifs,
+        "elapsed_sec": time.perf_counter() - t0,
+        "init_sec": init_sec,
+        "best_sha256": best_sha,
+        "certificate": cert,
+    }
 
 
-def run_greedy_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
-                     max_evals: int, seed: int) -> dict:
+def run_greedy_trial(
+    v: int, k: int, t: int, n_blocks: int, budget_sec: float, max_evals: int, seed: int
+) -> dict:
     rng = __import__("numpy").random.default_rng(seed)
     st = CoveringState(v, k, t, n_blocks, rng)
     t0 = time.perf_counter()
@@ -308,8 +342,11 @@ def run_greedy_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
         verifs += 1
         ok, _ = _certify(st.blocks, v, k, t)
         if ok:
-            cert = {"n_blocks": len(st.blocks), "sha256": best_sha,
-                    "blocks": [list(b) for b in st.blocks]}
+            cert = {
+                "n_blocks": len(st.blocks),
+                "sha256": best_sha,
+                "blocks": [list(b) for b in st.blocks],
+            }
     while evals < max_evals and (time.perf_counter() - t0) < budget_sec and cert is None:
         idx = int(rng.integers(0, n_blocks))
         cand = st.random_block()
@@ -325,13 +362,21 @@ def run_greedy_trial(v: int, k: int, t: int, n_blocks: int, budget_sec: float,
                     verifs += 1
                     ok, _ = _certify(st.blocks, v, k, t)
                     if ok:
-                        cert = {"n_blocks": len(st.blocks), "sha256": best_sha,
-                                "blocks": [list(b) for b in st.blocks]}
+                        cert = {
+                            "n_blocks": len(st.blocks),
+                            "sha256": best_sha,
+                            "blocks": [list(b) for b in st.blocks],
+                        }
                         break
-    return {"best_uncovered": best_uncovered, "evaluations": evals,
-            "verifications": verifs, "elapsed_sec": time.perf_counter() - t0,
-            "init_sec": 0.0,
-            "best_sha256": best_sha, "certificate": cert}
+    return {
+        "best_uncovered": best_uncovered,
+        "evaluations": evals,
+        "verifications": verifs,
+        "elapsed_sec": time.perf_counter() - t0,
+        "init_sec": 0.0,
+        "best_sha256": best_sha,
+        "certificate": cert,
+    }
 
 
 RUNNERS = {
@@ -345,6 +390,7 @@ RUNNERS = {
 # Campaign driver.
 # --------------------------------------------------------------------------
 
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", required=True)
@@ -352,8 +398,12 @@ def main() -> None:
     parser.add_argument("--checkpoint", required=True)
     parser.add_argument("--resume", action="store_true", default=True)
     parser.add_argument("--no-resume", dest="resume", action="store_false")
-    parser.add_argument("--max-new-trials", type=int, default=None,
-                        help="Chunked execution: stop after this many NEW trials (checkpoint kept).")
+    parser.add_argument(
+        "--max-new-trials",
+        type=int,
+        default=None,
+        help="Chunked execution: stop after this many NEW trials (checkpoint kept).",
+    )
     args = parser.parse_args()
 
     manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
@@ -392,13 +442,25 @@ def main() -> None:
                         certs_by_target.setdefault(target_id, []).append(rec["certificate"])
                     continue
                 runner = RUNNERS[algo]
-                res = runner(v, k, t, attempt, float(manifest["budget_sec_per_seed"]),
-                             int(manifest.get("max_evaluations_per_trial", 10_000_000)), int(seed))
-                rec = {"trial_key": key, "target_id": target_id, "attempt_size": attempt,
-                       "algorithm": algo, "seed": int(seed),
-                       "published_size": published,
-                       "result": "BEATEN" if res["certificate"] else "UNBEATEN",
-                       **{kk: vv for kk, vv in res.items() if kk != "certificate"}}
+                res = runner(
+                    v,
+                    k,
+                    t,
+                    attempt,
+                    float(manifest["budget_sec_per_seed"]),
+                    int(manifest.get("max_evaluations_per_trial", 10_000_000)),
+                    int(seed),
+                )
+                rec = {
+                    "trial_key": key,
+                    "target_id": target_id,
+                    "attempt_size": attempt,
+                    "algorithm": algo,
+                    "seed": int(seed),
+                    "published_size": published,
+                    "result": "BEATEN" if res["certificate"] else "UNBEATEN",
+                    **{kk: vv for kk, vv in res.items() if kk != "certificate"},
+                }
                 if res["certificate"]:
                     rec["certificate"] = res["certificate"]
                     certs_by_target.setdefault(target_id, []).append(res["certificate"])
@@ -406,8 +468,11 @@ def main() -> None:
                 save_checkpoint(ckpt_path, ckpt)
                 trials.append(rec)
                 new_trials += 1
-                print(f"  {key}: uncovered={res['best_uncovered']} evals={res['evaluations']} "
-                      f"t={res['elapsed_sec']:.1f}s {rec['result']}", flush=True)
+                print(
+                    f"  {key}: uncovered={res['best_uncovered']} evals={res['evaluations']} "
+                    f"t={res['elapsed_sec']:.1f}s {rec['result']}",
+                    flush=True,
+                )
                 if chunk_cap is not None and new_trials >= chunk_cap:
                     outer_break = True
                     break
@@ -429,25 +494,34 @@ def main() -> None:
         else:
             verdict = verdict_for_target(published, certs)
             best_unc = min(r["best_uncovered"] for r in t_trials)
-        entry: dict = {"target_id": target_id,
-                       "params": spec["params"],
-                       "published_size": published,
-                       "attempt_size": break_size(published),
-                       "verdict": verdict,
-                       "best_uncovered": best_unc,
-                       "n_trials": len(t_trials)}
+        entry: dict = {
+            "target_id": target_id,
+            "params": spec["params"],
+            "published_size": published,
+            "attempt_size": break_size(published),
+            "verdict": verdict,
+            "best_uncovered": best_unc,
+            "n_trials": len(t_trials),
+        }
         if certs:
             entry["certificate"] = certs[0]
         per_target.append(entry)
 
     finished_at = time.strftime("%Y-%m-%dT%H:%M:%S+00:00", time.gmtime())
-    results = {"phase": "P176", "started_at": started_at, "finished_at": finished_at,
-               "manifest_sha256": manifest_sha,
-               "manifest_created_at": manifest.get("created_at"),
-               "total_sec": time.perf_counter() - t_start,
-               "verdict_counts": {v: sum(1 for e in per_target if e["verdict"] == v)
-                                  for v in ("DISCOVERY_BEATEN", "NULL_RESULT", "INCOMPLETE")},
-               "targets": per_target, "trials": trials}
+    results = {
+        "phase": "P176",
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "manifest_sha256": manifest_sha,
+        "manifest_created_at": manifest.get("created_at"),
+        "total_sec": time.perf_counter() - t_start,
+        "verdict_counts": {
+            v: sum(1 for e in per_target if e["verdict"] == v)
+            for v in ("DISCOVERY_BEATEN", "NULL_RESULT", "INCOMPLETE")
+        },
+        "targets": per_target,
+        "trials": trials,
+    }
     out_p = Path(args.output)
     out_p.parent.mkdir(parents=True, exist_ok=True)
     out_p.write_text(json.dumps(results, indent=1), encoding="utf-8")
