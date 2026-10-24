@@ -1,6 +1,6 @@
 # P172 — Baselines competitivos honestos e harness de solver para a fronteira
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P171 concluída (`docs/research/targets/frontier_targets_v2.json` commitado; se ausente, PARE).
 **Owner:** agente executor; revisor de sistemas nos gates de medição.
