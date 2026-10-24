@@ -1,6 +1,6 @@
 # P175 — Cascata de construção em GPU (batching PyTorch/CUDA com medição real)
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P173 concluída (construtor + `evaluate_priority` CPU); branch a partir de `codex/p173-constructive-bytecode-priority-engine`.
 **Owner:** agente executor; revisor de sistemas (medir, nunca estimar).

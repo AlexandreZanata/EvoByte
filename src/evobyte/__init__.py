@@ -12,9 +12,8 @@ from evobyte.verifier import (
     reproduce_candidate,
     verify_l2,
 )
+from evobyte.bytecode import OPCODE_VERSION
 from evobyte.vm import execute_batch_f64, execute_f64
-
-OPCODE_VERSION = 0
 
 __version__ = "0.0.0"
 __all__ = [
