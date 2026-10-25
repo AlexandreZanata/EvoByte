@@ -117,10 +117,7 @@ def test_frontier_entries_in_human_review_log() -> None:
 def test_spec_broken_fixture_is_rejected() -> None:
     """Broken or corrupt configurations must be rejected by reference verifiers."""
     # Fano with missing block leaves subsets uncovered
-    broken_fano = [
-        [1, 2, 3], [1, 4, 5], [1, 6, 7],
-        [2, 4, 6], [2, 5, 7], [3, 4, 7]
-    ]
+    broken_fano = [[1, 2, 3], [1, 4, 5], [1, 6, 7], [2, 4, 6], [2, 5, 7], [3, 4, 7]]
     ok_cov, _ = verify_covering_design(broken_fano, 7, 3, 2)
     assert not ok_cov
 

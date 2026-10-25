@@ -227,11 +227,13 @@ Corresponding Author, EvoByte Project
     for fname in sorted(os.listdir(curator_dir)):
         fpath = curator_dir / fname
         if fpath.is_file():
-            files.append({
-                "name": fname,
-                "path": str(fpath),
-                "sha256": compute_file_sha256(fpath),
-            })
+            files.append(
+                {
+                    "name": fname,
+                    "path": str(fpath),
+                    "sha256": compute_file_sha256(fpath),
+                }
+            )
     return files
 
 
@@ -399,11 +401,13 @@ Corresponding Author, EvoByte Project
     for fname in sorted(os.listdir(curator_dir)):
         fpath = curator_dir / fname
         if fpath.is_file():
-            files.append({
-                "name": fname,
-                "path": str(fpath),
-                "sha256": compute_file_sha256(fpath),
-            })
+            files.append(
+                {
+                    "name": fname,
+                    "path": str(fpath),
+                    "sha256": compute_file_sha256(fpath),
+                }
+            )
     return files
 
 
@@ -574,11 +578,13 @@ Corresponding Author, EvoByte Project
     for fname in sorted(os.listdir(curator_dir)):
         fpath = curator_dir / fname
         if fpath.is_file():
-            files.append({
-                "name": fname,
-                "path": str(fpath),
-                "sha256": compute_file_sha256(fpath),
-            })
+            files.append(
+                {
+                    "name": fname,
+                    "path": str(fpath),
+                    "sha256": compute_file_sha256(fpath),
+                }
+            )
     return files
 
 

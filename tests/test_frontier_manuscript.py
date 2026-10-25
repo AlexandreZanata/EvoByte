@@ -37,7 +37,9 @@ def test_no_sorry_or_todo_in_manuscript() -> None:
         "new record found",
     ]
     for phrase in banned_phrases:
-        assert phrase not in content_lower, f"Unverified discovery claim '{phrase}' found in main.tex"
+        assert phrase not in content_lower, (
+            f"Unverified discovery claim '{phrase}' found in main.tex"
+        )
 
 
 def test_cites_and_refs_resolve() -> None:
@@ -89,7 +91,9 @@ def test_manuscript_type_matches_verdicts() -> None:
     assert audit_file.exists(), f"Missing {audit_file}"
     audit = json.loads(audit_file.read_text(encoding="utf-8"))
     confirmed_count = audit.get("summary", {}).get("confirmed", -1)
-    assert confirmed_count == 0, f"Expected 0 confirmed claims in P186 audit, found {confirmed_count}"
+    assert confirmed_count == 0, (
+        f"Expected 0 confirmed claims in P186 audit, found {confirmed_count}"
+    )
     assert audit.get("overall_verdict") == "NO_ACTIVE_DISCOVERY_CLAIMS"
 
     # Check H2 verdict

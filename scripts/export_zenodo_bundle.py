@@ -40,7 +40,14 @@ def collect_bundle_files(repo_root: Path) -> list[tuple[Path, str]]:
     root = repo_root.resolve()
 
     # Core metadata & container recipe
-    for fname in ["Dockerfile", ".dockerignore", "Makefile", "pyproject.toml", "README.md", "LICENSE"]:
+    for fname in [
+        "Dockerfile",
+        ".dockerignore",
+        "Makefile",
+        "pyproject.toml",
+        "README.md",
+        "LICENSE",
+    ]:
         src = root / fname
         if src.is_file():
             entries.append((src, fname))
@@ -101,7 +108,13 @@ def collect_bundle_files(repo_root: Path) -> list[tuple[Path, str]]:
             elif exp_file.is_dir() and not exp_file.name.startswith("."):
                 # Include json / csv / log result files inside experiment run directories
                 for sub_file in exp_file.rglob("*"):
-                    if sub_file.is_file() and sub_file.suffix in {".json", ".csv", ".txt", ".log", ".md"}:
+                    if sub_file.is_file() and sub_file.suffix in {
+                        ".json",
+                        ".csv",
+                        ".txt",
+                        ".log",
+                        ".md",
+                    }:
                         rel = sub_file.relative_to(root).as_posix()
                         entries.append((sub_file, rel))
 
@@ -336,11 +349,15 @@ def verify_zenodo_bundle_integrity(bundle_dir: Path | str) -> tuple[bool, list[s
         exp_sha, rel_name = parts
         target_path = b_dir / rel_name
         if not target_path.is_file():
-            findings.append(f"MISSING_CHECKSUM_FILE: {rel_name} listed in checksums.sha256 not found")
+            findings.append(
+                f"MISSING_CHECKSUM_FILE: {rel_name} listed in checksums.sha256 not found"
+            )
             continue
         actual_sha = compute_file_sha256(target_path)
         if actual_sha != exp_sha:
-            findings.append(f"CHECKSUMS_FILE_MISMATCH: {rel_name} hash mismatch in checksums.sha256")
+            findings.append(
+                f"CHECKSUMS_FILE_MISMATCH: {rel_name} hash mismatch in checksums.sha256"
+            )
 
     is_sound = len(findings) == 0
     return is_sound, findings

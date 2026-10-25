@@ -25,7 +25,7 @@ def verify_vdw_pure(coloring: list[int], r: int, k: int) -> tuple[bool, str]:
         for a in range(n - (k - 1) * d):
             first = coloring[a]
             if all(coloring[a + i * d] == first for i in range(k)):
-                return False, f"monochromatic AP of length {k} at a={a+1}, d={d}"
+                return False, f"monochromatic AP of length {k} at a={a + 1}, d={d}"
 
     return True, f"VERIFIED: zero monochromatic {k}-term APs in 1..{n}"
 
@@ -42,7 +42,7 @@ def verify_schur_pure(partition: list[int], k: int) -> tuple[bool, str]:
         for i, x in enumerate(elems):
             for y in elems[i:]:
                 if (x + y) in elem_set:
-                    return False, f"monochromatic Schur violation: {x} + {y} = {x+y}"
+                    return False, f"monochromatic Schur violation: {x} + {y} = {x + y}"
 
     return True, f"VERIFIED: valid sum-free partition of 1..{n} into {k} classes"
 

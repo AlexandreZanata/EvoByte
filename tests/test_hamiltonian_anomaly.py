@@ -38,7 +38,7 @@ def test_calibration_reproduces_exact_invariant() -> None:
 
     # Dense H
     h_mat = (
-        - np.kron(np.kron(x2, i2), i2)
+        -np.kron(np.kron(x2, i2), i2)
         - np.kron(np.kron(i2, x2), i2)
         - np.kron(np.kron(i2, i2), x2)
         - np.kron(np.kron(z2, z2), i2)
@@ -67,7 +67,9 @@ def test_no_manual_seeds_in_protocol() -> None:
     for node in ast.walk(tree):
         if isinstance(node, ast.List):
             # Only small configuration lists are allowed
-            assert len(node.elts) < 32, f"Disallowed large literal array in protocol: length {len(node.elts)}"
+            assert len(node.elts) < 32, (
+                f"Disallowed large literal array in protocol: length {len(node.elts)}"
+            )
 
     # Check manifest for absence of solution seeds
     manifest_path = Path("experiments/p183-hamiltonian-manifest.json")

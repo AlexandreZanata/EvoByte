@@ -131,42 +131,50 @@ def run_calibrations(manifest: dict[str, Any]) -> dict[str, Any]:
         if model == "ising":
             h_terms = ising(n, j=cal["params"]["j"], h=cal["params"]["h"])
             # Discover 1-term parity operator
-            res = evolve_conserved_operator(h_terms, n, pop_size=40, generations=25, n_terms=1, seed=42)
+            res = evolve_conserved_operator(
+                h_terms, n, pop_size=40, generations=25, n_terms=1, seed=42
+            )
             passed = res["success"] and res["commutator_error"] < 1e-7
             if passed:
                 indep_comm = independent_commutator_norm(h_terms, res["best_candidate"], n)
                 passed = indep_comm < 1e-7
-            results.append({
-                "target_id": cal_id,
-                "model": model,
-                "n_qubits": n,
-                "passed": passed,
-                "evaluations": res["evaluations"],
-                "elapsed_s": res["elapsed_s"],
-                "best_candidate": [decode_term(t, n) for t in res["best_candidate"]],
-                "commutator_error": res["commutator_error"],
-            })
+            results.append(
+                {
+                    "target_id": cal_id,
+                    "model": model,
+                    "n_qubits": n,
+                    "passed": passed,
+                    "evaluations": res["evaluations"],
+                    "elapsed_s": res["elapsed_s"],
+                    "best_candidate": [decode_term(t, n) for t in res["best_candidate"]],
+                    "commutator_error": res["commutator_error"],
+                }
+            )
             if not passed:
                 all_passed = False
 
         elif model == "j1j2":
             h_terms = j1j2(n, j1=cal["params"]["j1"], j2=cal["params"]["j2"])
             ex = exact(h_terms, n)
-            res = evolve_ground_state(h_terms, n, pop_size=30, generations=25, n_terms=4, seed=42, oracle_truth=ex)
+            res = evolve_ground_state(
+                h_terms, n, pop_size=30, generations=25, n_terms=4, seed=42, oracle_truth=ex
+            )
             e_err = abs(res["energy_candidate"] - cal["known_e0"])
             passed = e_err < 1e-3 and (res["fidelity"] or 0.0) >= 0.99
-            results.append({
-                "target_id": cal_id,
-                "model": model,
-                "n_qubits": n,
-                "passed": passed,
-                "evaluations": res["evaluations"],
-                "elapsed_s": res["elapsed_s"],
-                "energy_discovered": res["energy_candidate"],
-                "energy_exact": cal["known_e0"],
-                "energy_error": e_err,
-                "fidelity": res["fidelity"],
-            })
+            results.append(
+                {
+                    "target_id": cal_id,
+                    "model": model,
+                    "n_qubits": n,
+                    "passed": passed,
+                    "evaluations": res["evaluations"],
+                    "elapsed_s": res["elapsed_s"],
+                    "energy_discovered": res["energy_candidate"],
+                    "energy_exact": cal["known_e0"],
+                    "energy_error": e_err,
+                    "fidelity": res["fidelity"],
+                }
+            )
             if not passed:
                 all_passed = False
 
@@ -252,9 +260,7 @@ def execute_campaign(
                 )
 
                 # Strict independent check
-                verif_out = verify_non_trivial_invariant(
-                    h_terms, res_cons["best_candidate"], n
-                )
+                verif_out = verify_non_trivial_invariant(h_terms, res_cons["best_candidate"], n)
 
                 # 2. Variational Ground State Search (without manual dimer seeds)
                 res_ground = evolve_ground_state(
@@ -315,8 +321,7 @@ def execute_campaign(
 
     total_wall_clock = time.perf_counter() - t_start
     total_evaluations = sum(
-        t["conserved_search"]["evaluations"] + t["ground_search"]["evaluations"]
-        for t in trials
+        t["conserved_search"]["evaluations"] + t["ground_search"]["evaluations"] for t in trials
     )
 
     campaign_status = "ANOMALY_CONFIRMED" if has_confirmed_anomaly else "NULL_RESULT"
@@ -348,7 +353,9 @@ def main() -> None:
     results = execute_campaign(args.manifest, args.output, args.checkpoint)
     print(f"P183 Hamiltonian Anomaly Search: {results['campaign_status']}")
     print(f"Calibration: {results['calibration_status']}")
-    print(f"Trials: {results['total_trials']}, Evaluations: {results['total_evaluations']}, Wall Clock: {results['wall_clock_sec']:.2f}s")
+    print(
+        f"Trials: {results['total_trials']}, Evaluations: {results['total_evaluations']}, Wall Clock: {results['wall_clock_sec']:.2f}s"
+    )
 
 
 if __name__ == "__main__":

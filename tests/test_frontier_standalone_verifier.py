@@ -44,10 +44,7 @@ def test_standalone_accepts_valid_covering(tmp_path: Path) -> None:
         "v": 7,
         "k": 3,
         "t": 2,
-        "blocks": [
-            [1, 2, 3], [1, 4, 5], [1, 6, 7],
-            [2, 4, 6], [2, 5, 7], [3, 4, 7], [3, 5, 6]
-        ],
+        "blocks": [[1, 2, 3], [1, 4, 5], [1, 6, 7], [2, 4, 6], [2, 5, 7], [3, 4, 7], [3, 5, 6]],
     }
     p = tmp_path / "valid_covering.json"
     p.write_text(json.dumps(cert), encoding="utf-8")
@@ -68,8 +65,12 @@ def test_standalone_rejects_corrupted_covering(tmp_path: Path) -> None:
         "k": 3,
         "t": 2,
         "blocks": [
-            [1, 2, 3], [1, 4, 5], [1, 6, 7],
-            [2, 4, 6], [2, 5, 7], [3, 4, 7]
+            [1, 2, 3],
+            [1, 4, 5],
+            [1, 6, 7],
+            [2, 4, 6],
+            [2, 5, 7],
+            [3, 4, 7],
             # missing [3, 5, 6]
         ],
     }
@@ -132,8 +133,14 @@ def test_standalone_accepts_cap_cube_and_rejects_line(tmp_path: Path) -> None:
     """Affine hypercube in F3^3 passes; collinear triple fails with exit code 1."""
     # 1. Valid hypercube {0, 1}^3
     valid_pts = [
-        [0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1],
-        [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0],
+        [0, 1, 1],
+        [1, 0, 0],
+        [1, 0, 1],
+        [1, 1, 0],
+        [1, 1, 1],
     ]
     cert_valid = {
         "certificate_type": "cap_set",
@@ -222,10 +229,26 @@ def test_standalone_imports_only_stdlib() -> None:
     tree = ast.parse(SCRIPT_PATH.read_text(encoding="utf-8"))
 
     # Determine standard library module names
-    stdlib_names = set(sys.stdlib_module_names) if hasattr(sys, "stdlib_module_names") else {
-        "argparse", "hashlib", "json", "sys", "math", "itertools", "dataclasses",
-        "collections", "typing", "pathlib", "os", "re", "time", "functools",
-    }
+    stdlib_names = (
+        set(sys.stdlib_module_names)
+        if hasattr(sys, "stdlib_module_names")
+        else {
+            "argparse",
+            "hashlib",
+            "json",
+            "sys",
+            "math",
+            "itertools",
+            "dataclasses",
+            "collections",
+            "typing",
+            "pathlib",
+            "os",
+            "re",
+            "time",
+            "functools",
+        }
+    )
 
     imported_modules: set[str] = set()
     for node in ast.walk(tree):
@@ -270,7 +293,9 @@ def test_sample_certificates_verify_both_implementations() -> None:
         elif cert_type == "qecc_stabilizer":
             ok, res_payload = internal_code_distance(data["stabilizers"])
             if ok:
-                ok = (res_payload["k"] == data["k_claimed"]) and (res_payload["d"] == data["d_claimed"])
+                ok = (res_payload["k"] == data["k_claimed"]) and (
+                    res_payload["d"] == data["d_claimed"]
+                )
                 msg = f"QECC verified: {res_payload}"
             else:
                 msg = str(res_payload)

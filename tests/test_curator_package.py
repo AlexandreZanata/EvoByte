@@ -47,13 +47,19 @@ def test_package_has_all_artifacts() -> None:
         # 4. reproduce.sh (must be executable)
         reproduce = curator_path / "reproduce.sh"
         assert reproduce.is_file(), f"reproduce.sh missing in {curator}"
-        assert bool(reproduce.stat().st_mode & stat.S_IXUSR), f"reproduce.sh not executable in {curator}"
+        assert bool(reproduce.stat().st_mode & stat.S_IXUSR), (
+            f"reproduce.sh not executable in {curator}"
+        )
 
         # 5. submission-letter.md
-        assert (curator_path / "submission-letter.md").is_file(), f"submission-letter.md missing in {curator}"
+        assert (curator_path / "submission-letter.md").is_file(), (
+            f"submission-letter.md missing in {curator}"
+        )
 
         # 6. submission-letter.txt
-        assert (curator_path / "submission-letter.txt").is_file(), f"submission-letter.txt missing in {curator}"
+        assert (curator_path / "submission-letter.txt").is_file(), (
+            f"submission-letter.txt missing in {curator}"
+        )
 
 
 def test_index_matches_disk_hashes() -> None:
@@ -78,9 +84,9 @@ def test_index_matches_disk_hashes() -> None:
             assert disk_path.exists(), f"File listed in index missing on disk: {disk_path}"
             expected_sha = item["sha256"]
             actual_sha = compute_file_sha256(disk_path)
-            assert (
-                actual_sha == expected_sha
-            ), f"Hash mismatch for {disk_path}: index={expected_sha}, disk={actual_sha}"
+            assert actual_sha == expected_sha, (
+                f"Hash mismatch for {disk_path}: index={expected_sha}, disk={actual_sha}"
+            )
 
 
 def test_letters_make_no_unchecked_claims() -> None:
@@ -108,9 +114,9 @@ def test_letters_make_no_unchecked_claims() -> None:
             # If any of the tracked words appears, check that CONFIRMED is cited
             contains_tracked_word = any(w in lower_content for w in words_requiring_confirmed)
             if contains_tracked_word:
-                assert (
-                    "confirmed" in lower_content
-                ), f"Letter in {curator} uses tracked words without referencing CONFIRMED: {letter_path}"
+                assert "confirmed" in lower_content, (
+                    f"Letter in {curator} uses tracked words without referencing CONFIRMED: {letter_path}"
+                )
 
             # When confirmed_count == 0, check explicit null result disclaimers
             if confirmed_count == 0:
@@ -119,9 +125,9 @@ def test_letters_make_no_unchecked_claims() -> None:
                     or "null result" in lower_content
                     or "null-result" in lower_content
                 ), f"Letter in {curator} lacks null result declaration: {letter_path}"
-                assert (
-                    "not claim" in lower_content or "not claimed" in lower_content
-                ), f"Letter in {curator} lacks explicit non-claim disclaimer: {letter_path}"
+                assert "not claim" in lower_content or "not claimed" in lower_content, (
+                    f"Letter in {curator} lacks explicit non-claim disclaimer: {letter_path}"
+                )
 
 
 def test_status_is_pending_human() -> None:

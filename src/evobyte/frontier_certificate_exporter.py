@@ -66,8 +66,7 @@ class FrontierCertificate:
             "reference_literature": self.reference_literature,
             "sha256_checksum": self.sha256_checksum(),
             "sha256_scope": (
-                "SHA-256 of canonical JSON of "
-                "{certificate_type, target_id, candidate, parameters}"
+                "SHA-256 of canonical JSON of {certificate_type, target_id, candidate, parameters}"
             ),
             "reproduction_seed": self.reproduction_seed,
         }
@@ -96,9 +95,7 @@ class FrontierCertificate:
         return document
 
 
-def export_frontier_certificate(
-    cert: FrontierCertificate, output_path: str | Path
-) -> Path:
+def export_frontier_certificate(cert: FrontierCertificate, output_path: str | Path) -> Path:
     """Write standardized frontier certificate JSON to disk."""
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -75,7 +75,10 @@ def verify_covering(blocks: object, v: object, k: object, t: object) -> tuple[bo
                 covered += 1
 
     if covered == num_subsets:
-        return True, f"VERIFIED: all {num_subsets} {t}-subsets of 1..{v} covered by {len(blocks)} blocks"
+        return (
+            True,
+            f"VERIFIED: all {num_subsets} {t}-subsets of 1..{v} covered by {len(blocks)} blocks",
+        )
     return False, f"FAILED: only {covered}/{num_subsets} {t}-subsets covered"
 
 
@@ -124,7 +127,7 @@ def verify_weak_schur(partition: object, k: object) -> tuple[bool, str]:
         s = color_sets[c]
         sorted_s = sorted(s)
         for idx_x, x in enumerate(sorted_s):
-            for y in sorted_s[idx_x + 1:]:
+            for y in sorted_s[idx_x + 1 :]:
                 z = x + y
                 if z in s:
                     return False, f"weak Schur violation in color {c}: {x} + {y} = {z}"
@@ -257,7 +260,10 @@ def verify_qecc_stabilizer(
     rank = _gf2_rank(rows)
     expected_m = n - k_claimed
     if rank != expected_m:
-        return False, f"GF(2) rank mismatch: rank {rank} != expected {expected_m} for n={n}, k={k_claimed}"
+        return (
+            False,
+            f"GF(2) rank mismatch: rank {rank} != expected {expected_m} for n={n}, k={k_claimed}",
+        )
 
     # Weight-ordered distance sweep
     for w in range(1, n + 1):
@@ -288,7 +294,10 @@ def verify_qecc_stabilizer(
                 # First logical operator found sets exact distance
                 if w != d_claimed:
                     return False, f"code distance mismatch: discovered d={w} != claimed {d_claimed}"
-                return True, f"VERIFIED: valid quantum stabilizer code [[{n},{k_claimed},{d_claimed}]]"
+                return (
+                    True,
+                    f"VERIFIED: valid quantum stabilizer code [[{n},{k_claimed},{d_claimed}]]",
+                )
 
     return False, "no logical operator found"
 
@@ -321,7 +330,9 @@ def main(argv: list[str]) -> int:
     print(f"[*] File SHA-256: {sha256_hash}")
 
     if cert_type == "covering":
-        valid, msg = verify_covering(data.get("blocks"), data.get("v"), data.get("k"), data.get("t"))
+        valid, msg = verify_covering(
+            data.get("blocks"), data.get("v"), data.get("k"), data.get("t")
+        )
     elif cert_type == "schur":
         valid, msg = verify_schur(data.get("partition"), data.get("k"))
     elif cert_type == "weak_schur":

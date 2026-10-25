@@ -116,7 +116,9 @@ def fetch_source_snapshot(
 
     # Attempt live HTTP request
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "curl/7.88.1 (EvoByte P186 Auditor)"})
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "curl/7.88.1 (EvoByte P186 Auditor)"}
+        )
         with urllib.request.urlopen(req, timeout=timeout) as response:
             content = response.read()
             sha = compute_sha256(content)
@@ -447,7 +449,11 @@ def load_catalogue_targets(
     if frontier_path.exists():
         with frontier_path.open("r", encoding="utf-8") as f:
             frontier_data = json.load(f)
-            t_list = frontier_data.get("targets", frontier_data) if isinstance(frontier_data, dict) else frontier_data
+            t_list = (
+                frontier_data.get("targets", frontier_data)
+                if isinstance(frontier_data, dict)
+                else frontier_data
+            )
             for t in t_list:
                 tid = t.get("target_id")
                 if tid:
@@ -543,10 +549,14 @@ def run_novelty_dual_audit(
             frozen_val = target_info.get("best_known_value", 0)
             obj = target_info.get("objective", "maximize")
             val = data.get("metric_value", data.get("size", 0))
-            cand_obj = data.get("blocks", data.get("partition", data.get("points", data.get("generators"))))
+            cand_obj = data.get(
+                "blocks", data.get("partition", data.get("points", data.get("generators")))
+            )
             is_record = data.get("is_record_claim", False)
 
-            snap = reconsulted_snapshots.get("ljcr-coverdata-459bcaf" if "covering" in fam else "oeis-A072842", generic_snapshot)
+            snap = reconsulted_snapshots.get(
+                "ljcr-coverdata-459bcaf" if "covering" in fam else "oeis-A072842", generic_snapshot
+            )
             c_type = "discovery_beaten" if is_record else "calibration_tie"
             claim = audit_claim(
                 target_id=target_id,
@@ -602,13 +612,22 @@ def run_novelty_dual_audit(
 
         for tid, t_trials in targets_in_trials.items():
             target_info = all_targets.get(tid, {})
-            fam = target_info.get("family", "covering_design" if "covering" in tid else "weak_schur")
+            fam = target_info.get(
+                "family", "covering_design" if "covering" in tid else "weak_schur"
+            )
             obj = target_info.get("objective", "minimize" if "covering" in tid else "maximize")
-            frozen_val = target_info.get("best_known_value", t_trials[0].get("published_size", t_trials[0].get("best_known_value", 0)))
+            frozen_val = target_info.get(
+                "best_known_value",
+                t_trials[0].get("published_size", t_trials[0].get("best_known_value", 0)),
+            )
 
             # Check if any trial in this target claimed a beaten record
-            beaten_trials = [tr for tr in t_trials if tr.get("result") == "BEATEN" or tr.get("oracle_certified")]
-            snap = reconsulted_snapshots.get("ljcr-coverdata-459bcaf" if "covering" in fam else "oeis-A072842", generic_snapshot)
+            beaten_trials = [
+                tr for tr in t_trials if tr.get("result") == "BEATEN" or tr.get("oracle_certified")
+            ]
+            snap = reconsulted_snapshots.get(
+                "ljcr-coverdata-459bcaf" if "covering" in fam else "oeis-A072842", generic_snapshot
+            )
 
             if beaten_trials:
                 best_tr = beaten_trials[0]
@@ -630,9 +649,18 @@ def run_novelty_dual_audit(
             else:
                 # Sanity check near-records: evaluate best attempted trial
                 if obj == "minimize":
-                    best_tr = min(t_trials, key=lambda t: (t.get("best_uncovered", 9999), t.get("attempt_size", 9999)))
+                    best_tr = min(
+                        t_trials,
+                        key=lambda t: (t.get("best_uncovered", 9999), t.get("attempt_size", 9999)),
+                    )
                 else:
-                    best_tr = max(t_trials, key=lambda t: (-(t.get("best_violations", 9999)), t.get("attempt_size", -1)))
+                    best_tr = max(
+                        t_trials,
+                        key=lambda t: (
+                            -(t.get("best_violations", 9999)),
+                            t.get("attempt_size", -1),
+                        ),
+                    )
 
                 cand_val = best_tr.get("attempt_size")
                 claim = audit_claim(
@@ -660,7 +688,9 @@ def run_novelty_dual_audit(
                     target_id=tid,
                     family="qecc_stabilizer",
                     objective="maximize",
-                    frozen_best_known=target_info.get("d_hi", target_info.get("best_known_value", 0)),
+                    frozen_best_known=target_info.get(
+                        "d_hi", target_info.get("best_known_value", 0)
+                    ),
                     candidate_metric=None,
                     candidate_object=None,
                     claim_type="null_result" if verd == "NULL_RESULT" else "discovery_beaten",
@@ -677,9 +707,7 @@ def run_novelty_dual_audit(
     not_applicable_count = sum(1 for c in claims if c.verdict == "NOT_APPLICABLE")
 
     overall_verdict = (
-        "CONFIRMED_DISCOVERIES_PRESENT"
-        if confirmed_count > 0
-        else "NO_ACTIVE_DISCOVERY_CLAIMS"
+        "CONFIRMED_DISCOVERIES_PRESENT" if confirmed_count > 0 else "NO_ACTIVE_DISCOVERY_CLAIMS"
     )
 
     audit_report = {
