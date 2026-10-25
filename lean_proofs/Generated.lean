@@ -54,3 +54,4 @@ import Generated.SchinzelQuadraticRingSieveTheorems
 import Generated.SchinzelHighModuliTheorems
 import Generated.ExtremalConstructiveCertificates
 import Generated.FaithfulExtremalCertificates
+import Generated.FrontierDiscoveryCertificates
