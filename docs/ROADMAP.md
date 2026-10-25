@@ -405,6 +405,16 @@ P168 prova 2 certificados Lean 4 fiéis no kernel (`decide`, zero `sorry`), regi
 P169 consolida o veredito estatístico (6 comparações SA-vs-Tabu não significativas após Holm a 0.01; agrupada $N=60$ significativa a favor do SA; `NULL_RESULT` matemático confirmado).
 P170 publica o manuscrito auditado em PDF, o pacote arquivável Zenodo com cadeia SHA-256 e o dossiê de conclusão do programa.
 
+## Frontier discovery program (P171–P190, D042)
+
+[Programa de Descoberta na Fronteira](phases/README.md#programa-de-descoberta-na-fronteira-p171p190-d042)
+investiga exaustivamente três fronteiras abertas (covering designs LJCR, Schur fraco OEIS, códigos estabilizadores quânticos de Grassl) e calibra a hipótese FunSearch H2 com pré-registro estrito, verificadores independentes de dependência zero, certificados Lean 4 sem axiomas, auditoria de novidade mundial e empacotamento arquival hermético.
+Estado final: **concluído** — H2 **NOT SUPPORTED** (tamanho 288 vs 512), descoberta matemática e quântica **NULL_RESULT** (0/51 recordes superados; 426 ensaios; 4 665 899 avaliações medidas; 3 certificados de calibração verificados no kernel Lean 4 com revisão humana de fidelidade; 0 alegações confirmadas em auditoria de 50 alvos; manuscrito de nulos honestos compilado em 8 páginas; container isolado `--network none` com 100% de aprovação).
+
+- **Trilha A (Combinatória e H2):** P171 catálogo v2 congelado; P172 baselines; P173 busca construtiva; P174 calibração H2 (288 vs 512, NOT SUPPORTED); P175 síntese GPU e ablações (1,52x); P176 campanha de covering (40/40 nulos, 0 recordes); P177 Schur fraco (3/3 nulos, 0 recordes, 14 violações mínimas); P178 veredito estatístico pareado e registro de nulos.
+- **Trilha B (Quântica e Estados Fundamentais):** P179 verificador simplético independente; P180 catálogo de fronteira Grassl; P181 operadores evolutivos de estabilizadores; P182 campanha pré-registrada QECC (7/7 nulos, 0 recordes); P183 busca por anomalias em estados fundamentais de Hamiltonianos.
+- **Fundação Comum e Fechamento:** P184 verificador standalone sem dependências; P185 certificados formais Lean 4 provados por decide com revisão humana de fidelidade; P186 auditoria dupla de novidade mundial (50 alvos, 0 confirmed); P187 pacotes para curadores; P188 container hermético offline e pacote Zenodo; P189 manuscrito científico de nulos honestos (8 páginas, 250 KB); P190 conclusão do programa e registro D042.
+
 ## Quantum track (experimental, deferred expansion)
 
 

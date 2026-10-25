@@ -358,6 +358,29 @@ Defined under D039 to close the foundational H1 benchmark matrix with strict wal
 - [P169 — Veredito estatístico consolidado com controle FWER e registro de resultados nulos](P169-statistical-verdict-negative-results.md).
 - [P170 — Manuscrito de publicação auditado, pacote arquivável Zenodo e conclusão do programa](P170-publication-manuscript-archive.md).
 
+## Programa de Descoberta na Fronteira (P171–P190, D042)
+
+- [P171 — Congelamento do catálogo de alvos da fronteira v2](P171-frontier-target-catalogue-v2.md).
+- [P172 — Baselines combinatórios da fronteira e harness de resolução](P172-frontier-baselines-solver-harness.md).
+- [P173 — Busca construtiva e operadores de fronteira](P173-constructive-bytecode-priority-engine.md).
+- [P174 — Calibração H2 pré-registrada e confronto FunSearch](P174-h2-preregistered-calibration-funsearch.md).
+- [P175 — Síntese construtiva GPU e ablações de throughput](P175-gpu-constructive-synthesis-ablation.md).
+- [P176 — Campanha pré-registrada de covering designs](P176-preregistered-covering-designs-campaign.md).
+- [P177 — Campanha de Schur fraco com simetria cíclica](P177-weak-schur-symmetric-campaign.md).
+- [P178 — Veredito combinatório honesto e registro de resultados nulos](P178-honest-combinatorial-verdict-null-registration.md).
+- [P179 — Verificador quântico independente de códigos estabilizadores](P179-quantum-stabilizer-code-verifier.md).
+- [P180 — Catálogo de fronteira de códigos quânticos (Grassl bounds)](P180-grassl-bounds-frontier-catalogue.md).
+- [P181 — Operadores evolutivos para códigos estabilizadores com Q-Forge](P181-quantum-stabilizer-evolution.md).
+- [P182 — Redescoberta cega de códigos quânticos e campanha pré-registrada](P182-quantum-rediscovery-and-campaign.md).
+- [P183 — Busca por anomalias em estados fundamentais de Hamiltonianos](P183-hamiltonian-ground-state-anomaly-search.md).
+- [P184 — Validação externa: verificador autônomo e reprodução por terceiros](P184-external-validation-standalone-verifier.md).
+- [P185 — Certificados formais de descoberta e calibração em Lean 4](P185-lean4-discovery-certificates.md).
+- [P186 — Auditoria dupla de novidade e prioridade na literatura mundial](P186-world-literature-novelty-dual-audit.md).
+- [P187 — Dossiê de submissão formal a curadores e registro de custódia](P187-curator-submission-dossier.md).
+- [P188 — Pacote arquival Zenodo e contêiner de reprodutibilidade hermético](P188-zenodo-archive-reproducibility-container.md).
+- [P189 — Manuscrito científico: a descoberta inédita ou o avanço metodológico H2](P189-frontier-discovery-manuscript.md).
+- [P190 — Conclusão do programa Descoberta na Fronteira e registro D042](P190-program-conclusion-and-decisions.md).
+
 Execute one micro-task at a time. All phases remain Proposed until their explicit
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.
