@@ -1,6 +1,6 @@
 # P179 — Verificador independente de códigos estabilizadores QECC [[n,k,d]]
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** nenhuma fase anterior exigida além de `main` (módulo autocontido, só stdlib+NumPy); branch a partir de `main`.
 **Owner:** agente executor; revisor formal (álgebra simplética) nos gates de correção.
