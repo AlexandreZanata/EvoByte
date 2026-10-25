@@ -1,6 +1,6 @@
 # P190 — Conclusão do programa Descoberta na Fronteira e registro D042
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P171–P189 concluídas (ou explicitamente registradas como não aplicáveis com motivo); branch a partir de `main`.
 **Owner:** agente executor; autor correspondente humano valida o relatório de impacto.
@@ -133,3 +133,9 @@ git status --short
 O corpo do PR (`/tmp/evobyte-p190-pr.md`) traz: problema, comportamento resultante, comandos de
 validação exatos (inventário de fases, CIs, branches restantes), o veredito final em 1 frase e
 o link do relatório de impacto.
+
+## Registro de Execução
+
+- **Decisão D042 Registrada:** [`docs/DECISIONS.md`](../DECISIONS.md) formalizando a conclusão do programa P171–P190 com `RESULTADO NULO HONESTO` (nenhuma quebra de recorde mundial, H2 refutado com 288 vs 512).
+- **Roadmap e Fases Sincronizados:** [`docs/ROADMAP.md`](../ROADMAP.md) e [`docs/phases/README.md`](README.md) atualizados com o índice completo de P171–P190 marcado como concluído.
+- **Relatório de Impacto:** [`docs/research/p190-program-conclusion-impact-report.md`](../research/p190-program-conclusion-impact-report.md) consolidando a auditoria de todas as 20 fases, vereditos técnicos/não-técnicos e declaração de integridade.

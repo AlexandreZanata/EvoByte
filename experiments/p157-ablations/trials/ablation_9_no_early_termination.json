@@ -1,0 +1,12 @@
+{
+  "ablation_id": 9,
+  "component_removed": "Early Stop Rejection on Overflow/NaN",
+  "keep_or_drop": "KEEP",
+  "mean_cvps": 2463.758618406742,
+  "mean_extrap_mse": 10631.822176801752,
+  "mean_hidden_mse": 123.86366673877106,
+  "name": "No Early Termination",
+  "ruling_rationale": "Early termination halts execution immediately upon detecting numerical divergence (3.00x speedup).",
+  "speedup_ratio": 3.004826687998671,
+  "success_rate": 0.0
+}

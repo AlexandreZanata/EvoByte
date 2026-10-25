@@ -40,27 +40,46 @@ def collect_bundle_files(repo_root: Path) -> list[tuple[Path, str]]:
     root = repo_root.resolve()
 
     # Core metadata & container recipe
-    for fname in ["Dockerfile", ".dockerignore", "Makefile", "pyproject.toml", "README.md", "LICENSE"]:
+    for fname in [
+        "Dockerfile",
+        ".dockerignore",
+        "Makefile",
+        "pyproject.toml",
+        "README.md",
+        "LICENSE",
+    ]:
         src = root / fname
         if src.is_file():
             entries.append((src, fname))
 
-    # Research dossiers & formal hypothesis documentation
-    for doc_path in root.glob("docs/research/*.md"):
-        if doc_path.is_file():
+    # Research dossiers, review registries, and formal documentation
+    for doc_path in root.glob("docs/research/*"):
+        if doc_path.is_file() and doc_path.suffix in {".md", ".json"}:
             rel = doc_path.relative_to(root).as_posix()
             entries.append((doc_path, rel))
+
+    for target_path in root.glob("docs/research/targets/*"):
+        if target_path.is_file():
+            rel = target_path.relative_to(root).as_posix()
+            entries.append((target_path, rel))
 
     for core_doc in ["docs/HYPOTHESIS.md", "docs/SYSTEMS.md", "docs/ROADMAP.md", "docs/COMMITS.md"]:
         src = root / core_doc
         if src.is_file():
             entries.append((src, core_doc))
 
-    # Phase specifications for empirical evaluation
-    for phase_path in root.glob("docs/phases/P15*.md"):
-        if phase_path.is_file():
-            rel = phase_path.relative_to(root).as_posix()
-            entries.append((phase_path, rel))
+    # Phase specifications for empirical evaluation & frontier discovery (P150-P190)
+    for phase_pattern in (
+        "docs/phases/P15*.md",
+        "docs/phases/P16*.md",
+        "docs/phases/P17*.md",
+        "docs/phases/P18*.md",
+        "docs/phases/P19*.md",
+    ):
+        for phase_path in root.glob(phase_pattern):
+            if phase_path.is_file():
+                rel = phase_path.relative_to(root).as_posix()
+                entries.append((phase_path, rel))
 
     # Benchmarking and reproduction scripts
     for bench_path in root.glob("benchmarks/*.py"):
@@ -74,9 +93,14 @@ def collect_bundle_files(repo_root: Path) -> list[tuple[Path, str]]:
             rel = script_path.relative_to(root).as_posix()
             entries.append((script_path, rel))
 
-    # Experiments: configs, runners, and result summaries for P153-P169 and the
-    # validated-discovery program (P161-P170 evidence stays inside experiments/)
-    for exp_pattern in ("experiments/p15*", "experiments/p16*"):
+    # Experiments: configs, runners, and result summaries for P150-P190
+    for exp_pattern in (
+        "experiments/p15*",
+        "experiments/p16*",
+        "experiments/p17*",
+        "experiments/p18*",
+        "experiments/p19*",
+    ):
         for exp_file in root.glob(exp_pattern):
             if exp_file.is_file():
                 rel = exp_file.relative_to(root).as_posix()
@@ -84,11 +108,17 @@ def collect_bundle_files(repo_root: Path) -> list[tuple[Path, str]]:
             elif exp_file.is_dir() and not exp_file.name.startswith("."):
                 # Include json / csv / log result files inside experiment run directories
                 for sub_file in exp_file.rglob("*"):
-                    if sub_file.is_file() and sub_file.suffix in {".json", ".csv", ".txt", ".log", ".md"}:
+                    if sub_file.is_file() and sub_file.suffix in {
+                        ".json",
+                        ".csv",
+                        ".txt",
+                        ".log",
+                        ".md",
+                    }:
                         rel = sub_file.relative_to(root).as_posix()
                         entries.append((sub_file, rel))
 
-    # Audited publication manuscript and data tables (P160, P170)
+    # Audited publication manuscript and data tables (P160, P170, P189)
     for doc_rel in [
         "docs/paper/main.tex",
         "docs/paper/main.pdf",
@@ -97,27 +127,30 @@ def collect_bundle_files(repo_root: Path) -> list[tuple[Path, str]]:
         "docs/paper/table_h1_verdict.tex",
         "docs/paper/table_pareto.tex",
         "docs/paper/table_wilcoxon.tex",
-        "docs/research/lean-fidelity-reviews.json",
-        "docs/research/targets/open_targets.json",
+        "docs/paper/table_frontier_summary.tex",
     ]:
         src = root / doc_rel
         if src.is_file():
             entries.append((src, doc_rel))
 
-    # Project source code (engine, baselines, verifiers, statistical evaluation)
+    # Project source code (engine, baselines, verifiers, statistical evaluation, quantum)
     for src_file in root.glob("src/**/*.py"):
         if src_file.is_file() and "__pycache__" not in src_file.parts:
             entries.append((src_file, src_file.relative_to(root).as_posix()))
 
-    # Standalone external-validation certificate (P167): must be verifiable
-    # without installing the package, so it ships as an explicit artifact.
+    # Standalone external-validation certificates and verifiers (P167, P184)
     for standalone_rel in [
         "scripts/verify_certificate_standalone.py",
-        "dist/external-validation/sample_certificate.json",
+        "scripts/verify_frontier_certificate.py",
     ]:
         src = root / standalone_rel
         if src.is_file():
             entries.append((src, standalone_rel))
+
+    for cert_path in root.glob("dist/external-validation/*.json"):
+        if cert_path.is_file():
+            rel = cert_path.relative_to(root).as_posix()
+            entries.append((cert_path, rel))
 
     # Formal Lean 4 sources (excluding build artifacts and mathlib lake cache)
     lean_dir = root / "lean_proofs"
@@ -316,11 +349,15 @@ def verify_zenodo_bundle_integrity(bundle_dir: Path | str) -> tuple[bool, list[s
         exp_sha, rel_name = parts
         target_path = b_dir / rel_name
         if not target_path.is_file():
-            findings.append(f"MISSING_CHECKSUM_FILE: {rel_name} listed in checksums.sha256 not found")
+            findings.append(
+                f"MISSING_CHECKSUM_FILE: {rel_name} listed in checksums.sha256 not found"
+            )
             continue
         actual_sha = compute_file_sha256(target_path)
         if actual_sha != exp_sha:
-            findings.append(f"CHECKSUMS_FILE_MISMATCH: {rel_name} hash mismatch in checksums.sha256")
+            findings.append(
+                f"CHECKSUMS_FILE_MISMATCH: {rel_name} hash mismatch in checksums.sha256"
+            )
 
     is_sound = len(findings) == 0
     return is_sound, findings

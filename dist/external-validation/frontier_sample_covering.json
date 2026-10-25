@@ -1,0 +1,55 @@
+{
+  "certificate_version": "1.0.0",
+  "target_id": "fano_plane_c7_3_2",
+  "certificate_type": "covering",
+  "candidate_length": 7,
+  "reference_literature": "Fano, G. (1892). Sui postulati fondamentali della geometria proiettiva. Giornale di Matematiche 30: 106-132.",
+  "sha256_checksum": "5eb545376066d9f897b99e7fbe6d3bd79a8a727bd12ed486120543fa7498baf2",
+  "sha256_scope": "SHA-256 of canonical JSON of {certificate_type, target_id, candidate, parameters}",
+  "reproduction_seed": 42,
+  "blocks": [
+    [
+      1,
+      2,
+      3
+    ],
+    [
+      1,
+      4,
+      5
+    ],
+    [
+      1,
+      6,
+      7
+    ],
+    [
+      2,
+      4,
+      6
+    ],
+    [
+      2,
+      5,
+      7
+    ],
+    [
+      3,
+      4,
+      7
+    ],
+    [
+      3,
+      5,
+      6
+    ]
+  ],
+  "v": 7,
+  "k": 3,
+  "t": 2,
+  "provenance": {
+    "role": "calibration",
+    "family": "covering_design",
+    "optimality": "proven_exact"
+  }
+}

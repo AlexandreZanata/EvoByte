@@ -1,6 +1,6 @@
 # P184 — Verificador autônomo zero-dependency para qualquer pesquisador validar em < 10 s
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P171 (verificadores de referência), P179 (verificador QECC) e P167 (padrão de empacotamento) concluídas; branch a partir de `main`.
 **Owner:** agente executor; revisor externo simulado (rodar numa máquina limpa sem o repo instalado).
@@ -148,3 +148,11 @@ git status --short
 O corpo do PR (`/tmp/evobyte-p184-pr.md`) traz: problema, comportamento resultante, comandos de
 validação exatos, matriz de validação com tempos medidos (< 10 s cada), limitações (escala do
 QECC autônomo; exemplos são calibração) e o link do dossiê.
+
+## Registro de Execução
+
+- **Script Standalone:** `scripts/verify_frontier_certificate.py` (zero imports fora da stdlib).
+- **Exportador Padronizado:** `src/evobyte/frontier_certificate_exporter.py`
+- **Amostras Padronizadas:** 5 certificados gerados e verificados em `dist/external-validation/frontier_sample_*.json`.
+- **Matriz de Validação:** 5/5 famílias verificadas de forma cruzada (interno vs standalone CLI); tempos entre 27 ms e 31 ms (todos < 10 s).
+- **Dossiê:** [`docs/research/p184-external-validation-dossier.md`](../research/p184-external-validation-dossier.md)

@@ -1,0 +1,388 @@
+{
+  "catalogue_date": "2026-10-25",
+  "description": "QECC Frontier Target Catalogue based on Markus Grassl bounds (P180)",
+  "targets": [
+    {
+      "best_known_value": 3,
+      "certificate_object": [
+        "IIIXXXX",
+        "IXXIIXX",
+        "XIXIXIX",
+        "IIIZZZZ",
+        "IZZIIZZ",
+        "ZIZIZIZ"
+      ],
+      "certificate_status": "constructed_calibration",
+      "claimed_values": [
+        {
+          "source_id": "steane-1996",
+          "value": 3
+        }
+      ],
+      "d_hi": 3,
+      "d_lo": 3,
+      "family": "qecc_stabilizer",
+      "k": 1,
+      "n": 7,
+      "objective": "exact verification of canonical Steane [[7,1,3]] code",
+      "role": "calibration",
+      "source_convention": "exact known code [[7,1,3]] (Steane 1996)",
+      "target_id": "steane_7_1_3",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 3,
+      "certificate_object": [
+        "ZZIIIIIII",
+        "IZZIIIIII",
+        "IIIZZIIII",
+        "IIIIZZIII",
+        "IIIIIIZZI",
+        "IIIIIIIZZ",
+        "XXXXXXIII",
+        "IIIXXXXXX"
+      ],
+      "certificate_status": "constructed_calibration",
+      "claimed_values": [
+        {
+          "source_id": "shor-1995",
+          "value": 3
+        }
+      ],
+      "d_hi": 3,
+      "d_lo": 3,
+      "family": "qecc_stabilizer",
+      "k": 1,
+      "n": 9,
+      "objective": "exact verification of canonical Shor [[9,1,3]] code",
+      "role": "calibration",
+      "source_convention": "exact known code [[9,1,3]] (Shor 1995)",
+      "target_id": "shor_9_1_3",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 3,
+      "certificate_object": [
+        "XZZXI",
+        "IXZZX",
+        "XIXZZ",
+        "ZXIXZ"
+      ],
+      "certificate_status": "constructed_calibration",
+      "claimed_values": [
+        {
+          "source_id": "laflamme-1996",
+          "value": 3
+        }
+      ],
+      "d_hi": 3,
+      "d_lo": 3,
+      "family": "qecc_stabilizer",
+      "k": 1,
+      "n": 5,
+      "objective": "exact verification of 5-qubit perfect code [[5,1,3]]",
+      "role": "calibration",
+      "source_convention": "exact known code [[5,1,3]] (Laflamme et al. 1996)",
+      "target_id": "five_qubit_5_1_3",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 2,
+      "certificate_object": [
+        "XXXX",
+        "ZZZZ"
+      ],
+      "certificate_status": "constructed_calibration",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-bounds",
+          "value": 2
+        }
+      ],
+      "d_hi": 2,
+      "d_lo": 2,
+      "family": "qecc_stabilizer",
+      "k": 2,
+      "n": 4,
+      "objective": "exact verification of error detection code [[4,2,2]]",
+      "role": "calibration",
+      "source_convention": "exact known code [[4,2,2]]",
+      "target_id": "error_detect_4_2_2",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 1,
+      "certificate_object": [
+        "ZZI",
+        "IZZ"
+      ],
+      "certificate_status": "constructed_calibration",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-bounds",
+          "value": 1
+        }
+      ],
+      "d_hi": 1,
+      "d_lo": 1,
+      "family": "qecc_stabilizer",
+      "k": 1,
+      "n": 3,
+      "objective": "exact verification of 3-qubit bit-flip code [[3,1,1]]",
+      "role": "calibration",
+      "source_convention": "bit-flip code [[3,1,1]]",
+      "target_id": "repetition_3_1_1",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 4,
+      "certificate_object": [
+        "XIIIYIIXZZYZII",
+        "ZIIZXYIZYIYZII",
+        "IXIIZXIXIIIXII",
+        "IZIZYXIZIYZYII",
+        "IIXIXYIIXYYXII",
+        "IIZZZZIIZZYYII",
+        "IIIXIZIIIZXYII",
+        "IIIIIIXXXXXXII",
+        "IIIIIIZZZZZZII",
+        "IIIIIIIIIIIIXI",
+        "IIIIIIIIIIIIIX"
+      ],
+      "certificate_status": "verified_published_object",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-14-3",
+          "value": 4
+        }
+      ],
+      "d_hi": 5,
+      "d_lo": 4,
+      "family": "qecc_stabilizer",
+      "k": 3,
+      "n": 14,
+      "objective": "achieve d >= 5 via explicit stabilizer set, or prove d >= 5",
+      "role": "record",
+      "source_convention": "lower bound = maior d com constru\u00e7\u00e3o expl\u00edcita publicada nas tabelas de Grassl",
+      "target_id": "qecc_14_3_open",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 4,
+      "certificate_object": [
+        "XIIIYZIXYYXXIXII",
+        "ZIIZXYIZXYZIYXII",
+        "IXIIZYIXZZIIIXII",
+        "IZIZYXIZYXIZYXII",
+        "IIXIXXIIIXXIYYII",
+        "IIZZZZIIIIZZZZII",
+        "IIIXIIIIIXIXZZII",
+        "IIIIIIXXXXXXXXII",
+        "IIIIIIZZZZZZZZII",
+        "IIIIIIIIIIIIIIXI",
+        "IIIIIIIIIIIIIIIX"
+      ],
+      "certificate_status": "verified_published_object",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-16-5",
+          "value": 4
+        }
+      ],
+      "d_hi": 5,
+      "d_lo": 4,
+      "family": "qecc_stabilizer",
+      "k": 5,
+      "n": 16,
+      "objective": "achieve d >= 5 via explicit stabilizer set, or prove d >= 5",
+      "role": "record",
+      "source_convention": "lower bound = maior d com constru\u00e7\u00e3o expl\u00edcita publicada nas tabelas de Grassl",
+      "target_id": "qecc_16_5_open",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 5,
+      "certificate_object": [
+        "XIIIIIIZZYZYIXZII",
+        "ZIIIIIIYYXYXIZYII",
+        "IXIIIIZYYYYZZXZII",
+        "IZIIIIYXXXXYYZYII",
+        "IIXIIIZXZZYYYYZII",
+        "IIZIIIYZYYXXXXYII",
+        "IIIXIIZXIYZYZZIII",
+        "IIIZIIYZIXYXYYIII",
+        "IIIIXIIZXIYZYZZII",
+        "IIIIZIIYZIXYXYYII",
+        "IIIIIXZYYIIYYZXII",
+        "IIIIIZYXXIIXXYZII",
+        "IIIIIIIIIIIIIIIXI",
+        "IIIIIIIIIIIIIIIIX"
+      ],
+      "certificate_status": "verified_published_object",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-17-3",
+          "value": 5
+        }
+      ],
+      "d_hi": 6,
+      "d_lo": 5,
+      "family": "qecc_stabilizer",
+      "k": 3,
+      "n": 17,
+      "objective": "achieve d >= 6 via explicit stabilizer set, or prove d >= 6",
+      "role": "record",
+      "source_convention": "lower bound = maior d com constru\u00e7\u00e3o expl\u00edcita publicada nas tabelas de Grassl",
+      "target_id": "qecc_17_3_open",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 5,
+      "certificate_object": [
+        "XIIIIIIZZYZYIXZIII",
+        "ZIIIIIIYYXYXIZYIII",
+        "IXIIIIZYYYYZZXZIII",
+        "IZIIIIYXXXXYYZYIII",
+        "IIXIIIZXZZYYYYZIII",
+        "IIZIIIYZYYXXXXYIII",
+        "IIIXIIZXIYZYZZIIII",
+        "IIIZIIYZIXYXYYIIII",
+        "IIIIXIIZXIYZYZZIII",
+        "IIIIZIIYZIXYXYYIII",
+        "IIIIIXZYYIIYYZXIII",
+        "IIIIIZYXXIIXXYZIII",
+        "IIIIIIIIIIIIIIIXII",
+        "IIIIIIIIIIIIIIIIXI",
+        "IIIIIIIIIIIIIIIIIX"
+      ],
+      "certificate_status": "verified_published_object",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-18-3",
+          "value": 5
+        }
+      ],
+      "d_hi": 6,
+      "d_lo": 5,
+      "family": "qecc_stabilizer",
+      "k": 3,
+      "n": 18,
+      "objective": "achieve d >= 6 via explicit stabilizer set, or prove d >= 6",
+      "role": "record",
+      "source_convention": "lower bound = maior d com constru\u00e7\u00e3o expl\u00edcita publicada nas tabelas de Grassl",
+      "target_id": "qecc_18_3_open",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 3,
+      "certificate_object": [
+        "XIZYIXYZYXYZIXIZIII",
+        "ZIYXIZXYXZXYIZIYIII",
+        "IXXXIIIZZZYYYXXXIII",
+        "IZZZIIIYYYXXXZZZIII",
+        "IIIIXXXXXXXXXXXXIII",
+        "IIIIZZZZZZZZZZZZIII",
+        "IIIIIIIIIIIIIIIIXII",
+        "IIIIIIIIIIIIIIIIIXI",
+        "IIIIIIIIIIIIIIIIIIX"
+      ],
+      "certificate_status": "verified_published_object",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-19-10",
+          "value": 3
+        }
+      ],
+      "d_hi": 4,
+      "d_lo": 3,
+      "family": "qecc_stabilizer",
+      "k": 10,
+      "n": 19,
+      "objective": "achieve d >= 4 via explicit stabilizer set, or prove d >= 4",
+      "role": "record",
+      "source_convention": "lower bound = maior d com constru\u00e7\u00e3o expl\u00edcita publicada nas tabelas de Grassl",
+      "target_id": "qecc_19_10_open",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 6,
+      "certificate_object": [
+        "XIIIIIIZZYZYIXZIIIII",
+        "ZIIIIIIYYXYXIZYIIIII",
+        "IXIIIIIIZZYZYIXZIIII",
+        "IZIIIIIIYYXYXIZYIIII",
+        "IIXIIIIZYYYYZZXZIIII",
+        "IIZIIIIYXXXXYYZYIIII",
+        "IIIXIIIZXZZYYYYZIIII",
+        "IIIZIIIYZYYXXXXYIIII",
+        "IIIIXIIZXIYZYZZIIIII",
+        "IIIIZIIYZIXYXYYIIIII",
+        "IIIIIXIIZXIYZYZZIIII",
+        "IIIIIZIIYZIXYXYYIIII",
+        "IIIIIIXZYYIIYYZXIIII",
+        "IIIIIIZYXXIIXXYZIIII",
+        "IIIIIIIIIIIIIIIIXIII",
+        "IIIIIIIIIIIIIIIIIXII",
+        "IIIIIIIIIIIIIIIIIIXI",
+        "IIIIIIIIIIIIIIIIIIIX"
+      ],
+      "certificate_status": "verified_published_object",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-20-2",
+          "value": 6
+        }
+      ],
+      "d_hi": 7,
+      "d_lo": 6,
+      "family": "qecc_stabilizer",
+      "k": 2,
+      "n": 20,
+      "objective": "achieve d >= 7 via explicit stabilizer set, or prove d >= 7",
+      "role": "record",
+      "source_convention": "lower bound = maior d com constru\u00e7\u00e3o expl\u00edcita publicada nas tabelas de Grassl",
+      "target_id": "qecc_20_2_open",
+      "verifier": "qecc_verifier.code_distance"
+    },
+    {
+      "best_known_value": 6,
+      "certificate_object": [
+        "XIIIIIIIIYIXIYZYXZXI",
+        "ZIIIIIIIZXIZIYXYIXZY",
+        "IXIIIIIIZYZYXIXYYYIZ",
+        "IZIIIIIIIXYXZYXZZZIZ",
+        "IIXIIIIIZXIXYXZIYXXY",
+        "IIZIIIIIIZIZXXIYZXZI",
+        "IIIXIIIIIIXXXIZIIIXX",
+        "IIIZIIIIZIZZZZXZZZZX",
+        "IIIIXIIIIXYXXXXYXXXX",
+        "IIIIZIIIIZXZZZZXZZZZ",
+        "IIIIIXIIIYXZXZYZZYIX",
+        "IIIIIZIIZXZYZXYXXYIX",
+        "IIIIIIXIZYYZZXIZZIXY",
+        "IIIIIIZIIXXYYXYIIYZI",
+        "IIIIIIIXZXXIZZYXZIZZ",
+        "IIIIIIIZIZZIYIZXIYYZ",
+        "IIIIIIIIXIIIIXXXXXIZ"
+      ],
+      "certificate_status": "verified_published_object",
+      "claimed_values": [
+        {
+          "source_id": "grassl-codetables-20-3",
+          "value": 6
+        }
+      ],
+      "d_hi": 7,
+      "d_lo": 6,
+      "family": "qecc_stabilizer",
+      "k": 3,
+      "n": 20,
+      "objective": "achieve d >= 7 via explicit stabilizer set, or prove d >= 7",
+      "role": "record",
+      "source_convention": "lower bound = maior d com constru\u00e7\u00e3o expl\u00edcita publicada nas tabelas de Grassl",
+      "target_id": "qecc_20_3_open",
+      "verifier": "qecc_verifier.code_distance"
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,122 @@
+{
+  "budgets_sec": [
+    0.4,
+    0.8
+  ],
+  "comparison": {
+    "Classic-GP": {
+      "bloat_rate": 0.0,
+      "completed_runs": 20,
+      "explosion_rate": 0.0,
+      "extrap_success_rate": 0.5,
+      "hidden_success_rate": 0.5,
+      "mean_complexity": 6.0,
+      "mean_extrap_r2": 0.9650157547541891,
+      "mean_hidden_r2": 0.9174813324157018,
+      "median_extrap_r2": 0.9908935875585381,
+      "median_hidden_r2": 0.9351594399189347,
+      "total_evaluations": 20
+    },
+    "Classical-SR": {
+      "bloat_rate": 0.0,
+      "completed_runs": 20,
+      "explosion_rate": 0.0,
+      "extrap_success_rate": 1.0,
+      "hidden_success_rate": 1.0,
+      "mean_complexity": 6.0,
+      "mean_extrap_r2": 0.9999999999998586,
+      "mean_hidden_r2": 0.9999999999999968,
+      "median_extrap_r2": 0.9999999999998588,
+      "median_hidden_r2": 0.9999999999999969,
+      "total_evaluations": 20
+    },
+    "EvoByte": {
+      "bloat_rate": 0.0,
+      "completed_runs": 20,
+      "explosion_rate": 0.0,
+      "extrap_success_rate": 0.8,
+      "hidden_success_rate": 0.8,
+      "mean_complexity": 5.2,
+      "mean_extrap_r2": 0.9668838511425177,
+      "mean_hidden_r2": 0.9926943904718046,
+      "median_extrap_r2": 0.9999999999999996,
+      "median_hidden_r2": 0.9999999999999998,
+      "total_evaluations": 20
+    },
+    "PySR-Adapter": {
+      "bloat_rate": 0.0,
+      "completed_runs": 0,
+      "explosion_rate": 0.0,
+      "extrap_success_rate": 0.0,
+      "hidden_success_rate": 0.0,
+      "mean_complexity": 0.0,
+      "mean_extrap_r2": -Infinity,
+      "mean_hidden_r2": -Infinity,
+      "median_extrap_r2": -Infinity,
+      "median_hidden_r2": -Infinity,
+      "total_evaluations": 20
+    },
+    "Random": {
+      "bloat_rate": 0.0,
+      "completed_runs": 20,
+      "explosion_rate": 0.0,
+      "extrap_success_rate": 0.5,
+      "hidden_success_rate": 0.5,
+      "mean_complexity": 5.45,
+      "mean_extrap_r2": 0.5471674406048715,
+      "mean_hidden_r2": 0.7281462680989625,
+      "median_extrap_r2": 0.982151431031123,
+      "median_hidden_r2": 0.8336473206147343,
+      "total_evaluations": 20
+    }
+  },
+  "elapsed_sec": 0.21829037999850698,
+  "h1_criterion_4_supported": true,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu0": {
+      "compute_capability": "8.9",
+      "multi_processor_count": 24,
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "total_memory_MB": 7805
+    },
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130",
+    "vram_telemetry": {
+      "allocated_mb": 0.0,
+      "cuda_available": true,
+      "device_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "free_mb": 7701.75,
+      "max_allocated_mb": 0.0,
+      "max_reserved_mb": 0.0,
+      "reserved_mb": 0.0,
+      "total_mb": 7805.56
+    }
+  },
+  "leakage_findings": [],
+  "methods": [
+    "Random",
+    "Classic-GP",
+    "Classical-SR",
+    "PySR-Adapter",
+    "EvoByte"
+  ],
+  "seeds": [
+    42,
+    101,
+    202,
+    303,
+    404
+  ],
+  "suite": "P156-generalization-extrapolation",
+  "target_keys": [
+    "x_plus_1",
+    "x2_3x_7"
+  ],
+  "total_evaluations": 100
+}

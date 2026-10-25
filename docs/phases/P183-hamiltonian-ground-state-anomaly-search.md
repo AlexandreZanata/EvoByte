@@ -1,6 +1,6 @@
 # P183 — Busca de anomalias em redes frustradas e estados fundamentais (Q10–Q13)
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** nenhuma fase anterior exigida (reativação de trilha legada); branch a partir de `main`.
 **Owner:** agente executor; revisor de física (conservação de invariantes) nos gates de veredito.
@@ -142,3 +142,10 @@ git status --short
 
 O corpo do PR (`/tmp/evobyte-p183-pr.md`) traz: problema, comportamento resultante, comandos de
 validação exatos, números medidos (calibração sim/não, vereditos), limitações e o link do relatório.
+
+## Registro de Execução
+
+- **Manifesto SHA-256:** `7702893b7b9ee5e0987064416b97068baa32da2b97e706256c2bef6264d0a390`
+- **Calibração:** `ALL_CALIBRATIONS_PASSED` (Ising N=4 paridade exata redescoberta em 0,009 s; J1-J2 N=4 E0=-6.0 redescoberto com erro < 1e-14 e fidelidade 1.0 em 0,028 s).
+- **Veredito da Campanha:** `NULL_RESULT` (12 ensaios, 9.630 avaliações, 50,18 s; zero anomalias ou invariantes não catalogados).
+- **Relatório:** [`docs/research/p183-hamiltonian-anomaly-report.md`](../research/p183-hamiltonian-anomaly-report.md)

@@ -9,7 +9,8 @@ __pycache__/
 .ruff_cache/
 .local/
 build/
-dist/
+dist/*
+!dist/external-validation/
 lean_proofs/.lake/
 lean_proofs/build/
 experiments/*-matrix/

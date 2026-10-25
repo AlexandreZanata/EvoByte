@@ -1,0 +1,12 @@
+{
+  "ablation_id": 2,
+  "component_removed": "Single-Point Crossover",
+  "keep_or_drop": "KEEP",
+  "mean_cvps": 1959.0669518103623,
+  "mean_extrap_mse": 6572.396845989625,
+  "mean_hidden_mse": 96.21021410647674,
+  "name": "No Crossover",
+  "ruling_rationale": "Crossover enables recombining partial solutions; without it convergence slows.",
+  "speedup_ratio": 1.0,
+  "success_rate": 0.0
+}

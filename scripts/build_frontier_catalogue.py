@@ -289,33 +289,210 @@ def build_certificates(certs_dir: Path, raw_dir: Path) -> dict[str, str]:
     paths["covering_C_8_4_3"] = f"docs/research/targets/certificates/{p.name}"
 
     # 4. weak_schur_5 (Rowley 207)
-    ws5_witness = raw_dir / "ws6_records" / "ws6_records_20260610" / "witnesses" / "ws5_207_rowley_verified.digits"
+    ws5_witness = (
+        raw_dir
+        / "ws6_records"
+        / "ws6_records_20260610"
+        / "witnesses"
+        / "ws5_207_rowley_verified.digits"
+    )
     with ws5_witness.open("r", encoding="utf-8") as f:
         ws5_coloring = [int(c) for c in f.read().strip() if c.isdigit()]
     assert len(ws5_coloring) == 207
     ok, msg = verify_weak_schur_partition(ws5_coloring, 5)
     assert ok, f"WS(5) verification failed: {msg}"
     p = certs_dir / "weak_schur_5.json"
-    p.write_text(json.dumps({"target_id": "weak_schur_5", "coloring": ws5_coloring}, indent=2) + "\n")
+    p.write_text(
+        json.dumps({"target_id": "weak_schur_5", "coloring": ws5_coloring}, indent=2) + "\n"
+    )
     paths["weak_schur_5"] = f"docs/research/targets/certificates/{p.name}"
 
     # 5. weak_schur_6 (Rodrigo 650)
-    ws6_witness = raw_dir / "ws6_records" / "ws6_records_20260610" / "witnesses" / "ws6_650_WITNESS.digits"
+    ws6_witness = (
+        raw_dir / "ws6_records" / "ws6_records_20260610" / "witnesses" / "ws6_650_WITNESS.digits"
+    )
     with ws6_witness.open("r", encoding="utf-8") as f:
         ws6_coloring = [int(c) for c in f.read().strip() if c.isdigit()]
     assert len(ws6_coloring) == 650
     ok, msg = verify_weak_schur_partition(ws6_coloring, 6)
     assert ok, f"WS(6) verification failed: {msg}"
     p = certs_dir / "weak_schur_6.json"
-    p.write_text(json.dumps({"target_id": "weak_schur_6", "coloring": ws6_coloring}, indent=2) + "\n")
+    p.write_text(
+        json.dumps({"target_id": "weak_schur_6", "coloring": ws6_coloring}, indent=2) + "\n"
+    )
     paths["weak_schur_6"] = f"docs/research/targets/certificates/{p.name}"
 
     # 6. schur_5 (Marijn Heule 160)
-    A = {1, 6, 10, 18, 21, 23, 26, 30, 34, 38, 43, 45, 50, 54, 65, 74, 87, 96, 107, 111, 116, 118, 123, 127, 131, 135, 138, 140, 143, 151, 155, 160}
-    B = {2, 3, 8, 14, 19, 20, 24, 25, 36, 46, 47, 51, 62, 73, 88, 99, 110, 114, 115, 125, 136, 137, 141, 142, 147, 153, 158, 159}
-    C = {4, 5, 15, 16, 22, 28, 29, 39, 40, 41, 42, 48, 49, 59, 102, 112, 113, 119, 120, 121, 122, 132, 133, 139, 145, 146, 156, 157}
-    D = {7, 9, 11, 12, 13, 17, 27, 31, 32, 33, 35, 37, 53, 56, 57, 61, 79, 82, 100, 104, 105, 108, 124, 126, 128, 129, 130, 134, 144, 148, 149, 150, 152, 154}
-    E = {44, 52, 55, 58, 60, 63, 64, 66, 67, 68, 69, 70, 71, 72, 75, 76, 77, 78, 80, 81, 83, 84, 85, 86, 89, 90, 91, 92, 93, 94, 95, 97, 98, 101, 103, 106, 109, 117}
+    A = {
+        1,
+        6,
+        10,
+        18,
+        21,
+        23,
+        26,
+        30,
+        34,
+        38,
+        43,
+        45,
+        50,
+        54,
+        65,
+        74,
+        87,
+        96,
+        107,
+        111,
+        116,
+        118,
+        123,
+        127,
+        131,
+        135,
+        138,
+        140,
+        143,
+        151,
+        155,
+        160,
+    }
+    B = {
+        2,
+        3,
+        8,
+        14,
+        19,
+        20,
+        24,
+        25,
+        36,
+        46,
+        47,
+        51,
+        62,
+        73,
+        88,
+        99,
+        110,
+        114,
+        115,
+        125,
+        136,
+        137,
+        141,
+        142,
+        147,
+        153,
+        158,
+        159,
+    }
+    C = {
+        4,
+        5,
+        15,
+        16,
+        22,
+        28,
+        29,
+        39,
+        40,
+        41,
+        42,
+        48,
+        49,
+        59,
+        102,
+        112,
+        113,
+        119,
+        120,
+        121,
+        122,
+        132,
+        133,
+        139,
+        145,
+        146,
+        156,
+        157,
+    }
+    D = {
+        7,
+        9,
+        11,
+        12,
+        13,
+        17,
+        27,
+        31,
+        32,
+        33,
+        35,
+        37,
+        53,
+        56,
+        57,
+        61,
+        79,
+        82,
+        100,
+        104,
+        105,
+        108,
+        124,
+        126,
+        128,
+        129,
+        130,
+        134,
+        144,
+        148,
+        149,
+        150,
+        152,
+        154,
+    }
+    E = {
+        44,
+        52,
+        55,
+        58,
+        60,
+        63,
+        64,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72,
+        75,
+        76,
+        77,
+        78,
+        80,
+        81,
+        83,
+        84,
+        85,
+        86,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        97,
+        98,
+        101,
+        103,
+        106,
+        109,
+        117,
+    }
     s5_coloring = [0] * 160
     for idx, s in enumerate([A, B, C, D, E], 1):
         for x in s:
@@ -392,8 +569,15 @@ def build_certificates(certs_dir: Path, raw_dir: Path) -> dict[str, str]:
 
     # 9. cap_set_3 (9-cap)
     c3_pts = [
-        [0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1],
-        [1, 0, 0], [1, 0, 1], [1, 1, 2], [1, 2, 2], [2, 1, 2],
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0],
+        [0, 1, 1],
+        [1, 0, 0],
+        [1, 0, 1],
+        [1, 1, 2],
+        [1, 2, 2],
+        [2, 1, 2],
     ]
     ok, msg = verify_cap_set(c3_pts, 3)
     assert ok, f"Cap(3) verification failed: {msg}"
@@ -572,21 +756,33 @@ def build_catalogue(retime: bool = False) -> dict[str, Any]:
     cov_calib = [
         (
             "covering_C_7_3_2",
-            7, 3, 2, 7, 7,
+            7,
+            3,
+            2,
+            7,
+            7,
             "1890-01-01",
             "Fano plane PG(2,2)",
             "docs/research/targets/certificates/covering_C_7_3_2.json",
         ),
         (
             "covering_C_9_3_2",
-            9, 3, 2, 12, 12,
+            9,
+            3,
+            2,
+            12,
+            12,
             "1900-01-01",
             "Affine plane AG(2,3)",
             "docs/research/targets/certificates/covering_C_9_3_2.json",
         ),
         (
             "covering_C_8_4_3",
-            8, 4, 3, 14, 14,
+            8,
+            4,
+            3,
+            14,
+            14,
             "1938-01-01",
             "Steiner system S(3,4,8)",
             "docs/research/targets/certificates/covering_C_8_4_3.json",
@@ -735,7 +931,19 @@ def build_catalogue(retime: bool = False) -> dict[str, Any]:
             "docs/research/targets/certificates/schur_7.json",
         ),
     ]
-    for tid, k, bkv, role, stratum, prov_opt, claims, last_date, last_meth, cert_stat, cert_path in s_targets:
+    for (
+        tid,
+        k,
+        bkv,
+        role,
+        stratum,
+        prov_opt,
+        claims,
+        last_date,
+        last_meth,
+        cert_stat,
+        cert_path,
+    ) in s_targets:
         t_obj = {
             "target_id": tid,
             "family": "schur",
@@ -763,16 +971,124 @@ def build_catalogue(retime: bool = False) -> dict[str, Any]:
 
     # 5. Cap set targets (n=3..10)
     cap_specs = [
-        ("cap_set_3", 3, 9, "calibration", "calibration", True, [{"value": 9, "source_id": "oeis-A090245", "verified_object": True}], "1970-01-01", "Exact classical geometry", "constructed_calibration", "docs/research/targets/certificates/cap_set_3.json"),
-        ("cap_set_4", 4, 20, "calibration", "calibration", True, [{"value": 20, "source_id": "oeis-A090245", "verified_object": False}], "1970-01-01", "Pellegrino (1970)", "not_obtained", None),
-        ("cap_set_5", 5, 45, "calibration", "calibration", True, [{"value": 45, "source_id": "oeis-A090245", "verified_object": False}], "2002-01-01", "Edel, Ferret, Landjev, Storme (2002)", "not_obtained", None),
-        ("cap_set_6", 6, 112, "calibration", "calibration", True, [{"value": 112, "source_id": "oeis-A090245", "verified_object": False}], "2008-01-01", "Aaron Potechin (2008)", "not_obtained", None),
-        ("cap_set_7", 7, 236, "record", "named_open", False, [{"value": 236, "source_id": "edel-248-7-3", "verified_object": True}], "1994-01-01", "Calderbank & Fishburn (1994) / Edel (2004)", "verified_published_object", "docs/research/targets/certificates/cap_set_7.json"),
-        ("cap_set_8", 8, 512, "calibration", "calibration", False, [{"value": 512, "source_id": "funsearch-nature-2024", "verified_object": True}], "2023-12-14", "Romera-Paredes et al., FunSearch (Nature 2024)", "verified_published_object", "docs/research/targets/certificates/cap_set_8.json"),
-        ("cap_set_9", 9, 1082, "record", "named_open", False, [{"value": 1082, "source_id": "funsearch-nature-2024", "verified_object": True}], "2004-01-01", "Yves Edel (2004) / FunSearch (2024)", "verified_published_object", "docs/research/targets/certificates/cap_set_9.json"),
-        ("cap_set_10", 10, 2240, "record", "named_open", False, [{"value": 2240, "source_id": "edel-caps-tables", "verified_object": False}], "2004-01-01", "Yves Edel product construction (2004)", "not_obtained", None),
+        (
+            "cap_set_3",
+            3,
+            9,
+            "calibration",
+            "calibration",
+            True,
+            [{"value": 9, "source_id": "oeis-A090245", "verified_object": True}],
+            "1970-01-01",
+            "Exact classical geometry",
+            "constructed_calibration",
+            "docs/research/targets/certificates/cap_set_3.json",
+        ),
+        (
+            "cap_set_4",
+            4,
+            20,
+            "calibration",
+            "calibration",
+            True,
+            [{"value": 20, "source_id": "oeis-A090245", "verified_object": False}],
+            "1970-01-01",
+            "Pellegrino (1970)",
+            "not_obtained",
+            None,
+        ),
+        (
+            "cap_set_5",
+            5,
+            45,
+            "calibration",
+            "calibration",
+            True,
+            [{"value": 45, "source_id": "oeis-A090245", "verified_object": False}],
+            "2002-01-01",
+            "Edel, Ferret, Landjev, Storme (2002)",
+            "not_obtained",
+            None,
+        ),
+        (
+            "cap_set_6",
+            6,
+            112,
+            "calibration",
+            "calibration",
+            True,
+            [{"value": 112, "source_id": "oeis-A090245", "verified_object": False}],
+            "2008-01-01",
+            "Aaron Potechin (2008)",
+            "not_obtained",
+            None,
+        ),
+        (
+            "cap_set_7",
+            7,
+            236,
+            "record",
+            "named_open",
+            False,
+            [{"value": 236, "source_id": "edel-248-7-3", "verified_object": True}],
+            "1994-01-01",
+            "Calderbank & Fishburn (1994) / Edel (2004)",
+            "verified_published_object",
+            "docs/research/targets/certificates/cap_set_7.json",
+        ),
+        (
+            "cap_set_8",
+            8,
+            512,
+            "calibration",
+            "calibration",
+            False,
+            [{"value": 512, "source_id": "funsearch-nature-2024", "verified_object": True}],
+            "2023-12-14",
+            "Romera-Paredes et al., FunSearch (Nature 2024)",
+            "verified_published_object",
+            "docs/research/targets/certificates/cap_set_8.json",
+        ),
+        (
+            "cap_set_9",
+            9,
+            1082,
+            "record",
+            "named_open",
+            False,
+            [{"value": 1082, "source_id": "funsearch-nature-2024", "verified_object": True}],
+            "2004-01-01",
+            "Yves Edel (2004) / FunSearch (2024)",
+            "verified_published_object",
+            "docs/research/targets/certificates/cap_set_9.json",
+        ),
+        (
+            "cap_set_10",
+            10,
+            2240,
+            "record",
+            "named_open",
+            False,
+            [{"value": 2240, "source_id": "edel-caps-tables", "verified_object": False}],
+            "2004-01-01",
+            "Yves Edel product construction (2004)",
+            "not_obtained",
+            None,
+        ),
     ]
-    for tid, n, bkv, role, stratum, prov_opt, claims, last_date, last_meth, cert_stat, cert_path in cap_specs:
+    for (
+        tid,
+        n,
+        bkv,
+        role,
+        stratum,
+        prov_opt,
+        claims,
+        last_date,
+        last_meth,
+        cert_stat,
+        cert_path,
+    ) in cap_specs:
         t_obj = {
             "target_id": tid,
             "family": "cap_set",
@@ -901,8 +1217,12 @@ def check_all() -> bool:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Frontier Target Catalogue v2 builder and checker")
-    parser.add_argument("--check", action="store_true", help="Check committed catalogue against reconstruction")
-    parser.add_argument("--retime", action="store_true", help="Force remeasurement of verification runtime")
+    parser.add_argument(
+        "--check", action="store_true", help="Check committed catalogue against reconstruction"
+    )
+    parser.add_argument(
+        "--retime", action="store_true", help="Force remeasurement of verification runtime"
+    )
     args = parser.parse_args()
 
     if args.check:

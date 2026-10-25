@@ -1,0 +1,1324 @@
+{
+  "audit_timestamp": "2026-10-25T18:33:58.284879+00:00",
+  "audited_inputs": [
+    "experiments/p176-covering-results.json",
+    "experiments/p177-weak-schur-results.json",
+    "experiments/p182-qecc-results.json"
+  ],
+  "claims": [
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 23,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 24,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_12_7_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 10,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 11,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_19_11_3",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 22,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 23,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_19_11_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 41,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 42,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_19_13_6",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 19,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 20,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_20_12_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 41,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 42,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_20_12_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 1059,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 1060,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_21_9_6",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 10,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 11,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_22_13_3",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 45,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 46,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_22_15_6",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 19,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 20,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_23_16_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 37,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 38,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_23_16_6",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 10,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 11,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_24_14_3",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 16,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 17,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_25_16_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 10,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 11,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_26_15_3",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 17,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 18,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_26_16_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 10,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 11,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_28_16_3",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 1215,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 1216,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_28_9_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 285,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 286,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_32_16_6",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 185,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 186,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_40_18_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 225,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 226,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_40_21_6",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 246,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 247,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_42_18_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 1834,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 1835,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_43_13_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 337,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 338,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_44_18_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 341,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 342,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_44_22_6",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 1947,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 1948,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_46_14_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 1158,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 1159,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_48_11_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 634,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 635,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_49_18_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 67,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 68,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_50_15_3",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 1496,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 1497,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_51_11_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 1699,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 1700,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_53_11_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 15,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 16,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_54_16_2",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 1215,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 1216,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_56_18_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 152,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 153,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_59_20_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 126,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 127,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_62_23_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 860,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 861,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_64_22_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 830,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 831,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_65_15_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 72,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 73,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_84_11_2",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 257,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 258,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_86_16_3",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 858,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 859,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_88_21_4",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 26,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+        "snapshot_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+      },
+      "family": "covering_design",
+      "frozen_best_known_value": 27,
+      "objective": "minimize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "covering_C_98_22_2",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 208,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:55.978780+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://oeis.org/search?q=id:A072842&fmt=text"
+      },
+      "family": "weak_schur",
+      "frozen_best_known_value": 207,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "weak_schur_5",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 651,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:55.978780+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://oeis.org/search?q=id:A072842&fmt=text"
+      },
+      "family": "weak_schur",
+      "frozen_best_known_value": 650,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "weak_schur_6",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": 2147,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:55.978780+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://oeis.org/search?q=id:A072842&fmt=text"
+      },
+      "family": "weak_schur",
+      "frozen_best_known_value": 2146,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "weak_schur_7",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": null,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:58.283195+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://github.com/AlexandreZanata/EvoByte/docs/research/targets/"
+      },
+      "family": "qecc_stabilizer",
+      "frozen_best_known_value": 5,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "qecc_14_3_open",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": null,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:58.283195+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://github.com/AlexandreZanata/EvoByte/docs/research/targets/"
+      },
+      "family": "qecc_stabilizer",
+      "frozen_best_known_value": 5,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "qecc_16_5_open",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": null,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:58.283195+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://github.com/AlexandreZanata/EvoByte/docs/research/targets/"
+      },
+      "family": "qecc_stabilizer",
+      "frozen_best_known_value": 6,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "qecc_17_3_open",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": null,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:58.283195+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://github.com/AlexandreZanata/EvoByte/docs/research/targets/"
+      },
+      "family": "qecc_stabilizer",
+      "frozen_best_known_value": 6,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "qecc_18_3_open",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": null,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:58.283195+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://github.com/AlexandreZanata/EvoByte/docs/research/targets/"
+      },
+      "family": "qecc_stabilizer",
+      "frozen_best_known_value": 4,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "qecc_19_10_open",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": null,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:58.283195+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://github.com/AlexandreZanata/EvoByte/docs/research/targets/"
+      },
+      "family": "qecc_stabilizer",
+      "frozen_best_known_value": 7,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "qecc_20_2_open",
+      "verdict": "NOT_APPLICABLE"
+    },
+    {
+      "audit_a_details": "Calibration/null target; no discovery claimed.",
+      "audit_a_passed": true,
+      "audit_b_details": "Literature recheck confirms frozen baseline is current.",
+      "audit_b_passed": true,
+      "candidate_metric": null,
+      "candidate_sha256": null,
+      "claim_type": "null_result",
+      "evidence": {
+        "accessed_at": "2026-10-25T18:33:58.283195+00:00",
+        "is_tie": false,
+        "snapshot_sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+        "snapshot_url": "https://github.com/AlexandreZanata/EvoByte/docs/research/targets/"
+      },
+      "family": "qecc_stabilizer",
+      "frozen_best_known_value": 7,
+      "objective": "maximize",
+      "reason": "No discovery claim made (campaign returned NULL_RESULT/UNBEATEN).",
+      "signatures": {
+        "human_signature": "human:Alexandre",
+        "machine_signature": "EvoByte-FrontierVerifier-v2"
+      },
+      "target_id": "qecc_20_3_open",
+      "verdict": "NOT_APPLICABLE"
+    }
+  ],
+  "dual_signatures_registered": {
+    "human_reviewer": "human:Alexandre",
+    "machine_verifier": "EvoByte-FrontierVerifier-v2"
+  },
+  "overall_verdict": "NO_ACTIVE_DISCOVERY_CLAIMS",
+  "phase": "P186",
+  "sources_reconsulted": [
+    {
+      "accessed_at": "2026-10-25T18:33:55.978780+00:00",
+      "literature_bound": null,
+      "local_path": "data/raw/novelty/oeis-A072842.snapshot",
+      "notes": "Live recheck successful; content snapshot stored.",
+      "sha256": "703ead14a0aa95a0759831b50dc794af0894587d4bf991cf21a5a7e91f840273",
+      "source_id": "oeis-A072842",
+      "status": "reconsulted_ok",
+      "url": "https://oeis.org/search?q=id:A072842&fmt=text"
+    },
+    {
+      "accessed_at": "2026-10-25T18:33:56.917649+00:00",
+      "literature_bound": null,
+      "local_path": "data/raw/novelty/oeis-A118771.snapshot",
+      "notes": "Live recheck successful; content snapshot stored.",
+      "sha256": "0ab6b7a4cf9a10f53c1b4a2b5aabb1e100bb0eccba513312d843bb998c83d606",
+      "source_id": "oeis-A118771",
+      "status": "reconsulted_ok",
+      "url": "https://oeis.org/search?q=id:A118771&fmt=text"
+    },
+    {
+      "accessed_at": "2026-10-25T18:33:57.175522+00:00",
+      "literature_bound": null,
+      "local_path": "data/raw/novelty/oeis-A090245.snapshot",
+      "notes": "Live recheck successful; content snapshot stored.",
+      "sha256": "33faf08316d3fb4f493996908878cd549d54e859e1bfa479e518f349dfd7e940",
+      "source_id": "oeis-A090245",
+      "status": "reconsulted_ok",
+      "url": "https://oeis.org/search?q=id:A090245&fmt=text"
+    },
+    {
+      "accessed_at": "2026-10-25T18:33:57.527030+00:00",
+      "literature_bound": null,
+      "local_path": "data/raw/novelty/oeis-A030126.snapshot",
+      "notes": "Live recheck successful; content snapshot stored.",
+      "sha256": "6ae2bfd71096db12976dad33887d396debb15f1afdff0471bd691dfeff738cb2",
+      "source_id": "oeis-A030126",
+      "status": "reconsulted_ok",
+      "url": "https://oeis.org/search?q=id:A030126&fmt=text"
+    },
+    {
+      "accessed_at": "2026-10-25T18:33:57.788986+00:00",
+      "literature_bound": null,
+      "local_path": "data/raw/novelty/ljcr-coverdata-459bcaf.snapshot",
+      "notes": "Live recheck successful; content snapshot stored.",
+      "sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+      "source_id": "ljcr-coverdata-459bcaf",
+      "status": "reconsulted_ok",
+      "url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json"
+    }
+  ],
+  "summary": {
+    "confirmed": 0,
+    "downgraded": 0,
+    "not_applicable": 50,
+    "total_claims_audited": 50
+  }
+}
