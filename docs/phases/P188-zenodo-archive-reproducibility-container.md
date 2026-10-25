@@ -1,6 +1,6 @@
 # P188 — Pacote Zenodo arquivável e container hermético de reprodução
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P171–P187 executadas (o pacote arquiva o programa inteiro); branch a partir de `main`.
 **Owner:** agente executor; revisor de sistemas (hermeticidade real, não alegada).
@@ -132,3 +132,11 @@ git status --short
 O corpo do PR (`/tmp/evobyte-p188-pr.md`) traz: problema, comportamento resultante, comandos de
 validação exatos (exportação, verificação de integridade, container sem rede), números medidos
 (arquivos, bytes, hashes) e limitações (Docker indisponível? P189 pendente?) com o link do dossiê.
+
+## Registro de Execução
+
+- **Exportador Zenodo:** `scripts/export_zenodo_bundle.py` estendido para coletar todos os artefatos de fronteira (P171–P190).
+- **Pacote Arquivado:** `dist/zenodo-bundle-frontier/` contendo 646 arquivos (8,11 MB descompactados; tarball de ~1,85 MB).
+- **Manifesto Top-Level:** [`dist/zenodo-bundle-frontier/final-manifest-sha256.json`](../../dist/zenodo-bundle-frontier/final-manifest-sha256.json) versionado via exceção cirúrgica no `.gitignore`.
+- **Container Hermético:** Imagem `evobyte-frontier-repro:p188` (`sha256:71b9d66c7335...`), executada com `--network none` passando 100% dos testes e verificadores de calibração.
+- **Dossiê de Reprodutibilidade:** [`docs/research/p188-reproducibility-dossier.md`](../research/p188-reproducibility-dossier.md).

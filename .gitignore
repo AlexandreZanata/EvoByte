@@ -13,6 +13,9 @@ dist/*
 !dist/zenodo-bundle/
 dist/zenodo-bundle/*
 !dist/zenodo-bundle/final-manifest-sha256.json
+!dist/zenodo-bundle-frontier/
+dist/zenodo-bundle-frontier/*
+!dist/zenodo-bundle-frontier/final-manifest-sha256.json
 *.whl
 
 # Machine-local notes (never commit: paths, versions, measurements)
