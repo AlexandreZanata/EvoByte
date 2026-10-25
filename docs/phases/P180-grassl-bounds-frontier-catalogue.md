@@ -1,6 +1,6 @@
 # P180 — Catálogo de fronteira QECC a partir das tabelas de Grassl
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P179 concluída (verificador de distância); branch a partir de `codex/p179-quantum-stabilizer-code-verifier`.
 **Owner:** agente executor; revisor humano valida a lista final no PR (cotas vêm de fonte externa).
