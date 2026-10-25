@@ -1,6 +1,6 @@
 # P182 — Redescoberta cega de QECC e campanha pré-registrada em parâmetros abertos
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P180 (catálogo QECC) e P181 (motor de busca) concluídas; branch a partir de `codex/p181-quantum-stabilizer-evolution`.
 **Owner:** agente executor; revisor formal/estatístico nos gates de veredito.
