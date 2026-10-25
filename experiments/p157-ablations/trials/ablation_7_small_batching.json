@@ -1,0 +1,12 @@
+{
+  "ablation_id": 7,
+  "component_removed": "Massive Population Batching",
+  "keep_or_drop": "KEEP",
+  "mean_cvps": 1760.7106277992418,
+  "mean_extrap_mse": 8496.776587113307,
+  "mean_hidden_mse": 188.7534253978131,
+  "name": "Small Batching",
+  "ruling_rationale": "Larger population batching amortizes kernel launch overhead and saturates GPU SMs.",
+  "speedup_ratio": 1.0,
+  "success_rate": 0.0
+}

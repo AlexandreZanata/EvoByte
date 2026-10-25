@@ -10,6 +10,7 @@ venv/
 build/
 dist/*
 !dist/external-validation/
+!dist/curator-submissions/
 !dist/zenodo-bundle/
 dist/zenodo-bundle/*
 !dist/zenodo-bundle/final-manifest-sha256.json
@@ -32,10 +33,15 @@ checkpoints/
 runs/
 experiments/*-matrix/
 experiments/*-baselines/
+!experiments/p155-baselines/
 experiments/*-generalization/
+!experiments/p156-generalization/
 experiments/*-ablations/
+!experiments/p157-ablations/
 experiments/*-verdict/
-data/raw/
+!experiments/p158-verdict/
+data/raw/*
+!data/raw/quantum/
 data/processed/
 *.pt
 *.safetensors

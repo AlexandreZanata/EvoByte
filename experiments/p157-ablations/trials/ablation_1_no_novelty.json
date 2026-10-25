@@ -1,0 +1,12 @@
+{
+  "ablation_id": 1,
+  "component_removed": "MAP-Elites & Novelty Fitness",
+  "keep_or_drop": "KEEP",
+  "mean_cvps": 2293.7966697471725,
+  "mean_extrap_mse": 10631.822176801752,
+  "mean_hidden_mse": 123.86366673877106,
+  "name": "No Novelty",
+  "ruling_rationale": "Novelty prevents premature stagnation on multimodal problems; keep active.",
+  "speedup_ratio": 1.0,
+  "success_rate": 0.0
+}

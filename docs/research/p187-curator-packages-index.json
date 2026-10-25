@@ -1,8 +1,8 @@
 {
   "audit_confirmed_count": 0,
-  "audit_reference": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/experiments/p186-novelty-audit.json",
+  "audit_reference": "experiments/p186-novelty-audit.json",
   "audit_verdict": "NO_ACTIVE_DISCOVERY_CLAIMS",
-  "created_at": "2026-10-25T19:02:24.884676+00:00",
+  "created_at": "2026-10-25T21:12:42.427064+00:00",
   "packages": {
     "grassl_codetables": {
       "curator_channel": "http://www.codetables.de/",
@@ -11,36 +11,36 @@
       "files": [
         {
           "name": "README.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/grassl_codetables/README.md",
+          "path": "dist/curator-submissions/grassl_codetables/README.md",
           "sha256": "f845daf7ed81479243ba76308064f6a316fe6a0d1d0dd83811a1b52125d33e44"
         },
         {
           "name": "null-result-notice.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/grassl_codetables/null-result-notice.md",
+          "path": "dist/curator-submissions/grassl_codetables/null-result-notice.md",
           "sha256": "e4fb6212a2c448ffafa35591684f343d1afecb892618133c0bb50acf3168d8fc"
         },
         {
           "name": "reproduce.sh",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/grassl_codetables/reproduce.sh",
+          "path": "dist/curator-submissions/grassl_codetables/reproduce.sh",
           "sha256": "c54f61160f849555b8f8f769da2a1b32b2b27b57864fb50efb9c1414fbcc4b50"
         },
         {
           "name": "submission-letter.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/grassl_codetables/submission-letter.md",
+          "path": "dist/curator-submissions/grassl_codetables/submission-letter.md",
           "sha256": "da1cd5dd2a6068db0a411df224abf639cbe86066dc7a0c8bd109639c7d575e5c"
         },
         {
           "name": "submission-letter.txt",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/grassl_codetables/submission-letter.txt",
+          "path": "dist/curator-submissions/grassl_codetables/submission-letter.txt",
           "sha256": "811522618b4d57522aa7528e0583fcc9278bba33bb6e982bc629f393327964ef"
         },
         {
           "name": "verify_frontier_certificate.py",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/grassl_codetables/verify_frontier_certificate.py",
-          "sha256": "6dd6921ae399ccf7214b9ad4ec3133e91df863ef95ded3f0edba99cac504ccba"
+          "path": "dist/curator-submissions/grassl_codetables/verify_frontier_certificate.py",
+          "sha256": "212d8c929b575d12c1e2555225ca863f0a82ea55f3dfb3fc211ffbd93e0889b1"
         }
       ],
-      "package_dir": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/grassl_codetables",
+      "package_dir": "dist/curator-submissions/grassl_codetables",
       "status": "pending_human_submission",
       "verdict_type": "null_result"
     },
@@ -51,36 +51,36 @@
       "files": [
         {
           "name": "README.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/ljcr_gordon/README.md",
+          "path": "dist/curator-submissions/ljcr_gordon/README.md",
           "sha256": "a8ec78eb069f4525b08c45dade74c5e4eeeb3b70df046d3d6677653d20bd61e1"
         },
         {
           "name": "null-result-notice.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/ljcr_gordon/null-result-notice.md",
+          "path": "dist/curator-submissions/ljcr_gordon/null-result-notice.md",
           "sha256": "69e28ff248d3b6523dcf52fa2799ad7c97db041eaa0bd082135576ab6d57e140"
         },
         {
           "name": "reproduce.sh",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/ljcr_gordon/reproduce.sh",
+          "path": "dist/curator-submissions/ljcr_gordon/reproduce.sh",
           "sha256": "f2199f9d041b9d3b3c9c36bca375b44d595c57f47753276f58968a5d71ce8f23"
         },
         {
           "name": "submission-letter.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/ljcr_gordon/submission-letter.md",
+          "path": "dist/curator-submissions/ljcr_gordon/submission-letter.md",
           "sha256": "66440be0c4b561eaacf75bb4e5c2b4d3ed0d551456b5beb5c0491dd1f4bcd285"
         },
         {
           "name": "submission-letter.txt",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/ljcr_gordon/submission-letter.txt",
+          "path": "dist/curator-submissions/ljcr_gordon/submission-letter.txt",
           "sha256": "1dd473bb194f8620d617e175117c7f5938cb60e0bb3bd8c2c2c26fb315e77aac"
         },
         {
           "name": "verify_frontier_certificate.py",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/ljcr_gordon/verify_frontier_certificate.py",
-          "sha256": "6dd6921ae399ccf7214b9ad4ec3133e91df863ef95ded3f0edba99cac504ccba"
+          "path": "dist/curator-submissions/ljcr_gordon/verify_frontier_certificate.py",
+          "sha256": "212d8c929b575d12c1e2555225ca863f0a82ea55f3dfb3fc211ffbd93e0889b1"
         }
       ],
-      "package_dir": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/ljcr_gordon",
+      "package_dir": "dist/curator-submissions/ljcr_gordon",
       "status": "pending_human_submission",
       "verdict_type": "null_result"
     },
@@ -91,36 +91,36 @@
       "files": [
         {
           "name": "README.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/oeis_editors/README.md",
+          "path": "dist/curator-submissions/oeis_editors/README.md",
           "sha256": "d00a4d0cbcd1bb9a58715b9f093a5ac74fb611712d16c4a1eaafd494930e1f46"
         },
         {
           "name": "null-result-notice.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/oeis_editors/null-result-notice.md",
+          "path": "dist/curator-submissions/oeis_editors/null-result-notice.md",
           "sha256": "f036715003364dd5f48060e74e68b5cf3357f298fa06e0fa3f5b04182b5af3af"
         },
         {
           "name": "reproduce.sh",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/oeis_editors/reproduce.sh",
+          "path": "dist/curator-submissions/oeis_editors/reproduce.sh",
           "sha256": "dc0fde2c9d18a7774c7bf8349615915b54cec81e862462067e2f5e5c9e1dde01"
         },
         {
           "name": "submission-letter.md",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/oeis_editors/submission-letter.md",
+          "path": "dist/curator-submissions/oeis_editors/submission-letter.md",
           "sha256": "9a8e408fcd45fc36536fac9b1c8dc064aded1724f92582f283bcebab08ca386b"
         },
         {
           "name": "submission-letter.txt",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/oeis_editors/submission-letter.txt",
+          "path": "dist/curator-submissions/oeis_editors/submission-letter.txt",
           "sha256": "e662e681a14973a40124dc3cd036280216ba274e30f6d99995e32e01ac464924"
         },
         {
           "name": "verify_frontier_certificate.py",
-          "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/oeis_editors/verify_frontier_certificate.py",
-          "sha256": "6dd6921ae399ccf7214b9ad4ec3133e91df863ef95ded3f0edba99cac504ccba"
+          "path": "dist/curator-submissions/oeis_editors/verify_frontier_certificate.py",
+          "sha256": "212d8c929b575d12c1e2555225ca863f0a82ea55f3dfb3fc211ffbd93e0889b1"
         }
       ],
-      "package_dir": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/dist/curator-submissions/oeis_editors",
+      "package_dir": "dist/curator-submissions/oeis_editors",
       "status": "pending_human_submission",
       "verdict_type": "null_result"
     }

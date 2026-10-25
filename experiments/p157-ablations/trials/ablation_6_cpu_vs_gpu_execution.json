@@ -1,0 +1,12 @@
+{
+  "ablation_id": 6,
+  "component_removed": "Resident PyTorch GPU VM",
+  "keep_or_drop": "KEEP",
+  "mean_cvps": 2264.5934561855984,
+  "mean_extrap_mse": 10631.822176801752,
+  "mean_hidden_mse": 123.86366673877106,
+  "name": "CPU vs GPU Execution",
+  "ruling_rationale": "GPU-resident population execution accelerates bytecode evaluation (2.60x speedup over CPU).",
+  "speedup_ratio": 2.597951227812097,
+  "success_rate": 0.0
+}

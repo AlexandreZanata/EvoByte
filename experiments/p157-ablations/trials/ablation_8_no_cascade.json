@@ -1,0 +1,12 @@
+{
+  "ablation_id": 8,
+  "component_removed": "Multi-Stage Verifier Cascade (S1->S2->S3)",
+  "keep_or_drop": "KEEP",
+  "mean_cvps": 2270.9586307542386,
+  "mean_extrap_mse": 10631.822176801752,
+  "mean_hidden_mse": 123.86366673877106,
+  "name": "No Cascade",
+  "ruling_rationale": "Cascade early-rejects 95%+ of invalid programs on cheap subsets, giving a measured 15.51x CVPS speedup.",
+  "speedup_ratio": 15.506270087836103,
+  "success_rate": 0.0
+}

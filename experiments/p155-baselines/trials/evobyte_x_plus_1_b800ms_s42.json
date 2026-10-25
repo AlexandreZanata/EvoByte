@@ -1,0 +1,30 @@
+{
+  "budget_sec": 0.8,
+  "candidates_total": 1500,
+  "cvps": 4583.140613511558,
+  "deadline": {
+    "budget_sec": 0.8,
+    "compute_sec": 0.3607360160021926,
+    "elapsed_sec": 0.3607390329998452,
+    "overshoot_sec": 0.0,
+    "setup_sec": 1.2939999578520656e-06,
+    "verification_sec": 1.5170007827691734e-06,
+    "warmup_sec": 2.0599691197276115e-07
+  },
+  "device_actual": "cuda",
+  "expression": "POW r2, r3, 0x07 ; CSEL r3, r7, 0x07 ; ADD r7, r2, 0x00 ; NEG r2, r7, 0x06",
+  "extrap_mse": 0.0,
+  "hidden_mse": 0.0,
+  "method": "EvoByte",
+  "program_size": 4,
+  "seed": 42,
+  "status": "completed",
+  "success": true,
+  "suite": "Level-A",
+  "synthesized": false,
+  "target": "x_plus_1",
+  "time_sec": 0.3607390329998452,
+  "timestamp": "2026-10-21T01:19:24.423159+00:00",
+  "train_mse": 0.0,
+  "vram_peak_mb": 2.0
+}

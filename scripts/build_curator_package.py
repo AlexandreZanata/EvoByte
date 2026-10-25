@@ -49,6 +49,14 @@ def compute_file_sha256(path: Path) -> str:
     return hasher.hexdigest()
 
 
+def to_repo_rel(path: Path) -> str:
+    """Return path relative to repo root/cwd if possible, posix format."""
+    try:
+        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except Exception:
+        return path.as_posix()
+
+
 def generate_ljcr_package(
     curator_dir: Path,
     verifier_src: Path,
@@ -230,7 +238,7 @@ Corresponding Author, EvoByte Project
             files.append(
                 {
                     "name": fname,
-                    "path": str(fpath),
+                    "path": to_repo_rel(fpath),
                     "sha256": compute_file_sha256(fpath),
                 }
             )
@@ -404,7 +412,7 @@ Corresponding Author, EvoByte Project
             files.append(
                 {
                     "name": fname,
-                    "path": str(fpath),
+                    "path": to_repo_rel(fpath),
                     "sha256": compute_file_sha256(fpath),
                 }
             )
@@ -581,7 +589,7 @@ Corresponding Author, EvoByte Project
             files.append(
                 {
                     "name": fname,
-                    "path": str(fpath),
+                    "path": to_repo_rel(fpath),
                     "sha256": compute_file_sha256(fpath),
                 }
             )
@@ -621,7 +629,7 @@ def build_curator_packages(
         "curator_channel": "https://raw.githubusercontent.com/dmgordo/LJCR/",
         "status": "pending_human_submission",
         "verdict_type": "null_result",
-        "package_dir": str(ljcr_dir),
+        "package_dir": to_repo_rel(ljcr_dir),
         "files": ljcr_files,
     }
 
@@ -634,7 +642,7 @@ def build_curator_packages(
         "curator_channel": "http://www.codetables.de/",
         "status": "pending_human_submission",
         "verdict_type": "null_result",
-        "package_dir": str(grassl_dir),
+        "package_dir": to_repo_rel(grassl_dir),
         "files": grassl_files,
     }
 
@@ -647,14 +655,14 @@ def build_curator_packages(
         "curator_channel": "https://oeis.org/",
         "status": "pending_human_submission",
         "verdict_type": "null_result",
-        "package_dir": str(oeis_dir),
+        "package_dir": to_repo_rel(oeis_dir),
         "files": oeis_files,
     }
 
     index_record = {
         "phase": "P187",
         "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
-        "audit_reference": str(aud_p),
+        "audit_reference": to_repo_rel(aud_p),
         "audit_verdict": audit_data.get("overall_verdict", "NO_ACTIVE_DISCOVERY_CLAIMS"),
         "audit_confirmed_count": audit_data.get("summary", {}).get("confirmed", 0),
         "protocol_rule": "Agent prepares dossier; human author reviews and transmits. Zero automated communication.",

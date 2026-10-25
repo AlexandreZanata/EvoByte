@@ -1,0 +1,12 @@
+{
+  "ablation_id": 4,
+  "component_removed": "4-Island Ring Migration",
+  "keep_or_drop": "KEEP",
+  "mean_cvps": 2005.9524914388912,
+  "mean_extrap_mse": 8715.54400663593,
+  "mean_hidden_mse": 100.0287875871056,
+  "name": "No Islands",
+  "ruling_rationale": "Islands provide heterogeneous pressure and migration, accelerating convergence.",
+  "speedup_ratio": 1.0,
+  "success_rate": 0.0
+}
