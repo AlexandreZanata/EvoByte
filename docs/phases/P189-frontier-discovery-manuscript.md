@@ -1,6 +1,6 @@
 # P189 — Manuscrito científico: a descoberta inédita ou o avanço metodológico H2
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P184–P188 concluídas (verificação externa, certificados Lean, novidade auditada, pacote); branch a partir de `main`.
 **Owner:** agente executor (rascunho técnico completo); autor correspondente humano revisa e submete.
@@ -145,3 +145,10 @@ git status --short
 O corpo do PR (`/tmp/evobyte-p189-pr.md`) traz: problema, tipo do manuscrito e por quê, comandos de
 validação exatos, tabela número→origem (resumo), limitações e o link do dossiê. **Nenhuma
 submissão a periódico/conferência é feita pelo agente.**
+
+## Registro de Execução
+
+- **Tipo do Manuscrito:** `nulos honestos` (Honest Null Results), fundamentado nos vereditos literais de P176 (40/40 NULL_RESULT), P177 (3/3 NULL_RESULT), P182 (7/7 NULL_RESULT), P174 (H2_NOT_SUPPORTED) e na auditoria P186 (0 CONFIRMED, NO_ACTIVE_DISCOVERY_CLAIMS).
+- **Artigo LaTeX:** [`docs/frontier-paper/main.tex`](../frontier-paper/main.tex) (8 páginas compiladas, 250 537 bytes > 100 KB em [`main.pdf`](../frontier-paper/main.pdf)), 0 keywords banidas (`sorry`, `TODO`, `FIXME`, `quebramos`), 100% citações e labels resolvidos.
+- **Dossiê de Rastreabilidade:** [`docs/research/p189-manuscript-dossier.md`](../research/p189-manuscript-dossier.md) mapeando cada número citado a sua chave JSON de origem, com declaração de revisão humana `human_review: pending`.
+- **Testes Estáticos:** [`tests/test_frontier_manuscript.py`](../../tests/test_frontier_manuscript.py) (3 testes passando em 0,12 s).
