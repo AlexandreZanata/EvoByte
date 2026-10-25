@@ -170,19 +170,19 @@ def evolve_conserved_operator(
         eval_records: list[dict[str, Any]] = []
 
         for cand in population:
-            # Stage-0 bitwise early exit for single-term candidates
             if n_terms == 1:
                 t = cand[0]
                 if not commutes_bitwise(h_terms, Pauli(t.x_mask, t.z_mask, t.phase, n_qubits)):
                     # Assign high penalty without dense commutator
                     err = 10.0
-                    fit_score = err + COMPLEXITY_W * float(len(cand))
-                    fitness_scores.append(fit_score)
-                    eval_records.append({"fitness": fit_score, "commutator_error": err})
-                    total_evals += 1
-                    continue
+                    comp = float(len(cand)) + 0.5 * len({(t.x_mask, t.z_mask) for t in cand})
+                    fit_score = err + COMPLEXITY_W * comp
+                    out = {"fitness": fit_score, "commutator_error": err, "complexity": comp}
+                else:
+                    out = fitness(h_terms, cand, n_qubits)
+            else:
+                out = fitness(h_terms, cand, n_qubits)
 
-            out = fitness(h_terms, cand, n_qubits)
             total_evals += 1
 
             # Incorporate novelty bonus into selection score

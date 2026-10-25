@@ -1,0 +1,57 @@
+{
+  "phase": "P183",
+  "calibration": "instâncias exatamente solúveis (diagonalização completa) com invariantes conhecidos",
+  "calibration_targets": [
+    {
+      "id": "calib_ising_4",
+      "model": "ising",
+      "n_qubits": 4,
+      "params": {"j": 1.0, "h": 1.0},
+      "known_invariant": "ising_parity_prod_x",
+      "reference": "Lieb, Schultz & Mattis, Ann. Phys. 16, 407 (1961)"
+    },
+    {
+      "id": "calib_j1j2_4",
+      "model": "j1j2",
+      "n_qubits": 4,
+      "params": {"j1": 1.0, "j2": 0.5},
+      "known_e0": -6.0,
+      "reference": "Majumdar & Ghosh, J. Math. Phys. 10, 1388 (1969)"
+    }
+  ],
+  "lattices": [
+    {
+      "id": "j1j2_mg",
+      "model": "j1j2",
+      "params": {"j1": 1.0, "j2": 0.5},
+      "description": "J1-J2 antiferromagnetic chain at Majumdar-Ghosh frustration point (J2/J1 = 0.5)",
+      "reference": "Majumdar & Ghosh, J. Math. Phys. 10, 1388 (1969)"
+    },
+    {
+      "id": "j1j2_spiral",
+      "model": "j1j2",
+      "params": {"j1": 1.0, "j2": 0.75},
+      "description": "J1-J2 antiferromagnetic chain in incommensurate spiral non-dimer regime (J2/J1 = 0.75)",
+      "reference": "White & Affleck, Phys. Rev. B 54, 9862 (1996)"
+    }
+  ],
+  "sizes": [
+    {
+      "label": "pequeno-exato",
+      "n_qubits": 6,
+      "hilbert_dim": 64
+    },
+    {
+      "label": "alvo",
+      "n_qubits": 8,
+      "hilbert_dim": 256
+    }
+  ],
+  "budget_sec_per_seed": 10.0,
+  "max_evaluations_per_target": 1000,
+  "seeds": [42, 101, 202],
+  "verdict_rule": {
+    "ANOMALY_CONFIRMED": "invariante/estado reproduz gabarito exato E revela estrutura verificável não catalogada",
+    "NULL_RESULT": "nada além do conhecido dentro do orçamento"
+  }
+}
