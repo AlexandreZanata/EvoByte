@@ -1,6 +1,6 @@
 # P187 — Dossiê formal de submissão aos curadores externos (selo final)
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P186 (auditoria de novidade) concluída; branch a partir de `main`.
 **Owner:** agente executor prepara; **autor correspondente humano submete** (o agente nunca envia e-mail em nome de ninguém).
@@ -127,3 +127,11 @@ validação exatos, o que cada pacote contém, limitações (nada foi enviado; e
 link do dossiê. **Nota:** se `dist/curator-submissions/` precisar de exceção no `.gitignore`,
 ela entra neste commit como mudança mínima documentada (mesmo padrão da P167); o conteúdo dos
 pacotes em si permanece não-versionado, só o índice com hashes é commitado.
+
+## Registro de Execução
+
+- **Script de Montagem:** [`scripts/build_curator_package.py`](../../scripts/build_curator_package.py) (gera diretórios autocontidos por curador com README, aviso de nulo, verificador autônomo, script de reprodução e minutas).
+- **Diretórios dos Pacotes:** `dist/curator-submissions/` (`ljcr_gordon`, `grassl_codetables`, `oeis_editors`) mantidos não-versionados (ignorados pelo git).
+- **Índice Commitado:** [`docs/research/p187-curator-packages-index.json`](../research/p187-curator-packages-index.json) (rastreia os 18 arquivos, seus hashes SHA-256 e o status `pending_human_submission`).
+- **Suíte de Testes:** [`tests/test_curator_package.py`](../../tests/test_curator_package.py) (5/5 testes aprovados em 0,15 s; zero rede; validação de minutas honestas e conformidade de hashes).
+- **Dossiê e Protocolo:** [`docs/research/p187-curator-dossier.md`](../research/p187-curator-dossier.md) com as 3 minutas (MD + TXT), cronograma de follow-up e a declaração de não-envio por agentes.

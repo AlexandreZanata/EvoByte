@@ -1,0 +1,90 @@
+{
+  "grassl-codetables-14-3": {
+    "accessed_at": "2026-10-25T16:24:00Z",
+    "notes": "Markus Grassl: [[14,3]] qubit code with d_lo=4, d_hi=5 and stabilizer matrix.",
+    "sha256": "47188e2033fbd0227efdaa1d7a2d424109702fbec7389a2e4bd9b25a8bedd714",
+    "source_id": "grassl-codetables-14-3",
+    "status": "verified_snapshot",
+    "url": "https://codetables.de/QECC.php?q=4&n=14&k=3"
+  },
+  "grassl-codetables-16-5": {
+    "accessed_at": "2026-10-25T16:24:00Z",
+    "notes": "Markus Grassl: [[16,5]] qubit code with d_lo=4, d_hi=5 and stabilizer matrix.",
+    "sha256": "2a74240fb793bb88e3edfedd2b34d737595ba1080af2972498d1c0fee221316e",
+    "source_id": "grassl-codetables-16-5",
+    "status": "verified_snapshot",
+    "url": "https://codetables.de/QECC.php?q=4&n=16&k=5"
+  },
+  "grassl-codetables-17-3": {
+    "accessed_at": "2026-10-25T16:25:14Z",
+    "notes": "Markus Grassl: [[17,3]] qubit code with d_lo=5, d_hi=6 and stabilizer matrix.",
+    "sha256": "fa62cfe2fed23e1380fb7408ec1e0d61720190daac7bd6ea329669362e5cfcbe",
+    "source_id": "grassl-codetables-17-3",
+    "status": "verified_snapshot",
+    "url": "https://codetables.de/QECC.php?q=4&n=17&k=3"
+  },
+  "grassl-codetables-18-3": {
+    "accessed_at": "2026-10-25T16:25:14Z",
+    "notes": "Markus Grassl: [[18,3]] qubit code with d_lo=5, d_hi=6 and stabilizer matrix.",
+    "sha256": "b7a370e26b83eedfab4bc73e75aa5f102e3ddebc1f2cc9de78e391b2b9b6560d",
+    "source_id": "grassl-codetables-18-3",
+    "status": "verified_snapshot",
+    "url": "https://codetables.de/QECC.php?q=4&n=18&k=3"
+  },
+  "grassl-codetables-19-10": {
+    "accessed_at": "2026-10-25T16:25:14Z",
+    "notes": "Markus Grassl: [[19,10]] qubit code with d_lo=3, d_hi=4 and stabilizer matrix.",
+    "sha256": "88c7d050a1cce6fbe150f742383f2413c00d7c5ae37e55ae73f746b7475bf427",
+    "source_id": "grassl-codetables-19-10",
+    "status": "verified_snapshot",
+    "url": "https://codetables.de/QECC.php?q=4&n=19&k=10"
+  },
+  "grassl-codetables-20-2": {
+    "accessed_at": "2026-10-25T16:23:24Z",
+    "notes": "Markus Grassl: [[20,2]] qubit code with d_lo=6, d_hi=7 and stabilizer matrix.",
+    "sha256": "85a30663ec80ac6f7f46f2f3dd79b31ad066ba4f1b2ae4c43cebde10ed1d1c02",
+    "source_id": "grassl-codetables-20-2",
+    "status": "verified_snapshot",
+    "url": "https://codetables.de/QECC.php?q=4&n=20&k=2"
+  },
+  "grassl-codetables-20-3": {
+    "accessed_at": "2026-10-25T16:25:14Z",
+    "notes": "Markus Grassl: [[20,3]] qubit code with d_lo=6, d_hi=7 and stabilizer matrix.",
+    "sha256": "df71b4f69a085f4e7daa566c2b2cd145b238d8409599e86ffa42938f5aa29fe4",
+    "source_id": "grassl-codetables-20-3",
+    "status": "verified_snapshot",
+    "url": "https://codetables.de/QECC.php?q=4&n=20&k=3"
+  },
+  "grassl-codetables-bounds": {
+    "accessed_at": "2026-10-25T16:23:37Z",
+    "notes": "Markus Grassl's table of bounds on the minimum distance of qubit quantum codes [[n,k,d]]_2 for length 1<=n<=30 and dimension 0<=k<=10.",
+    "sha256": "52c8a9c9c41ad8faa3f953cf689ae73b0454a74d0d485caeb5a5ec1cb7c98f3e",
+    "source_id": "grassl-codetables-bounds",
+    "status": "verified_snapshot",
+    "url": "https://codetables.de/QECC/Tables_color.php?q=4&n0=1&n1=30&k0=0&k1=10"
+  },
+  "laflamme-1996": {
+    "accessed_at": "2026-10-25T16:24:00Z",
+    "notes": "R. Laflamme, C. Miquel, J. P. Paz, W. H. Zurek (1996): Perfect Quantum Error Correcting Code. Perfect 5-qubit code [[5,1,3]].",
+    "sha256": "e25f6e8ccae700444565eb63567d26da5381fbc036329a27c0062a4b8682a033",
+    "source_id": "laflamme-1996",
+    "status": "peer_reviewed_literature",
+    "url": "https://doi.org/10.1103/PhysRevLett.77.198"
+  },
+  "shor-1995": {
+    "accessed_at": "2026-10-24T10:33:00Z",
+    "notes": "P. W. Shor (1995): Scheme for reducing decoherence in quantum computer memory. Shor [[9,1,3]] code.",
+    "sha256": "d9a33bb7f525bf4e397ba3d0ec422171ecba3a8b4ecbfb2e23035be48cbcf124",
+    "source_id": "shor-1995",
+    "status": "peer_reviewed_literature",
+    "url": "https://doi.org/10.1103/PhysRevA.52.R2493"
+  },
+  "steane-1996": {
+    "accessed_at": "2026-10-24T10:33:00Z",
+    "notes": "A. M. Steane (1996): Error Correcting Codes in Quantum Theory. Steane [[7,1,3]] CSS code based on Hamming [7,4,3].",
+    "sha256": "bf4553229b47e804fce571a067ff5067a9cf608304e226a31c57e84cbef51ce8",
+    "source_id": "steane-1996",
+    "status": "peer_reviewed_literature",
+    "url": "https://doi.org/10.1098/rspa.1996.0136"
+  }
+}

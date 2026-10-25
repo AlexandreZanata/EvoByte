@@ -1,0 +1,22 @@
+{
+  "certificate_version": "1.0.0",
+  "target_id": "schur_k2_n4",
+  "certificate_type": "schur",
+  "candidate_length": 4,
+  "reference_literature": "Schur, I. (1916). \u00dcber die Kongruenz x^m + y^m = z^m (mod p). Jahresbericht der DMV 25: 114-117.",
+  "sha256_checksum": "9c5b403fff86d1c95cdf9f77d532a309532e3643c50dac320ff2dc683a232ed7",
+  "sha256_scope": "SHA-256 of canonical JSON of {certificate_type, target_id, candidate, parameters}",
+  "reproduction_seed": 42,
+  "partition": [
+    1,
+    2,
+    2,
+    1
+  ],
+  "k": 2,
+  "provenance": {
+    "role": "calibration",
+    "family": "schur",
+    "optimality": "proven_exact"
+  }
+}

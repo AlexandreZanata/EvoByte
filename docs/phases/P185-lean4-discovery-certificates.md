@@ -1,6 +1,6 @@
 # P185 — Certificados formais Lean 4 dos recordes (com gate de fidelidade)
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P171 (verificadores), P168 (padrão de certificado fiel) concluídas; branch a partir de `main`.
 **Owner:** agente executor; revisor formal humano assina cada entrada `faithful` no registro.
@@ -161,3 +161,11 @@ git status --short
 O corpo do PR (`/tmp/evobyte-p185-pr.md`) traz: problema, comportamento resultante, comandos de
 validação exatos (build, linter, testes), limitações (só recordes reais; calibração como
 regressão; escala do `decide`) e o link do relatório.
+
+## Registro de Execução
+
+- **Módulo Formal:** `lean_proofs/Generated/FrontierDiscoveryCertificates.lean` (compilado com 0 `sorry` e 0 warnings).
+- **Biblioteca Raiz:** `lean_proofs/Generated.lean` integrado.
+- **Teoremas Certificados (Regressão/Calibração):** Fano $C(7,3,2)$, Schur fraco $WS(2,8)$, Steane $[[7,1,3]]$.
+- **Linter de Fidelidade:** 0 `vacuous-constant`, 3 `needs-review`, 3 entradas aprovadas como `faithful` em `docs/research/lean-fidelity-reviews.json`.
+- **Relatório:** [`docs/research/p185-frontier-certificates-report.md`](../research/p185-frontier-certificates-report.md)

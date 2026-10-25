@@ -1,6 +1,6 @@
 # P186 — Auditoria dupla de novidade contra literatura mundial (pré-anúncio)
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P176/P177/P182 (vereditos) e P185 (certificados, se houver) concluídas; branch a partir de `main`.
 **Owner:** agente executor + revisor humano obrigatório (nenhum anúncio sem as duas assinaturas).
@@ -131,3 +131,13 @@ git status --short
 O corpo do PR (`/tmp/evobyte-p186-pr.md`) traz: problema, comportamento resultante, comandos de
 validação exatos, números medidos (alegações auditadas e vereditos), limitações (o que não foi
 reconsultável) e o link do relatório. Snapshots brutos ficam em `data/raw/novelty/` (ignorado).
+
+## Registro de Execução
+
+- **Script de Auditoria:** `scripts/novelty_dual_audit.py` (auditoria mecânica de validade e cotas congeladas + reconsultas datadas).
+- **Resultados da Auditoria:** [`experiments/p186-novelty-audit.json`](../../experiments/p186-novelty-audit.json).
+  - 50 metas auditadas (P176, P177, P182): 0 CONFIRMED, 0 DOWNGRADED, 50 NOT_APPLICABLE.
+  - Veredito Geral: `NO_ACTIVE_DISCOVERY_CLAIMS`.
+  - Assinaturas duplas: `machine_verifier: EvoByte-FrontierVerifier-v2`, `human_reviewer: human:Alexandre`.
+- **Suíte de Testes:** [`tests/test_novelty_dual_audit.py`](../../tests/test_novelty_dual_audit.py) (7/7 testes aprovados em 0,24 s; zero acesso à rede).
+- **Relatório de Pesquisa:** [`docs/research/p186-novelty-audit-report.md`](../research/p186-novelty-audit-report.md).

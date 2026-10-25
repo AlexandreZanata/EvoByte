@@ -1,6 +1,6 @@
 # P181 — Evolução de estabilizadores com Q-Forge para superar cotas de Grassl
 
-**Status:** Proposed.
+**Status:** Completed.
 **Programa:** Descoberta na Fronteira (P171–P190, D042). Trilhas A, B e fundação comum.
 **Dependência:** P179 (verificador) e P180 (catálogo QECC) concluídas; branch a partir de `codex/p180-grassl-bounds-frontier-catalogue`.
 **Owner:** agente executor; revisor formal (álgebra simplética) nos gates de correção.
