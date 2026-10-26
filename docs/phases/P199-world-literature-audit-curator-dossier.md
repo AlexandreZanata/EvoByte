@@ -1,6 +1,6 @@
 # P199 — Auditoria de novidade na literatura mundial e dossiê para curadores
 
-**Status:** Proposed.
+**Status:** Concluída.
 **Programa:** Descoberta Algébrica Estruturada e Síntese Funcional (P191–P200, D043).
 **Dependência:** P198 concluída.
 **Owner:** agente executor; autor correspondente humano revisa a carta de submissão.
@@ -26,6 +26,8 @@ Se o resultado da campanha for nulo, o dossiê formaliza o registro do nulo hone
 - `experiments/p199-novelty-audit.json`: auditoria detalhada de cada alvo investigado.
 - `scripts/build_p199_curator_package.py`: gerador do pacote de submissão aos curadores oficiais.
 - `docs/research/p199-curator-dossier-report.md`: relatório e registro de custódia.
+- `docs/research/p199-curator-packages-index.json`: índice canônico de pacotes e hashes.
+- `dist/curator-submissions/p199/`: diretórios auto-contidos para Gordon, Grassl e Sloane.
 - `tests/test_p199_curator_package.py`: testes unitários garantindo que o pacote é auto-contido e sem vazamento de e-mails privados.
 
 ## Critérios de Saída (Gates)
@@ -33,3 +35,13 @@ Se o resultado da campanha for nulo, o dossiê formaliza o registro do nulo hone
 1. `tests/test_p199_curator_package.py` passa 100% verde.
 2. Cada pacote de curador contém `README.md`, certificado/notícia de nulo, verificador standalone, `reproduce.sh` executável e carta de submissão.
 3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros.
+
+## Commit & Push
+
+```bash
+git add experiments/p199-novelty-audit.json scripts/build_p199_curator_package.py docs/research/p199-curator-dossier-report.md docs/research/p199-curator-packages-index.json dist/curator-submissions/p199 docs/phases/P199-world-literature-audit-curator-dossier.md tests/test_p199_curator_package.py
+git commit -m "feat(curator): generate world literature audit and curator dossiers (P199)"
+git push -u origin codex/p199-world-literature-audit-curator-dossier
+gh pr create --title "feat(curator): generate world literature audit and curator dossiers (P199)" --body "..."
+gh pr merge --squash --delete-branch
+```
