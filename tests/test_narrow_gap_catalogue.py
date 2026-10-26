@@ -142,18 +142,14 @@ def test_reference_qecc_objects_verification_speed() -> None:
     assert target_16_5.reference_object is not None
 
     t0 = time.perf_counter()
-    ok_14, res_14 = verify_target_candidate(
-        "qecc_14_3_open", target_14_3.reference_object
-    )
+    ok_14, res_14 = verify_target_candidate("qecc_14_3_open", target_14_3.reference_object)
     dt_14 = time.perf_counter() - t0
     assert ok_14 is True
     assert res_14["d"] == 4
     assert dt_14 < 0.1
 
     t1 = time.perf_counter()
-    ok_16, res_16 = verify_target_candidate(
-        "qecc_16_5_open", target_16_5.reference_object
-    )
+    ok_16, res_16 = verify_target_candidate("qecc_16_5_open", target_16_5.reference_object)
     dt_16 = time.perf_counter() - t1
     assert ok_16 is True
     assert res_16["d"] == 4
