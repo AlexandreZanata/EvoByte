@@ -419,18 +419,18 @@ Estado final: **concluído** — H2 **NOT SUPPORTED** (tamanho 288 vs 512), desc
 
 [Programa de Descoberta Algébrica Estruturada e Síntese Funcional](phases/README.md#programa-de-descoberta-algébrica-estruturada-e-síntese-funcional-p191p200-d043)
 ataca a fronteira matemática aberta através de redução por grupos de simetria (órbitas sob subgrupos cíclicos $\mathbb{Z}_m$), síntese de funções de prioridade contínuas em bytecode compacto (paradigma FunSearch em GPU), e hibridização exata com solvers SAT (CaDiCaL/PySAT) para fechar restrições rígidas residuais em alvos de gap estreito ($gap \le 2$).
-Estado atual: **proposto / em andamento**.
+Estado atual: **concluído** (D044) — Descoberta de empate $C(15, 8, 4) = 30$ (`DISCOVERY_TIED`), cotas estruturais negativas provadas em CSS circulante para $[[14, 3, 4]]$ e $[[16, 5, 4]]$ (`NULL_BOUND`), calibrações $\text{SQS}(10) = 30$ e $[[8, 3, 3]]$ redescobertas cegamente, 5 teoremas formais provados no kernel Lean 4 sem sorry e manuscrito acadêmico compilado em 8 páginas (`docs/structured-paper/main.pdf`).
 
-- P191 congela 5 alvos de gap estreito ($gap \le 2$) em Covering Designs e QECC.
-- P192 implementa o motor de simetrias algébricas e redução por órbitas sob grupos cíclicos.
-- P193 implementa o motor de síntese de funções de prioridade em bytecode compacto com seleção gulosa na GPU.
-- P194 integra a ponte de resolução booleana exata com solver SAT (EvoByte $\to$ SAT completion).
-- P195 executa calibração cega obrigatória em alvos históricos de alta dificuldade ($[[8, 3, 3]]$ e $C(10, 4, 3)=20$).
-- P196 executa a campanha pré-registrada de busca estruturada nos 5 alvos de gap estreito.
-- P197 extrai certificados autônomos de descoberta com verificador standalone de dependência zero.
-- P198 certifica formalmente os resultados no kernel Lean 4 com revisão de fidelidade matemática.
-- P199 executa auditoria de novidade na literatura mundial e empacota dossiê para curadores externos.
-- P200 compila o manuscrito científico final, valida o contêiner Zenodo e encerra o programa com a decisão D043.
+- P191 congelou 5 alvos de gap estreito ($gap \le 2$) em Covering Designs e QECC.
+- P192 implementou o motor de simetrias algébricas e redução por órbitas sob grupos cíclicos $\mathbb{Z}_m$.
+- P193 implementou o motor de síntese de funções de prioridade em bytecode com seleção paralela na GPU.
+- P194 integrou a ponte de resolução booleana exata com CaDiCaL / PySAT.
+- P195 executou calibração cega obrigatória em alvos históricos ($\text{SQS}(10) = 30$ e Gottesman $[[8, 3, 3]]$).
+- P196 executou a campanha pré-registrada com descoberta de empate $C(15, 8, 4) = 30$ e cotas negativas em QECC.
+- P197 extraiu certificados canônicos autônomos (JSON v2.0.0, SHA-256) e verificador standalone (< 1.5 ms).
+- P198 certificou formalmente 5 teoremas no kernel Lean 4 com zero sorry e axiomas padrão.
+- P199 auditou literatura mundial (LJCR, codetables.de, OEIS) e gerou pacotes de curador sob custódia humana.
+- P200 compilou o manuscrito científico (`docs/structured-paper/main.pdf`), elaborou o dossiê de impacto e encerrou o programa sob D044.
 
 ## Quantum track (experimental, deferred expansion)
 
