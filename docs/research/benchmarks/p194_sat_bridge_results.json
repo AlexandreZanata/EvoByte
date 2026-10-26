@@ -1,0 +1,132 @@
+{
+  "commit": "0fc2647d3670c2da3a819deb6bf0faf2f55eb45b",
+  "hardware": {
+    "platform": "Linux-7.2.6-76070206-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "pysat_version": "1.9.dev17",
+    "python_version": "3.12.2"
+  },
+  "orbit_completion": {
+    "covering_C_13_6_3": {
+      "base_orbits_selected": 2,
+      "k": 6,
+      "sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "solve_time_seconds": 0.04090222499507945,
+      "status": "SAT",
+      "symmetry_group": "Z_13",
+      "t": 3,
+      "target_id": "covering_C_13_6_3",
+      "total_blocks": 26,
+      "uncovered_after": 0,
+      "uncovered_before": 286,
+      "v": 13,
+      "verified": true,
+      "wall_clock_seconds": 0.04180703499878291
+    },
+    "covering_C_14_6_3": {
+      "base_orbits_selected": 2,
+      "k": 6,
+      "sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "solve_time_seconds": 0.08207530599611346,
+      "status": "SAT",
+      "symmetry_group": "Z_14",
+      "t": 3,
+      "target_id": "covering_C_14_6_3",
+      "total_blocks": 28,
+      "uncovered_after": 0,
+      "uncovered_before": 364,
+      "v": 14,
+      "verified": true,
+      "wall_clock_seconds": 0.0838486139982706
+    },
+    "covering_C_15_8_4": {
+      "base_orbits_selected": 2,
+      "k": 8,
+      "sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "solve_time_seconds": 0.4831278290002956,
+      "status": "SAT",
+      "symmetry_group": "Z_15",
+      "t": 4,
+      "target_id": "covering_C_15_8_4",
+      "total_blocks": 30,
+      "uncovered_after": 0,
+      "uncovered_before": 1365,
+      "v": 15,
+      "verified": true,
+      "wall_clock_seconds": 0.4981938540004194
+    }
+  },
+  "skeleton_completion": {
+    "C_7_3_2": {
+      "added_blocks": 2,
+      "completed_blocks": 7,
+      "sha256": "1f9261311da07a83a59b6ae596305ac94d768d1ec8cf9ae965e9045a864bc524",
+      "skeleton_blocks": 5,
+      "solve_time_seconds": 0.0004644610016839579,
+      "status": "SAT",
+      "target": "C(7,3,2)",
+      "target_blocks": 7,
+      "uncovered_after": 0,
+      "uncovered_before": 6,
+      "verified": true,
+      "wall_clock_seconds": 0.0004772399988723919
+    },
+    "C_8_4_3": {
+      "added_blocks": 3,
+      "completed_blocks": 14,
+      "sha256": "ea093100a2e9ae6cdb8ea03c3f2aa4f497b6225ac53852ab9a9f421ce7fc3911",
+      "skeleton_blocks": 11,
+      "solve_time_seconds": 0.0008090799965430051,
+      "status": "SAT",
+      "target": "C(8,4,3)",
+      "target_blocks": 14,
+      "uncovered_after": 0,
+      "uncovered_before": 12,
+      "verified": true,
+      "wall_clock_seconds": 0.0008289299948955886
+    }
+  },
+  "solver_comparison": {
+    "cadical153": {
+      "solve_time_seconds": 0.0005031809996580705,
+      "solver": "cadical153",
+      "total_blocks": 7,
+      "verified": true,
+      "wall_clock_seconds": 0.00051635000272654
+    },
+    "g4": {
+      "solve_time_seconds": 0.00032540999382035807,
+      "solver": "g4",
+      "total_blocks": 7,
+      "verified": true,
+      "wall_clock_seconds": 0.00033546700433362275
+    },
+    "pure_python": {
+      "solve_time_seconds": 0.006220916999154724,
+      "solver": "pure_python",
+      "total_blocks": 7,
+      "verified": true,
+      "wall_clock_seconds": 0.0062353199973586015
+    }
+  },
+  "stabilizer_synthesis": {
+    "steane_partial": {
+      "fixed_generators": 4,
+      "solve_time_seconds": 0.00023649499780731276,
+      "success": true,
+      "synthesized_generator": "YYYYYYY",
+      "verification_result": {
+        "k": 2,
+        "n": 7,
+        "rank": 5
+      },
+      "verified_commuting": true,
+      "wall_clock_seconds": 0.0004924039967590943
+    }
+  },
+  "summary": {
+    "all_under_5_seconds": true,
+    "all_verified": true
+  },
+  "timestamp": "2026-10-26T15:36:49Z"
+}
