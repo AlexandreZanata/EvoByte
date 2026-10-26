@@ -48,5 +48,55 @@
     "reviewer": "human:Alexandre",
     "verdict": "faithful",
     "reviewed_at": "2026-10-25"
+  },
+  {
+    "theorem": "EvoByte.Structured.gottesman_8_3_3_commute",
+    "file": "lean_proofs/Generated/StructuredDiscovery.lean",
+    "informal_statement": "Os 5 geradores estabilizadores do código quântico de Gottesman [[8, 3, 3]] comutam todos dois a dois sob o produto simplético binário mod 2.",
+    "lean_statement": "¬ HasNonCommutingPair 5 8 gottesmanGens",
+    "mathlib_concepts": ["Fin", "HasNonCommutingPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-26"
+  },
+  {
+    "theorem": "EvoByte.Structured.c15_base1_strictly_sorted",
+    "file": "lean_proofs/Generated/StructuredDiscovery.lean",
+    "informal_statement": "O bloco base 1 do cobrimento C(15, 8, 4) é estritamente crescente e possui 8 elementos distintos em Fin 15.",
+    "lean_statement": "IsStrictlySorted 8 (fun i => (c15Base1 i).val)",
+    "mathlib_concepts": ["Fin", "IsStrictlySorted"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-26"
+  },
+  {
+    "theorem": "EvoByte.Structured.c15_base2_strictly_sorted",
+    "file": "lean_proofs/Generated/StructuredDiscovery.lean",
+    "informal_statement": "O bloco base 2 do cobrimento C(15, 8, 4) é estritamente crescente e possui 8 elementos distintos em Fin 15.",
+    "lean_statement": "IsStrictlySorted 8 (fun i => (c15Base2 i).val)",
+    "mathlib_concepts": ["Fin", "IsStrictlySorted"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-26"
+  },
+  {
+    "theorem": "EvoByte.Structured.c15_bases_disjoint_orbits",
+    "file": "lean_proofs/Generated/StructuredDiscovery.lean",
+    "informal_statement": "Os dois blocos base de C(15, 8, 4) pertencem a órbitas cíclicas disjuntas sob a ação de Z_15, gerando exatamente 30 blocos distintos de tamanho 8.",
+    "lean_statement": "¬ AreInSameOrbit 15 8 c15Base1 c15Base2",
+    "mathlib_concepts": ["Fin", "AreInSameOrbit"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-26"
+  },
+  {
+    "theorem": "EvoByte.Structured.sqs10_covering_valid",
+    "file": "lean_proofs/Generated/StructuredDiscovery.lean",
+    "informal_statement": "Os 30 blocos do Steiner Quadruple System SQS(10) cobrem todos os 120 trios de Fin 10 sem deixar nenhum trio descoberto.",
+    "lean_statement": "¬ HasUncoveredTriple 10 30 4 sqs10Blocks",
+    "mathlib_concepts": ["Fin", "HasUncoveredTriple"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-26"
   }
 ]
