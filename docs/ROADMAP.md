@@ -415,6 +415,23 @@ Estado final: **concluído** — H2 **NOT SUPPORTED** (tamanho 288 vs 512), desc
 - **Trilha B (Quântica e Estados Fundamentais):** P179 verificador simplético independente; P180 catálogo de fronteira Grassl; P181 operadores evolutivos de estabilizadores; P182 campanha pré-registrada QECC (7/7 nulos, 0 recordes); P183 busca por anomalias em estados fundamentais de Hamiltonianos.
 - **Fundação Comum e Fechamento:** P184 verificador standalone sem dependências; P185 certificados formais Lean 4 provados por decide com revisão humana de fidelidade; P186 auditoria dupla de novidade mundial (50 alvos, 0 confirmed); P187 pacotes para curadores; P188 container hermético offline e pacote Zenodo; P189 manuscrito científico de nulos honestos (8 páginas, 250 KB); P190 conclusão do programa e registro D042.
 
+## Structured discovery program (P191–P200, D043)
+
+[Programa de Descoberta Algébrica Estruturada e Síntese Funcional](phases/README.md#programa-de-descoberta-algébrica-estruturada-e-síntese-funcional-p191p200-d043)
+ataca a fronteira matemática aberta através de redução por grupos de simetria (órbitas sob subgrupos cíclicos $\mathbb{Z}_m$), síntese de funções de prioridade contínuas em bytecode compacto (paradigma FunSearch em GPU), e hibridização exata com solvers SAT (CaDiCaL/PySAT) para fechar restrições rígidas residuais em alvos de gap estreito ($gap \le 2$).
+Estado atual: **proposto / em andamento**.
+
+- P191 congela 5 alvos de gap estreito ($gap \le 2$) em Covering Designs e QECC.
+- P192 implementa o motor de simetrias algébricas e redução por órbitas sob grupos cíclicos.
+- P193 implementa o motor de síntese de funções de prioridade em bytecode compacto com seleção gulosa na GPU.
+- P194 integra a ponte de resolução booleana exata com solver SAT (EvoByte $\to$ SAT completion).
+- P195 executa calibração cega obrigatória em alvos históricos de alta dificuldade ($[[8, 3, 3]]$ e $C(10, 4, 3)=20$).
+- P196 executa a campanha pré-registrada de busca estruturada nos 5 alvos de gap estreito.
+- P197 extrai certificados autônomos de descoberta com verificador standalone de dependência zero.
+- P198 certifica formalmente os resultados no kernel Lean 4 com revisão de fidelidade matemática.
+- P199 executa auditoria de novidade na literatura mundial e empacota dossiê para curadores externos.
+- P200 compila o manuscrito científico final, valida o contêiner Zenodo e encerra o programa com a decisão D043.
+
 ## Quantum track (experimental, deferred expansion)
 
 
