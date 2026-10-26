@@ -1,0 +1,68 @@
+{
+  "timestamp": "2026-10-26T14:49:46Z",
+  "hardware": {
+    "platform": "Linux-7.2.6-76070206-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python_version": "3.12.2",
+    "torch_available": true,
+    "cuda_available": true,
+    "gpu_name": "NVIDIA GeForce RTX 4060 Laptop GPU"
+  },
+  "throughput": {
+    "n3_cpu": {
+      "n": 3.0,
+      "iterations": 50000.0,
+      "elapsed_sec": 0.12708382900018478,
+      "constructions_per_sec": 393441.0884010058
+    },
+    "n4_cpu": {
+      "n": 4.0,
+      "iterations": 50000.0,
+      "elapsed_sec": 0.5690295379972667,
+      "constructions_per_sec": 87868.90075333869
+    },
+    "n3_gpu": {
+      "n": 3.0,
+      "iterations": 50000.0,
+      "elapsed_sec": 0.06591073000163306,
+      "constructions_per_sec": 758601.823993774
+    },
+    "n4_gpu": {
+      "n": 4.0,
+      "iterations": 50000.0,
+      "elapsed_sec": 0.017134153997176327,
+      "constructions_per_sec": 2918148.1623335415
+    }
+  },
+  "rediscovery": {
+    "n3": {
+      "target_size": 9,
+      "best_size": 9,
+      "discovered": true,
+      "evaluations": 64,
+      "elapsed_sec": 0.007279306999407709,
+      "certified": true,
+      "sha256": "fa81358964f646c08e426a8389a20c044e5a3edbdd2543ab82b96167984359b8"
+    },
+    "n4": {
+      "target_size": 20,
+      "best_size": 20,
+      "discovered": true,
+      "evaluations": 4618,
+      "elapsed_sec": 0.45279357799881836,
+      "certified": true,
+      "sha256": "a715929e8c555623cc375e6318d07a97782389765d55d21f5ce595b8fcffc8b2"
+    }
+  },
+  "covering_orbits": {
+    "C_10_3_2": {
+      "v": 10,
+      "k": 3,
+      "t": 2,
+      "base_blocks_count": 12,
+      "selected_blocks_count": 20,
+      "elapsed_sec": 8.330900163855404e-05
+    }
+  },
+  "all_gates_pass": true
+}
