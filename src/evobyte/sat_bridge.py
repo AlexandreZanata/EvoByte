@@ -339,7 +339,9 @@ class PurePythonSolver:
         elapsed = time.perf_counter() - t0
 
         if status == "SAT" and model_assign is not None:
-            model_list = [v if model_assign.get(v, False) else -v for v in range(1, self.n_vars + 1)]
+            model_list = [
+                v if model_assign.get(v, False) else -v for v in range(1, self.n_vars + 1)
+            ]
             return SatResult(
                 status="SAT",
                 is_sat=True,
@@ -544,11 +546,7 @@ class CoveringCnfEncoder:
 
         # Coverage clauses: for each uncovered subset, at least one covering candidate block must be chosen
         for sub in self.uncovered_subsets:
-            covering_vars = [
-                self.block_to_var[b]
-                for b in self.candidates
-                if set(sub).issubset(b)
-            ]
+            covering_vars = [self.block_to_var[b] for b in self.candidates if set(sub).issubset(b)]
             if not covering_vars:
                 # Impossible: no candidate covers this subset -> add empty conflict clause
                 formula.add_clause([])
@@ -698,9 +696,7 @@ def complete_covering_orbits(
 
     base_offset = 1 if one_indexed else 0
     fixed_set = {
-        engine.group.canonical_representative(
-            tuple(sorted(int(x) - base_offset for x in b))
-        )
+        engine.group.canonical_representative(tuple(sorted(int(x) - base_offset for x in b)))
         for b in fixed_base_blocks
     }
 
@@ -750,9 +746,7 @@ def complete_covering_orbits(
     formula = CNFFormula(n_vars=len(candidate_reps))
     # Coverage clauses
     for sub in uncovered_subsets:
-        cov_lits = [
-            i + 1 for i, c_subsets in enumerate(candidate_cov) if sub in c_subsets
-        ]
+        cov_lits = [i + 1 for i, c_subsets in enumerate(candidate_cov) if sub in c_subsets]
         if not cov_lits:
             formula.add_clause([])  # Conflict
             break
@@ -788,9 +782,7 @@ def complete_covering_orbits(
         )
 
     model_vars = set(sat_res.model)
-    selected_reps = [
-        candidate_reps[i] for i in range(len(candidate_reps)) if (i + 1) in model_vars
-    ]
+    selected_reps = [candidate_reps[i] for i in range(len(candidate_reps)) if (i + 1) in model_vars]
     all_reps = list(fixed_set) + selected_reps
     full_blocks = engine.expand_base_blocks(all_reps, one_indexed=one_indexed)
     added_expanded = engine.expand_base_blocks(selected_reps, one_indexed=one_indexed)
@@ -829,9 +821,13 @@ class StabilizerCnfEncoder:
         """Find a new non-trivial Pauli generator that commutes with all fixed generators."""
         n = self.n
         formula = CNFFormula(n_vars=2 * n)
+
         # x_j: 1..n, z_j: n+1..2n
-        def var_x(j: int) -> int: return j + 1
-        def var_z(j: int) -> int: return n + j + 1
+        def var_x(j: int) -> int:
+            return j + 1
+
+        def var_z(j: int) -> int:
+            return n + j + 1
 
         # Non-triviality / minimum weight: at least min_weight non-I Paulis
         # A site has non-I iff x_j or z_j is true.
