@@ -1,0 +1,372 @@
+{
+  "git_commit": "e31a28aa22bbdb5af1883de73be4a6073e0efaa6",
+  "hardware": {
+    "platform": "Linux-7.2.6-76070206-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "pysat_version": "1.9.dev17",
+    "python_version": "3.12.2"
+  },
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "solver_used": "cadical153",
+  "targets": {
+    "covering_c10_4_3": {
+      "name": "C(10, 4, 3) = 30 (SQS(10))",
+      "successes": 5,
+      "trials": [
+        {
+          "base_orbits": [
+            [
+              0,
+              1,
+              2,
+              6
+            ],
+            [
+              0,
+              1,
+              3,
+              4
+            ],
+            [
+              0,
+              2,
+              4,
+              7
+            ]
+          ],
+          "k": 4,
+          "num_orbits": 22,
+          "seed": 42,
+          "sha256": "c570e021af5ce469ff7198fc26d1f4eb14e697013a8b66e57506369da83a0754",
+          "solve_time_seconds": 0.002087109998683445,
+          "status": "SAT",
+          "t": 3,
+          "target_blocks": 30,
+          "total_blocks": 30,
+          "v": 10,
+          "verification_msg": "all 120 3-subsets covered",
+          "verified": true,
+          "wall_clock_seconds": 0.014154493997921236
+        },
+        {
+          "base_orbits": [
+            [
+              0,
+              1,
+              2,
+              6
+            ],
+            [
+              0,
+              1,
+              3,
+              4
+            ],
+            [
+              0,
+              2,
+              4,
+              7
+            ]
+          ],
+          "k": 4,
+          "num_orbits": 22,
+          "seed": 43,
+          "sha256": "c570e021af5ce469ff7198fc26d1f4eb14e697013a8b66e57506369da83a0754",
+          "solve_time_seconds": 0.0017822500012698583,
+          "status": "SAT",
+          "t": 3,
+          "target_blocks": 30,
+          "total_blocks": 30,
+          "v": 10,
+          "verification_msg": "all 120 3-subsets covered",
+          "verified": true,
+          "wall_clock_seconds": 0.012734425996313803
+        },
+        {
+          "base_orbits": [
+            [
+              0,
+              1,
+              2,
+              6
+            ],
+            [
+              0,
+              1,
+              3,
+              4
+            ],
+            [
+              0,
+              2,
+              4,
+              7
+            ]
+          ],
+          "k": 4,
+          "num_orbits": 22,
+          "seed": 44,
+          "sha256": "c570e021af5ce469ff7198fc26d1f4eb14e697013a8b66e57506369da83a0754",
+          "solve_time_seconds": 0.0021257260013953783,
+          "status": "SAT",
+          "t": 3,
+          "target_blocks": 30,
+          "total_blocks": 30,
+          "v": 10,
+          "verification_msg": "all 120 3-subsets covered",
+          "verified": true,
+          "wall_clock_seconds": 0.013901705999160185
+        },
+        {
+          "base_orbits": [
+            [
+              0,
+              1,
+              2,
+              6
+            ],
+            [
+              0,
+              1,
+              3,
+              4
+            ],
+            [
+              0,
+              2,
+              4,
+              7
+            ]
+          ],
+          "k": 4,
+          "num_orbits": 22,
+          "seed": 45,
+          "sha256": "c570e021af5ce469ff7198fc26d1f4eb14e697013a8b66e57506369da83a0754",
+          "solve_time_seconds": 0.002106329004163854,
+          "status": "SAT",
+          "t": 3,
+          "target_blocks": 30,
+          "total_blocks": 30,
+          "v": 10,
+          "verification_msg": "all 120 3-subsets covered",
+          "verified": true,
+          "wall_clock_seconds": 0.014729459995578509
+        },
+        {
+          "base_orbits": [
+            [
+              0,
+              1,
+              2,
+              6
+            ],
+            [
+              0,
+              1,
+              3,
+              4
+            ],
+            [
+              0,
+              2,
+              4,
+              7
+            ]
+          ],
+          "k": 4,
+          "num_orbits": 22,
+          "seed": 46,
+          "sha256": "c570e021af5ce469ff7198fc26d1f4eb14e697013a8b66e57506369da83a0754",
+          "solve_time_seconds": 0.0023060399980749935,
+          "status": "SAT",
+          "t": 3,
+          "target_blocks": 30,
+          "total_blocks": 30,
+          "v": 10,
+          "verification_msg": "all 120 3-subsets covered",
+          "verified": true,
+          "wall_clock_seconds": 0.016957102001470048
+        }
+      ],
+      "trials_total": 5
+    },
+    "qecc_8_3_3": {
+      "name": "Gottesman [[8, 3, 3]]",
+      "successes": 5,
+      "trials": [
+        {
+          "code_distance": 3,
+          "distance_info": {
+            "d": 3,
+            "k": 3,
+            "logical": "ZXXIIIII",
+            "n": 8
+          },
+          "generators": [
+            "YYXYYYYY",
+            "ZYYYIXXI",
+            "IYZZZYZI",
+            "IYYIXZYX",
+            "ZXXZIIZY"
+          ],
+          "k": 3,
+          "n": 8,
+          "num_clauses": 12671,
+          "num_vars": 3900,
+          "seed": 42,
+          "sha256": "79d160b12734a3a5f8da5f36a237af2b389d23af3110dc9b45045f7fc216e418",
+          "solve_time_seconds": 0.20899183100118535,
+          "stabilizer_info": {
+            "k": 3,
+            "n": 8,
+            "rank": 5
+          },
+          "status": "SAT",
+          "target_d": 3,
+          "verified": true,
+          "wall_clock_seconds": 0.3060522289961227
+        },
+        {
+          "code_distance": 3,
+          "distance_info": {
+            "d": 3,
+            "k": 3,
+            "logical": "YYYIIIII",
+            "n": 8
+          },
+          "generators": [
+            "YIIYZYZZ",
+            "ZIXYXIYY",
+            "IZZYXZIZ",
+            "IXZZYIXY",
+            "ZYZIZYIY"
+          ],
+          "k": 3,
+          "n": 8,
+          "num_clauses": 12671,
+          "num_vars": 3900,
+          "seed": 43,
+          "sha256": "0dad5ecd95c601b46baa0f5efcb8b0ec091be5ddfb009dfce5bea36a2389d6db",
+          "solve_time_seconds": 0.041823819003184326,
+          "stabilizer_info": {
+            "k": 3,
+            "n": 8,
+            "rank": 5
+          },
+          "status": "SAT",
+          "target_d": 3,
+          "verified": true,
+          "wall_clock_seconds": 0.07760387400048785
+        },
+        {
+          "code_distance": 3,
+          "distance_info": {
+            "d": 3,
+            "k": 3,
+            "logical": "ZXYIIIII",
+            "n": 8
+          },
+          "generators": [
+            "XYYXXYYY",
+            "IYXYZYZI",
+            "ZZXZYZZX",
+            "IZZXYYIZ",
+            "ZIIZZYYZ"
+          ],
+          "k": 3,
+          "n": 8,
+          "num_clauses": 12671,
+          "num_vars": 3900,
+          "seed": 44,
+          "sha256": "b7e14535aa3d2253fc42be24300b8ef578bb02393136beb4c29ad2067e664054",
+          "solve_time_seconds": 0.10676984000019729,
+          "stabilizer_info": {
+            "k": 3,
+            "n": 8,
+            "rank": 5
+          },
+          "status": "SAT",
+          "target_d": 3,
+          "verified": true,
+          "wall_clock_seconds": 0.14302317400142783
+        },
+        {
+          "code_distance": 3,
+          "distance_info": {
+            "d": 3,
+            "k": 3,
+            "logical": "XXZIIIII",
+            "n": 8
+          },
+          "generators": [
+            "XYXZZIIZ",
+            "YYZYXIYI",
+            "ZYZZYYZY",
+            "ZYIIZZYX",
+            "YZZIZXIY"
+          ],
+          "k": 3,
+          "n": 8,
+          "num_clauses": 12671,
+          "num_vars": 3900,
+          "seed": 45,
+          "sha256": "ab086532733902886e8b7c3e18c9003ab151534dc83b3bf6f3e91dc007f2297a",
+          "solve_time_seconds": 0.10255832200346049,
+          "stabilizer_info": {
+            "k": 3,
+            "n": 8,
+            "rank": 5
+          },
+          "status": "SAT",
+          "target_d": 3,
+          "verified": true,
+          "wall_clock_seconds": 0.315862786002981
+        },
+        {
+          "code_distance": 3,
+          "distance_info": {
+            "d": 3,
+            "k": 3,
+            "logical": "XZXIIIII",
+            "n": 8
+          },
+          "generators": [
+            "XIXZXIXY",
+            "ZXXXZYYY",
+            "IIXYZZZX",
+            "IZIYXXYY",
+            "ZZZIIZYX"
+          ],
+          "k": 3,
+          "n": 8,
+          "num_clauses": 12671,
+          "num_vars": 3900,
+          "seed": 46,
+          "sha256": "44116257cd082cbdde5575ea8b0b481531028b17b32eeeaf9df460301be8c574",
+          "solve_time_seconds": 0.18668538999918383,
+          "stabilizer_info": {
+            "k": 3,
+            "n": 8,
+            "rank": 5
+          },
+          "status": "SAT",
+          "target_d": 3,
+          "verified": true,
+          "wall_clock_seconds": 0.23841276700113667
+        }
+      ],
+      "trials_total": 5
+    }
+  },
+  "timeout_per_trial_sec": 300.0,
+  "timestamp": "2026-10-26T16:16:21Z",
+  "total_benchmark_time_seconds": 1.2063864399970043,
+  "verdict": "CALIBRATION_PASSED"
+}

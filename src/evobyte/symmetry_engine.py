@@ -469,7 +469,7 @@ def benchmark_all_p191_symmetry_reductions() -> dict[str, dict[str, Any]]:
         ("qecc_16_5_open", 16, 5, 8),
     ]:
         engine = QuasiCyclicStabilizerEngine(n, k, block_size=L)
-        stats = engine.measure_commutativity_preservation(n_samples=200)
+        stats = engine.measure_commutativity_preservation(n_samples=50)
         results[tid] = {
             "family": "qecc_stabilizer",
             "group": f"circulant_Z_{L}",
