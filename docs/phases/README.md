@@ -381,6 +381,19 @@ Defined under D039 to close the foundational H1 benchmark matrix with strict wal
 - [P189 — Manuscrito científico: a descoberta inédita ou o avanço metodológico H2](P189-frontier-discovery-manuscript.md).
 - [P190 — Conclusão do programa Descoberta na Fronteira e registro D042](P190-program-conclusion-and-decisions.md).
 
+## Programa de Descoberta Algébrica Estruturada e Síntese Funcional (P191–P200, D043)
+
+- [P191 — Seleção e congelamento de alvos de fronteira com gap estreito (gap ≤ 2)](P191-narrow-gap-frontier-targets.md).
+- [P192 — Motor de simetrias algébricas e redução por órbitas (Automorphism Orbit Reduction)](P192-symmetry-groups-orbit-reduction.md).
+- [P193 — Motor de síntese de funções de prioridade em bytecode (EvoSearch Functional Priority)](P193-functional-priority-bytecode-engine.md).
+- [P194 — Ponte de hibridização EvoByte → Solver SAT (SAT Completion Bridge)](P194-sat-solver-exact-completion-bridge.md).
+- [P195 — Calibração cega em alvos históricos difíceis (Hard Records Calibration)](P195-hard-historical-records-calibration.md).
+- [P196 — Campanha pré-registrada estruturada nos alvos de gap estreito](P196-preregistered-structured-campaign.md).
+- [P197 — Extração de certificados autônomos e verificador independente de dependência zero](P197-autonomous-certificate-extraction.md).
+- [P198 — Certificação formal no kernel Lean 4 (Formal Verification Gate)](P198-lean4-kernel-formal-certification.md).
+- [P199 — Auditoria de novidade na literatura mundial e dossiê para curadores](P199-world-literature-audit-curator-dossier.md).
+- [P200 — Manuscrito de pesquisa, pacote arquival Zenodo e registro da decisão D043](P200-discovery-manuscript-decision-d043.md).
+
 Execute one micro-task at a time. All phases remain Proposed until their explicit
 gates and measurements pass. No worldwide novelty, quantum advantage, or unproven
 conjecture resolution is claimed.
