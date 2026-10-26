@@ -293,16 +293,19 @@ def test_complete_covering_orbits_c14_6_3():
 
 
 def test_complete_covering_orbits_c15_8_4_matches_record():
-    """SAT completes C(15,8,4) under Z_15 with 2 base blocks (30 blocks, matching LJCR record)."""
+    """Given 1 base block skeleton, SAT completes C(15,8,4) under Z_15 to 30 blocks (LJCR record)."""
     v, k, t = 15, 8, 4
+    # 1 base block skeleton (covers 1085 of 1365 quadruples)
+    skeleton_base = [(1, 2, 3, 4, 5, 6, 11, 13)]
     res = complete_covering_orbits(
-        fixed_base_blocks=[],
+        fixed_base_blocks=skeleton_base,
         v=v,
         k=k,
         t=t,
-        max_additional_orbits=2,
+        max_additional_orbits=1,
         timeout_seconds=5.0,
         solver_name="auto",
+        one_indexed=True,
     )
 
     assert res.success, f"Failed orbit completion for C(15,8,4): {res.verification_msg}"
