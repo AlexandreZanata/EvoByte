@@ -1,0 +1,1155 @@
+{
+  "campaign_summary": {
+    "expected_trials": 50,
+    "overall_verdict": "DISCOVERY_TIED",
+    "target_verdicts": {
+      "covering_C_13_6_3": "NULL_RESULT",
+      "covering_C_14_6_3": "NULL_RESULT",
+      "covering_C_15_8_4": "DISCOVERY_TIED",
+      "qecc_14_3_open": "NULL_RESULT",
+      "qecc_16_5_open": "NULL_RESULT"
+    },
+    "total_trials": 50,
+    "total_wall_clock_seconds": 8.026610296998115
+  },
+  "git_commit": "38dcbc9068d955b88f9d371b89ee52e4ac02fab2",
+  "hardware": {
+    "platform": "Linux-7.2.6-76070206-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python_version": "3.12.2"
+  },
+  "manifest_path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/experiments/p196-campaign-manifest.json",
+  "timestamp": "2026-10-26T17:03:15Z",
+  "trials": [
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.0023172010041889735,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 42,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.045927602994197514
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.0021551899990299717,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 101,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.045386528996459674
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.001975965002202429,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 202,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.04624706399772549
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.0021384249994298443,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 303,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.046300720001454465
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.0020481890023802407,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 404,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.04559455999697093
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.0020271510002203286,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 505,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.04589912299707066
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.0021252019942039624,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 606,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.046604464994743466
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.0020837109987041913,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 707,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.045859751997340936
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.0020606729958672076,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 808,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.047427734003576916
+    },
+    {
+      "achieved_value": 26,
+      "candidate_sha256": "6a6c1e9baeec1c997280057127a3cfb761e69032a56b502e5951b133c4cd770e",
+      "details": {
+        "num_blocks": 26,
+        "sat_stats": {
+          "num_candidate_orbits": 132,
+          "num_clauses": 939,
+          "num_vars": 394,
+          "solve_time_seconds": 0.002206304998253472,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 286 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 21,
+      "seed": 909,
+      "target_id": "covering_C_13_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.05013731700455537
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.009008077999169473,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 42,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.09170895099668996
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.009241385996574536,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 101,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08628592600143747
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.008997452998301014,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 202,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08534305299690459
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.009351082000648603,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 303,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08618529300292721
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.009185423004964832,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 404,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08604711200314341
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.00942941100220196,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 505,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08830524299992248
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.009623771999031305,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 606,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08838713000295684
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.009538997001072858,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 707,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08753624399832916
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.008982912004285026,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 808,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08714190000318922
+    },
+    {
+      "achieved_value": 28,
+      "candidate_sha256": "eb5d0de9a23a25dd551fc3e9151e4cfe3ec5e7cdc5bfc9e32d1c3b70ab22225e",
+      "details": {
+        "num_blocks": 28,
+        "sat_stats": {
+          "num_candidate_orbits": 217,
+          "num_clauses": 1442,
+          "num_vars": 649,
+          "solve_time_seconds": 0.008017887004825752,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 364 3-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 25,
+      "seed": 909,
+      "target_id": "covering_C_14_6_3",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.0883054380028625
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.07353269499435555,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 42,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.5097613350008032
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.07318015900091268,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 101,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.5231698219940881
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.06761928000196349,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 202,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.5135529010003665
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.09205984900472686,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 303,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.5352985739955329
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.12300913799845148,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 404,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.5973942710043048
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.07297206499788444,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 505,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.5602462219976587
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.08381567699689185,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 606,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.5825049150007544
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.0712752109975554,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 707,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.5498727250014781
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.07270670800062362,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 808,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.530752336999285
+    },
+    {
+      "achieved_value": 30,
+      "candidate_sha256": "f6bc07d7386c49e82000f67f4061bfa8b2e6cbbe20a51dfc7f880732df042f0e",
+      "details": {
+        "num_blocks": 30,
+        "sat_stats": {
+          "num_candidate_orbits": 429,
+          "num_clauses": 3503,
+          "num_vars": 1285,
+          "solve_time_seconds": 0.08522330500272801,
+          "solver_used": "pysat:cadical153"
+        },
+        "status": "SAT",
+        "verification_msg": "all 1365 4-subsets covered"
+      },
+      "family": "covering_design",
+      "published_best": 30,
+      "seed": 909,
+      "target_id": "covering_C_15_8_4",
+      "verdict": "DISCOVERY_TIED",
+      "verified": true,
+      "wall_clock_seconds": 0.6297978520015022
+    },
+    {
+      "achieved_value": 2,
+      "candidate_sha256": "be5db3dbae9da314229e84ac6161d9f23419674dca25461d0f47a8f4bd4a9b80",
+      "details": {
+        "code_distance": 2,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 2,
+          "k": 3,
+          "logical": "XIIIIIIXIIIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 42,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.05013657300150953
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "b8ed649da18d00465ec431b38e318763c194349e5b3eb87b2060915b3b6aac65",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 3,
+          "logical": "XIIIIIIIIIIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 101,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.03955249700084096
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "435fd4687cde33a0e01f62c810dd0608c2d8d50ad6a00ad6265005b52240c41c",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 3,
+          "logical": "XIIIIIIIIIIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 202,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.04267083600279875
+    },
+    {
+      "achieved_value": 2,
+      "candidate_sha256": "196fca33667f6a39aa17b22da6b088f2c3c63c97951a607c27dc79d7c8b88939",
+      "details": {
+        "code_distance": 2,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 2,
+          "k": 3,
+          "logical": "IXIIIXIIIIIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 303,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.044469425003626384
+    },
+    {
+      "achieved_value": 2,
+      "candidate_sha256": "544ec46a99403131f90988fdff81f35cb6111facd6a17d2604310970eafeaf7d",
+      "details": {
+        "code_distance": 2,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 2,
+          "k": 3,
+          "logical": "IXIIXIIIIIIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 404,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.040318498002307024
+    },
+    {
+      "achieved_value": 2,
+      "candidate_sha256": "391f4786a430f6a222d028bd349e45aae357537c9c7296f6fdff7d6cb4f8c547",
+      "details": {
+        "code_distance": 2,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 2,
+          "k": 3,
+          "logical": "IIIIIIXIIXIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 505,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.06675740799983032
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "d6a93c0baa2d499bc8429dcd0d17a874a616546ba598dafa40722580c9179e37",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 3,
+          "logical": "XIIIIIIIIIIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 606,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.06995123199885711
+    },
+    {
+      "achieved_value": 2,
+      "candidate_sha256": "40dd91e69ab15cf05fb7fd337977d194d144aa163fe489a8171d3ee19fe277ad",
+      "details": {
+        "code_distance": 2,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 2,
+          "k": 3,
+          "logical": "IIIIXIIIIXIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 707,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.06020682399685029
+    },
+    {
+      "achieved_value": 2,
+      "candidate_sha256": "b16b64573e7a6b7015826bc164af5daa23e6ca5848eef387e0b141a801552584",
+      "details": {
+        "code_distance": 2,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 2,
+          "k": 3,
+          "logical": "XIXIIIIIIIIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 808,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.044966659996134695
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "80c95bbc65d5a0562a6c161013297aa237a914c4827b465fc52eef10f9b81c76",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 3,
+          "logical": "XIIIIIIIIIIIII",
+          "n": 14
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 909,
+      "target_id": "qecc_14_3_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.0737465490019531
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "e97f06a5cc1277df5dbd11ec2fe623d8b503d72423d4508033f948412cb0ed11",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 42,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.06478430899733212
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "925db472758bb8a583f171a3234f6ba6db7f753c3d0c9e58b8111c15bba843a3",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 101,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.06349767900246661
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "7ed3e63a7d792cddc95742c99438ab7a0ebf9014976d6d5d157c78c721202014",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 202,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.08345379299862543
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "bf57727cdb74a87b464dfbe7347f8c92ae1e5a69c9aef79c2090a014970ffaf3",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 303,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.0689610219997121
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "939a39b6a49db94950be1031247fc4e5b85aeaee39d9815578c2384debd44216",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 404,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.04987626100046327
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "0a44755daf922319573d494c4591951ee0efdd747a96695c799520ef4487140c",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 505,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.07730673799960641
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "f9591713e3edd86686d7ba1ebfa197f72868cf4d4705ca64b7c413adb280bcf9",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 606,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.04673284800082911
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "7594950d30c15c4832f1431de1019a1b1b56837226210cbcba68092c613b1d65",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 707,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.05289018600160489
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "383a4723b07a75f1284ad8abd948c155b6bdfc856fd9e2258a930384d26491da",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 808,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.07121316299890168
+    },
+    {
+      "achieved_value": 1,
+      "candidate_sha256": "fa219ababbba1af90f68233f337cb4657f0192f6922e4ebd74a642d970de51da",
+      "details": {
+        "code_distance": 1,
+        "evaluations": 15,
+        "generators_count": 11,
+        "verification_info": {
+          "d": 1,
+          "k": 5,
+          "logical": "XIIIIIIIIIIIIIII",
+          "n": 16
+        }
+      },
+      "family": "qecc_stabilizer",
+      "published_best": 4,
+      "seed": 909,
+      "target_id": "qecc_16_5_open",
+      "verdict": "NULL_RESULT",
+      "verified": true,
+      "wall_clock_seconds": 0.030245998997997958
+    }
+  ]
+}

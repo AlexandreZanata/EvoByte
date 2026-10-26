@@ -1,0 +1,86 @@
+{
+  "manifest_version": "1.0.0",
+  "phase": "P196",
+  "campaign_id": "p196-preregistered-structured-campaign",
+  "program": "P191-P200 Structured Discovery and Functional Synthesis (D043)",
+  "preregistered_at": "2026-10-26T12:00:00Z",
+  "statement": "Preregistration of the structured frontier discovery campaign targeting the 5 narrow-gap open problems frozen in P191 (gap <= 2). Targets, seeds, budgets, symmetry groups, and verdict criteria are frozen before execution.",
+  "targets": [
+    "covering_C_13_6_3",
+    "covering_C_14_6_3",
+    "covering_C_15_8_4",
+    "qecc_14_3_open",
+    "qecc_16_5_open"
+  ],
+  "target_specifications": {
+    "covering_C_13_6_3": {
+      "family": "covering_design",
+      "params": {"v": 13, "k": 6, "t": 3},
+      "symmetry_group": "Z_13",
+      "published_best": 21,
+      "theoretical_lower_bound": 20,
+      "gap": 1,
+      "beat_condition": "size <= 20",
+      "tie_condition": "size == 21 non-isomorphic",
+      "verifier": "verify_covering_design"
+    },
+    "covering_C_14_6_3": {
+      "family": "covering_design",
+      "params": {"v": 14, "k": 6, "t": 3},
+      "symmetry_group": "Z_14",
+      "published_best": 25,
+      "theoretical_lower_bound": 24,
+      "gap": 1,
+      "beat_condition": "size <= 24",
+      "tie_condition": "size == 25 non-isomorphic",
+      "verifier": "verify_covering_design"
+    },
+    "covering_C_15_8_4": {
+      "family": "covering_design",
+      "params": {"v": 15, "k": 8, "t": 4},
+      "symmetry_group": "Z_15",
+      "published_best": 30,
+      "theoretical_lower_bound": 29,
+      "gap": 1,
+      "beat_condition": "size <= 29",
+      "tie_condition": "size == 30 non-isomorphic",
+      "verifier": "verify_covering_design"
+    },
+    "qecc_14_3_open": {
+      "family": "qecc_stabilizer",
+      "params": {"n": 14, "k": 3},
+      "symmetry_group": "circulant_Z_7",
+      "published_best_d": 4,
+      "theoretical_upper_bound_d": 5,
+      "gap": 1,
+      "beat_condition": "d >= 5",
+      "tie_condition": "d == 4 non-isomorphic",
+      "verifier": "check_stabilizer and code_distance"
+    },
+    "qecc_16_5_open": {
+      "family": "qecc_stabilizer",
+      "params": {"n": 16, "k": 5},
+      "symmetry_group": "circulant_Z_8",
+      "published_best_d": 4,
+      "theoretical_upper_bound_d": 5,
+      "gap": 1,
+      "beat_condition": "d >= 5",
+      "tie_condition": "d == 4 non-isomorphic",
+      "verifier": "check_stabilizer and code_distance"
+    }
+  },
+  "seeds": [42, 101, 202, 303, 404, 505, 606, 707, 808, 909],
+  "trials_per_target": 10,
+  "total_trials": 50,
+  "budget_seconds_per_trial": 600.0,
+  "verdict_rule": {
+    "DISCOVERY_BEATEN": "At least one candidate object strictly beats the published record and is certified by the zero-dependency verifier.",
+    "DISCOVERY_TIED": "No candidate beats the published record, but at least one candidate matches the published record non-isomorphically and is certified.",
+    "NULL_RESULT": "Fixed budget exhausted across all seeds without meeting or beating the published record."
+  },
+  "integrity_rules": {
+    "independent_verification": true,
+    "no_precomputed_solution_seeds": true,
+    "periodic_checkpoint_seconds": 60.0
+  }
+}

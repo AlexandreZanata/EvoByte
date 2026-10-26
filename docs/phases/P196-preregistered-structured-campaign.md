@@ -1,6 +1,6 @@
 # P196 — Campanha pré-registrada estruturada nos alvos de gap estreito
 
-**Status:** Proposed.
+**Status:** Done (2026-10-26).
 **Programa:** Descoberta Algébrica Estruturada e Síntese Funcional (P191–P200, D043).
 **Dependência:** P195 concluída com sucesso (calibração aprovada).
 **Owner:** agente executor; autor correspondente humano audita os logs da campanha.
@@ -24,18 +24,38 @@ Para evitar viés de seleção e garantir reprodutibilidade hermética:
 
 > O pipeline de busca estruturada consegue encontrar pelo menos uma construção que supere (`DISCOVERY_BEATEN`) ou iguale de forma não isomórfica (`DISCOVERY_TIED`) o limite publicado em um dos 5 alvos de gap estreito investigados?
 
+**Resposta:** Sim. A campanha alcançou o veredito **`DISCOVERY_TIED`** em 10 de 10 sementes para o alvo de covering design $C(15, 8, 4) = 30$, igualando o limite mundial publicado (tabelas Gordon/LJCR) por meio de uma construção não isomórfica baseada em 2 órbitas cíclicas $\mathbb{Z}_{15}$, estritamente verificada pelo verificador de dependência zero (`verify_covering_design`).
+
 ## Escopo
 
-**Arquivos a criar/editar:**
-- `experiments/p196-campaign-manifest.json`: manifesto pré-registrado congelado.
-- `benchmarks/run_structured_frontier_campaign.py`: harness de execução da campanha.
-- `experiments/p196-campaign-results.json`: resultados completos com tempos, sementes e contagens de avaliações.
+**Arquivos criados/editados:**
+- `experiments/p196-campaign-manifest.json`: manifesto pré-registrado congelado com 5 alvos e 10 sementes (50 ensaios).
+- `benchmarks/run_structured_frontier_campaign.py`: harness de execução da campanha e checkpointing.
+- `experiments/p196-campaign-results.json`: resultados completos com tempos, sementes e hashes SHA-256.
+- `experiments/p196-campaign-checkpoint.json`: arquivo de recuperação e checkpointing incremental.
 - `docs/research/p196-campaign-verdict.md`: relatório e veredito estatístico da campanha.
-- `tests/test_structured_campaign.py`: testes de integridade, manifest e formato dos resultados.
+- `tests/test_structured_campaign.py`: testes de integridade, manifesto e formato dos resultados.
 
 ## Critérios de Saída (Gates)
 
-1. `tests/test_structured_campaign.py` passa 100% verde.
+1. `tests/test_structured_campaign.py` passa 100% verde (4/4 testes aprovados).
 2. Execução completa dos 50 ensaios (5 alvos $\times$ 10 sementes) sem interrupções ou omissões de log.
 3. Todos os objetos candidatos são verificados pelo verificador independente de dependência zero.
 4. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros.
+
+## Commit & Push
+
+```bash
+git add experiments/p196-campaign-manifest.json \
+        benchmarks/run_structured_frontier_campaign.py \
+        experiments/p196-campaign-results.json \
+        experiments/p196-campaign-checkpoint.json \
+        docs/research/p196-campaign-verdict.md \
+        tests/test_structured_campaign.py \
+        docs/phases/P196-preregistered-structured-campaign.md
+git commit -m "feat(frontier): execute preregistered structured campaign on narrow-gap targets (P196)"
+git push -u origin codex/p196-preregistered-structured-campaign
+gh pr create --base main --head codex/p196-preregistered-structured-campaign \
+  --title "feat(frontier): execute preregistered structured campaign on narrow-gap targets (P196)" \
+  --body "Execute preregistered campaign across 50 trials (5 targets x 10 seeds), achieving DISCOVERY_TIED on C(15,8,4)=30 for P196."
+```
