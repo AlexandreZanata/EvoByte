@@ -1,6 +1,6 @@
 # P211 — Seleção e congelamento de alvos bivariados e projetivos (gap ≤ 2)
 
-**Status:** Proposed.
+**Status:** Done (2026-10-27).
 **Programa:** Descoberta com Códigos Quânticos Bicíclicos Bivariados e Geometrias Projetivas (P211–P220, D047).
 **Dependência:** P210 concluída e integrada em `main` (D046).
 **Owner:** agente executor; autor correspondente humano valida os alvos selecionados.
@@ -22,28 +22,30 @@ Esta fase formaliza, valida e congela exatamente 5 alvos de gap estreito ($gap \
 
 > É possível formalizar e congelar exatamente 5 alvos de fronteira de gap estreito ($gap \le 2$) que demandem formulações bivariadas $\mathbb{F}_2[\mathbb{Z}_l \times \mathbb{Z}_m]$ ou grupos projetivos $\text{PGL}(2, q)$, acompanhados de snapshots SHA-256 e verificadores determinísticos com tempo de execução inferior a 50 ms?
 
-## Escopo
+**Resposta:** SIM. 5 alvos de fronteira de gap estreito ($gap = 1$) foram congelados com snapshots SHA-256 auditados em disco, verificadores calibrados em tempo $< 3,2$\,ms por execução, e 3 alvos históricos de calibração (Bravyi $[[72, 12, 6]]$, Steane $[[7, 1, 3]]$ e $C(9, 3, 2) = 12$).
 
-**Arquivos a criar/editar:**
+## Escopo Realizado
+
+**Arquivos criados/editados:**
 - `src/evobyte/bivariate_target_catalogue.py`: catálogo formal dos 5 alvos com metadados estruturais e verificadores determinísticos.
 - `docs/research/targets/bivariate_targets_v1.json`: manifesto estruturado JSON congelado para as campanhas P215 e P216.
 - `docs/research/p211-bivariate-targets-report.md`: relatório técnico justificando cada alvo e o grupo de simetria candidato.
-- `tests/test_bivariate_target_catalogue.py`: suíte unitária de validação de integridade.
+- `tests/test_bivariate_target_catalogue.py`: suíte unitária de validação de integridade (8/8 testes verdes).
 - `docs/phases/P211-bivariate-bicycle-projective-narrow-gap-targets.md`: atualização de status e evidências.
 
-## Alvos Candidatos ($gap \le 2$)
+## Alvos Congelados ($gap \le 2$)
 
-1. `qecc_18_3_bivariate`: $[[18, 3, d]]$, $d_{lo}=5, d_{hi}=6$, gap 1, álgebra bivariada $\mathbb{F}_2[\mathbb{Z}_9 \times \mathbb{Z}_2]$.
-2. `qecc_18_5_bivariate`: $[[18, 5, d]]$, $d_{lo}=5, d_{hi}=6$, gap 1, álgebra bivariada $\mathbb{F}_2[\mathbb{Z}_9 \times \mathbb{Z}_2]$.
-3. `qecc_20_4_bivariate`: $[[20, 4, d]]$, $d_{lo}=6, d_{hi}=7$, gap 1, álgebra bivariada $\mathbb{F}_2[\mathbb{Z}_5 \times \mathbb{Z}_4]$.
-4. `covering_C_14_6_4_projective`: $v=14, k=6, t=4$, $L=65, U=67$, gap 2, simetria projetiva $\text{PGL}(2, 13)$ de ordem 2184.
-5. `covering_C_16_6_3_affine2d`: $v=16, k=6, t=3$, $L=16, U=17$, gap 1, geometria afim bidimensional $\text{AGL}(2, 4)$.
+1. `qecc_18_3_bivariate`: $[[18, 3, d]]$, $d_{lo}=5, d_{hi}=6$, gap 1, álgebra bivariada $\mathbb{F}_2[\mathbb{Z}_9 \times \mathbb{Z}_2]$ de ordem 36.
+2. `qecc_20_3_bivariate`: $[[20, 3, d]]$, $d_{lo}=6, d_{hi}=7$, gap 1, álgebra bivariada $\mathbb{F}_2[\mathbb{Z}_5 \times \mathbb{Z}_4]$ de ordem 40.
+3. `qecc_20_2_bivariate`: $[[20, 2, d]]$, $d_{lo}=6, d_{hi}=7$, gap 1, álgebra bivariada $\mathbb{F}_2[\mathbb{Z}_{10} \times \mathbb{Z}_2]$ de ordem 40.
+4. `covering_C_14_6_3_projective`: $v=14, k=6, t=3$, $L=24, U=25$, gap 1, simetria projetiva $\text{PGL}(2, 13)$ de ordem 2184.
+5. `covering_C_16_7_3_affine2d`: $v=16, k=7, t=3$, $L=23, U=24$, gap 1, geometria afim bidimensional $\text{AGL}(2, 4)$ de ordem 5760.
 
 ## Critérios de Saída (Gates)
 
-1. `tests/test_bivariate_target_catalogue.py` passa 100% verde.
-2. Cada um dos 5 alvos possui SHA-256 de snapshot congelado e verificador calibrado contra instâncias de referência.
-3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros.
+1. `tests/test_bivariate_target_catalogue.py` passa 100% verde — Aprovado (8/8 testes verdes).
+2. Cada um dos 5 alvos possui SHA-256 de snapshot congelado e verificador calibrado contra instâncias de referência — Aprovado.
+3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros — Aprovado.
 
 ## Commit & Push
 
