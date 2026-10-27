@@ -453,6 +453,23 @@ Estado atual: **concluído** (D046) — Empate com recorde mundial em códigos q
 - P209 executa auditoria de novidade na literatura mundial e empacota dossiês para curadores sob custódia humana.
 - P210 compila o manuscrito científico, valida contêiner Zenodo e encerra o programa sob D046.
 
+## Bivariate bicycle quantum codes & projective geometries program (P211–P220, D047)
+
+[Programa de Descoberta com Códigos Quânticos Bicíclicos Bivariados e Geometrias Projetivas](phases/README.md#programa-de-descoberta-com-códigos-quânticos-bicíclicos-bivariados-e-geometrias-projetivas-p211p220-d047)
+avança a fronteira além dos códigos quase-cíclicos 1D de D046 (que atingiram $d=4$) para a exploração sistemática de álgebras de grupo abelianas bidimensionais $\mathbb{F}_2[\mathbb{Z}_l \times \mathbb{Z}_m]$ (códigos bicíclicos bivariados / 2D lifted products) em busca de distância quântica $d \ge 5$ nos parâmetros em aberto da literatura mundial ($[[18, 3, d]]$, $[[18, 5, d]]$, $[[20, 4, d]]$) e designs de cobertura sob grupos projetivos lineares $\text{PGL}(2, q)$ e geometrias afins 2D $\text{AGL}(2, q)$.
+Estado atual: **proposto / em andamento**.
+
+- P211 congela 5 alvos de gap estreito que exigem códigos quânticos bivariados e geometrias projetivas.
+- P212 implementa o motor de grupos projetivos ($\text{PGL}(2, q)$) e álgebras de grupo bivariadas ($\mathbb{F}_2[\mathbb{Z}_l \times \mathbb{Z}_m]$).
+- P213 implementa o motor gerador e verificador de códigos bicíclicos bivariados e produto levantado 2D.
+- P214 implementa a codificação SAT exata para distância mínima $d \ge 5$ e decodificação BP-OSD.
+- P215 executa calibração cega obrigatória em alvos históricos ($[[72, 12, 6]]$ de Bravyi et al. e $\text{PG}(2, 3)$).
+- P216 executa a campanha pré-registrada nos 5 alvos congelados sob orçamentos estritos de tempo de parede.
+- P217 extrai certificados canônicos v4.0.0 com verificador standalone de dependência zero (< 2 ms).
+- P218 certifica formalmente os teoremas provados no kernel Lean 4 com zero sorry.
+- P219 executa auditoria de novidade na literatura mundial e empacota dossiês para curadores sob custódia humana.
+- P220 compila o manuscrito científico, valida contêiner Zenodo e encerra o programa sob D048.
+
 ## Quantum track (experimental, deferred expansion)
 
 
