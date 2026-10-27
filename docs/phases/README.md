@@ -398,7 +398,20 @@ P191–P200 are completed (Done, D044) with all measured gates passing, clean-tr
 verification, 5 Lean 4 kernel theorems with zero sorry, autonomous verification under 1.5 ms,
 and manuscript compiled in docs/structured-paper/main.pdf.
 
+## Programa de Descoberta com Simetrias Generalizadas e Códigos Quânticos Não-Circulantes (P201–P210, D045)
 
+- [P201 — Seleção e congelamento de alvos não-circulantes e afins (gap ≤ 2)](P201-generalized-symmetry-narrow-gap-targets.md).
+- [P202 — Motor de grupos de automorfismos generalizados (Affine, Dihedral & Projective Orbits)](P202-generalized-automorphism-orbit-reduction.md).
+- [P203 — Gerador e verificador de códigos quânticos quase-cíclicos e não-circulantes (Lifted Product & Quasi-Cyclic QECC)](P203-quasi-cyclic-non-circulant-qecc-engine.md).
+- [P204 — Codificação SAT exata para comutação simplética e distância mínima (Exact SAT QECC & Covering Formulations)](P204-exact-sat-distance-and-symplectic-encoder.md).
+- [P205 — Calibração cega em códigos quânticos não-circulantes e designs afins (Blind Historical Calibration)](P205-blind-calibration-affine-non-circulant.md).
+- [P206 — Campanha pré-registrada estruturada em alvos não-circulantes e afins (Preregistered Generalized Campaign)](P206-preregistered-generalized-campaign.md).
+- [P207 — Extração de certificados autônomos v3.0.0 e verificador independente de dependência zero (Zero-Dependency Standalone Verifier)](P207-v3-certificates-and-standalone-verifier.md).
+- [P208 — Certificação formal no kernel Lean 4 (Formal Verification Gate)](P208-lean4-kernel-formal-certification.md).
+- [P209 — Auditoria de novidade na literatura mundial e dossiês para curadores (Curator Dossiers)](P209-world-literature-audit-curator-dossiers.md).
+- [P210 — Manuscrito de pesquisa, pacote arquival Zenodo e registro da decisão D046](P210-discovery-manuscript-and-decision-d045.md).
+
+All phases remain Proposed until measured and accepted under their explicit gates.
 
 ## Historical execution and acceptance contract
 
