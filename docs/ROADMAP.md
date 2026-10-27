@@ -64,6 +64,10 @@ P129–P136 discrete geometry, Erdős distinct distances & point configurations 
 P137–P144 discrepancy theory, Erdős discrepancy problem & covering systems program (D037)
 P145–P152 constructive algebraic discovery & high-moduli Schinzel program (D038)
 P153–P160 P13 clean reproduction closing & systems publication program (D039)
+P161–P170 validated discovery program (D041)
+P171–P190 frontier discovery program (D042)
+P191–P200 structured discovery program (D043)
+P201–P210 generalized symmetry & non-circulant quantum codes program (D045)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -431,6 +435,23 @@ Estado atual: **concluído** (D044) — Descoberta de empate $C(15, 8, 4) = 30$ 
 - P198 certificou formalmente 5 teoremas no kernel Lean 4 com zero sorry e axiomas padrão.
 - P199 auditou literatura mundial (LJCR, codetables.de, OEIS) e gerou pacotes de curador sob custódia humana.
 - P200 compilou o manuscrito científico (`docs/structured-paper/main.pdf`), elaborou o dossiê de impacto e encerrou o programa sob D044.
+
+## Generalized symmetry & non-circulant quantum codes program (P201–P210, D045)
+
+[Programa de Descoberta com Simetrias Generalizadas e Códigos Quânticos Não-Circulantes](phases/README.md#programa-de-descoberta-com-simetrias-generalizadas-e-códigos-quânticos-não-circulantes-p201p210-d045)
+avança além dos limites delimitados em D044 (onde a Proposição 4.1 provou que códigos puramente circulantes não superam $d=3$ e onde alvos densos resistiram a $\mathbb{Z}_m$). O programa quebra a simetria circulante elementar através de arquiteturas quase-cíclicas acopladas e códigos produto levantados (lifted product), e expande o espaço de busca combinatório para grupos afins 1-dimensionais $\text{AGL}(1, q)$ e grupos diédricos $D_m$, integrados com codificação SAT exata de distância quântica e prioridade funcional em bytecode na GPU.
+Estado atual: **proposto / em andamento**.
+
+- P201 congela 5 alvos de gap estreito que exigem quebra de simetria circulante e grupos afins.
+- P202 implementa o motor de grupos de automorfismos generalizados ($\text{AGL}(1, q)$ e $D_m$).
+- P203 implementa o motor de códigos quânticos quase-cíclicos e produto levantado (lifted product).
+- P204 implementa a codificação SAT exata de comutação simplética e distância mínima $d \ge 4$.
+- P205 executa calibração cega obrigatória em alvos históricos (Shor $[[9, 1, 3]]$, Steane $[[7, 1, 3]]$ e $C(9, 3, 2)=12$).
+- P206 executa a campanha pré-registrada nos 5 alvos congelados sob orçamentos estritos de tempo de parede.
+- P207 extrai certificados canônicos v3.0.0 com verificador standalone de dependência zero (< 2 ms).
+- P208 certifica formalmente os teoremas provados no kernel Lean 4 com zero sorry.
+- P209 executa auditoria de novidade na literatura mundial e empacota dossiês para curadores sob custódia humana.
+- P210 compila o manuscrito científico, valida contêiner Zenodo e encerra o programa sob D046.
 
 ## Quantum track (experimental, deferred expansion)
 
