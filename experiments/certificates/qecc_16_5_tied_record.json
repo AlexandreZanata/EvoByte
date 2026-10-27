@@ -1,0 +1,35 @@
+{
+  "candidate": {
+    "code_structure": "non_circulant_css",
+    "generators": [
+      "XXXXXXXXXXXXXXXX",
+      "XIXXXXXXXIIIIIII",
+      "IIIXXIIXXXXXXIII",
+      "XIXIXIIXIIXXIXXI",
+      "IIXIIXIXXIIXXIXX",
+      "ZZZZZZZZZZZZZZZZ",
+      "ZIZZZIZIZIIIZIZI",
+      "ZIZIIZIZIIZZZIZI",
+      "ZIIZIIIZZZIZZZII",
+      "ZIZZZZIZIIIIZZZZ",
+      "ZIZZZZIZIZIIIIIZ"
+    ],
+    "num_generators": 11
+  },
+  "certificate_type": "qecc_stabilizer",
+  "certificate_version": "3.0.0",
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine",
+    "seed": 42,
+    "timestamp_utc": "2026-10-27T18:41:19Z",
+    "wall_clock_seconds": 0.32623312099894974
+  },
+  "parameters": {
+    "claimed_d": 4,
+    "k": 5,
+    "n": 16
+  },
+  "sha256_checksum": "6837d14248cdea697dc5af7a3315bc0c2771518c2c419c363e04ad78561cbe75",
+  "target_id": "qecc_16_5_noncirculant",
+  "verdict": "DISCOVERY_TIED"
+}

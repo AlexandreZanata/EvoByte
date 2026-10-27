@@ -1,0 +1,30 @@
+{
+  "candidate": {
+    "code_structure": "steane_fano_css",
+    "generators": [
+      "XIXIXIX",
+      "IXXIXXI",
+      "IXXXIIX",
+      "ZIZIZIZ",
+      "IZZIZZI",
+      "IZZZIIZ"
+    ],
+    "num_generators": 6
+  },
+  "certificate_type": "qecc_stabilizer",
+  "certificate_version": "3.0.0",
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine",
+    "seed": 42,
+    "solve_time_seconds": 0.004959942991263233,
+    "timestamp_utc": "2026-10-27T18:41:19Z"
+  },
+  "parameters": {
+    "claimed_d": 3,
+    "k": 1,
+    "n": 7
+  },
+  "sha256_checksum": "fa3755f1de9324346614bfe7350e26b4fb442b4d38a7620d885ebf21eaaf545f",
+  "target_id": "calib_steane_7_1_3",
+  "verdict": "CALIBRATION_REPRODUCED"
+}
