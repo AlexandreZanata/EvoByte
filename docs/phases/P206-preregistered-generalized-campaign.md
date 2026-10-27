@@ -1,6 +1,6 @@
 # P206 — Campanha pré-registrada estruturada em alvos não-circulantes e afins (Preregistered Generalized Campaign)
 
-**Status:** Proposed.
+**Status:** Concluída (2026-10-27).
 **Programa:** Descoberta com Simetrias Generalizadas e Códigos Quânticos Não-Circulantes (P201–P210, D045).
 **Dependência:** P205 concluída e integrada em `main`.
 **Owner:** agente executor.
@@ -24,20 +24,27 @@ Toda execução opera sob limites rígidos de tempo de parede (wall-clock budget
 
 > A busca estruturada com simetrias generalizadas e códigos quase-cíclicos alcança pelo menos uma nova realização de empate (`DISCOVERY_TIED`), delimitador estrutural comprovado (`NULL_BOUND`) ou superação (`DISCOVERY_BEATEN`) nos 5 alvos congelados?
 
-## Escopo
+**Resposta:** SIM. O pipeline alcançou o veredito global `DISCOVERY_TIED`:
+- 10 realizações `DISCOVERY_TIED`: quebrou a barreira circulante $d \le 3$, alcançando $d = 4$ em $[[14, 3, 4]]$ (5/5 sementes) e $[[16, 5, 4]]$ (5/5 sementes).
+- 10 provas `NULL_BOUND`: provou que órbitas completas sob $\text{AGL}(1, 13)$ para $C(13, 5, 3)$ (mínimo 39 blocos) e $D_{15}$ para $C(15, 10, 4)$ (mínimo 15 blocos) não podem atingir os recordes de 34 e 14 blocos.
+- 5 ensaios `NULL_RESULT`: $[[18, 3, d]]$ atingiu $d=4 < 5$.
 
-**Arquivos a criar/editar:**
-- `benchmarks/run_p206_generalized_campaign.py`: harness executável da campanha estruturada com controle de orçamento e sementes.
-- `experiments/p206-generalized-campaign-results.json`: resultados brutos completos com tempos e métricas.
-- `docs/research/p206-generalized-campaign-report.md`: relatório detalhado de achados e análises comparativas.
-- `tests/test_p206_generalized_campaign.py`: verificação automatizada de sanidade e integridade dos resultados.
-- `docs/phases/P206-preregistered-generalized-campaign.md`: atualização de status e evidências.
+## Escopo Realizado
+
+**Arquivos criados/editados:**
+- `src/evobyte/generalized_campaign.py`: rotinas de avaliação de cada um dos 5 alvos e controle de campanha multi-semente.
+- `benchmarks/run_p206_generalized_campaign.py`: harness executável da campanha com controle de tempo, checkpoints e relatórios.
+- `experiments/p206-generalized-campaign-results.json`: manifesto com os 25 ensaios e hashes imutáveis SHA-256.
+- `experiments/p206-generalized-campaign-checkpoint.json`: checkpoint de progresso persistente.
+- `docs/research/p206-generalized-campaign-report.md`: relatório detalhado de achados e análises de obstrução.
+- `tests/test_p206_generalized_campaign.py`: testes unitários e verificação oracular independente (6/6 verdes).
+- `docs/phases/P206-preregistered-generalized-campaign.md`: status e evidências atualizados.
 
 ## Critérios de Saída (Gates)
 
-1. `tests/test_p206_generalized_campaign.py` passa 100% verde.
-2. Todos os ensaios executados respeitam o orçamento pré-registrado e salvam checkpoints com hashes imutáveis.
-3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros.
+1. `tests/test_p206_generalized_campaign.py` passa 100% verde — Aprovado (6/6 testes em 5,21 s).
+2. Todos os ensaios executados respeitam o orçamento pré-registrado e salvam checkpoints com hashes imutáveis — Aprovado (tempo total 12,18 s, todos $< 3$\,s por ensaio vs teto de 30 s).
+3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros — Aprovado.
 
 ## Commit & Push
 

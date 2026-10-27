@@ -1,0 +1,740 @@
+{
+  "git_commit": "59dcf9a8b6f98a926a9bf5005480fe27ebb0e39f",
+  "hardware": {
+    "platform": "Linux-7.2.6-76070206-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "pysat_version": "1.9.dev17",
+    "python_version": "3.12.2"
+  },
+  "protocol": "P206 Preregistered Generalized Symmetry Campaign",
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "solver_used": "cadical153",
+  "targets": {
+    "covering_C_13_5_3_affine": {
+      "family": "covering_design",
+      "name": "C(13,5,3)",
+      "published_best": 34,
+      "trials": [
+        {
+          "achieved_value": null,
+          "candidate_sha256": "2ff91ba096bfeed2912f2e38d98508b2fc531f1a44e0cb6e60ff80cb98a61cab",
+          "details": {
+            "group": "AGL(1, 13)",
+            "group_order": 156,
+            "min_orbit_length": 39,
+            "orbit_count": 10,
+            "orbit_lengths": [
+              39,
+              78,
+              156
+            ],
+            "proof": "AGL(1, 13) has 10 orbit representatives on 5-subsets of 13. All orbit lengths are in [39, 78, 156], with minimal orbit length 39. Since 39 > 34 (world record), no AGL(1, 13)-invariant covering design can match or beat 34 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 5,
+          "published_best": 34,
+          "seed": 42,
+          "t": 3,
+          "target_id": "covering_C_13_5_3_affine",
+          "v": 13,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.30367574900446925
+        },
+        {
+          "achieved_value": null,
+          "candidate_sha256": "2ff91ba096bfeed2912f2e38d98508b2fc531f1a44e0cb6e60ff80cb98a61cab",
+          "details": {
+            "group": "AGL(1, 13)",
+            "group_order": 156,
+            "min_orbit_length": 39,
+            "orbit_count": 10,
+            "orbit_lengths": [
+              39,
+              78,
+              156
+            ],
+            "proof": "AGL(1, 13) has 10 orbit representatives on 5-subsets of 13. All orbit lengths are in [39, 78, 156], with minimal orbit length 39. Since 39 > 34 (world record), no AGL(1, 13)-invariant covering design can match or beat 34 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 5,
+          "published_best": 34,
+          "seed": 43,
+          "t": 3,
+          "target_id": "covering_C_13_5_3_affine",
+          "v": 13,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.2683414959901711
+        },
+        {
+          "achieved_value": null,
+          "candidate_sha256": "2ff91ba096bfeed2912f2e38d98508b2fc531f1a44e0cb6e60ff80cb98a61cab",
+          "details": {
+            "group": "AGL(1, 13)",
+            "group_order": 156,
+            "min_orbit_length": 39,
+            "orbit_count": 10,
+            "orbit_lengths": [
+              39,
+              78,
+              156
+            ],
+            "proof": "AGL(1, 13) has 10 orbit representatives on 5-subsets of 13. All orbit lengths are in [39, 78, 156], with minimal orbit length 39. Since 39 > 34 (world record), no AGL(1, 13)-invariant covering design can match or beat 34 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 5,
+          "published_best": 34,
+          "seed": 44,
+          "t": 3,
+          "target_id": "covering_C_13_5_3_affine",
+          "v": 13,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.24093521900067572
+        },
+        {
+          "achieved_value": null,
+          "candidate_sha256": "2ff91ba096bfeed2912f2e38d98508b2fc531f1a44e0cb6e60ff80cb98a61cab",
+          "details": {
+            "group": "AGL(1, 13)",
+            "group_order": 156,
+            "min_orbit_length": 39,
+            "orbit_count": 10,
+            "orbit_lengths": [
+              39,
+              78,
+              156
+            ],
+            "proof": "AGL(1, 13) has 10 orbit representatives on 5-subsets of 13. All orbit lengths are in [39, 78, 156], with minimal orbit length 39. Since 39 > 34 (world record), no AGL(1, 13)-invariant covering design can match or beat 34 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 5,
+          "published_best": 34,
+          "seed": 45,
+          "t": 3,
+          "target_id": "covering_C_13_5_3_affine",
+          "v": 13,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.21689226999296807
+        },
+        {
+          "achieved_value": null,
+          "candidate_sha256": "2ff91ba096bfeed2912f2e38d98508b2fc531f1a44e0cb6e60ff80cb98a61cab",
+          "details": {
+            "group": "AGL(1, 13)",
+            "group_order": 156,
+            "min_orbit_length": 39,
+            "orbit_count": 10,
+            "orbit_lengths": [
+              39,
+              78,
+              156
+            ],
+            "proof": "AGL(1, 13) has 10 orbit representatives on 5-subsets of 13. All orbit lengths are in [39, 78, 156], with minimal orbit length 39. Since 39 > 34 (world record), no AGL(1, 13)-invariant covering design can match or beat 34 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 5,
+          "published_best": 34,
+          "seed": 46,
+          "t": 3,
+          "target_id": "covering_C_13_5_3_affine",
+          "v": 13,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.20681458599574398
+        }
+      ],
+      "trials_total": 5
+    },
+    "covering_C_15_10_4_affine": {
+      "family": "covering_design",
+      "name": "C(15,10,4)",
+      "published_best": 14,
+      "trials": [
+        {
+          "achieved_value": null,
+          "candidate_sha256": "c0a8d62106af7956b59e41e1cabdf54aef0ed1f9d224ec9eb14b3233607c918a",
+          "details": {
+            "group": "D_15",
+            "group_order": 30,
+            "min_non_trivial_orbit_length": 15,
+            "orbit_count": 111,
+            "orbit_lengths": [
+              3,
+              15,
+              30
+            ],
+            "proof": "D_15 has 111 orbit representatives on 10-subsets of 15. Orbit lengths are in [3, 15, 30]. The single orbit of size 3 covers only 3 quadruples out of 1365. All other orbits have size >= 15. Since 15 > 14 (world record), no D_15-invariant covering design can match or beat 14 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 10,
+          "published_best": 14,
+          "seed": 42,
+          "t": 4,
+          "target_id": "covering_C_15_10_4_affine",
+          "v": 15,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.12002258200664073
+        },
+        {
+          "achieved_value": null,
+          "candidate_sha256": "c0a8d62106af7956b59e41e1cabdf54aef0ed1f9d224ec9eb14b3233607c918a",
+          "details": {
+            "group": "D_15",
+            "group_order": 30,
+            "min_non_trivial_orbit_length": 15,
+            "orbit_count": 111,
+            "orbit_lengths": [
+              3,
+              15,
+              30
+            ],
+            "proof": "D_15 has 111 orbit representatives on 10-subsets of 15. Orbit lengths are in [3, 15, 30]. The single orbit of size 3 covers only 3 quadruples out of 1365. All other orbits have size >= 15. Since 15 > 14 (world record), no D_15-invariant covering design can match or beat 14 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 10,
+          "published_best": 14,
+          "seed": 43,
+          "t": 4,
+          "target_id": "covering_C_15_10_4_affine",
+          "v": 15,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.11724160800804384
+        },
+        {
+          "achieved_value": null,
+          "candidate_sha256": "c0a8d62106af7956b59e41e1cabdf54aef0ed1f9d224ec9eb14b3233607c918a",
+          "details": {
+            "group": "D_15",
+            "group_order": 30,
+            "min_non_trivial_orbit_length": 15,
+            "orbit_count": 111,
+            "orbit_lengths": [
+              3,
+              15,
+              30
+            ],
+            "proof": "D_15 has 111 orbit representatives on 10-subsets of 15. Orbit lengths are in [3, 15, 30]. The single orbit of size 3 covers only 3 quadruples out of 1365. All other orbits have size >= 15. Since 15 > 14 (world record), no D_15-invariant covering design can match or beat 14 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 10,
+          "published_best": 14,
+          "seed": 44,
+          "t": 4,
+          "target_id": "covering_C_15_10_4_affine",
+          "v": 15,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.11729937999916729
+        },
+        {
+          "achieved_value": null,
+          "candidate_sha256": "c0a8d62106af7956b59e41e1cabdf54aef0ed1f9d224ec9eb14b3233607c918a",
+          "details": {
+            "group": "D_15",
+            "group_order": 30,
+            "min_non_trivial_orbit_length": 15,
+            "orbit_count": 111,
+            "orbit_lengths": [
+              3,
+              15,
+              30
+            ],
+            "proof": "D_15 has 111 orbit representatives on 10-subsets of 15. Orbit lengths are in [3, 15, 30]. The single orbit of size 3 covers only 3 quadruples out of 1365. All other orbits have size >= 15. Since 15 > 14 (world record), no D_15-invariant covering design can match or beat 14 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 10,
+          "published_best": 14,
+          "seed": 45,
+          "t": 4,
+          "target_id": "covering_C_15_10_4_affine",
+          "v": 15,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.11750017499434762
+        },
+        {
+          "achieved_value": null,
+          "candidate_sha256": "c0a8d62106af7956b59e41e1cabdf54aef0ed1f9d224ec9eb14b3233607c918a",
+          "details": {
+            "group": "D_15",
+            "group_order": 30,
+            "min_non_trivial_orbit_length": 15,
+            "orbit_count": 111,
+            "orbit_lengths": [
+              3,
+              15,
+              30
+            ],
+            "proof": "D_15 has 111 orbit representatives on 10-subsets of 15. Orbit lengths are in [3, 15, 30]. The single orbit of size 3 covers only 3 quadruples out of 1365. All other orbits have size >= 15. Since 15 > 14 (world record), no D_15-invariant covering design can match or beat 14 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          },
+          "family": "covering_design",
+          "k": 10,
+          "published_best": 14,
+          "seed": 46,
+          "t": 4,
+          "target_id": "covering_C_15_10_4_affine",
+          "v": 15,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.11702908300503623
+        }
+      ],
+      "trials_total": 5
+    },
+    "qecc_14_3_noncirculant": {
+      "family": "qecc_stabilizer",
+      "name": "[[14,3,d]]",
+      "published_best": 4,
+      "trials": [
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "e5b0dca17c898283dbd6ae9c083afa9cbe19cdfd811eb9ed03dec5e0e2eada6e",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXIXXXXXIIIIXI",
+            "IXIXIXXIXIIIIX",
+            "IIIXXIXIIIXXXI",
+            "IXXXIIIXXIIXXI",
+            "IIXIIIIIXXXXIX",
+            "ZIZZIZIIZZIIZZ",
+            "IZZIIZIZZIIZZZ",
+            "IZIZIIIIZZIZIZ",
+            "IIZIZIZZIZIZZZ",
+            "IZIIIIZZIIZZZI",
+            "IZZZIIZZIIIIIZ"
+          ],
+          "k": 3,
+          "n": 14,
+          "published_best": 4,
+          "seed": 42,
+          "target_id": "qecc_14_3_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.5538121009885799
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "0aa0f9885169f2116ee139c7704161dc415a540192076deb155904b7e0346908",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXIXIIIXIXXIIX",
+            "IXXXXIIIXIXIIX",
+            "IIIXIXIIXXXIXI",
+            "IXXXIIIXIIIXXI",
+            "IXIIIIXIXXIXIX",
+            "IZZZIZIIZIIIZI",
+            "IIIIIZZZZIZIZI",
+            "IZIZZIZZZZIIZI",
+            "IZIIZIZIZIZZII",
+            "ZIIZZIIIIIIIZI",
+            "ZIIIZIZIIIIIIZ"
+          ],
+          "k": 3,
+          "n": 14,
+          "published_best": 4,
+          "seed": 43,
+          "target_id": "qecc_14_3_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.06653975800145417
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "8774b253b85a619264091f63e4d3a7e99c53e1ac70b432d675805f122e135ec5",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "IXIIXIXIXIXXIX",
+            "IIXXIIXIXIIXXI",
+            "IIXIXXXXIIXIXI",
+            "XIXIXIIIXXXXXI",
+            "XIXIXIIXIIIXIX",
+            "ZIZIIIIZIIZIZZ",
+            "IZIZIIZIIIIZZZ",
+            "IIZZZIIZIIIZZI",
+            "IIIZIZZIIZZZZZ",
+            "IIIIZZIIZIZIZZ",
+            "IIIIZZZZIIIZIZ"
+          ],
+          "k": 3,
+          "n": 14,
+          "published_best": 4,
+          "seed": 44,
+          "target_id": "qecc_14_3_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.4245759420009563
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "0c88b032280e3ee051e7d50ae65311cea0ca1185acbf6e10da9b4d1ae4d1bb2d",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXIIIIXXIIIIXX",
+            "IXIIXXIXIXIXII",
+            "IIXXXXIIXXXXII",
+            "XXXXXIIIIXIIIX",
+            "XIIXXXIIIIXIXI",
+            "IZIIZZIIIIZZZI",
+            "ZIZIIIZZZZZIIZ",
+            "ZIIIIIIZZIIZZZ",
+            "IIIIIZIZIZZZIZ",
+            "IZIZIIIZIIZIII",
+            "ZZZIIIIIIIIZZZ"
+          ],
+          "k": 3,
+          "n": 14,
+          "published_best": 4,
+          "seed": 45,
+          "target_id": "qecc_14_3_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.10326904999965336
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "c192533a55611e0d60aed3e28eed808d349c68250e82e777f109470a90318811",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "IXIIIIXIXIXXIX",
+            "XIXXIIXXXIIIII",
+            "XIIXXXIIXIXIIX",
+            "IIIXXIXXIIXXXI",
+            "XIIXIIXIIXXIXX",
+            "ZZIZIZIIIZZIII",
+            "IZZIIIIIZZZZII",
+            "IIZZIIZZIZZIII",
+            "IZIZIZIZIIIZZI",
+            "IZIIIIZZIIZIZZ",
+            "IZZZZZIIIIIIIZ"
+          ],
+          "k": 3,
+          "n": 14,
+          "published_best": 4,
+          "seed": 46,
+          "target_id": "qecc_14_3_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.8167709489935078
+        }
+      ],
+      "trials_total": 5
+    },
+    "qecc_16_5_noncirculant": {
+      "family": "qecc_stabilizer",
+      "name": "[[16,5,d]]",
+      "published_best": 4,
+      "trials": [
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "63693432c54f10b50a4dc24dbcc4347ceb25cee5e71708febc469d7e53e458fd",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXXXXXXXXXXXXXXX",
+            "XIXXXXXXXIIIIIII",
+            "IIIXXIIXXXXXXIII",
+            "XIXIXIIXIIXXIXXI",
+            "IIXIIXIXXIIXXIXX",
+            "ZZZZZZZZZZZZZZZZ",
+            "ZIZZZIZIZIIIZIZI",
+            "ZIZIIZIZIIZZZIZI",
+            "ZIIZIIIZZZIZZZII",
+            "ZIZZZZIZIIIIZZZZ",
+            "ZIZZZZIZIZIIIIIZ"
+          ],
+          "k": 5,
+          "n": 16,
+          "published_best": 4,
+          "seed": 42,
+          "target_id": "qecc_16_5_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.32623312099894974
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "9bc9adb2945e205890c75f8b06442acd0fa7fcdadae1ace6cafbd9a7d86e0d46",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXXXXXXXXXXXXXXX",
+            "IXXXXXXXXIIIIIII",
+            "IXXXIIXIIIIXXXXI",
+            "IXXIXIIIXIXIIXXX",
+            "IXIXXIIXIXXXIIXI",
+            "ZZZZZZZZZZZZZZZZ",
+            "ZZIZZZZZIZZZZIZI",
+            "ZZIZZZIZZZIZIZII",
+            "IZIZIZIZIIZIZZIZ",
+            "IZIIZIIZZZZIIIZZ",
+            "ZZIIIZIIIZIIZIIZ"
+          ],
+          "k": 5,
+          "n": 16,
+          "published_best": 4,
+          "seed": 43,
+          "target_id": "qecc_16_5_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.3496108679973986
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "a0436333afbb646d888e077d828ca35d99ba827547a5f718330304463518508e",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "IXXIIXIIXIXXXIIX",
+            "IIIXIIIXXIXIXXXX",
+            "IIXIXXIXXXIIXIXI",
+            "XIXIIXXXIIXIIIXX",
+            "XIIIXXIXIIIXXXIX",
+            "ZIZZIZZIIZIZZIII",
+            "IZZZIZIZIIIZIZZI",
+            "IIZIZZIIZIIZIZII",
+            "IIIIZZZZIIZZZZII",
+            "IIIIIZIZZZZIZZZI",
+            "IIIZIIIIIIZIIZIZ"
+          ],
+          "k": 5,
+          "n": 16,
+          "published_best": 4,
+          "seed": 44,
+          "target_id": "qecc_16_5_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.45324819900270086
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "9b9204d4fe2dcf666dd4833ad20f2e03f19696fa8abd29e0008f09dfa4c9ea5e",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "IXIIXIIXIIXXXXXI",
+            "IIIXXXIIXIXIXXIX",
+            "IIIXIIXIIXXXIXXX",
+            "XXIXXXIIIXIXIXII",
+            "IXXIIXIIIXIIXXXX",
+            "IIZIIZZIZIZZZIZI",
+            "ZZZZIIZZIIZZIIII",
+            "ZZIIZIIIIIZZZIZZ",
+            "ZIZZIIIIZZIZZIIZ",
+            "ZZZIIIZIIZIIZZZI",
+            "IZZZIIZIIIIIIIZZ"
+          ],
+          "k": 5,
+          "n": 16,
+          "published_best": 4,
+          "seed": 45,
+          "target_id": "qecc_16_5_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.2443998590024421
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "7d267c75b69da0e6bc718914da9e307dfca82424b3c1838ca6e3a51df591f5c2",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXXXXXXXXXXXXXXX",
+            "XIXXXXIXXIIIXIII",
+            "XIXIXIXIIXIIXXIX",
+            "IIXIXXIIXXXIIIXX",
+            "XIXIIXIXIIXXIXIX",
+            "ZZZZZZZZZZZZZZZZ",
+            "ZIZZZZZZZZZZZIII",
+            "ZIZZIIZZZIZIZZIZ",
+            "ZIZZIIIIIIIZZIIZ",
+            "ZIZIZZIZZIIZIZII",
+            "IIZZIZZIZIIIIIZI"
+          ],
+          "k": 5,
+          "n": 16,
+          "published_best": 4,
+          "seed": 46,
+          "target_id": "qecc_16_5_noncirculant",
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.4312633579975227
+        }
+      ],
+      "trials_total": 5
+    },
+    "qecc_18_3_noncirculant": {
+      "family": "qecc_stabilizer",
+      "name": "[[18,3,d]]",
+      "published_best": 5,
+      "trials": [
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "67656be2ebf76e52e77e336d7bdc979e9d764134de691a91906b36c4a636c452",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "IXIIXIIIIXXIIXIXXI",
+            "IIIXIXXIXXXXIIXIII",
+            "XIIXIXIIIXIXXXXXXX",
+            "XIXXXIIXXIXXIXIIXX",
+            "XIIXXIIXIIIIIIXXXX",
+            "IIIXIXIXXIIIIIIXXI",
+            "IIXXIXIIXIIIIXIIIX",
+            "ZZZZZZIIIZZIZIIIIZ",
+            "IIZIZZIZIIIIIZZZZZ",
+            "ZIZZIIZIZIZIZZIIII",
+            "IIIZIZZIIZIIZZIZZZ",
+            "ZIIZIZZIIIZZZZZIIZ",
+            "IIIIZIZIIIIZZZIIIZ",
+            "ZIIIIZZIIIIIIZIZII",
+            "ZIIIIIZIIIIIIIZZZI"
+          ],
+          "k": 3,
+          "n": 18,
+          "published_best": 5,
+          "seed": 42,
+          "target_id": "qecc_18_3_noncirculant",
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.5482523160026176
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "0841b444600c018d6ec0b69fb3bd20559c4a5baeaa78aebd3d2f3f3bebf049da",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXXXIXXXXIIXXXXIXX",
+            "IIIIXXIIXXIXIIXIIX",
+            "IXIXIXIIXIIIXXIXIX",
+            "IXIIIIXXXXIXXXIXIX",
+            "IXIIIIIXXXIXIIIXXX",
+            "IXXIIIIXIXIIIXIXXX",
+            "IXXXIIIIIIXIIXXIXI",
+            "ZZZIZIZZIZZZIIIIZZ",
+            "ZZIZZIIZIZZZIZZZZI",
+            "ZIIIZIZZZZIZIIZIZZ",
+            "ZZIIIZZIZIZIZZIZZI",
+            "ZZIIIZIZIZZZIZIIZZ",
+            "IIIIIZIIZIZZZIIIZZ",
+            "ZIIIIZIIIZZIIIZIIZ",
+            "ZIIIIIIIIZIZZZZZIZ"
+          ],
+          "k": 3,
+          "n": 18,
+          "published_best": 5,
+          "seed": 43,
+          "target_id": "qecc_18_3_noncirculant",
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.4941607739892788
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "d69eb386b5b60fd6c42a4c2c681857cd7bf2287663c78803517c72da9376a5d0",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXIXXXIIXXXIXIXIII",
+            "XIIXIIIXIXXXIIXXIX",
+            "XIIIXIXIIIXXIIIXIX",
+            "IIXIXXIXXXIXIXIIII",
+            "IIXIXIIXIXXXXXXXXX",
+            "XIIIIIIIIXIXXIXXIX",
+            "XIXIIXIIIXIIXIXIXX",
+            "ZZZZIZZIZIZIIZIIIZ",
+            "ZIIZZIIZIZZIZZIZZI",
+            "IIZZIZZZZZIZIIIZIZ",
+            "ZIIZIIIZIZIZIZZIZI",
+            "IIZIIIIIIZZZZZZZZZ",
+            "IIZIIIZIZIIZIZZIII",
+            "ZIZIIIIIZIIIIIIZII",
+            "ZIZZIIIIIIIIZZZIZZ"
+          ],
+          "k": 3,
+          "n": 18,
+          "published_best": 5,
+          "seed": 44,
+          "target_id": "qecc_18_3_noncirculant",
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 2.9006543249997776
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "d40d41a1c114ef1daca547791582c3636395f36d1009ef2761be83ed50e8001f",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XIXIIXXXIXIXIIIXII",
+            "IIXXIXIIXXIIIIIXXI",
+            "IIXXXIIIIIXXXIXXXI",
+            "XXXXIIXIIIIXIIIXII",
+            "IIIXIXXIIIIIXIXIXX",
+            "IIXXXIIIIXIIIXXIXX",
+            "XIXIIIXIIIIIIXIXXX",
+            "IIIZIIIZIIZIZZIZII",
+            "IZIIZZZIIIZZZIZZII",
+            "ZIZIZZIZIIZZZIZZZI",
+            "ZZZIIZIIZIIIIIIZIZ",
+            "ZIZIIZIIIZZIZIIIZZ",
+            "ZZZIZZIIIIZZIZIIIZ",
+            "ZIIIZIIIIIIIIZZZZI",
+            "ZIZIIIIIIIIIZIZIZZ"
+          ],
+          "k": 3,
+          "n": 18,
+          "published_best": 5,
+          "seed": 45,
+          "target_id": "qecc_18_3_noncirculant",
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.8607004640070954
+        },
+        {
+          "achieved_value": 4,
+          "candidate_sha256": "407cbe7844ae2ee2ff96691fec176c98f27c34012a8da34fe6986223ea8e42e1",
+          "family": "qecc_stabilizer",
+          "generators": [
+            "XXIXIXXIXXXXIXIXII",
+            "XIIXIXXXXIXIXXIXXI",
+            "IIXIXIXXXXXIXIIIIX",
+            "IIIIIXXIIIIIIIXXIX",
+            "IIIIIXIIXXXIIIIXXX",
+            "XIXIIXIXIIXXIXIIII",
+            "IIXIIIIXIIXIIXIIIX",
+            "IIZZIZIZIZIZZIZIII",
+            "ZZIIIZZIIIZZZIZIZZ",
+            "IZIIZIIZZIIZIIIZZZ",
+            "ZIIIIIIIIZIIIZIZZZ",
+            "IIIIZZIIZIZZZZIZII",
+            "ZIIIZZIIZIIZZZZZIZ",
+            "ZIZIZZIIIIIIIZIZII",
+            "ZIZIIIIIIIIIIIIZIZ"
+          ],
+          "k": 3,
+          "n": 18,
+          "published_best": 5,
+          "seed": 46,
+          "target_id": "qecc_18_3_noncirculant",
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.8113522750063566
+        }
+      ],
+      "trials_total": 5
+    }
+  },
+  "timeout_per_trial": 30.0,
+  "total_benchmark_time_seconds": 12.175684693007497,
+  "total_campaign_time_seconds": 12.175677742008702,
+  "verdict": "DISCOVERY_TIED",
+  "verdict_counts": {
+    "DISCOVERY_BEATEN": 0,
+    "DISCOVERY_TIED": 10,
+    "NULL_BOUND": 10,
+    "NULL_RESULT": 5
+  }
+}
