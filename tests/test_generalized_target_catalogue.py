@@ -116,7 +116,9 @@ def test_calibration_targets_verification() -> None:
 
     # Shor [[9,1,3]]
     t0 = time.perf_counter()
-    ok_shor, payload_shor = verify_calibration_candidate("calib_shor_9_1_3", get_calibration_by_id("calib_shor_9_1_3").certificate_object)
+    ok_shor, payload_shor = verify_calibration_candidate(
+        "calib_shor_9_1_3", get_calibration_by_id("calib_shor_9_1_3").certificate_object
+    )
     dt_shor = time.perf_counter() - t0
     assert ok_shor is True
     assert payload_shor["check"]["n"] == 9
@@ -126,7 +128,9 @@ def test_calibration_targets_verification() -> None:
 
     # Steane [[7,1,3]]
     t0 = time.perf_counter()
-    ok_steane, payload_steane = verify_calibration_candidate("calib_steane_7_1_3", get_calibration_by_id("calib_steane_7_1_3").certificate_object)
+    ok_steane, payload_steane = verify_calibration_candidate(
+        "calib_steane_7_1_3", get_calibration_by_id("calib_steane_7_1_3").certificate_object
+    )
     dt_steane = time.perf_counter() - t0
     assert ok_steane is True
     assert payload_steane["check"]["n"] == 7
@@ -136,7 +140,9 @@ def test_calibration_targets_verification() -> None:
 
     # C(9,3,2) = 12
     t0 = time.perf_counter()
-    ok_cov, payload_cov = verify_calibration_candidate("calib_covering_C_9_3_2", get_calibration_by_id("calib_covering_C_9_3_2").certificate_object)
+    ok_cov, payload_cov = verify_calibration_candidate(
+        "calib_covering_C_9_3_2", get_calibration_by_id("calib_covering_C_9_3_2").certificate_object
+    )
     dt_cov = time.perf_counter() - t0
     assert ok_cov is True
     assert "covered" in str(payload_cov)
