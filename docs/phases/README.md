@@ -411,7 +411,7 @@ and manuscript compiled in docs/structured-paper/main.pdf.
 - [P209 — Auditoria de novidade na literatura mundial e dossiês para curadores (Curator Dossiers)](P209-world-literature-audit-curator-dossiers.md).
 - [P210 — Manuscrito de pesquisa, pacote arquival Zenodo e registro da decisão D046](P210-discovery-manuscript-and-decision-d045.md).
 
-All phases remain Proposed until measured and accepted under their explicit gates.
+P201–P210 are completed (Done, D046) with all measured gates passing, clean-tree verification, tied world records in quantum stabilizer codes [[14, 3, 4]] and [[16, 5, 4]], rigorous structural NULL_BOUND theorems, zero-dependency standalone verification (< 2.0 ms), 8 Lean 4 kernel theorems with zero unproven gaps, curator submission packages under human custody, and compiled scientific manuscript (`docs/generalized-paper/main.pdf`).
 
 ## Historical execution and acceptance contract
 

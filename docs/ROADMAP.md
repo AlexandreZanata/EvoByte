@@ -440,7 +440,7 @@ Estado atual: **concluído** (D044) — Descoberta de empate $C(15, 8, 4) = 30$ 
 
 [Programa de Descoberta com Simetrias Generalizadas e Códigos Quânticos Não-Circulantes](phases/README.md#programa-de-descoberta-com-simetrias-generalizadas-e-códigos-quânticos-não-circulantes-p201p210-d045)
 avança além dos limites delimitados em D044 (onde a Proposição 4.1 provou que códigos puramente circulantes não superam $d=3$ e onde alvos densos resistiram a $\mathbb{Z}_m$). O programa quebra a simetria circulante elementar através de arquiteturas quase-cíclicas acopladas e códigos produto levantados (lifted product), e expande o espaço de busca combinatório para grupos afins 1-dimensionais $\text{AGL}(1, q)$ e grupos diédricos $D_m$, integrados com codificação SAT exata de distância quântica e prioridade funcional em bytecode na GPU.
-Estado atual: **proposto / em andamento**.
+Estado atual: **concluído** (D046) — Empate com recorde mundial em códigos quânticos $[[14, 3, 4]]$ e $[[16, 5, 4]]$ (`DISCOVERY_TIED`), cotas estruturais negativas provadas em $\operatorname{AGL}(1, 13)$ e $D_{15}$ (`NULL_BOUND`), calibrações de Fano/Steane, Shor e $AG(2, 3) = C(9, 3, 2) = 12$ reproduzidas, 8 teoremas formais provados no kernel Lean 4 sem sorry e manuscrito acadêmico compilado em 6 páginas (`docs/generalized-paper/main.pdf`).
 
 - P201 congela 5 alvos de gap estreito que exigem quebra de simetria circulante e grupos afins.
 - P202 implementa o motor de grupos de automorfismos generalizados ($\text{AGL}(1, q)$ e $D_m$).
