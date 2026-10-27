@@ -1,6 +1,6 @@
 # P203 — Gerador e verificador de códigos quânticos quase-cíclicos e não-circulantes (Lifted Product & Quasi-Cyclic QECC)
 
-**Status:** Proposed.
+**Status:** Done (2026-10-27).
 **Programa:** Descoberta com Simetrias Generalizadas e Códigos Quânticos Não-Circulantes (P201–P210, D045).
 **Dependência:** P202 concluída e integrada em `main`.
 **Owner:** agente executor.
@@ -21,12 +21,14 @@ Esta fase implementa o motor gerador e validador especializado de matrizes de es
 
 > O motor de códigos quase-cíclicos acoplados gera famílias de estabilizadores comutantes válidos (comutatividade simplética 100% garantida por construção algébrica) que ultrapassam o limite circulante $d \le 3$ em testes de amostragem em instâncias de calibração?
 
-## Escopo
+**Resposta:** SIM. O construtor quase-cíclico bicirculante gerou com 100% de comutatividade simplética analítica o código CSS $[[16, 2, 4]]$, quebrando a barreira analítica de distância $d \le 3$ provada na Proposição 4.1 para matrizes puramente circulantes.
 
-**Arquivos a criar/editar:**
-- `src/evobyte/quasi_cyclic_qecc.py`: classes `QuasiCyclicStabilizer`, gerador de produto levantado e álgebra bicirculante.
-- `docs/research/p203-quasi-cyclic-qecc-report.md`: relatório formal de parametrização e tempos de comutação.
-- `tests/test_quasi_cyclic_qecc.py`: suíte formal de testes de comutatividade e distância.
+## Escopo Realizado
+
+**Arquivos criados/editados:**
+- `src/evobyte/quasi_cyclic_qecc.py`: classes `QuasiCyclicStabilizer`, `BicirculantQECCEngine`, `LiftedProductQECCEngine` e avaliador rápido de distância CSS.
+- `docs/research/p203-quasi-cyclic-qecc-report.md`: relatório formal de parametrização, prova de comutatividade e medição de desempenho ($13.0\times$ mais rápido).
+- `tests/test_quasi_cyclic_qecc.py`: suíte formal de testes de comutatividade, independência e distância mínima (6/6 verdes).
 - `docs/phases/P203-quasi-cyclic-non-circulant-qecc-engine.md`: atualização de status e evidências.
 
 ## Critérios de Saída (Gates)
