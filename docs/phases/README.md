@@ -413,6 +413,21 @@ and manuscript compiled in docs/structured-paper/main.pdf.
 
 P201–P210 are completed (Done, D046) with all measured gates passing, clean-tree verification, tied world records in quantum stabilizer codes [[14, 3, 4]] and [[16, 5, 4]], rigorous structural NULL_BOUND theorems, zero-dependency standalone verification (< 2.0 ms), 8 Lean 4 kernel theorems with zero unproven gaps, curator submission packages under human custody, and compiled scientific manuscript (`docs/generalized-paper/main.pdf`).
 
+## Programa de Descoberta com Códigos Quânticos Bicíclicos Bivariados e Geometrias Projetivas (P211–P220, D047)
+
+- [P211 — Seleção e congelamento de alvos bivariados e projetivos de gap estreito (gap ≤ 2)](P211-bivariate-bicycle-projective-narrow-gap-targets.md).
+- [P212 — Motor de grupos projetivos e álgebras de grupo bivariadas (PGL(2, q) & Bivariate Group Algebras)](P212-projective-groups-and-bivariate-group-algebras.md).
+- [P213 — Gerador e verificador de códigos quânticos bicíclicos bivariados (Bivariate Bicycle & 2D Lifted Product Engine)](P213-bivariate-bicycle-2d-lifted-product-engine.md).
+- [P214 — Codificação SAT exata de distância quântica d ≥ 5 e decodificador BP-OSD](P214-exact-sat-distance-and-bposd-decoder.md).
+- [P215 — Calibração cega em códigos bivariados históricos e designs projetivos (Blind Bivariate Calibration)](P215-blind-calibration-bivariate-projective.md).
+- [P216 — Campanha pré-registrada estruturada em alvos bivariados e projetivos (Preregistered Bivariate Campaign)](P216-preregistered-bivariate-campaign.md).
+- [P217 — Extração de certificados autônomos v4.0.0 e verificador independente de dependência zero](P217-v4-certificates-and-standalone-verifier.md).
+- [P218 — Certificação formal no kernel Lean 4 (Formal Verification Gate)](P218-lean4-kernel-formal-certification.md).
+- [P219 — Auditoria de novidade na literatura mundial e dossiês para curadores (Curator Dossiers)](P219-world-literature-audit-curator-dossiers.md).
+- [P220 — Manuscrito de pesquisa, pacote arquival Zenodo e registro da decisão D048](P220-discovery-manuscript-and-decision-d048.md).
+
+All phases remain Proposed until measured and accepted under their explicit gates.
+
 ## Historical execution and acceptance contract
 
 ```text
