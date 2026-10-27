@@ -1,0 +1,88 @@
+{
+  "candidate": {
+    "blocks": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        1,
+        4,
+        5
+      ],
+      [
+        1,
+        6,
+        7
+      ],
+      [
+        1,
+        8,
+        9
+      ],
+      [
+        2,
+        4,
+        8
+      ],
+      [
+        2,
+        5,
+        7
+      ],
+      [
+        2,
+        6,
+        9
+      ],
+      [
+        3,
+        4,
+        6
+      ],
+      [
+        3,
+        5,
+        9
+      ],
+      [
+        3,
+        7,
+        8
+      ],
+      [
+        4,
+        7,
+        9
+      ],
+      [
+        5,
+        6,
+        8
+      ]
+    ],
+    "indexing": 1,
+    "is_affine_plane": true,
+    "total_blocks": 12
+  },
+  "certificate_type": "covering_design",
+  "certificate_version": "3.0.0",
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine",
+    "provenance": "P205 Blind Calibration",
+    "seed": 42,
+    "solve_time_seconds": 0.21597610900062136,
+    "timestamp_utc": "2026-10-27T18:41:19Z"
+  },
+  "parameters": {
+    "claimed_blocks": 12,
+    "k": 3,
+    "published_best": 12,
+    "t": 2,
+    "v": 9
+  },
+  "sha256_checksum": "3fb5473979997e4007f884d1d4390e881957acfa63ee933c4efe1b4a5337d967",
+  "target_id": "calib_covering_C_9_3_2",
+  "verdict": "CALIBRATION_REPRODUCED"
+}

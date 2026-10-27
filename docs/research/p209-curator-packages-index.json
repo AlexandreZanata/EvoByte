@@ -1,0 +1,143 @@
+{
+  "created_at": "2026-10-27T19:00:00Z",
+  "curator_packages": {
+    "dan_gordon_ljcr": {
+      "curator_channel": "https://dmgordon.org/cover/",
+      "curator_id": "dan_gordon_ljcr",
+      "curator_name": "Dan Gordon (LJCR / Covering Designs)",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p209/dan_gordon_ljcr/README.md",
+          "sha256": "f234cba49805433e1b4f0ade5afd6bd2e4ac98f5bfd0a4fe366ed4a7a261f1f0"
+        },
+        {
+          "name": "certificate_C_13_5_3.json",
+          "path": "dist/curator-submissions/p209/dan_gordon_ljcr/certificate_C_13_5_3.json",
+          "sha256": "eb9ecdd536f6cad416f960f762149d6a53eeb6574b9fa48ca829e9eff724f80f"
+        },
+        {
+          "name": "certificate_C_15_10_4.json",
+          "path": "dist/curator-submissions/p209/dan_gordon_ljcr/certificate_C_15_10_4.json",
+          "sha256": "f15d7f56c526aea33aa234fb9bb3b44b43e28e51b3347367a2d1a732edf3a928"
+        },
+        {
+          "name": "verify_generalized_certificate.py",
+          "path": "dist/curator-submissions/p209/dan_gordon_ljcr/verify_generalized_certificate.py",
+          "sha256": "af73fd48fa609e6c93079664ab4d96d46361097dbe2085fffa8b05105b183991"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p209/dan_gordon_ljcr/reproduce.sh",
+          "sha256": "3845cb204fa1e510cb5f30713d6cf75f99699375c07972097a92c5829223521e"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p209/dan_gordon_ljcr/submission-letter.md",
+          "sha256": "031db76be6fa61b2e6c375f8585dab9781ec317e8ed8d8996549bb97e1c8979d"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p209/dan_gordon_ljcr/submission-letter.txt",
+          "sha256": "031db76be6fa61b2e6c375f8585dab9781ec317e8ed8d8996549bb97e1c8979d"
+        }
+      ],
+      "package_dir": "dist/curator-submissions/p209/dan_gordon_ljcr",
+      "status": "pending_human_submission",
+      "verdict_type": "null_bound"
+    },
+    "markus_grassl_codetables": {
+      "curator_channel": "http://www.codetables.de/",
+      "curator_id": "markus_grassl_codetables",
+      "curator_name": "Markus Grassl (codetables.de / QECC)",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p209/markus_grassl_codetables/README.md",
+          "sha256": "399ce9e62f887e8f877cc4794f053c5f0878aafe4d815bcd1dfa01db23d778df"
+        },
+        {
+          "name": "certificate_qecc_14_3.json",
+          "path": "dist/curator-submissions/p209/markus_grassl_codetables/certificate_qecc_14_3.json",
+          "sha256": "6beab8cab87eb6f4bb672e03671a3f85837337e422f9fcbd71b2cc69ae0617a2"
+        },
+        {
+          "name": "certificate_qecc_16_5.json",
+          "path": "dist/curator-submissions/p209/markus_grassl_codetables/certificate_qecc_16_5.json",
+          "sha256": "f915f164304389f389abf0915d41a9277c3ec7dd68d2107358f6ff7a3d1088b1"
+        },
+        {
+          "name": "verify_generalized_certificate.py",
+          "path": "dist/curator-submissions/p209/markus_grassl_codetables/verify_generalized_certificate.py",
+          "sha256": "af73fd48fa609e6c93079664ab4d96d46361097dbe2085fffa8b05105b183991"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p209/markus_grassl_codetables/reproduce.sh",
+          "sha256": "7d8c7c014e4676cfcc616272b73b010c8d9bef8350d2757d11b3d6a4448af5ee"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p209/markus_grassl_codetables/submission-letter.md",
+          "sha256": "aa1dfebf0494a0c279414ba7669bdeb8ad1b9199f996cfdd5ed6943a64ed6515"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p209/markus_grassl_codetables/submission-letter.txt",
+          "sha256": "aa1dfebf0494a0c279414ba7669bdeb8ad1b9199f996cfdd5ed6943a64ed6515"
+        }
+      ],
+      "package_dir": "dist/curator-submissions/p209/markus_grassl_codetables",
+      "status": "pending_human_submission",
+      "verdict_type": "discovery_tied"
+    },
+    "neil_sloane_oeis": {
+      "curator_channel": "https://oeis.org/",
+      "curator_id": "neil_sloane_oeis",
+      "curator_name": "Neil Sloane & OEIS Editorial Board (OEIS)",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p209/neil_sloane_oeis/README.md",
+          "sha256": "679711286e9ae88c084fe2f2a8cf7134fe8029be55d474ef3b822d1a5f4e1ca8"
+        },
+        {
+          "name": "certificate_C_9_3_2.json",
+          "path": "dist/curator-submissions/p209/neil_sloane_oeis/certificate_C_9_3_2.json",
+          "sha256": "0579a842ee6928770d39d8c1ac4309c8db08225b86646a956ab0c7c7b87f6c01"
+        },
+        {
+          "name": "verify_generalized_certificate.py",
+          "path": "dist/curator-submissions/p209/neil_sloane_oeis/verify_generalized_certificate.py",
+          "sha256": "af73fd48fa609e6c93079664ab4d96d46361097dbe2085fffa8b05105b183991"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p209/neil_sloane_oeis/reproduce.sh",
+          "sha256": "fddd45e983b0e35f2e8b6c4c2d4949647bbcb242fda562c3a69b87f3d3e5bf8e"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p209/neil_sloane_oeis/submission-letter.md",
+          "sha256": "44f37147421022e53a2aa4a4ff40e74c1940406d0aa1abe6d32e6d3af461be45"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p209/neil_sloane_oeis/submission-letter.txt",
+          "sha256": "44f37147421022e53a2aa4a4ff40e74c1940406d0aa1abe6d32e6d3af461be45"
+        }
+      ],
+      "package_dir": "dist/curator-submissions/p209/neil_sloane_oeis",
+      "status": "pending_human_submission",
+      "verdict_type": "calibration_affine_plane"
+    }
+  },
+  "index_version": "3.0.0",
+  "overall_campaign_verdict": "DISCOVERY_TIED",
+  "safety_guarantee": {
+    "autonomous_emails_sent": 0,
+    "corresponding_author": "Alexandre Zanata",
+    "external_api_calls": 0,
+    "human_submission_status": "pending_human_submission"
+  }
+}
