@@ -56,3 +56,4 @@ import Generated.ExtremalConstructiveCertificates
 import Generated.FaithfulExtremalCertificates
 import Generated.FrontierDiscoveryCertificates
 import Generated.StructuredDiscovery
+import Generated.GeneralizedDiscovery

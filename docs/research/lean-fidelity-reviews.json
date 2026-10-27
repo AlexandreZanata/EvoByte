@@ -98,5 +98,85 @@
     "reviewer": "human:Alexandre",
     "verdict": "faithful",
     "reviewed_at": "2026-10-26"
+  },
+  {
+    "theorem": "EvoByte.Generalized.steane_7_1_3_commute",
+    "file": "lean_proofs/Generated/GeneralizedDiscovery.lean",
+    "informal_statement": "Os 6 geradores estabilizadores do código de Steane [[7, 1, 3]] comutam todos dois a dois sob o produto simplético binário mod 2.",
+    "lean_statement": "¬ HasNonCommutingPair 6 7 steaneGens",
+    "mathlib_concepts": ["Fin", "HasNonCommutingPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-27"
+  },
+  {
+    "theorem": "EvoByte.Generalized.shor_9_1_3_commute",
+    "file": "lean_proofs/Generated/GeneralizedDiscovery.lean",
+    "informal_statement": "Os 8 geradores estabilizadores do código de calibração [[9, 1, 3]] comutam todos dois a dois sob o produto simplético binário mod 2.",
+    "lean_statement": "¬ HasNonCommutingPair 8 9 shorGens",
+    "mathlib_concepts": ["Fin", "HasNonCommutingPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-27"
+  },
+  {
+    "theorem": "EvoByte.Generalized.qecc_14_3_4_commute",
+    "file": "lean_proofs/Generated/GeneralizedDiscovery.lean",
+    "informal_statement": "Os 11 geradores estabilizadores do código quase-cíclico não-circulante [[14, 3, 4]] comutam todos dois a dois sob o produto simplético binário mod 2.",
+    "lean_statement": "¬ HasNonCommutingPair 11 14 qecc14Gens",
+    "mathlib_concepts": ["Fin", "HasNonCommutingPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-27"
+  },
+  {
+    "theorem": "EvoByte.Generalized.qecc_16_5_4_commute",
+    "file": "lean_proofs/Generated/GeneralizedDiscovery.lean",
+    "informal_statement": "Os 11 geradores estabilizadores do código quase-cíclico não-circulante [[16, 5, 4]] comutam todos dois a dois sob o produto simplético binário mod 2.",
+    "lean_statement": "¬ HasNonCommutingPair 11 16 qecc16Gens",
+    "mathlib_concepts": ["Fin", "HasNonCommutingPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-27"
+  },
+  {
+    "theorem": "EvoByte.Generalized.ag23_affine_covering_valid",
+    "file": "lean_proofs/Generated/GeneralizedDiscovery.lean",
+    "informal_statement": "Os 12 blocos do plano afim AG(2, 3) cobrem todos os 36 pares de Fin 9 sem deixar nenhum par descoberto.",
+    "lean_statement": "¬ HasUncoveredPair 9 12 3 ag23Blocks",
+    "mathlib_concepts": ["Fin", "HasUncoveredPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-27"
+  },
+  {
+    "theorem": "EvoByte.Generalized.ag23_blocks_strictly_sorted",
+    "file": "lean_proofs/Generated/GeneralizedDiscovery.lean",
+    "informal_statement": "Todos os 12 blocos de tamanho 3 do plano afim AG(2, 3) são estritamente ordenados e possuem elementos distintos.",
+    "lean_statement": "∀ (bi : Fin 12), IsStrictlySorted 3 (fun i => (ag23Blocks bi i).val)",
+    "mathlib_concepts": ["Fin", "IsStrictlySorted"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-27"
+  },
+  {
+    "theorem": "EvoByte.Generalized.agl13_orbit_obstruction",
+    "file": "lean_proofs/Generated/GeneralizedDiscovery.lean",
+    "informal_statement": "Sob AGL(1, 13), nenhum comprimento de órbita em 5-subconjuntos de 13 é menor ou igual ao recorde mundial de 34 blocos.",
+    "lean_statement": "¬ HasSubRecordOrbit 3 agl13OrbitLens 34",
+    "mathlib_concepts": ["Fin", "HasSubRecordOrbit"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-27"
+  },
+  {
+    "theorem": "EvoByte.Generalized.dihedral15_orbit_obstruction",
+    "file": "lean_proofs/Generated/GeneralizedDiscovery.lean",
+    "informal_statement": "Sob o grupo diédrico D_15, nenhum comprimento de órbita não-trivial em 10-subconjuntos de 15 é menor ou igual ao recorde mundial de 14 blocos.",
+    "lean_statement": "¬ HasSubRecordOrbit 2 dihedral15NontrivialOrbitLens 14",
+    "mathlib_concepts": ["Fin", "HasSubRecordOrbit"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-27"
   }
 ]
