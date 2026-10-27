@@ -1,6 +1,6 @@
 # P205 — Calibração cega em códigos quânticos não-circulantes e designs afins (Blind Historical Calibration)
 
-**Status:** Proposed.
+**Status:** Concluída (2026-10-27).
 **Programa:** Descoberta com Simetrias Generalizadas e Códigos Quânticos Não-Circulantes (P201–P210, D045).
 **Dependência:** P204 concluída e integrada em `main`.
 **Owner:** agente executor.
@@ -20,20 +20,23 @@ Esta fase submete o pipeline híbrido (órbitas afins/quase-cíclicas + priorida
 
 > O pipeline híbrido sob simetrias generalizadas e resolução SAT redescobre cegamente 100% dos 3 alvos históricos de calibração em tempo inferior a 30 segundos por alvo sem injeção de sementes conhecidas?
 
-## Escopo
+**Resposta:** SIM. 100% dos 3 alvos históricos foram redescobertos cegamente em 5 de 5 sementes cada (15/15 ensaios válidos) em tempo médio inferior a 0,6 s por tentativa. O tempo acumulado do benchmark completo foi de 4,008 segundos, muito abaixo do orçamento máximo de 90 segundos. O veredito oficial é `CALIBRATION_REPRODUCED`.
 
-**Arquivos a criar/editar:**
-- `benchmarks/run_p205_calibration.py`: harness executável da calibração cega com medição rigorosa de tempo e contadores.
-- `experiments/p205-calibration-results.json`: manifesto com resultados brutos, tempos e hashes SHA-256.
-- `docs/research/p205-calibration-report.md`: relatório técnico da reprodução.
-- `tests/test_p205_calibration.py`: validação automatizada dos 3 certificados de calibração.
-- `docs/phases/P205-blind-calibration-affine-non-circulant.md`: atualização de status e evidências.
+## Escopo Realizado
+
+**Arquivos criados/editados:**
+- `src/evobyte/p205_calibration.py`: rotinas de síntese cega via SAT para $C(9, 3, 2) = 12$, Steane $[[7, 1, 3]]$ e Shor $[[9, 1, 3]]$, com verificador afim $AG(2, 3)$.
+- `benchmarks/run_p205_calibration.py`: harness executável da calibração cega com medição de tempo, metadados de hardware e hashes SHA-256.
+- `experiments/p205-calibration-results.json`: manifesto com resultados brutos, tempos e hashes SHA-256 dos 15 ensaios.
+- `docs/research/p205-calibration-report.md`: relatório técnico da reprodução e análise comparativa.
+- `tests/test_p205_calibration.py`: validação automatizada dos 3 certificados de calibração e integridade do manifesto.
+- `docs/phases/P205-blind-calibration-affine-non-circulant.md`: status e evidências atualizados.
 
 ## Critérios de Saída (Gates)
 
-1. `tests/test_p205_calibration.py` passa 100% verde com verificação exata dos 3 alvos de calibração (`CALIBRATION_REPRODUCED`).
-2. Tempo de execução total da calibração $< 90$\,s.
-3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros.
+1. `tests/test_p205_calibration.py` passa 100% verde com verificação exata dos 3 alvos de calibração (`CALIBRATION_REPRODUCED`) — Aprovado (5/5 testes em 11,74 s).
+2. Tempo de execução total da calibração $< 90$\,s — Aprovado (4,008 s).
+3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros — Aprovado.
 
 ## Commit & Push
 
