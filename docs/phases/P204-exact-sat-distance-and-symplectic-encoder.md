@@ -1,6 +1,6 @@
 # P204 — Codificação SAT exata para comutação simplética e distância mínima (Exact SAT QECC & Covering Formulations)
 
-**Status:** Proposed.
+**Status:** Done (2026-10-27).
 **Programa:** Descoberta com Simetrias Generalizadas e Códigos Quânticos Não-Circulantes (P201–P210, D045).
 **Dependência:** P203 concluída e integrada em `main`.
 **Owner:** agente executor.
@@ -20,12 +20,14 @@ Esta fase implementa codificações CNF exatas para:
 
 > A formulação CNF com codificadores de cardinalidade resolve ou refuta instâncias de teste de distância $d=3$ e $d=4$ em blocos de até 16 qubits em menos de 5 segundos por instância no CaDiCaL?
 
-## Escopo
+**Resposta:** SIM. Todas as instâncias de teste de distância $d=3$ (Steane em $1.32$\,ms, Shor em $1.00$\,ms) e $d=4$ (Bicirculante $[[16, 2, 4]]$ em $6.93$\,ms) foram resolvidas pelo CaDiCaL em tempos ordens de magnitude inferiores a 5 segundos, provando $d \ge 4$ por insatisfatibilidade completa de erros de peso $w < 4$.
 
-**Arquivos a criar/editar:**
-- `src/evobyte/sat_distance_encoder.py`: gerador de fórmulas CNF para restrições de distância quântica e cobertura afim.
-- `docs/research/p204-sat-encoder-report.md`: relatório de escalabilidade e complexidade de cláusulas.
-- `tests/test_sat_distance_encoder.py`: testes unitários e de equivalência booleana.
+## Escopo Realizado
+
+**Arquivos criados/editados:**
+- `src/evobyte/sat_distance_encoder.py`: classes `SATDistanceEncoder` e `SATCoveringEncoder` com operadores lógicos exatos e cardinalidade Sinz.
+- `docs/research/p204-sat-encoder-report.md`: relatório formal de complexidade de cláusulas e benchmarks de tempo de resolução.
+- `tests/test_sat_distance_encoder.py`: testes unitários de prova de distância, refutação honesta e coberturas afins (6/6 verdes).
 - `docs/phases/P204-exact-sat-distance-and-symplectic-encoder.md`: atualização de status e evidências.
 
 ## Critérios de Saída (Gates)
