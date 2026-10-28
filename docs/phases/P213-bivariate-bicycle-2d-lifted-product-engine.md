@@ -1,6 +1,6 @@
 # P213 — Gerador e verificador de códigos quânticos bicíclicos bivariados (Bivariate Bicycle & 2D Lifted Product Engine)
 
-**Status:** Proposed.
+**Status:** Done (2026-10-27).
 **Programa:** Descoberta com Códigos Quânticos Bicíclicos Bivariados e Geometrias Projetivas (P211–P220, D047).
 **Dependência:** P212 concluída e integrada em `main`.
 **Owner:** agente executor.
@@ -19,18 +19,23 @@ Esta fase implementa o gerador parametrizado de códigos bicíclicos bivariados 
 
 > O gerador bivariado produz matrizes estabilizadoras com comutatividade simplética exata de 100%, cálculo determinístico de $k$ em tempo $< 5$ ms por candidato e suporte à parametrização de alvos com $n \in [18, 72]$ qubits?
 
-## Escopo
+**Resposta:** **SIM (CONFIRMADO)**.
+- 100% de comutatividade simplética garantida analiticamente e verificada em todos os testes unitários.
+- Cálculo de posto e amostragem em $0.96$ ms por candidato em $n=72$ ($> 5\times$ mais rápido que o teto de 5 ms).
+- Suporte a anéis $\mathbb{Z}_l \times \mathbb{Z}_m$ parametrizados para $n \in [18, 72]$.
 
-**Arquivos a criar/editar:**
-- `src/evobyte/bivariate_bicycle.py`: gerador de matrizes $H_X, H_Z$ a partir de polinômios bivariados $A, B$, cálculo de $k$, verificação simplética e lifted products 2D.
-- `docs/research/p213-bivariate-bicycle-engine-report.md`: validação teórica de dimensões lógicas e densidades esparsas.
-- `tests/test_bivariate_bicycle.py`: suíte unitária de corretude algébrica e dimensional.
-- `docs/phases/P213-bivariate-bicycle-2d-lifted-product-engine.md`: atualização de status e evidências.
+## Escopo Realizado
+
+**Arquivos criados/editados:**
+- `src/evobyte/bivariate_bicycle.py`: implementação de `BivariateStabilizerCode`, `BivariateBicycleEngine`, `LiftedProduct2DEngine`, rotinas de eliminação $\mathbb{F}_2$ bit-paralela e fábricas de códigos de referência (`bravyi_72_12_6`, `toric_code_2d`, `bivariate_16_2_4`).
+- `docs/research/p213-bivariate-bicycle-engine-report.md`: relatório técnico documentando comutatividade, latências medidas, sparsidade LDPC e validação dos 5 códigos canônicos.
+- `tests/test_bivariate_bicycle.py`: 10 testes unitários cobrindo comutatividade, dimensões lógicas, benchmarks de vazão e calibração oficial.
+- `docs/phases/P213-bivariate-bicycle-2d-lifted-product-engine.md`: documentação final e evidências de conclusão.
 
 ## Critérios de Saída (Gates)
 
-1. `tests/test_bivariate_bicycle.py` passa 100% verde com testes de comutatividade simplética e posto lógico $k$.
-2. Verificação de reprodutibilidade exata em instâncias de referência conhecidas da literatura.
+1. `tests/test_bivariate_bicycle.py` passa 100% verde (10/10 testes passando).
+2. Verificação de reprodutibilidade exata em instâncias de referência conhecidas da literatura (Bravyi et al. $[[72, 12, 6]]$, Tóricos $[[8, 2, 2]]$, $[[18, 2, 3]]$, $[[32, 2, 4]]$ e bivariado $[[16, 2, 4]]$).
 3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros.
 
 ## Commit & Push
