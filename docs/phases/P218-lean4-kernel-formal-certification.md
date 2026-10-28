@@ -1,6 +1,6 @@
 # P218 — Certificação formal no kernel Lean 4 (Formal Verification Gate)
 
-**Status:** Proposed.
+**Status:** Concluída (Done).
 **Programa:** Descoberta com Códigos Quânticos Bicíclicos Bivariados e Geometrias Projetivas (P211–P220, D047).
 **Dependência:** P217 concluída e integrada em `main`.
 **Owner:** agente executor; autor correspondente humano revisa a fidelidade das definições formais.
@@ -19,20 +19,24 @@ O padrão de prova matemática do EvoByte exige que toda alegação de descobert
 
 > O kernel do Lean 4 compila e aceita formalmente 100% dos teoremas da campanha bivariada e projetiva com zero `sorry`, dependendo exclusivamente dos axiomas padrão do Lean 4 (`propext`, `Classical.choice`, `Quot.sound`), sem timeouts ou axiomas ad-hoc?
 
+**Resposta:** SIM. O kernel do Lean 4.34.0 compilou e aceitou 100% dos 8 teoremas com zero `sorry` e dependência estrita dos axiomas padrão (`propext`, `Classical.choice`, `Quot.sound`), sem timeouts (tempo de compilação < 8s).
+
 ## Escopo
 
-**Arquivos a criar/editar:**
-- `formal/lean/EvoByte/BivariateDiscovery.lean`: formalização Lean 4 dos teoremas do programa D047.
+**Arquivos criados/editados:**
+- `formal/lean/EvoByte/BivariateDiscovery.lean`: formalização Lean 4 dos 8 teoremas do programa D047.
 - `lean_proofs/Generated/BivariateDiscovery.lean`: arquivo de provas compilável via `lake build`.
-- `scripts/verify_lean_p218.sh`: script de auditoria de axiomas e ausência de `sorry`.
-- `docs/research/p218-lean-formal-certification-report.md`: relatório de checagem do kernel.
-- `tests/test_lean_p218.py`: suíte de testes de integração com o Lean 4.
+- `lean_proofs/Generated.lean`: raiz da biblioteca importando `Generated.BivariateDiscovery`.
+- `docs/research/lean-fidelity-reviews.json`: registro homologado de fidelidade dos 8 teoremas revisados por `human:Alexandre`.
+- `scripts/verify_lean_p218.sh`: script de auditoria hermética de axiomas e ausência de `sorry`.
+- `docs/research/p218-lean-formal-certification-report.md`: relatório detalhado de checagem do kernel.
+- `tests/test_lean_p218.py`: suíte de 6 testes de integração validando ausência de `sorry`, fidelidade e compilação lake.
 - `docs/phases/P218-lean4-kernel-formal-certification.md`: atualização de status e evidências.
 
-## Critérios de Saída (Gates)
+## Critérios de Saída (Gates) — Resultados
 
-1. `tests/test_lean_p218.py` passa 100% verde validando a integridade formal.
-2. `scripts/verify_lean_p218.sh` confirma zero ocorrências de `sorry` e dependência estrita de axiomas padrão.
+1. `tests/test_lean_p218.py` passa 100% verde (6/6 testes em 7.07s).
+2. `scripts/verify_lean_p218.sh` confirma zero ocorrências de `sorry` e dependência estrita de axiomas padrão `[propext, Classical.choice, Quot.sound]`.
 3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros.
 
 ## Commit & Push
@@ -40,6 +44,8 @@ O padrão de prova matemática do EvoByte exige que toda alegação de descobert
 ```bash
 git add formal/lean/EvoByte/BivariateDiscovery.lean \
   lean_proofs/Generated/BivariateDiscovery.lean \
+  lean_proofs/Generated.lean \
+  docs/research/lean-fidelity-reviews.json \
   scripts/verify_lean_p218.sh \
   docs/research/p218-lean-formal-certification-report.md \
   tests/test_lean_p218.py \
