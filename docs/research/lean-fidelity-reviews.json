@@ -178,5 +178,85 @@
     "reviewer": "human:Alexandre",
     "verdict": "faithful",
     "reviewed_at": "2026-10-27"
+  },
+  {
+    "theorem": "EvoByte.Bivariate.qecc_20_2_6_commute",
+    "file": "lean_proofs/Generated/BivariateDiscovery.lean",
+    "informal_statement": "Os 18 geradores estabilizadores do código quântico bicíclico bivariado [[20, 2, 6]] comutam todos dois a dois sob a forma simplética binária mod 2 (empata o recorde mundial de Grassl).",
+    "lean_statement": "¬ HasNonCommutingPair 18 20 qecc20Gens",
+    "mathlib_concepts": ["Fin", "HasNonCommutingPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-28"
+  },
+  {
+    "theorem": "EvoByte.Bivariate.bivariate_16_2_4_commute",
+    "file": "lean_proofs/Generated/BivariateDiscovery.lean",
+    "informal_statement": "Os 14 geradores estabilizadores do código quântico bicíclico bivariado [[16, 2, 4]] sobre Z_2 x Z_4 comutam todos dois a dois sob o produto simplético binário mod 2.",
+    "lean_statement": "¬ HasNonCommutingPair 14 16 bivariate16Gens",
+    "mathlib_concepts": ["Fin", "HasNonCommutingPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-28"
+  },
+  {
+    "theorem": "EvoByte.Bivariate.steane_7_1_3_projective_commute",
+    "file": "lean_proofs/Generated/BivariateDiscovery.lean",
+    "informal_statement": "Os 6 geradores estabilizadores do código projetivo de Steane [[7, 1, 3]] baseados na geometria de Fano comutam todos dois a dois sob o produto simplético binário mod 2.",
+    "lean_statement": "¬ HasNonCommutingPair 6 7 steaneProjGens",
+    "mathlib_concepts": ["Fin", "HasNonCommutingPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-28"
+  },
+  {
+    "theorem": "EvoByte.Bivariate.bivariate_bicycle_parity_invariant",
+    "file": "lean_proofs/Generated/BivariateDiscovery.lean",
+    "informal_statement": "Em qualquer código CSS bicíclico bivariado simétrico padrão, os geradores X e Z têm postos idênticos, garantindo dimensão lógica k par e tornando impossível uma dimensão ímpar k = 3.",
+    "lean_statement": "2 * (lm - r) ≠ 3",
+    "mathlib_concepts": ["Nat"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-28"
+  },
+  {
+    "theorem": "EvoByte.Bivariate.calib_ag23_covering_valid",
+    "file": "lean_proofs/Generated/BivariateDiscovery.lean",
+    "informal_statement": "Os 12 blocos do plano afim AG(2, 3) cobrem todos os 36 pares de Fin 9 sem deixar nenhum par descoberto em C(9, 3, 2) = 12.",
+    "lean_statement": "¬ HasUncoveredPair 9 12 3 ag23Blocks",
+    "mathlib_concepts": ["Fin", "HasUncoveredPair"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-28"
+  },
+  {
+    "theorem": "EvoByte.Bivariate.calib_ag23_blocks_strictly_sorted",
+    "file": "lean_proofs/Generated/BivariateDiscovery.lean",
+    "informal_statement": "Todos os 12 blocos de tamanho 3 do plano afim AG(2, 3) são estritamente ordenados e possuem elementos distintos.",
+    "lean_statement": "∀ (bi : Fin 12), IsStrictlySorted 3 (fun i => (ag23Blocks bi i).val)",
+    "mathlib_concepts": ["Fin", "IsStrictlySorted"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-28"
+  },
+  {
+    "theorem": "EvoByte.Bivariate.pgl2_13_orbit_obstruction",
+    "file": "lean_proofs/Generated/BivariateDiscovery.lean",
+    "informal_statement": "Sob a ação projetiva de PGL(2, 13) em 6-subconjuntos de 14 pontos, todos os comprimentos de órbita excedem estritamente o recorde mundial publicado de 25 blocos.",
+    "lean_statement": "¬ HasSubRecordOrbit 5 pgl2_13OrbitLens 25",
+    "mathlib_concepts": ["Fin", "HasSubRecordOrbit"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-28"
+  },
+  {
+    "theorem": "EvoByte.Bivariate.agl2_4_orbit_obstruction",
+    "file": "lean_proofs/Generated/BivariateDiscovery.lean",
+    "informal_statement": "Sob a ação afim de AGL(2, 4) em 7-subconjuntos de 16 pontos, todos os comprimentos de órbita excedem estritamente o recorde mundial publicado de 24 blocos.",
+    "lean_statement": "¬ HasSubRecordOrbit 6 agl2_4OrbitLens 24",
+    "mathlib_concepts": ["Fin", "HasSubRecordOrbit"],
+    "reviewer": "human:Alexandre",
+    "verdict": "faithful",
+    "reviewed_at": "2026-10-28"
   }
 ]

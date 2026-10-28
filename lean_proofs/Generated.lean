@@ -57,3 +57,4 @@ import Generated.FaithfulExtremalCertificates
 import Generated.FrontierDiscoveryCertificates
 import Generated.StructuredDiscovery
 import Generated.GeneralizedDiscovery
+import Generated.BivariateDiscovery
