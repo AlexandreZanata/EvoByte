@@ -1,0 +1,34 @@
+{
+  "certificate_type": "structural_null_bound",
+  "target_id": "covering_C_14_6_3_projective",
+  "verdict": "NULL_BOUND",
+  "parameters": {
+    "v": 14,
+    "k": 6,
+    "t": 3,
+    "published_best": 25
+  },
+  "candidate": {
+    "group_name": "PGL(2, 13)",
+    "group_order": 2184,
+    "action": "projective_line_P1_F13",
+    "orbit_count": 5,
+    "orbit_lengths": [
+      91,
+      182,
+      546,
+      1092,
+      1092
+    ],
+    "min_orbit_length": 91,
+    "proof_statement": "PGL(2, 13) of order 2184 partitions 3003 6-subsets into 5 orbits with minimal length 91. Since 91 > 25, no PGL(2, 13)-invariant covering design can match or beat 25 blocks."
+  },
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine v4.0.0",
+    "provenance": "P216 Preregistered Bivariate Campaign",
+    "git_commit": "ec02e30f2f8b9dca82f6530ba09a8587bd7f792d",
+    "timestamp_utc": "2026-10-28T09:45:47Z"
+  },
+  "certificate_version": "4.0.0",
+  "sha256_checksum": "b11f3e9ef558c51c9979345144a6213adf6a41fa4d37358f20b5e4e8b72b7ae4"
+}
