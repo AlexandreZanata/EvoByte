@@ -116,7 +116,9 @@ theorem steane_7_1_3_projective_commute : ¬ HasNonCommutingPair 6 7 steaneProjG
 
 /-- Bivariate bicycle parity invariant: in any symmetric bivariate bicycle code (A | B),
 the X and Z generator matrices have equal rank r <= lm, so the logical dimension
-k = 2 * (lm - r) is always even, making odd dimensions such as k = 3 impossible. -/
+k = 2 * (lm - r) is always even, making odd dimensions such as k = 3 impossible.
+SCOPE: arithmetic-only -/
+-- SCOPE: arithmetic-only
 theorem bivariate_bicycle_parity_invariant (lm r : Nat) :
     2 * (lm - r) ≠ 3 := by
   omega
@@ -184,7 +186,9 @@ def pgl2_13OrbitLens : Fin 5 → Nat
   | ⟨4, _⟩ => 1092
   | _ => 0
 
-/-- Formal certificate: under PGL(2, 13), no orbit length on 6-subsets of 14 is <= 25 (world record). -/
+/-- Formal certificate: under PGL(2, 13), no orbit length on 6-subsets of 14 is <= 25 (world record).
+SCOPE: data-lemma (orbit sizes hand-written; see BivariateReal) -/
+-- SCOPE: data-lemma (orbit sizes hand-written; see BivariateReal)
 theorem pgl2_13_orbit_obstruction : ¬ HasSubRecordOrbit 5 pgl2_13OrbitLens 25 := by
   decide
 
@@ -200,7 +204,9 @@ def agl2_4OrbitLens : Fin 6 → Nat
   | ⟨5, _⟩ => 2880
   | _ => 0
 
-/-- Formal certificate: under AGL(2, 4), no orbit length on 7-subsets of 16 is <= 24 (world record). -/
+/-- Formal certificate: under AGL(2, 4), no orbit length on 7-subsets of 16 is <= 24 (world record).
+SCOPE: data-lemma (orbit sizes hand-written; see BivariateReal) -/
+-- SCOPE: data-lemma (orbit sizes hand-written; see BivariateReal)
 theorem agl2_4_orbit_obstruction : ¬ HasSubRecordOrbit 6 agl2_4OrbitLens 24 := by
   decide
 
