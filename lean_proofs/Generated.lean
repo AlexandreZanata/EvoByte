@@ -58,3 +58,4 @@ import Generated.FrontierDiscoveryCertificates
 import Generated.StructuredDiscovery
 import Generated.GeneralizedDiscovery
 import Generated.BivariateDiscovery
+import Generated.BivariateReal
