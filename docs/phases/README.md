@@ -426,6 +426,32 @@ P201–P210 are completed (Done, D046) with all measured gates passing, clean-tr
 - [P219 — Auditoria de novidade na literatura mundial e dossiês para curadores (Curator Dossiers)](P219-world-literature-audit-curator-dossiers.md).
 - [P220 — Manuscrito de pesquisa, pacote arquival Zenodo e registro da decisão D048](P220-discovery-manuscript-and-decision-d048.md).
 
+P211–P220 are completed (Done, D048) with all measured gates passing, clean-tree verification, verified reconstructions of known quantum codes [[20, 2, 6]] and [[16, 2, 4]], parity invariant recognized as a known fact (Bravyi et al. 2024), weak computational orbit bounds under PGL(2, 13) and AΓL(2, 4), zero-dependency standalone verification (< 3.0 ms), scoped formal Lean 4 lemmas, and compiled scientific manuscript (`docs/bivariate-paper/main.pdf`).
+
+
+## Programa de Progresso Científico Verificável (P221–P228, D049)
+
+Origem: auditoria do revisor em 2026-10-28 concluiu que D042–D048 não produziram descoberta
+(empates/reconstruções, fato conhecido reformulado, cotas fracas, teoremas Lean de escopo
+limitado). Este programa troca "empilhar resultados" por: honestidade formal, verdade-terrestre
+exata, portões humanos de novidade e ablação do método.
+
+- [P221 — Honestidade formal: recálculo independente e Lean sobre os objetos reais](P221-formal-honesty-independent-recompute.md).
+- [P222 — Censo exaustivo e exato de códigos bicíclicos bivariados pequenos](P222-bb-code-exhaustive-census.md).
+- [P223 — Auditoria de novidade com portão humano obrigatório](P223-novelty-audit-human-gate.md).
+- [P224 — Ablação do método contra baselines fortes](P224-method-ablation-strong-baselines.md).
+- [P225 — Busca de fronteira em escala (condicional)](P225-frontier-scale-search.md).
+- [P226 — Certificação exata de distância dos candidatos (condicional)](P226-exact-distance-certification.md).
+- [P227 — Mineração de conjecturas com portão humano](P227-conjecture-mining-human-gate.md).
+- [P228 — Conclusão do programa, nota técnica e decisão D050](P228-program-conclusion-submission-d050.md).
+
+Ordem: P220 → P221 → P222 → (P223 ∥ P224) → P225/P226 (só se os portões permitirem) → P227 → P228.
+Protocolo executor→revisor: cada fase termina em commit local + push + PR **sem merge**; o
+revisor audita (diff, gates reexecutados, números conferidos contra artefatos) e só então aprova.
+Regras extras para o agente executor deste programa: nenhum número no texto que não tenha
+sido impresso por um comando; nenhum adjetivo de avaliação ("notável", "definitivo", "recorde");
+qualquer divergência entre o esperado da fase e a saída medida é PARE, nunca "ajuste do esperado".
+
 All phases remain Proposed until measured and accepted under their explicit gates.
 
 ## Historical execution and acceptance contract

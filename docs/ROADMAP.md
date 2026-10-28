@@ -68,6 +68,8 @@ P161–P170 validated discovery program (D041)
 P171–P190 frontier discovery program (D042)
 P191–P200 structured discovery program (D043)
 P201–P210 generalized symmetry & non-circulant quantum codes program (D045)
+P211–P220 bivariate bicycle quantum codes & projective geometries program (D047)
+P221–P228 verifiable scientific progress program (D049)
 ```
 
 ## Execution order and acceptance review (D013, D014)
@@ -457,7 +459,7 @@ Estado atual: **concluído** (D046) — Empate com recorde mundial em códigos q
 
 [Programa de Descoberta com Códigos Quânticos Bicíclicos Bivariados e Geometrias Projetivas](phases/README.md#programa-de-descoberta-com-códigos-quânticos-bicíclicos-bivariados-e-geometrias-projetivas-p211p220-d047)
 avança a fronteira além dos códigos quase-cíclicos 1D de D046 (que atingiram $d=4$) para a exploração sistemática de álgebras de grupo abelianas bidimensionais $\mathbb{F}_2[\mathbb{Z}_l \times \mathbb{Z}_m]$ (códigos bicíclicos bivariados / 2D lifted products) em busca de distância quântica $d \ge 5$ nos parâmetros em aberto da literatura mundial ($[[18, 3, d]]$, $[[18, 5, d]]$, $[[20, 4, d]]$) e designs de cobertura sob grupos projetivos lineares $\text{PGL}(2, q)$ e geometrias afins 2D $\text{AGL}(2, q)$.
-Estado atual: **proposto / em andamento**.
+Estado atual: **concluído (D048)**.
 
 - P211 congela 5 alvos de gap estreito que exigem códigos quânticos bivariados e geometrias projetivas.
 - P212 implementa o motor de grupos projetivos ($\text{PGL}(2, q)$) e álgebras de grupo bivariadas ($\mathbb{F}_2[\mathbb{Z}_l \times \mathbb{Z}_m]$).
@@ -469,6 +471,22 @@ Estado atual: **proposto / em andamento**.
 - P218 certifica formalmente os teoremas provados no kernel Lean 4 com zero sorry.
 - P219 executa auditoria de novidade na literatura mundial e empacota dossiês para curadores sob custódia humana.
 - P220 compila o manuscrito científico, valida contêiner Zenodo e encerra o programa sob D048.
+
+## Verifiable scientific progress program (P221–P228, D049)
+
+[Programa de Progresso Científico Verificável](phases/README.md#programa-de-progresso-científico-verificável-p221p228-d049)
+substitui a expansão por honestidade formal, verdade-terrestre exata, portões humanos de novidade e ablação do método contra baselines fortes.
+Estado atual: **proposto / em andamento**.
+
+- P221 executa recálculo independente em Python e certifica códigos sobre objetos reais em Lean 4.
+- P222 constrói o censo exaustivo e exato de códigos bicíclicos bivariados pequenos (n <= 32).
+- P223 audita novidade contra a literatura mundial com portão humano de parada obrigatório.
+- P224 executa ablação rigorosa do método contra baselines fortes (Random, MCTS, ILP).
+- P225 busca em escala na fronteira condicionalmente permitida pelos portões anteriores.
+- P226 certifica a distância exata dos novos candidatos encontrados.
+- P227 minera conjecturas estruturais sobre códigos quânticos com portão humano.
+- P228 consolida a nota técnica final do programa e registra a decisão D050.
+
 
 ## Quantum track (experimental, deferred expansion)
 
