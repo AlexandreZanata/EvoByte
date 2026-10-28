@@ -1,0 +1,84 @@
+{
+  "certificate_type": "covering_design",
+  "target_id": "calib_covering_C_9_3_2",
+  "verdict": "CALIBRATION_REPRODUCED",
+  "parameters": {
+    "v": 9,
+    "k": 3,
+    "t": 2,
+    "claimed_blocks": 12
+  },
+  "candidate": {
+    "blocks": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        4,
+        5,
+        6
+      ],
+      [
+        7,
+        8,
+        9
+      ],
+      [
+        1,
+        4,
+        7
+      ],
+      [
+        2,
+        5,
+        8
+      ],
+      [
+        3,
+        6,
+        9
+      ],
+      [
+        1,
+        5,
+        9
+      ],
+      [
+        2,
+        6,
+        7
+      ],
+      [
+        3,
+        4,
+        8
+      ],
+      [
+        1,
+        6,
+        8
+      ],
+      [
+        2,
+        4,
+        9
+      ],
+      [
+        3,
+        5,
+        7
+      ]
+    ],
+    "indexing": 1,
+    "is_affine_plane": true
+  },
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine v4.0.0",
+    "git_commit": "ec02e30f2f8b9dca82f6530ba09a8587bd7f792d",
+    "timestamp_utc": "2026-10-28T09:45:47Z"
+  },
+  "certificate_version": "4.0.0",
+  "sha256_checksum": "5055b6ed82cc5edd66c1dd7d61ab6ed57ae19c8980f3552c52bbbf2702d2350e"
+}
