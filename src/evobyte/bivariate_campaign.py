@@ -410,9 +410,7 @@ def evaluate_qecc_20_2_bivariate(
     if found_code is not None:
         paulis = found_code.to_pauli_strings()
         gens = list(paulis)
-        ok_cat, _ = verify_target_candidate(
-            "qecc_20_2_bivariate", paulis, check_distance=True
-        )
+        ok_cat, _ = verify_target_candidate("qecc_20_2_bivariate", paulis, check_distance=True)
         sat_solver = ExactSATDistanceSolver(solver_name=solver_name)
         sat_cert = sat_solver.prove_distance_at_least(
             found_code, min_distance=6, timeout_seconds=10.0
