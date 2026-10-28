@@ -1,6 +1,6 @@
 # P219 — Auditoria de novidade na literatura mundial e dossiês para curadores (Curator Dossiers)
 
-**Status:** Proposed.
+**Status:** Concluída (Done).
 **Programa:** Descoberta com Códigos Quânticos Bicíclicos Bivariados e Geometrias Projetivas (P211–P220, D047).
 **Dependência:** P218 concluída e integrada em `main`.
 **Owner:** agente executor; autor correspondente humano exerce a custódia das submissões.
@@ -21,19 +21,21 @@ Todo resultado científico que atinja recordes mundiais ou estabeleça cotas neg
 
 > É possível gerar pacotes de submissão autocontidos para cada curador externo com verificação standalone de 0 dependências, SHA-256 congelados e relatório auditado de conformidade sem qualquer envio autônomo não autorizado?
 
+**Resposta:** SIM. Os 3 pacotes de submissão foram gerados em `dist/curator-submissions/p219/` com verificação standalone de 0 dependências (`python3 -S`), hashes SHA-256 auditados em `docs/research/p219-curator-packages-index.json`, zero chamadas de API externas e custódia humana estrita (`pending_human_submission`).
+
 ## Escopo
 
-**Arquivos a criar/editar:**
+**Arquivos criados/editados:**
 - `scripts/build_bivariate_curator_packages.py`: empacotador de dossiês para curadores.
-- `dist/curator-submissions/p219/`: pacotes estruturados prontos para inspeção humana.
+- `dist/curator-submissions/p219/`: pacotes estruturados prontos para inspeção humana (`markus_grassl_codetables`, `dan_gordon_ljcr`, `neil_sloane_oeis`).
 - `docs/research/p219-world-literature-audit-report.md`: relatório formal de auditoria contra codetables.de, LJCR e OEIS.
 - `docs/research/p219-curator-packages-index.json`: índice canônico de SHA-256 dos pacotes gerados.
 - `tests/test_p219_curator_packages.py`: suíte de validação da integridade dos pacotes.
 - `docs/phases/P219-world-literature-audit-curator-dossiers.md`: atualização de status e evidências.
 
-## Critérios de Saída (Gates)
+## Critérios de Saída (Gates) — Resultados
 
-1. `tests/test_p219_curator_packages.py` passa 100% verde validando integridade e hashes dos pacotes.
+1. `tests/test_p219_curator_packages.py` passa 100% verde validando integridade e hashes dos pacotes (4/4 em 0.52s).
 2. Cada pacote contém `README.md`, certificados, verificador standalone e metadados de custódia humana.
 3. `git diff --check`, `git status --short`, `make lint` e `python3 -m pytest tests -q` passam sem erros.
 
