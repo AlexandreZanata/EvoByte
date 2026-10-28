@@ -1,0 +1,34 @@
+{
+  "current_target": "covering_C_16_7_3_affine2d",
+  "current_seed": 46,
+  "trial_result": {
+    "target_id": "covering_C_16_7_3_affine2d",
+    "family": "covering_design",
+    "seed": 46,
+    "v": 16,
+    "k": 7,
+    "t": 3,
+    "published_best": 24,
+    "achieved_value": null,
+    "verdict": "NULL_BOUND",
+    "verified": true,
+    "wall_clock_seconds": 0.03988474700599909,
+    "candidate_sha256": "d9e029a742570a1da875861292fda59e63717e5eb6a6a3cc54f4b41ce84a5382",
+    "details": {
+      "group": "AGL(2, 4)",
+      "group_order": 5760,
+      "orbit_count": 9,
+      "orbit_lengths": [
+        160,
+        240,
+        480,
+        960,
+        1440,
+        2880
+      ],
+      "min_orbit_length": 160,
+      "proof": "AGL(2, 4) has order 5760 acting on F_4^2 with exactly 9 canonical orbits on 7-subsets of 16. All orbit lengths are in [160, 240, 480, 960, 1440, 2880], with minimal orbit length 160. Since 160 > 24 (world record), no AGL(2, 4)-invariant covering design can match or beat 24 blocks. Structural obstruction NULL_BOUND rigorously proven."
+    }
+  },
+  "timestamp": 1793179580.4833548
+}
