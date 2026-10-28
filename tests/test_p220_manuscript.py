@@ -70,7 +70,9 @@ def test_claims_ledger_structure() -> None:
         "ESCOPO_LIMITADO",
     ]
     for cls_name in mandatory_classes:
-        assert cls_name in ledger_text, f"Mandatory class '{cls_name}' missing from {LEDGER_MD.name}"
+        assert cls_name in ledger_text, (
+            f"Mandatory class '{cls_name}' missing from {LEDGER_MD.name}"
+        )
 
 
 def test_decisions_d048_verdict() -> None:
@@ -141,9 +143,7 @@ def test_v4_certificates_and_standalone_verifier() -> None:
     for cert in cert_files:
         cmd = [sys.executable, "-S", str(VERIFIER_SCRIPT), str(cert)]
         res = subprocess.run(cmd, capture_output=True, text=True)
-        assert res.returncode == 0, (
-            f"Verifier failed for {cert.name}: {res.stderr}\n{res.stdout}"
-        )
+        assert res.returncode == 0, f"Verifier failed for {cert.name}: {res.stderr}\n{res.stdout}"
 
 
 def test_dossier_and_impact_report_consistency() -> None:
