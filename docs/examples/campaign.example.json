@@ -1,0 +1,28 @@
+{
+  "is_example": true,
+  "schema_version": 1,
+  "campaign_id": "EXAMPLE-initial-research",
+  "status": "PLANNED",
+  "cost_mode": "cold_start",
+  "protocol_version": "P1-NOT-FROZEN",
+  "protocol_sha256": null,
+  "baseline_selected": null,
+  "repetitions": 10,
+  "final_sizes": [24, 28, 32],
+  "methods": ["random", "greedy", "local_uniform", "local_manual", "local_linear", "local_untrained"],
+  "reserved_wall_s": 186480,
+  "absolute_wall_cap_s": 300000,
+  "planned_max_experimental_launches": 336,
+  "quotas_s": {
+    "tests": 3600,
+    "development": 2880,
+    "tuning": 14400,
+    "pilot": 21600,
+    "confirmatory": 108000,
+    "reproduction": 21600,
+    "analysis_and_independent_verification": 7200,
+    "external_failure_reserve": 7200
+  },
+  "schedule": null,
+  "frozen_manifest_sha256": null
+}

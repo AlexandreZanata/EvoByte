@@ -1,6 +1,27 @@
 # EvoByte
 
-Repositório preparado para recomeçar o projeto do zero utilizando uma nova abordagem.
+Planejamento de um laboratório científico computacional local para testar se uma
+política aprendida pequena melhora uma busca combinatória sob orçamento limitado.
+O primeiro domínio é construir grafos sem triângulos nem ciclos de quatro vértices,
+maximizando arestas. **Nesta etapa, o laboratório ainda não está implementado.**
+
+## Planejamento da nova versão
+
+- [Visão e escopo](docs/00-vision-and-scope.md)
+- [Protocolo científico proposto](docs/01-scientific-protocol.md)
+- [Fontes primárias e resultados conhecidos](docs/02-related-work.md)
+- [Arquitetura e contratos](docs/03-architecture-and-contracts.md)
+- [Fases, portões e estados científicos](docs/04-phases-and-gates.md)
+- [Orçamento por execução e campanha](docs/05-experiment-budget.md)
+- [Decisões e questões do piloto](docs/06-decision-log.md)
+- [Exemplos de formatos, sem resultados reais](docs/examples/README.md)
+- [Índice das tarefas de implementação](tasks/INDEX.md)
+- [Regras para agentes executores](AGENTS.md)
+
+A primeira entrega futura é revisar fontes e congelar o protocolo de desenvolvimento.
+Depois vêm candidatos, verificadores independentes, execução supervisionada e
+referências não aprendidas. A política só entra após esses portões. Comece pelas
+três primeiras fichas do índice e execute uma tarefa por vez.
 
 ---
 

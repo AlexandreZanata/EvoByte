@@ -1,0 +1,36 @@
+{
+  "is_example": true,
+  "schema_version": 1,
+  "protocol_version": "P1-NOT-FROZEN",
+  "protocol_sha256": null,
+  "campaign_id": "EXAMPLE-cold-start",
+  "run_id": "EXAMPLE-n24-linear-10000",
+  "code_commit": null,
+  "rules_id": "girth-ge-5-v1",
+  "n": 24,
+  "method": "local_linear",
+  "cost_mode": "cold_start",
+  "seed_block": 10000,
+  "derived_seeds": null,
+  "device": "cpu",
+  "compute_threads": 1,
+  "budget": {
+    "wall_limit_s": 600,
+    "search_stop_s": 540,
+    "finalize_by_s": 570,
+    "terminate_at_s": 580,
+    "kill_at_s": 590,
+    "checkpoint_every_s": 5,
+    "training_limit_s": 120
+  },
+  "method_parameters": {
+    "k_max": null,
+    "stagnation_cycles": null,
+    "ridge_lambda": null,
+    "features_version": "symmetric-12-v1",
+    "trainable_parameters": 13,
+    "max_training_pairs": 4096,
+    "rollouts_per_action": 2,
+    "training_sizes": [8, 10, 12, 16]
+  }
+}
