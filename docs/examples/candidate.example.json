@@ -1,0 +1,16 @@
+{
+  "is_example": true,
+  "run_id": "EXAMPLE-C5-plus-isolates",
+  "payload": {
+    "schema_version": 1,
+    "rules_id": "girth-ge-5-v1",
+    "n": 8,
+    "edges": [[0, 1], [0, 4], [1, 2], [2, 3], [3, 4]],
+    "claimed_m": 5
+  },
+  "content_sha256": null,
+  "independent_verification": {
+    "status": "NOT_EXECUTED",
+    "certificate_path": null
+  }
+}

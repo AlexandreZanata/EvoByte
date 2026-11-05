@@ -1,0 +1,27 @@
+{
+  "is_example": true,
+  "run_id": "EXAMPLE-C5-plus-isolates",
+  "status": "NOT_EXECUTED",
+  "certification_status": "UNCERTIFIED",
+  "protocol_version": "P1-NOT-FROZEN",
+  "code_commit": null,
+  "config_sha256": null,
+  "primary_m": null,
+  "observed_best_m": null,
+  "wall_s": null,
+  "cpu_s": null,
+  "peak_rss_bytes": null,
+  "peak_vram_bytes": null,
+  "gpu_unavailable_reason": "Ainda não medido",
+  "training_s": null,
+  "search_s": null,
+  "verification_s": null,
+  "evaluation_count": null,
+  "failures": [],
+  "candidate_path": "candidate.example.json",
+  "certificate_sha256": null,
+  "expected_if_validated": {
+    "computed_m": 5,
+    "note": "EXEMPLO de expectativa para C5 com isolados; não é medição nem certificado"
+  }
+}
