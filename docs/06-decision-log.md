@@ -78,13 +78,21 @@ Essas perguntas não estão respondidas. Qualquer mudança fora das escolhas já
 previstas deve registrar: motivo, evidência anterior à decisão, alternativas,
 impacto em validade/custo/split, responsável, versão afetada e novo portão exigido.
 
+## D010 Congelamento do protocolo P0 e aprovação do portão F0
+
+Em 5 de novembro de 2026, com a conclusão de F00-T01 e F00-T02, o protocolo de
+desenvolvimento P0 foi congelado em `protocols/development-v1.json` (SHA-256:
+`3811a92fc15ecf4584edb604dbb26225a0915ba60d801ad41a128e7d4764ede7`), amparado
+pelo extrato bibliográfico `reports/sources/girth-ge-5-v1.md`. A revisão independente
+do portão F0 foi formalizada em `reports/reviews/F0.md` com parecer APROVADO,
+autorizando o avanço para a fase F1 (tarefa F01-T01).
+
 ## Situação da entrega de planejamento
 
 - **Planejado:** domínio, H1, contratos, fases, máquina de estados, tarefas e quotas.
-- **Verificado nesta etapa:** raiz/remote, ausência de alterações locais iniciais,
-  consulta das fontes primárias citadas e consistência documental checada na entrega.
+- **Concluído e Aprovado:** Portão F0 (F00-T01 auditoria bibliográfica e F00-T02 protocolo P0 congelado com revisão independente).
 - **Não executado:** laboratório, instalação experimental, verificadores, busca,
-  treinamento, medições do hardware, campanhas e revisões científicas dos portões.
+  treinamento, medições do hardware, campanhas e revisões científicas dos portões futuros.
 - **Bloqueado por portão futuro:** implementação além da ficha autorizada,
   aprendizado antes de F3 e confirmação antes de P1. Não há dependência de cloud
   nem fonte indispensável inacessível registrada nesta entrega.
