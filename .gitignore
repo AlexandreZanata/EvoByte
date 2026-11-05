@@ -1,84 +1,52 @@
 # Python
 __pycache__/
 *.py[cod]
-*.egg-info/
-.venv/
-venv/
-.env
-
-# Build / dist
+*$py.class
+*.so
+.Python
 build/
-dist/*
-!dist/external-validation/
-!dist/curator-submissions/
-!dist/zenodo-bundle/
-dist/zenodo-bundle/*
-!dist/zenodo-bundle/final-manifest-sha256.json
-!dist/zenodo-bundle-frontier/
-dist/zenodo-bundle-frontier/*
-!dist/zenodo-bundle-frontier/final-manifest-sha256.json
-*.whl
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Machine-local notes (never commit: paths, versions, measurements)
-.local/
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# Test / coverage
-.pytest_cache/
-.coverage
-htmlcov/
-coverage.xml
-
-# Experiments (large artifacts, never commit)
-checkpoints/
-runs/
-experiments/*-matrix/
-experiments/*-baselines/
-!experiments/p155-baselines/
-experiments/*-generalization/
-!experiments/p156-generalization/
-experiments/*-ablations/
-!experiments/p157-ablations/
-experiments/*-verdict/
-!experiments/p158-verdict/
-data/raw/*
-!data/raw/quantum/
-data/processed/
-*.pt
-*.safetensors
-*.onnx
-*.parquet
-*.h5
-*.zarr
-
-# Hall of fame is curated; generated copies stay local
-hall_of_fame/generated/
-
-# OS / editor
-.DS_Store
-Thumbs.db
-.idea/
+# IDE & Editor
 .vscode/
+.idea/
 *.swp
 *.swo
-.freebuff/
+*~
 
-# Secrets (never commit)
-.env
-*.pem
-*.key
-secrets.yaml
+# Caches & Test
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
 
-# Lean (isolated P48 proofs; deps resolved by lake, never committed)
-lean_proofs/.lake/
-lean_proofs/build/
+# Lean / Lake
+.lake/
 
-# LaTeX auxiliary files
-*.aux
-*.log
-*.out
-*.toc
-*.bbl
-*.blg
-*.fls
-*.fdb_latexmk
-*.synctex.gz
+# OS
+.DS_Store
+Thumbs.db
