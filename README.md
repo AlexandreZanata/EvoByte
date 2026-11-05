@@ -1,5 +1,12 @@
 # EvoByte
 
+Direção proposta em 2026-11-05 — descoberta científica com baixo custo,
+redução matemática do trabalho e certificação independente. A P222 está
+arquivada com estado incompleto. O próximo ciclo documental está no
+[novo programa de pesquisa](docs/research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md),
+com tarefas delimitadas para execução pelo Gemini Flash 3.8. As seções
+abaixo registram a proposta e o histórico anteriores.
+
 **Massively parallel evolutionary discovery of symbolic programs via ultra-compact bytecode and deterministic verification.**
 
 EvoByte tests one hypothesis:

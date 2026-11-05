@@ -19,6 +19,7 @@ Newcomers start at the root [README.md](../README.md), then:
 
 ## Research direction
 
+- [Novo programa P229–P234](research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md) — proposta de pesquisa com baixo custo, seis tarefas delimitadas e prompt para Gemini Flash 3.8.
 - [VISION.md](VISION.md) — hypothesis, non-goals, hot-path philosophy.
 - [HYPOTHESIS.md](HYPOTHESIS.md) — falsifiable success criteria.
 - [MVP.md](MVP.md) — minimal scope and exit thresholds.

@@ -1,11 +1,24 @@
 # P222 — Censo exaustivo e exato de códigos bicíclicos bivariados pequenos
 
-**Status:** Proposed.
+**Status:** ARCHIVED / INCOMPLETE. Cobertura parcial de `ℓ·m ≤ 10`.
 **Programa:** Progresso Científico Verificável (P221–P228, D049).
 **Dependência:** P221 concluída e integrada em `main`.
 **Owner:** agente executor; o revisor (Claude) audita antes do merge.
 **Branch:** `codex/p222-bb-code-exhaustive-census` (a partir de `main`).
 **Leia antes:** [`AGENTS.md`](../../AGENTS.md), [`docs/research/p221-formal-honesty-report.md`](../research/p221-formal-honesty-report.md), [`tests/test_p221_independent_recompute.py`](../../tests/test_p221_independent_recompute.py).
+
+## Registro de arquivamento
+
+Em 2026-11-05, Alexandre solicitou o arquivamento da fase com seu estado
+parcial. A execução da P222 está encerrada. A próxima proposta é o
+[ciclo de pesquisa com baixo custo](../research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md).
+Os comandos e gates abaixo pertencem ao contrato histórico da P222.
+
+O [relatório do recorte](../research/p222-census-report.md) registra o
+domínio concluído, as calibrações, a reverificação independente e o
+hash do censo. Os dados deste recorte ficam disponíveis para comparar
+métodos de verificação. O plano abaixo registra o escopo original da P222,
+cujos portões seguem como referência para um eventual censo integral.
 
 ## Por que esta fase existe
 
@@ -135,7 +148,7 @@ python3 -m pytest tests -q -m "not slow" | tail -2
 git status --short
 ```
 
-## Commit & Push (obrigatório; NÃO fazer merge — o revisor aprova)
+## Commit & Push do plano integral (obrigatório; NÃO fazer merge — o revisor aprova)
 
 ```bash
 git add src/evobyte/bb_census.py scripts/run_p222_census.py tests/test_bb_census.py \

@@ -1,5 +1,11 @@
 # Plano de busca matemática verificável — execução por agente econômico
 
+Orientação de 2026-11-05, D051 — consultar o
+[programa P229–P234](research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md)
+e seu prompt de execução. A P222 está arquivada com estado incompleto.
+As instruções de continuidade deste documento pertencem aos ciclos
+históricos descritos abaixo.
+
 **Plano concluído: 2026-10-13 (D020).** P40–P57 são o programa histórico;
 P58–P72 estão concluídas (Done) com resultados medidos e arquivos individuais.
 Este documento não certifica fases antigas nem promete descoberta mundial.

@@ -1,5 +1,11 @@
 # Phases P00–P88 (executable plan)
 
+Direção proposta em 2026-11-05 — P222 arquivada com estado incompleto.
+O [programa P229–P234](../research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md)
+define a proposta seguinte. A primeira tarefa elegível após a revisão
+do plano e os pré-requisitos é P229. Os programas abaixo ficam como
+registro de seus contratos originais.
+
 One file per phase. Each phase states objective, scope (in/out),
 tasks, exit gate (artifact runs + measured), risks, and a **Commit & Push**
 block. Rules:
@@ -9,6 +15,20 @@ block. Rules:
 - Gates from the phase file block commit and push — never defer a red gate.
 
 ## Index
+
+### Proposta de pesquisa com baixo custo, D051
+
+- [P229 — Auditoria das garantias e pré-registro](P229-low-compute-audit-preregistration.md).
+- [P230 — Piloto de distância exata por núcleo](P230-exact-distance-kernel-pilot.md).
+- [P231 — Piloto de decomposição BB certificada](P231-certified-subgroup-decomposition.md).
+- [P232 — Piloto de identidades CNOT+T exatas](P232-exact-cnot-t-identities.md).
+- [P233 — Reprodução e comparação com garantia equivalente](P233-independent-comparison.md).
+- [P234 — Decisão científica do ciclo](P234-scientific-decision.md).
+
+Todas estão propostas. O [contrato do novo programa](../research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md)
+delimita pré-requisitos, revisão e a ordem de uma tarefa por vez.
+
+### Índice histórico
 
 - [P00 — Foundation, hardware probe, reproducibility harness](P00-foundation-hw-probe.md)
 - [P01 — Bytecode v0 frozen](P01-bytecode-v0.md)
@@ -437,7 +457,7 @@ limitado). Este programa troca "empilhar resultados" por: honestidade formal, ve
 exata, portões humanos de novidade e ablação do método.
 
 - [P221 — Honestidade formal: recálculo independente e Lean sobre os objetos reais](P221-formal-honesty-independent-recompute.md).
-- [P222 — Censo exaustivo e exato de códigos bicíclicos bivariados pequenos](P222-bb-code-exhaustive-census.md).
+- [P222 — Censo exaustivo e exato de códigos bicíclicos bivariados pequenos](P222-bb-code-exhaustive-census.md), arquivada no recorte `ℓ·m ≤ 10`. [Relatório do recorte](../research/p222-census-report.md).
 - [P223 — Auditoria de novidade com portão humano obrigatório](P223-novelty-audit-human-gate.md).
 - [P224 — Ablação do método contra baselines fortes](P224-method-ablation-strong-baselines.md).
 - [P225 — Busca de fronteira em escala (condicional)](P225-frontier-scale-search.md).

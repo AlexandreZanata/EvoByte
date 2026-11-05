@@ -1,5 +1,11 @@
 # Roadmap (phased, measurable, no false positives)
 
+Direção proposta em 2026-11-05, registrada em D051 — P222 arquivada com
+estado incompleto. O plano para revisão é
+[P229–P234](research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md).
+A sequência D049 abaixo permanece como registro histórico. A aprovação
+do novo plano e de seus pré-requisitos libera somente P229.
+
 **Status:** decision. Order is binding; skipping a phase needs a
 `DECISIONS.md` entry.
 
