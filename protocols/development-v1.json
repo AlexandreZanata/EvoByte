@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "protocol_id": "P0-development-v1",
+  "protocol_type": "development_and_tuning",
+  "status": "FROZEN",
+  "domain": {
+    "problem": "ex(n; {C3, C4})",
+    "description": "Maximização de arestas em grafos simples não-direcionados sem triângulos (C3) e sem ciclos de quatro vértices (C4), cintura g >= 5",
+    "rules_id": "girth-ge-5-v1",
+    "sources_extract_file": "reports/sources/girth-ge-5-v1.md",
+    "sources_extract_sha256": "d2c90be9e40b9bddfded8fc46dbbe699971e43ba831605f8553c6f608be678c5"
+  },
+  "scientific_hypothesis": {
+    "id": "H1",
+    "statement": "Uma política linear aprendida de seleção de arestas (local_linear), integrada à busca local, melhora a média da melhor quantidade de arestas certificadas ao fim de 600 s, em pelo menos uma aresta, contra a referência competente B* escolhida no piloto, em cada um dos três tamanhos finais (n in {24, 28, 32}), incluindo seu custo de partida.",
+    "primary_metric": "best_certified_edges_m_at_600s",
+    "evaluation_mode": "cold_start",
+    "time_budget_per_run_s": 600
+  },
+  "data_splits_and_sizes": {
+    "development": {
+      "sizes": [8, 10, 12, 16],
+      "optimal_edges": {
+        "8": 10,
+        "10": 15,
+        "12": 18,
+        "16": 28
+      },
+      "seed_range": [0, 99],
+      "short_run_wall_s": 60,
+      "purpose": "Geração de dados de completações e ensaios rápidos de integração"
+    },
+    "tuning": {
+      "sizes": [18, 20],
+      "optimal_edges": {
+        "18": 34,
+        "20": 41
+      },
+      "seed_blocks": [100, 101, 102],
+      "purpose": "Ajuste do motor manual compartilhado (bloco 100) e do hiperparâmetro ridge lambda (blocos 101, 102)"
+    },
+    "pilot": {
+      "sizes": [18, 20],
+      "optimal_edges": {
+        "18": 34,
+        "20": 41
+      },
+      "seeds": [150, 151, 152],
+      "purpose": "Seleção do braço de controle B* e estimativa de variância para dimensionar R"
+    },
+    "confirmatory_reserved": {
+      "sizes": [24, 28, 32],
+      "optimal_edges": {
+        "24": 54,
+        "28": 68,
+        "32": 85
+      },
+      "seed_start": 10000,
+      "status": "RESERVED_FOR_P1_POST_PILOT"
+    },
+    "reproduction_reserved": {
+      "sizes": [24, 28, 32],
+      "seed_start": 20000,
+      "status": "RESERVED_FOR_P1_POST_PILOT"
+    }
+  },
+  "arms": [
+    {
+      "id": "random",
+      "type": "baseline",
+      "is_learned": false,
+      "description": "Adicionar uniformemente arestas legais até maximalidade e reiniciar"
+    },
+    {
+      "id": "greedy",
+      "type": "baseline",
+      "is_learned": false,
+      "description": "Adicionar aresta legal com maior soma de graus (desempate uniforme); reiniciar na maximalidade"
+    },
+    {
+      "id": "local_uniform",
+      "type": "local_search",
+      "is_learned": false,
+      "description": "Busca local com adição uniforme até maximalidade, remoção aleatória de 1..k_max arestas, reinício após S ciclos sem melhora"
+    },
+    {
+      "id": "local_manual",
+      "type": "local_search",
+      "is_learned": false,
+      "description": "Mesmo motor local, escolhendo maior soma de graus com probabilidade p e uniforme com 1-p"
+    },
+    {
+      "id": "local_linear",
+      "type": "local_search",
+      "is_learned": true,
+      "description": "Mesmo motor local, selecionando a adição legal pelo escore predito por regressão linear ridge sobre 12 características simétricas"
+    },
+    {
+      "id": "local_untrained",
+      "type": "control",
+      "is_learned": false,
+      "description": "Mesmo motor local e 12 características, com pesos normais N(0,1) sorteados na semente de inicialização, sem treino"
+    }
+  ],
+  "policy_specification": {
+    "model_type": "ridge_linear_regression",
+    "features_version": "symmetric-12-v1",
+    "number_of_features": 12,
+    "total_trainable_parameters": 13,
+    "max_training_pairs": 4096,
+    "rollouts_per_action": 2,
+    "training_sizes": [8, 10, 12, 16],
+    "training_wall_limit_s": 120,
+    "training_data_generation_limit_s": 115
+  },
+  "tuning_grid": {
+    "total_runs": 24,
+    "wall_limit_per_run_s": 600,
+    "total_wall_s": 14400,
+    "stage_1_manual_motor": {
+      "description": "Ajuste de k_max, stagnation_cycles (S) e probabilidade gulosa p para fixar o motor compartilhado",
+      "parameters_grid": {
+        "k_max": [1, 3],
+        "stagnation_cycles": [50, 200],
+        "greedy_probability_p": [0.5, 1.0]
+      },
+      "sizes": [18, 20],
+      "seed_block": 100,
+      "number_of_runs": 16,
+      "selection_criteria_order": [
+        "Menor média do déficit relativo (ótimo - m) / ótimo sobre n=18 e n=20",
+        "Menor tempo mediano até a melhor meta",
+        "Ordem léxica crescente da tupla (k_max, S, p)"
+      ]
+    },
+    "stage_2_linear_lambda": {
+      "description": "Ajuste do hiperparâmetro de regularização ridge lambda da política linear com o motor fixado em (k_max*, S*)",
+      "parameters_grid": {
+        "ridge_lambda": [0.1, 1.0]
+      },
+      "sizes": [18, 20],
+      "seed_blocks": [101, 102],
+      "number_of_runs": 8,
+      "selection_criteria_order": [
+        "Menor média do déficit relativo (ótimo - m) / ótimo sobre n=18 e n=20",
+        "Menor tempo mediano até a melhor meta",
+        "Menor valor numérico de lambda"
+      ]
+    },
+    "explicit_run_list": [
+      {"run_id": "tune-01", "stage": 1, "method": "local_manual", "n": 18, "seed_block": 100, "k_max": 1, "S": 50, "p": 0.5},
+      {"run_id": "tune-02", "stage": 1, "method": "local_manual", "n": 20, "seed_block": 100, "k_max": 1, "S": 50, "p": 0.5},
+      {"run_id": "tune-03", "stage": 1, "method": "local_manual", "n": 18, "seed_block": 100, "k_max": 1, "S": 50, "p": 1.0},
+      {"run_id": "tune-04", "stage": 1, "method": "local_manual", "n": 20, "seed_block": 100, "k_max": 1, "S": 50, "p": 1.0},
+      {"run_id": "tune-05", "stage": 1, "method": "local_manual", "n": 18, "seed_block": 100, "k_max": 1, "S": 200, "p": 0.5},
+      {"run_id": "tune-06", "stage": 1, "method": "local_manual", "n": 20, "seed_block": 100, "k_max": 1, "S": 200, "p": 0.5},
+      {"run_id": "tune-07", "stage": 1, "method": "local_manual", "n": 18, "seed_block": 100, "k_max": 1, "S": 200, "p": 1.0},
+      {"run_id": "tune-08", "stage": 1, "method": "local_manual", "n": 20, "seed_block": 100, "k_max": 1, "S": 200, "p": 1.0},
+      {"run_id": "tune-09", "stage": 1, "method": "local_manual", "n": 18, "seed_block": 100, "k_max": 3, "S": 50, "p": 0.5},
+      {"run_id": "tune-10", "stage": 1, "method": "local_manual", "n": 20, "seed_block": 100, "k_max": 3, "S": 50, "p": 0.5},
+      {"run_id": "tune-11", "stage": 1, "method": "local_manual", "n": 18, "seed_block": 100, "k_max": 3, "S": 50, "p": 1.0},
+      {"run_id": "tune-12", "stage": 1, "method": "local_manual", "n": 20, "seed_block": 100, "k_max": 3, "S": 50, "p": 1.0},
+      {"run_id": "tune-13", "stage": 1, "method": "local_manual", "n": 18, "seed_block": 100, "k_max": 3, "S": 200, "p": 0.5},
+      {"run_id": "tune-14", "stage": 1, "method": "local_manual", "n": 20, "seed_block": 100, "k_max": 3, "S": 200, "p": 0.5},
+      {"run_id": "tune-15", "stage": 1, "method": "local_manual", "n": 18, "seed_block": 100, "k_max": 3, "S": 200, "p": 1.0},
+      {"run_id": "tune-16", "stage": 1, "method": "local_manual", "n": 20, "seed_block": 100, "k_max": 3, "S": 200, "p": 1.0},
+      {"run_id": "tune-17", "stage": 2, "method": "local_linear", "n": 18, "seed_block": 101, "ridge_lambda": 0.1},
+      {"run_id": "tune-18", "stage": 2, "method": "local_linear", "n": 20, "seed_block": 101, "ridge_lambda": 0.1},
+      {"run_id": "tune-19", "stage": 2, "method": "local_linear", "n": 18, "seed_block": 101, "ridge_lambda": 1.0},
+      {"run_id": "tune-20", "stage": 2, "method": "local_linear", "n": 20, "seed_block": 101, "ridge_lambda": 1.0},
+      {"run_id": "tune-21", "stage": 2, "method": "local_linear", "n": 18, "seed_block": 102, "ridge_lambda": 0.1},
+      {"run_id": "tune-22", "stage": 2, "method": "local_linear", "n": 20, "seed_block": 102, "ridge_lambda": 0.1},
+      {"run_id": "tune-23", "stage": 2, "method": "local_linear", "n": 18, "seed_block": 102, "ridge_lambda": 1.0},
+      {"run_id": "tune-24", "stage": 2, "method": "local_linear", "n": 20, "seed_block": 102, "ridge_lambda": 1.0}
+    ]
+  },
+  "pilot_specification": {
+    "total_runs": 36,
+    "wall_limit_per_run_s": 600,
+    "total_wall_s": 21600,
+    "methods": ["random", "greedy", "local_uniform", "local_manual", "local_linear", "local_untrained"],
+    "sizes": [18, 20],
+    "seeds": [150, 151, 152],
+    "baseline_selection_rule": {
+      "eligible_arms": ["random", "greedy", "local_uniform", "local_manual"],
+      "selection_criteria_order": [
+        "Menor média do déficit relativo (ótimo - m) / ótimo sobre n=18 e n=20",
+        "Menor tempo mediano até atingir a melhor meta",
+        "Ordem léxica do identificador do braço"
+      ]
+    }
+  },
+  "run_lifecycle_and_timing": {
+    "wall_limit_s": 600,
+    "search_stop_s": 540,
+    "finalize_by_s": 570,
+    "terminate_request_at_s": 580,
+    "kill_force_at_s": 590,
+    "checkpoint_interval_s": 5,
+    "cold_start_training_limit_s": 120,
+    "initial_certified_empty_graph_required": true
+  },
+  "failure_policy": {
+    "unsuccessful_or_timeout_score": "m=0 (atribuído ao grafo vazio inicial certificado)",
+    "overrun_status": "INTEGRITY_FAILURE",
+    "external_failure_handling": "Repetição estrita de bloco inteiro de 6 métodos sob cota de reserva (até 12 execuções)"
+  },
+  "quotas_summary_s": {
+    "tests_and_local_verification_F0_F4": 3600,
+    "development_short_runs": 2880,
+    "tuning_grid": 14400,
+    "pilot": 21600,
+    "confirmatory_reserved_R10": 108000,
+    "confirmatory_reserved_R20": 216000,
+    "reproduction_reserved": 21600,
+    "analysis_and_independent_verification": 7200,
+    "external_failure_reserve": 7200,
+    "absolute_global_cap": 300000
+  }
+}
