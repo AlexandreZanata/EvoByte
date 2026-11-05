@@ -1,0 +1,40 @@
+{
+  "phase": "P66",
+  "note": "Frozen P66 guided-vs-random-vs-isolated comparison. Disjoint train and dev starts; sealed finals excluded.",
+  "device": "cpu",
+  "seed": 0,
+  "require_clean_tree": true,
+  "max_coord": 1000000000,
+  "n": 4,
+  "train_starts": [
+    [
+      2,
+      3,
+      7
+    ],
+    [
+      3,
+      4,
+      13
+    ]
+  ],
+  "dev_starts": [
+    [
+      5,
+      5,
+      5
+    ],
+    [
+      4,
+      4,
+      12
+    ]
+  ],
+  "training": {
+    "n_packets": 16,
+    "seed": 0,
+    "epochs": 40
+  },
+  "n_packets": 8,
+  "param_cap": 100000
+}

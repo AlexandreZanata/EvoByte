@@ -1,0 +1,14 @@
+{
+  "phase": "P111",
+  "acceptance_phase": "P111",
+  "seed": 42,
+  "device": "cpu",
+  "alpha": 0.01,
+  "count_per_track": 25,
+  "min_total_instances": 100,
+  "min_wins": 80,
+  "split_path": "experiments/p111-blind-split.json",
+  "split_sha256": "3e7287b44b97df009229db70bac02cc5f9f1bdd47f88e7808f61730f2b27605b",
+  "require_clean_tree": true,
+  "allow_dirty": false
+}

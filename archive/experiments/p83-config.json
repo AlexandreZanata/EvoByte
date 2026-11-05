@@ -1,0 +1,27 @@
+{
+  "phase": "P83",
+  "note": "P83 structured divisor sieve and optimal divisor selection frozen configuration. Demonstrates logarithmic divisor ordering minimizing maximum coordinate max(x, y, z) on challenging primes n = 1 mod 24, proving coordinate bounds and certifying optimal Lean 4 certificates with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "project_dir": "lean_proofs",
+  "test_primes": [
+    73,
+    97,
+    193,
+    241,
+    313,
+    337,
+    1009,
+    1033,
+    1129,
+    1153,
+    1201,
+    1249,
+    1297,
+    1321,
+    1489,
+    1609
+  ],
+  "min_avg_reduction_factor": 10.0,
+  "seed": 42,
+  "require_clean_tree": true
+}

@@ -1,0 +1,31 @@
+{
+  "candidate": {
+    "group_name": "AGL(1, 13)",
+    "group_order": 156,
+    "min_orbit_length": 39,
+    "orbit_count": 10,
+    "orbit_lengths": [
+      39,
+      78,
+      156
+    ],
+    "proof_statement": "AGL(1, 13) has 10 orbit representatives on 5-subsets of 13. All orbit lengths are in [39, 78, 156], with minimal orbit length 39. Since 39 > 34 (world record), no AGL(1, 13)-invariant covering design can match or beat 34 blocks. Structural obstruction NULL_BOUND rigorously proven.",
+    "published_best": 34
+  },
+  "certificate_type": "structural_null_bound",
+  "certificate_version": "3.0.0",
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine",
+    "provenance": "P206 Preregistered Generalized Campaign",
+    "timestamp_utc": "2026-10-27T18:41:19Z"
+  },
+  "parameters": {
+    "k": 5,
+    "published_best": 34,
+    "t": 3,
+    "v": 13
+  },
+  "sha256_checksum": "0ba2a2bf95e628b1daf6920984b9eebc0ba45f084bad49b6eeff2c4c57dc4a60",
+  "target_id": "covering_C_13_5_3_affine",
+  "verdict": "NULL_BOUND"
+}

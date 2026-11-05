@@ -1,0 +1,9 @@
+{
+  "phase": "P85",
+  "min_theorems": 30,
+  "min_success_rate": 1.0,
+  "output_dir": "lean_proofs/Generated",
+  "project_dir": "lean_proofs",
+  "seed": 42,
+  "require_clean_tree": true
+}

@@ -1,0 +1,44 @@
+{
+  "phase": "P182",
+  "calibration": {
+    "targets": [
+      "steane_7_1_3",
+      "shor_9_1_3"
+    ],
+    "budget_sec_per_seed": 30.0,
+    "max_evaluations_per_trial": 200,
+    "seeds": [
+      42,
+      101
+    ]
+  },
+  "campaign": {
+    "targets": [
+      "qecc_14_3_open",
+      "qecc_16_5_open",
+      "qecc_17_3_open",
+      "qecc_18_3_open",
+      "qecc_19_10_open",
+      "qecc_20_2_open",
+      "qecc_20_3_open"
+    ],
+    "budget_sec_per_seed": 300.0,
+    "max_evaluations_per_trial": 50,
+    "seeds": [
+      42,
+      101,
+      202
+    ]
+  },
+  "targets_source": "docs/research/targets/qecc_frontier_v1.json",
+  "budget_note": "Orcamento duplo por ensaio: tempo OU max_evaluations_per_trial, o que esgotar primeiro. Candidatos gerados a partir de populacao pseudoaleatoria estrita.",
+  "algorithms": [
+    "StabilizerEvolution"
+  ],
+  "verifier": "qecc_verifier.code_distance",
+  "verdict_rule": {
+    "REDISCOVERY_OK": "calibração reencontra d publicado a partir de init aleatório",
+    "DISCOVERY_BEATEN": "candidato certificado com d > best_known_value do catálogo",
+    "NULL_RESULT": "orçamento esgotado sem certificado acima da cota"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "campaign_cap_sec": 10800.0,
+  "classical_frac": 0.9,
+  "confirm_sec": 60.0,
+  "corpus_manifest": "experiments/p52-certified-data.json",
+  "device": "cpu",
+  "domain": [-3.0, 3.0],
+  "error_threshold": 0.0001,
+  "hybrid_proposals": 64,
+  "keep_ratio": 0.8,
+  "min_pairs": 20,
+  "note": "Complete frozen configuration. Screen all arms at 10 s real on six P52 validation tasks x five seeds; confirm top-2 search arms plus classical at 60 s. KEEP needs the 95% paired interval below ln(0.8) with no success drop, recorded statistical approval, and a limited-adoption ADR; classical trivialization forces DROP; thin data forces INCONCLUSIVE. No threshold changes after measurement. No TBD values.",
+  "phase": "P54",
+  "pop_size": 64,
+  "proposer_manifest": "experiments/p53-proposer-manifest.json",
+  "screen_sec": 10.0,
+  "seeds": [42, 101, 202, 303, 404],
+  "statistical_review": {"approved_by": "", "status": "pending-human"},
+  "task_ids": [
+    "p52_va_0000",
+    "p52_va_0001",
+    "p52_va_0002",
+    "p52_va_0003",
+    "p52_va_0004",
+    "p52_va_0005"
+  ]
+}

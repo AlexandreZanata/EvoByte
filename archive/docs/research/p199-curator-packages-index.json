@@ -1,0 +1,139 @@
+{
+  "audit_reference": "experiments/p199-novelty-audit.json",
+  "created_at": "2026-10-26T17:35:00Z",
+  "curator_packages": {
+    "dan_gordon_ljcr": {
+      "curator_channel": "https://dmgordon.org/cover/",
+      "curator_id": "dan_gordon_ljcr",
+      "curator_name": "Dan Gordon (LJCR / Covering Designs)",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p199/dan_gordon_ljcr/README.md",
+          "sha256": "b713b558da79761241b0ca7a7fb406902123f370a5f5612b1b772b4632c4f0d2"
+        },
+        {
+          "name": "certificate.json",
+          "path": "dist/curator-submissions/p199/dan_gordon_ljcr/certificate.json",
+          "sha256": "9c0610f9c8cfacf403a984aa58361f868d17c51d99499724f28a09e7d684905e"
+        },
+        {
+          "name": "verify_structured_certificate.py",
+          "path": "dist/curator-submissions/p199/dan_gordon_ljcr/verify_structured_certificate.py",
+          "sha256": "26107b4b94304f62a95ba29e977f8d7f2996e7d0e92f86fe3fa6452cece0a2b0"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p199/dan_gordon_ljcr/reproduce.sh",
+          "sha256": "755e8a5f7324aeb0a9dc1c930911eb7a1ae564991992de793f0fccda381feeac"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p199/dan_gordon_ljcr/submission-letter.md",
+          "sha256": "1696bf2539510a13ff1c348ef5a74c05f6a35f6bdd97a38b830ff695e6cf1d73"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p199/dan_gordon_ljcr/submission-letter.txt",
+          "sha256": "1696bf2539510a13ff1c348ef5a74c05f6a35f6bdd97a38b830ff695e6cf1d73"
+        }
+      ],
+      "package_dir": "dist/curator-submissions/p199/dan_gordon_ljcr",
+      "status": "pending_human_submission",
+      "verdict_type": "discovery_tied"
+    },
+    "markus_grassl_codetables": {
+      "curator_channel": "http://www.codetables.de/",
+      "curator_id": "markus_grassl_codetables",
+      "curator_name": "Markus Grassl (codetables.de / QECC)",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p199/markus_grassl_codetables/README.md",
+          "sha256": "1f47f1b7509a3d70dbdf056ad00839ac40e3bac1fd53f19e8a47c06068e85ef7"
+        },
+        {
+          "name": "certificate.json",
+          "path": "dist/curator-submissions/p199/markus_grassl_codetables/certificate.json",
+          "sha256": "952d6b04b0664daa4fcc8c4219ba7958ed60655ce7728467c515ca7769c60ecd"
+        },
+        {
+          "name": "null-result-notice.md",
+          "path": "dist/curator-submissions/p199/markus_grassl_codetables/null-result-notice.md",
+          "sha256": "52441fc51e73313ef5ee3d8243b887d59cb4cd9f0ceb2d94c9ba861087a2217e"
+        },
+        {
+          "name": "verify_structured_certificate.py",
+          "path": "dist/curator-submissions/p199/markus_grassl_codetables/verify_structured_certificate.py",
+          "sha256": "26107b4b94304f62a95ba29e977f8d7f2996e7d0e92f86fe3fa6452cece0a2b0"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p199/markus_grassl_codetables/reproduce.sh",
+          "sha256": "ea86f7a088a64dd81771a6a789e826773f381871590319dbe2f61f02d2ef85ee"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p199/markus_grassl_codetables/submission-letter.md",
+          "sha256": "f08d3c5f608d86c2db0759049633a569cd6404534098b6763f34c9c02d3a826e"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p199/markus_grassl_codetables/submission-letter.txt",
+          "sha256": "f08d3c5f608d86c2db0759049633a569cd6404534098b6763f34c9c02d3a826e"
+        }
+      ],
+      "package_dir": "dist/curator-submissions/p199/markus_grassl_codetables",
+      "status": "pending_human_submission",
+      "verdict_type": "calibration_and_null_bound"
+    },
+    "neil_sloane_oeis": {
+      "curator_channel": "https://oeis.org/A066010",
+      "curator_id": "neil_sloane_oeis",
+      "curator_name": "Neil Sloane & OEIS Editorial Board (OEIS)",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p199/neil_sloane_oeis/README.md",
+          "sha256": "1bc6e2fd659b1a91e42e4d2b8735b3300bf867874a9ac8ac46c958f5f9438136"
+        },
+        {
+          "name": "certificate.json",
+          "path": "dist/curator-submissions/p199/neil_sloane_oeis/certificate.json",
+          "sha256": "e20a8c24a3ae395b6a8d481c95f7b84f89589a290448bad290b80e6b0196cc64"
+        },
+        {
+          "name": "verify_structured_certificate.py",
+          "path": "dist/curator-submissions/p199/neil_sloane_oeis/verify_structured_certificate.py",
+          "sha256": "26107b4b94304f62a95ba29e977f8d7f2996e7d0e92f86fe3fa6452cece0a2b0"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p199/neil_sloane_oeis/reproduce.sh",
+          "sha256": "7b7a81d3efb16bae550091f99beac4af78bee4b2b7364acfb83aa0ed2a549a17"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p199/neil_sloane_oeis/submission-letter.md",
+          "sha256": "c8b31c76698c9a0b069af4807bd36ac7f8905207612184ff5db1c83065fc1020"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p199/neil_sloane_oeis/submission-letter.txt",
+          "sha256": "c8b31c76698c9a0b069af4807bd36ac7f8905207612184ff5db1c83065fc1020"
+        }
+      ],
+      "package_dir": "dist/curator-submissions/p199/neil_sloane_oeis",
+      "status": "pending_human_submission",
+      "verdict_type": "calibration_sqs10"
+    }
+  },
+  "index_version": "2.0.0",
+  "overall_campaign_verdict": "DISCOVERY_TIED",
+  "safety_guarantee": {
+    "autonomous_emails_sent": 0,
+    "corresponding_author": "Alexandre Zanata",
+    "external_api_calls": 0,
+    "human_submission_status": "pending_human_submission"
+  }
+}

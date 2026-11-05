@@ -1,0 +1,342 @@
+{
+  "alpha": 0.05,
+  "description": "Sealed blind residue split for P79 statistical confirmation. Contains 20 held-out residue instances for Erd\u0151s-Straus (a=4 mod 840) and 20 held-out residue instances for Sierpi\u0144ski (a=5 mod 120).",
+  "max_coord": 1000000000,
+  "split_id": "p79-blind-residue-split-v1",
+  "tracks": {
+    "H_ES": {
+      "a": 4,
+      "instances": [
+        {
+          "a": 4,
+          "instance_id": "ES_blind_01",
+          "k": 10,
+          "modulus": 840,
+          "n": 8401,
+          "residue": 1
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_02",
+          "k": 11,
+          "modulus": 840,
+          "n": 9265,
+          "residue": 25
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_03",
+          "k": 12,
+          "modulus": 840,
+          "n": 10129,
+          "residue": 49
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_04",
+          "k": 13,
+          "modulus": 840,
+          "n": 11041,
+          "residue": 121
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_05",
+          "k": 14,
+          "modulus": 840,
+          "n": 11929,
+          "residue": 169
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_06",
+          "k": 15,
+          "modulus": 840,
+          "n": 12841,
+          "residue": 241
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_07",
+          "k": 16,
+          "modulus": 840,
+          "n": 13729,
+          "residue": 289
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_08",
+          "k": 17,
+          "modulus": 840,
+          "n": 14593,
+          "residue": 313
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_09",
+          "k": 18,
+          "modulus": 840,
+          "n": 15457,
+          "residue": 337
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_10",
+          "k": 19,
+          "modulus": 840,
+          "n": 16321,
+          "residue": 361
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_11",
+          "k": 20,
+          "modulus": 840,
+          "n": 17209,
+          "residue": 409
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_12",
+          "k": 21,
+          "modulus": 840,
+          "n": 18073,
+          "residue": 433
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_13",
+          "k": 22,
+          "modulus": 840,
+          "n": 18937,
+          "residue": 457
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_14",
+          "k": 23,
+          "modulus": 840,
+          "n": 19849,
+          "residue": 529
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_15",
+          "k": 24,
+          "modulus": 840,
+          "n": 20737,
+          "residue": 577
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_16",
+          "k": 25,
+          "modulus": 840,
+          "n": 21601,
+          "residue": 601
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_17",
+          "k": 26,
+          "modulus": 840,
+          "n": 22465,
+          "residue": 625
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_18",
+          "k": 27,
+          "modulus": 840,
+          "n": 23329,
+          "residue": 649
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_19",
+          "k": 28,
+          "modulus": 840,
+          "n": 24241,
+          "residue": 721
+        },
+        {
+          "a": 4,
+          "instance_id": "ES_blind_20",
+          "k": 29,
+          "modulus": 840,
+          "n": 25129,
+          "residue": 769
+        }
+      ],
+      "modulus": 840,
+      "name": "ErdosStraus_BlindHeldOut"
+    },
+    "H_SIER": {
+      "a": 5,
+      "instances": [
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_01",
+          "k": 10,
+          "modulus": 120,
+          "n": 1201,
+          "residue": 1
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_02",
+          "k": 11,
+          "modulus": 120,
+          "n": 1329,
+          "residue": 9
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_03",
+          "k": 12,
+          "modulus": 120,
+          "n": 1453,
+          "residue": 13
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_04",
+          "k": 13,
+          "modulus": 120,
+          "n": 1577,
+          "residue": 17
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_05",
+          "k": 14,
+          "modulus": 120,
+          "n": 1701,
+          "residue": 21
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_06",
+          "k": 15,
+          "modulus": 120,
+          "n": 1829,
+          "residue": 29
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_07",
+          "k": 16,
+          "modulus": 120,
+          "n": 1953,
+          "residue": 33
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_08",
+          "k": 17,
+          "modulus": 120,
+          "n": 2077,
+          "residue": 37
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_09",
+          "k": 18,
+          "modulus": 120,
+          "n": 2201,
+          "residue": 41
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_10",
+          "k": 19,
+          "modulus": 120,
+          "n": 2329,
+          "residue": 49
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_11",
+          "k": 20,
+          "modulus": 120,
+          "n": 2453,
+          "residue": 53
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_12",
+          "k": 21,
+          "modulus": 120,
+          "n": 2577,
+          "residue": 57
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_13",
+          "k": 22,
+          "modulus": 120,
+          "n": 2701,
+          "residue": 61
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_14",
+          "k": 23,
+          "modulus": 120,
+          "n": 2829,
+          "residue": 69
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_15",
+          "k": 24,
+          "modulus": 120,
+          "n": 2953,
+          "residue": 73
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_16",
+          "k": 25,
+          "modulus": 120,
+          "n": 3077,
+          "residue": 77
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_17",
+          "k": 26,
+          "modulus": 120,
+          "n": 3201,
+          "residue": 81
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_18",
+          "k": 27,
+          "modulus": 120,
+          "n": 3329,
+          "residue": 89
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_19",
+          "k": 28,
+          "modulus": 120,
+          "n": 3453,
+          "residue": 93
+        },
+        {
+          "a": 5,
+          "instance_id": "SIER_blind_20",
+          "k": 29,
+          "modulus": 120,
+          "n": 3577,
+          "residue": 97
+        }
+      ],
+      "modulus": 120,
+      "name": "Sierpinski_BlindHeldOut"
+    }
+  }
+}

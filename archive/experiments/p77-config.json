@@ -1,0 +1,8 @@
+{
+  "phase": "P77",
+  "note": "P77 bytecode compiler to certified Lean 4 theorems and formal proof bridge frozen configuration. Exports canonical formal catalog to lean_proofs/Generated: 29 polynomial identities over Q[k], 10 Diophantine certificates, 4 bytecode specifications; verifies 100% compilation in hermetic Lean 4 kernel with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "project_dir": "lean_proofs",
+  "seed": 42,
+  "require_clean_tree": true
+}

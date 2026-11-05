@@ -1,0 +1,343 @@
+{
+  "bounded_statement": "Find exact positive integer solutions (x, y, z) for nominated prime instances n in {1009, 10007, 100003} with search bound M <= 10^9.",
+  "classification": "rediscovery",
+  "classification_rationale": "2/3 nominated instances carry bounded dual-checked certificates matching benchmark knowledge; weaker label retained.",
+  "elapsed_sec": 0.30241516000023694,
+  "freeze_manifest": "experiments/p38-confirmation.json",
+  "freeze_manifest_sha256": "d839cc671b9657febde7956cb276921c7c8b562de0f46ad9db82bc86a1691bfd",
+  "instances": [
+    {
+      "baseline": {
+        "budget_sec": 0.23151533099735389,
+        "details": {
+          "checker_1": 0,
+          "checker_2": 0,
+          "n": 1009,
+          "x": 253,
+          "y": 85100,
+          "z": 944524900
+        },
+        "elapsed_sec": 5.5759999668225646e-05,
+        "evaluated": 8,
+        "found": true,
+        "n": 1009
+      },
+      "certificate": {
+        "certificate_hash": "b062df8c2ebf4befab2bcb85a3ea2a2a55ed3c0c0e568a1cca3afbd4a3ecc3d4",
+        "classification": "rediscovery",
+        "dual_evidence": {
+          "coordinate_bounds": {
+            "declared_bound": 1000000000,
+            "max_coordinate_value": 944524900,
+            "within_bounds": true
+          },
+          "dual_checker_exact_fractions": {
+            "formulation": "exact_rational_decomposition",
+            "fraction_diff": "0",
+            "lhs_fraction": "4/1009",
+            "n": 1009,
+            "rhs_fraction": "4/1009",
+            "verified_exact_fraction": true,
+            "x": 253,
+            "y": 85100,
+            "z": 944524900
+          },
+          "lhs": "81343617817880000",
+          "n": 1009,
+          "residual": 0,
+          "rhs": "81343617817880000",
+          "verified_exact": true,
+          "x": 253,
+          "y": 85100,
+          "z": 944524900
+        },
+        "novelty": {
+          "assessment": "duplicate_of_catalogue",
+          "classification_cap": "rediscovery",
+          "note": "Bit-exact match with a previously certified repo instance."
+        },
+        "reproduction": {
+          "details": {
+            "checker_1_integer_identity": {
+              "lhs": "81343617817880000",
+              "n": 1009,
+              "residual": 0,
+              "rhs": "81343617817880000",
+              "verified_exact": true,
+              "x": 253,
+              "y": 85100,
+              "z": 944524900
+            },
+            "checker_2_rational_fractions": {
+              "formulation": "exact_rational_decomposition",
+              "fraction_diff": "0",
+              "lhs_fraction": "4/1009",
+              "n": 1009,
+              "rhs_fraction": "4/1009",
+              "verified_exact_fraction": true,
+              "x": 253,
+              "y": 85100,
+              "z": 944524900
+            },
+            "classification": "rediscovery",
+            "coordinate_bounds": {
+              "constrained_coordinates": [
+                "x",
+                "y",
+                "z"
+              ],
+              "declared_bound": 1000000000,
+              "max_coordinate_value": 944524900,
+              "rule": "max(x, y, z) <= 1000000000",
+              "within_bounds": true
+            },
+            "within_declared_bounds": true
+          },
+          "reproduction_hash": "0856088520e7a0505974d4d681ccf0673371524fab188397dbcc11dbbfdf4d25",
+          "reproduction_time_sec": 4.941400038660504e-05,
+          "status": "PASS"
+        },
+        "solution": {
+          "n": 1009,
+          "x": 253,
+          "y": 85100,
+          "z": 944524900
+        }
+      },
+      "certificate_hash": "b062df8c2ebf4befab2bcb85a3ea2a2a55ed3c0c0e568a1cca3afbd4a3ecc3d4",
+      "classification": "rediscovery",
+      "coverage": "x in [n//4+1, n//4+50] with y windows <= 500000 per x step; budget-limited, not exhaustive",
+      "found": true,
+      "gpu_elapsed_sec": 0.23151533099735389,
+      "gpu_evaluated": 85094,
+      "n": 1009,
+      "overflow_audit": {
+        "guard_limit": 4611686018427387904,
+        "int64_limit": 9223372036854775807,
+        "n": 1009,
+        "peak_4xy": 912375824,
+        "peak_n_x_plus_y": 762380220,
+        "within_guard": true
+      },
+      "resumed": false,
+      "solution": {
+        "n": 1009,
+        "x": 253,
+        "y": 85100,
+        "z": 944524900
+      }
+    },
+    {
+      "baseline": {
+        "budget_sec": 0.004469335999601753,
+        "details": null,
+        "elapsed_sec": 0.004473589000554057,
+        "evaluated": 12926,
+        "found": false,
+        "n": 10007
+      },
+      "certificate": {
+        "certificate_hash": "7c29754905afe15e23aa2cbc061d0a52a71684b32784da85f377815320cafb7e",
+        "classification": "rediscovery",
+        "dual_evidence": {
+          "coordinate_bounds": {
+            "declared_bound": 1000000000,
+            "max_coordinate_value": 438506740,
+            "within_bounds": true
+          },
+          "dual_checker_exact_fractions": {
+            "formulation": "exact_rational_decomposition",
+            "fraction_diff": "0",
+            "lhs_fraction": "4/10007",
+            "n": 10007,
+            "rhs_fraction": "4/10007",
+            "verified_exact_fraction": true,
+            "x": 2504,
+            "y": 2801960,
+            "z": 438506740
+          },
+          "lhs": "12306442305627366400",
+          "n": 10007,
+          "residual": 0,
+          "rhs": "12306442305627366400",
+          "verified_exact": true,
+          "x": 2504,
+          "y": 2801960,
+          "z": 438506740
+        },
+        "novelty": {
+          "assessment": "rediscovery_benchmark_instance",
+          "classification_cap": "rediscovery",
+          "note": "Nominated prime instances are long-studied benchmarks; no exhaustive external catalogue (OEIS-wide) lookup performed, so novelty beyond rediscovery is not claimed."
+        },
+        "reproduction": {
+          "details": {
+            "checker_1_integer_identity": {
+              "lhs": "12306442305627366400",
+              "n": 10007,
+              "residual": 0,
+              "rhs": "12306442305627366400",
+              "verified_exact": true,
+              "x": 2504,
+              "y": 2801960,
+              "z": 438506740
+            },
+            "checker_2_rational_fractions": {
+              "formulation": "exact_rational_decomposition",
+              "fraction_diff": "0",
+              "lhs_fraction": "4/10007",
+              "n": 10007,
+              "rhs_fraction": "4/10007",
+              "verified_exact_fraction": true,
+              "x": 2504,
+              "y": 2801960,
+              "z": 438506740
+            },
+            "classification": "rediscovery",
+            "coordinate_bounds": {
+              "constrained_coordinates": [
+                "x",
+                "y",
+                "z"
+              ],
+              "declared_bound": 1000000000,
+              "max_coordinate_value": 438506740,
+              "rule": "max(x, y, z) <= 1000000000",
+              "within_bounds": true
+            },
+            "within_declared_bounds": true
+          },
+          "reproduction_hash": "675c54e424b095f63d00e6224c01eccb4e3961d38bf5592b23ec177ee19c22c4",
+          "reproduction_time_sec": 5.2808001782977954e-05,
+          "status": "PASS"
+        },
+        "solution": {
+          "n": 10007,
+          "x": 2504,
+          "y": 2801960,
+          "z": 438506740
+        }
+      },
+      "certificate_hash": "7c29754905afe15e23aa2cbc061d0a52a71684b32784da85f377815320cafb7e",
+      "classification": "rediscovery",
+      "coverage": "x in [n//4+1, n//4+50] with y windows <= 500000 per x step; budget-limited, not exhaustive",
+      "found": true,
+      "gpu_elapsed_sec": 0.004469335999601753,
+      "gpu_evaluated": 1500000,
+      "n": 10007,
+      "overflow_audit": {
+        "guard_limit": 4611686018427387904,
+        "int64_limit": 9223372036854775807,
+        "n": 10007,
+        "peak_4xy": 260584803060,
+        "peak_n_x_plus_y": 255579440462,
+        "within_guard": true
+      },
+      "resumed": false,
+      "solution": {
+        "n": 10007,
+        "x": 2504,
+        "y": 2801960,
+        "z": 438506740
+      }
+    },
+    {
+      "baseline": {
+        "budget_sec": 0.014456249999057036,
+        "details": null,
+        "elapsed_sec": 0.014458882000326412,
+        "evaluated": 36173,
+        "found": false,
+        "n": 100003
+      },
+      "classification": "budget_exhausted",
+      "coverage": "x in [n//4+1, n//4+50] with y windows <= 500000 per x step; budget-limited, not exhaustive",
+      "found": false,
+      "gpu_elapsed_sec": 0.014456249999057036,
+      "gpu_evaluated": 25000000,
+      "n": 100003,
+      "note": "No in-bounds certified decomposition in the explored windows; a failed finite search is not a counterexample to the existential conjecture.",
+      "overflow_audit": {
+        "guard_limit": 4611686018427387904,
+        "int64_limit": 9223372036854775807,
+        "n": 100003,
+        "peak_4xy": 250567635400800,
+        "peak_n_x_plus_y": 250077507500162,
+        "within_guard": true
+      },
+      "resumed": false
+    }
+  ],
+  "manifest_sha256": "12152476b3c4e950a5174d78e0bae2decdcec36419727fba0e768a270bdb9c99",
+  "nomination_path": "experiments/p39-nomination.json",
+  "nomination_sha256": "b257a3bee04d6399180c1150bea884fd3ea20740ed77f69ffae3559fb8aeea43",
+  "nomination_statement": "For every integer n >= 2, 4/n = 1/x + 1/y + 1/z has positive integer solutions.",
+  "novelty": "No catalogue-novel instance demonstrated; literature status unchanged (conjecture open in general; nominated instances remain benchmarks).",
+  "operator": "self-repetition with implementation-independent checkers; not independent authorship.",
+  "phase": "p39-certified-science",
+  "problem_id": "erdos-straus",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "94177953c1f1c7e8a9eb432fe5e65d4e1b39074c",
+    "config": {
+      "bound": 1000000000,
+      "bounds_strict": true,
+      "instances": [
+        1009,
+        10007,
+        100003
+      ],
+      "problem_id": "erdos-straus"
+    },
+    "config_hash": "9da037c11ccda742",
+    "dataset_hashes": {
+      "nomination": "b257a3bee04d6399",
+      "p38_freeze": "d839cc671b9657fe"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/open_problems.py\n M tests/test_open_problems.py\n?? experiments/p39-checkpoint.json\n?? experiments/p39-nomination.json",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/open_problems.py",
+      "--problem",
+      "erdos-straus",
+      "--certified-campaign",
+      "--freeze-manifest",
+      "experiments/p38-confirmation.json",
+      "--nomination",
+      "experiments/p39-nomination.json",
+      "--output",
+      "experiments/p39-science.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p39-science-raw.json",
+      "sha256": "a36c422ee85f546be564c712b5b60b601d8f2afc7d70573f60a2659e12583c3e"
+    }
+  ],
+  "soundness": {
+    "accepted_false_positives": 0,
+    "adversarial_rejected": "8/8"
+  },
+  "status": "PASS",
+  "timestamp": "2026-10-01T23:01:24.081234+00:00"
+}

@@ -1,0 +1,1042 @@
+{
+  "root": "lean_proofs/Generated",
+  "totals": {
+    "total": 4888,
+    "vacuous-constant": 51,
+    "numeric-literal": 2012,
+    "needs-review": 2825
+  },
+  "files": [
+    {
+      "file": "AdditiveCombinatoricsSignatures.lean",
+      "total": 103,
+      "vacuous-constant": 0,
+      "numeric-literal": 98,
+      "needs-review": 5,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "sidon_sample_1_bounds",
+          "sidon_sample_1_pair_0",
+          "sidon_sample_1_pair_1"
+        ],
+        "needs-review": [
+          "sum_comm",
+          "sum_assoc",
+          "sum_cancel_left"
+        ]
+      }
+    },
+    {
+      "file": "AdditiveEnergyTheorems.lean",
+      "total": 79,
+      "vacuous-constant": 0,
+      "numeric-literal": 69,
+      "needs-review": 10,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "cs_sumset_ap_len4",
+          "cs_diffset_ap_len4",
+          "energy_sandwich_ap_len4"
+        ],
+        "needs-review": [
+          "additive_cauchy_schwarz_mono",
+          "additive_energy_diag_ge",
+          "additive_energy_sandwich_trans"
+        ]
+      }
+    },
+    {
+      "file": "AdditiveTacticTheorems.lean",
+      "total": 71,
+      "vacuous-constant": 0,
+      "numeric-literal": 57,
+      "needs-review": 14,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "additive_norm_sumset_ap3",
+          "additive_norm_diffset_ap3",
+          "additive_norm_mono_ap3"
+        ],
+        "needs-review": [
+          "minkowski_elem_comm",
+          "minkowski_elem_assoc",
+          "minkowski_shift_diff_cancel"
+        ]
+      }
+    },
+    {
+      "file": "AsymptoticDensityTheorems.lean",
+      "total": 68,
+      "vacuous-constant": 0,
+      "numeric-literal": 68,
+      "needs-review": 0,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "density_m24_eq",
+          "density_m24_bound",
+          "density_m48_eq"
+        ],
+        "needs-review": []
+      }
+    },
+    {
+      "file": "AutomatedTheorems.lean",
+      "total": 30,
+      "vacuous-constant": 0,
+      "numeric-literal": 1,
+      "needs-review": 29,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "es_norm_num_instance"
+        ],
+        "needs-review": [
+          "es_pos_denom_linear_4k3",
+          "es_ge_denom_linear_4k3",
+          "es_pos_denom_linear_3k2"
+        ]
+      }
+    },
+    {
+      "file": "BytecodeTheorems.lean",
+      "total": 4,
+      "vacuous-constant": 0,
+      "numeric-literal": 0,
+      "needs-review": 4,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [],
+        "needs-review": [
+          "bytecode_spec_linear",
+          "bytecode_spec_quadratic",
+          "bytecode_spec_diff_squares"
+        ]
+      }
+    },
+    {
+      "file": "ConicParametrizations.lean",
+      "total": 75,
+      "vacuous-constant": 0,
+      "numeric-literal": 16,
+      "needs-review": 59,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "conic_param_cert_a4_n1009",
+          "conic_param_cert_a4_n10007",
+          "conic_param_cert_a4_n841"
+        ],
+        "needs-review": [
+          "legendre_conic_form_diagonal_equiv",
+          "legendre_conic_form_affine_slice",
+          "conic_hyperbolic_factorization"
+        ]
+      }
+    },
+    {
+      "file": "ConvexPolygonsHappyEndingTheorems.lean",
+      "total": 91,
+      "vacuous-constant": 0,
+      "numeric-literal": 3,
+      "needs-review": 88,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "triangle_interior_two_points_positive",
+          "klein_five_points_sufficient",
+          "horton_seven_hole_counterexample_threshold"
+        ],
+        "needs-review": [
+          "happy_ending_exact_3",
+          "happy_ending_exact_4",
+          "happy_ending_exact_5"
+        ]
+      }
+    },
+    {
+      "file": "CoveringSystemsTheorems.lean",
+      "total": 190,
+      "vacuous-constant": 0,
+      "numeric-literal": 45,
+      "needs-review": 145,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "erdos_covering_res_0",
+          "erdos_covering_res_1",
+          "erdos_covering_res_2"
+        ],
+        "needs-review": [
+          "erdos_1950_system_covers_fin",
+          "erdos_1950_system_covers_nat",
+          "erdos_1950_system_covers_any_nat"
+        ]
+      }
+    },
+    {
+      "file": "CubicSurfaceFibrations.lean",
+      "total": 57,
+      "vacuous-constant": 0,
+      "numeric-literal": 16,
+      "needs-review": 41,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "cubic_surface_cert_a4_n1009",
+          "cubic_surface_cert_a4_n10007",
+          "cubic_surface_cert_a4_n841"
+        ],
+        "needs-review": [
+          "cubic_surface_fiber_x_equiv",
+          "cubic_surface_bilinear_factorization",
+          "conic_fibration_discriminant_sq"
+        ]
+      }
+    },
+    {
+      "file": "CustomTacticTheorems.lean",
+      "total": 30,
+      "vacuous-constant": 0,
+      "numeric-literal": 1,
+      "needs-review": 29,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "meta_es_norm_num_instance"
+        ],
+        "needs-review": [
+          "meta_es_pos_denom_linear_4k3",
+          "meta_es_ge_denom_linear_4k3",
+          "meta_es_pos_denom_linear_3k2"
+        ]
+      }
+    },
+    {
+      "file": "DiophSurfaceTheorems.lean",
+      "total": 79,
+      "vacuous-constant": 0,
+      "numeric-literal": 16,
+      "needs-review": 63,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "meta_conic_cert_a4_n1009",
+          "meta_conic_cert_a4_n10007",
+          "meta_conic_cert_a4_n841"
+        ],
+        "needs-review": [
+          "meta_surface_fiber_equiv",
+          "meta_surface_bilinear_factor",
+          "meta_conic_fibration_discriminant_sq"
+        ]
+      }
+    },
+    {
+      "file": "DiscrepancyCoveringSignatures.lean",
+      "total": 116,
+      "vacuous-constant": 0,
+      "numeric-literal": 9,
+      "needs-review": 107,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "spencer_bound_concrete_1",
+          "spencer_bound_concrete_4",
+          "spencer_bound_concrete_9"
+        ],
+        "needs-review": [
+          "sign_val_sq",
+          "sign_val_bounds",
+          "sign_val_not"
+        ]
+      }
+    },
+    {
+      "file": "DiscrepancyTacticTheorems.lean",
+      "total": 147,
+      "vacuous-constant": 0,
+      "numeric-literal": 0,
+      "needs-review": 147,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [],
+        "needs-review": [
+          "disc2_symm_norm",
+          "disc2_zero_norm",
+          "disc2_self_norm"
+        ]
+      }
+    },
+    {
+      "file": "DiscreteGeometrySignatures.lean",
+      "total": 129,
+      "vacuous-constant": 0,
+      "numeric-literal": 9,
+      "needs-review": 120,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "circle_intersection_bound",
+          "empty_triangle_vertices",
+          "moser_spindle_vertex_count"
+        ],
+        "needs-review": [
+          "sq_dist_symm",
+          "sq_dist_self_zero",
+          "sq_dist_trans_x"
+        ]
+      }
+    },
+    {
+      "file": "DiscreteGeometryTacticTheorems.lean",
+      "total": 85,
+      "vacuous-constant": 0,
+      "numeric-literal": 0,
+      "needs-review": 85,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [],
+        "needs-review": [
+          "sq_dist_symm_norm",
+          "sq_dist_self_norm",
+          "sq_dist_trans_x_norm"
+        ]
+      }
+    },
+    {
+      "file": "DivisibilityLemmas.lean",
+      "total": 104,
+      "vacuous-constant": 0,
+      "numeric-literal": 0,
+      "needs-review": 104,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [],
+        "needs-review": [
+          "div_nat_2_mul",
+          "div_nat_3_lin",
+          "div_nat_4_lin"
+        ]
+      }
+    },
+    {
+      "file": "ErdosDiscrepancyTheorems.lean",
+      "total": 104,
+      "vacuous-constant": 0,
+      "numeric-literal": 2,
+      "needs-review": 102,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "polymath_c1_threshold",
+          "polymath_c2_threshold"
+        ],
+        "needs-review": [
+          "sign_sq",
+          "sign_cube",
+          "sign_pow4"
+        ]
+      }
+    },
+    {
+      "file": "ErdosDistinctDistancesTheorems.lean",
+      "total": 100,
+      "vacuous-constant": 0,
+      "numeric-literal": 6,
+      "needs-review": 94,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "erdos_to_moser_cleared",
+          "moser_to_chung_cleared",
+          "chung_to_szekely_cleared"
+        ],
+        "needs-review": [
+          "moser_cleared_cond",
+          "chung_cleared_cond",
+          "szekely_cleared_cond"
+        ]
+      }
+    },
+    {
+      "file": "ErdosGrahamTheorems.lean",
+      "total": 113,
+      "vacuous-constant": 0,
+      "numeric-literal": 110,
+      "needs-review": 3,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "erdos_graham_rat_0_2_3_6",
+          "erdos_graham_rat_1_2_3_7",
+          "erdos_graham_rat_2_2_3_7"
+        ],
+        "needs-review": [
+          "unit_fraction_split",
+          "erdos_graham_min_den_bound",
+          "erdos_graham_unit_upper_two"
+        ]
+      }
+    },
+    {
+      "file": "ErdosGyarfasChromaticTheorems.lean",
+      "total": 79,
+      "vacuous-constant": 0,
+      "numeric-literal": 72,
+      "needs-review": 7,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "instance_params_q3_cube",
+          "instance_params_petersen",
+          "instance_params_k4_complete"
+        ],
+        "needs-review": [
+          "dirac_cycle_bound_delta3",
+          "chromatic_alpha_partition_bound",
+          "brooks_chromatic_upper_bound"
+        ]
+      }
+    },
+    {
+      "file": "ErdosStrausCertificates.lean",
+      "total": 10,
+      "vacuous-constant": 0,
+      "numeric-literal": 10,
+      "needs-review": 0,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "erdos_straus_cert_n1009",
+          "erdos_straus_cert_n1033",
+          "erdos_straus_cert_n1129"
+        ],
+        "needs-review": []
+      }
+    },
+    {
+      "file": "ErdosStrausIdentities.lean",
+      "total": 29,
+      "vacuous-constant": 0,
+      "numeric-literal": 0,
+      "needs-review": 29,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [],
+        "needs-review": [
+          "erdos_straus_ident_m24_r0",
+          "erdos_straus_ident_m24_r2",
+          "erdos_straus_ident_m24_r3"
+        ]
+      }
+    },
+    {
+      "file": "ErdosTuranBasesTheorems.lean",
+      "total": 70,
+      "vacuous-constant": 0,
+      "numeric-literal": 60,
+      "needs-review": 10,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "erdos_turan_rohrbach_n2",
+          "erdos_turan_pigeonhole_n2",
+          "erdos_turan_energy_mult_n2"
+        ],
+        "needs-review": [
+          "rohrbach_pair_capacity",
+          "erdos_turan_pigeonhole_succ",
+          "erdos_turan_energy_multiplicity_trans"
+        ]
+      }
+    },
+    {
+      "file": "ExtremalBoundsTheorems.lean",
+      "total": 162,
+      "vacuous-constant": 0,
+      "numeric-literal": 50,
+      "needs-review": 112,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "bound_cert_a4_n73_frac",
+          "bound_cert_a4_n97_frac",
+          "bound_cert_a4_n193_frac"
+        ],
+        "needs-review": [
+          "param_bound_x_4k3",
+          "param_bound_yz_4k3",
+          "param_bound_x_8k5"
+        ]
+      }
+    },
+    {
+      "file": "ExtremalConstructiveCertificates.lean",
+      "total": 114,
+      "vacuous-constant": 0,
+      "numeric-literal": 0,
+      "needs-review": 114,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [],
+        "needs-review": [
+          "sidon_ruzsa_cert_p3",
+          "sidon_ruzsa_card_p3",
+          "sidon_ruzsa_bound_p3"
+        ]
+      }
+    },
+    {
+      "file": "ExtremalGraphRamseySignatures.lean",
+      "total": 81,
+      "vacuous-constant": 0,
+      "numeric-literal": 45,
+      "needs-review": 36,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "turan_cert_n4_r3",
+          "turan_cert_n6_r3",
+          "turan_cert_n8_r3"
+        ],
+        "needs-review": [
+          "handshaking_sum_even",
+          "complement_edge_le_total",
+          "degree_sum_le_max_deg_succ"
+        ]
+      }
+    },
+    {
+      "file": "GraphRamseyTacticTheorems.lean",
+      "total": 80,
+      "vacuous-constant": 0,
+      "numeric-literal": 70,
+      "needs-review": 10,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "goodman_mono_triangle_bound_n6",
+          "goodman_mono_triangle_bound_n7",
+          "goodman_mono_triangle_bound_n8"
+        ],
+        "needs-review": [
+          "complement_vertex_degree_sum",
+          "complement_handshaking_sum",
+          "goodman_bichromatic_square_completion"
+        ]
+      }
+    },
+    {
+      "file": "HadwigerNelsonColoringTheorems.lean",
+      "total": 100,
+      "vacuous-constant": 51,
+      "numeric-literal": 20,
+      "needs-review": 29,
+      "examples": {
+        "vacuous-constant": [
+          "moser_vertex_count",
+          "moser_edge_count",
+          "moser_clique_number_exact"
+        ],
+        "numeric-literal": [
+          "moser_degree_sum_decomposition",
+          "moser_min_degree",
+          "moser_max_degree"
+        ],
+        "needs-review": [
+          "moser_triangle_count",
+          "hadwiger_nelson_interval_sandwich",
+          "hadwiger_nelson_three_cases"
+        ]
+      }
+    },
+    {
+      "file": "HigherPowerTheorems.lean",
+      "total": 106,
+      "vacuous-constant": 0,
+      "numeric-literal": 49,
+      "needs-review": 57,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "higher_power_cert_k2_n2",
+          "higher_power_cert_k2_n3",
+          "higher_power_cert_k2_n5"
+        ],
+        "needs-review": [
+          "higher_power_surface_sq_symm_xy",
+          "higher_power_surface_sq_symm_yz",
+          "higher_power_surface_sq_cyclic"
+        ]
+      }
+    },
+    {
+      "file": "InductiveLemmas.lean",
+      "total": 33,
+      "vacuous-constant": 0,
+      "numeric-literal": 0,
+      "needs-review": 33,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [],
+        "needs-review": [
+          "nat_add_zero_ind",
+          "nat_zero_add_ind",
+          "nat_succ_pos"
+        ]
+      }
+    },
+    {
+      "file": "MultitermTheorems.lean",
+      "total": 36,
+      "vacuous-constant": 0,
+      "numeric-literal": 24,
+      "needs-review": 12,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "multiterm_frac_es_5_3t",
+          "multiterm_int_es_5_3t",
+          "multiterm_frac_es_7_3t"
+        ],
+        "needs-review": [
+          "multiterm_coprime_es_5_3t",
+          "multiterm_coprime_es_7_3t",
+          "multiterm_coprime_es_11_3t"
+        ]
+      }
+    },
+    {
+      "file": "ObstructionGraphTheorems.lean",
+      "total": 92,
+      "vacuous-constant": 0,
+      "numeric-literal": 5,
+      "needs-review": 87,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "pillai_catalan_diff_9_8",
+          "pillai_catalan_diff_27_8",
+          "pillai_catalan_diff_32_25"
+        ],
+        "needs-review": [
+          "incompatible_states_exclusive",
+          "incompatible_symm",
+          "incompatible_irreflexive"
+        ]
+      }
+    },
+    {
+      "file": "OpenProblemSignatures.lean",
+      "total": 108,
+      "vacuous-constant": 0,
+      "numeric-literal": 6,
+      "needs-review": 102,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "erdos_graham_solution_3",
+          "erdos_graham_solution_4",
+          "catalan_solution"
+        ],
+        "needs-review": [
+          "partition_disjoint",
+          "partition_exhaustive",
+          "sig_erdos_3_partition"
+        ]
+      }
+    },
+    {
+      "file": "OptimalCertificates.lean",
+      "total": 32,
+      "vacuous-constant": 0,
+      "numeric-literal": 32,
+      "needs-review": 0,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "erdos_straus_opt_cert_n73",
+          "sierpinski_opt_cert_n73",
+          "erdos_straus_opt_cert_n97"
+        ],
+        "needs-review": []
+      }
+    },
+    {
+      "file": "PillaiCatalanTheorems.lean",
+      "total": 175,
+      "vacuous-constant": 0,
+      "numeric-literal": 152,
+      "needs-review": 23,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "pillai_catalan_diff_pos",
+          "pillai_base_separation_sample",
+          "pillai_sol_0_1_3_2_2_3"
+        ],
+        "needs-review": [
+          "pillai_pow_pos",
+          "pillai_pow_mono_exp",
+          "pillai_pow_mono_base"
+        ]
+      }
+    },
+    {
+      "file": "PrimitiveSetsDivisorsTheorems.lean",
+      "total": 206,
+      "vacuous-constant": 0,
+      "numeric-literal": 127,
+      "needs-review": 79,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "interval_3_4_not_div",
+          "interval_4_5_not_div",
+          "interval_4_6_not_div"
+        ],
+        "needs-review": [
+          "primitive_refl",
+          "primitive_antisymm",
+          "primitive_trans"
+        ]
+      }
+    },
+    {
+      "file": "QuadraticIdentities.lean",
+      "total": 22,
+      "vacuous-constant": 0,
+      "numeric-literal": 10,
+      "needs-review": 12,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "erdos_straus_cert_res121",
+          "erdos_straus_cert_res169",
+          "erdos_straus_cert_res289"
+        ],
+        "needs-review": [
+          "erdos_quadratic_bilinear_4u1_4v1",
+          "erdos_quadratic_square_4u1",
+          "erdos_bilinear_3u1_3v1"
+        ]
+      }
+    },
+    {
+      "file": "QuadraticRingTheorems.lean",
+      "total": 58,
+      "vacuous-constant": 0,
+      "numeric-literal": 58,
+      "needs-review": 0,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "qring_cert_res1_k1",
+          "qring_norm_res1_k1",
+          "qring_cert_res1_k2"
+        ],
+        "needs-review": []
+      }
+    },
+    {
+      "file": "QuaternionAlgebraTheorems.lean",
+      "total": 72,
+      "vacuous-constant": 0,
+      "numeric-literal": 16,
+      "needs-review": 56,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "quat_conic_cert_a4_n1009",
+          "quat_conic_cert_a4_n10007",
+          "quat_conic_cert_a4_n841"
+        ],
+        "needs-review": [
+          "quat_nrd_std_equiv",
+          "euler_four_square_norm_multiplicative",
+          "quat_general_norm_multiplicative"
+        ]
+      }
+    },
+    {
+      "file": "RamseyPaleyTheorems.lean",
+      "total": 80,
+      "vacuous-constant": 0,
+      "numeric-literal": 16,
+      "needs-review": 64,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "ramsey_cert_r3_3_paley5",
+          "ramsey_cert_r3_4_circulant8",
+          "ramsey_cert_r3_5_cubic13"
+        ],
+        "needs-review": [
+          "ramsey_witness_lower_bound",
+          "paley_self_complementary_degree",
+          "paley_mu_eq_lambda_succ"
+        ]
+      }
+    },
+    {
+      "file": "RothSalemSpencerTheorems.lean",
+      "total": 81,
+      "vacuous-constant": 0,
+      "numeric-literal": 76,
+      "needs-review": 5,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "r3_certified_bound_n1",
+          "r3_certified_bound_n2",
+          "r3_certified_bound_n3"
+        ],
+        "needs-review": [
+          "salem_spencer_digit_identity",
+          "base3_two_digit_add",
+          "base3_two_digit_double"
+        ]
+      }
+    },
+    {
+      "file": "RothSpencerDiscrepancyTheorems.lean",
+      "total": 111,
+      "vacuous-constant": 0,
+      "numeric-literal": 57,
+      "needs-review": 54,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "roth_fourth_power_16",
+          "roth_fourth_power_81",
+          "roth_fourth_power_256"
+        ],
+        "needs-review": [
+          "roth_fourth_power_lower_bound",
+          "roth_fourth_power_sq_sq",
+          "roth_energy_nonneg"
+        ]
+      }
+    },
+    {
+      "file": "SchinzelHighModuliSignatures.lean",
+      "total": 213,
+      "vacuous-constant": 0,
+      "numeric-literal": 137,
+      "needs-review": 76,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "modulus840_eq_factors",
+          "modulus2520_eq_factors",
+          "modulus5040_eq_factors"
+        ],
+        "needs-review": [
+          "qr840_gcd_1",
+          "qr840_gcd_121",
+          "qr840_gcd_169"
+        ]
+      }
+    },
+    {
+      "file": "SchinzelHighModuliTheorems.lean",
+      "total": 117,
+      "vacuous-constant": 0,
+      "numeric-literal": 0,
+      "needs-review": 117,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [],
+        "needs-review": [
+          "schinzel_poly_identity_sub",
+          "schinzel_identity_a5_m840_r1",
+          "schinzel_ordering_a5_m840_r1"
+        ]
+      }
+    },
+    {
+      "file": "SchinzelQuadraticRingSieveTheorems.lean",
+      "total": 104,
+      "vacuous-constant": 0,
+      "numeric-literal": 30,
+      "needs-review": 74,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "resistant_class_mod840_r1",
+          "resistant_sieve_bound_a5_r1",
+          "resistant_sieve_bound_a6_r1"
+        ],
+        "needs-review": [
+          "quad_norm_mult_sub",
+          "quad_norm_mult_sub_alt",
+          "quad_norm_mult_pos"
+        ]
+      }
+    },
+    {
+      "file": "SchinzelTheorems.lean",
+      "total": 133,
+      "vacuous-constant": 0,
+      "numeric-literal": 48,
+      "needs-review": 85,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "schinzel_cert_a4_n11",
+          "schinzel_cert_a4_n13",
+          "schinzel_cert_a4_n17"
+        ],
+        "needs-review": [
+          "schinzel_ident_a4_m24_r0",
+          "schinzel_ident_a4_m24_r2",
+          "schinzel_ident_a4_m24_r4"
+        ]
+      }
+    },
+    {
+      "file": "SidonSetsTheorems.lean",
+      "total": 70,
+      "vacuous-constant": 0,
+      "numeric-literal": 60,
+      "needs-review": 10,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "extremal_k3_n4_diff_capacity",
+          "extremal_k3_n4_energy",
+          "extremal_k3_n4_adj_diff_ne_0"
+        ],
+        "needs-review": [
+          "sidon_diff_to_sum_eq",
+          "sidon_sum_to_diff_eq",
+          "sidon_diff_injective_of_guard"
+        ]
+      }
+    },
+    {
+      "file": "SierpinskiTheorems.lean",
+      "total": 106,
+      "vacuous-constant": 0,
+      "numeric-literal": 10,
+      "needs-review": 96,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "sierpinski_cert_n1009",
+          "sierpinski_cert_n1033",
+          "sierpinski_cert_n1129"
+        ],
+        "needs-review": [
+          "sierpinski_ident_m120_r0",
+          "sierpinski_ident_m120_r2",
+          "sierpinski_ident_m120_r3"
+        ]
+      }
+    },
+    {
+      "file": "SolutionMomentsTheorems.lean",
+      "total": 87,
+      "vacuous-constant": 0,
+      "numeric-literal": 62,
+      "needs-review": 25,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "divisor_count_1_eq",
+          "cum_divisor_1_bound",
+          "divisor_count_2_eq"
+        ],
+        "needs-review": [
+          "lagrange_identity_2",
+          "lagrange_identity_3",
+          "lagrange_identity_4"
+        ]
+      }
+    },
+    {
+      "file": "SumFreeTheorems.lean",
+      "total": 70,
+      "vacuous-constant": 0,
+      "numeric-literal": 60,
+      "needs-review": 10,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "sum_free_erdos_bounds_n3",
+          "sum_free_upper_overflow_n3",
+          "sum_free_erdos_bounds_n6"
+        ],
+        "needs-review": [
+          "sum_free_dilation_invariance",
+          "upper_half_interval_sum_free",
+          "odd_numbers_sum_free"
+        ]
+      }
+    },
+    {
+      "file": "UnitDistancesSzemerediTrotterTheorems.lean",
+      "total": 88,
+      "vacuous-constant": 0,
+      "numeric-literal": 4,
+      "needs-review": 84,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "line_intersection_unique_bound",
+          "sst_better_than_kst_exponent",
+          "sst_superlinear_exponent"
+        ],
+        "needs-review": [
+          "szemeredi_trotter_cubic_cleared",
+          "szemeredi_trotter_equisized",
+          "incidence_le_point_line_pairs"
+        ]
+      }
+    },
+    {
+      "file": "UniversalMultitermTheorems.lean",
+      "total": 108,
+      "vacuous-constant": 0,
+      "numeric-literal": 74,
+      "needs-review": 34,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "multiterm_k5_idx0_frac_eq",
+          "multiterm_k5_idx0_strict_ordering",
+          "multiterm_k5_idx1_frac_eq"
+        ],
+        "needs-review": [
+          "multiterm_k5_idx0_pairwise_coprime",
+          "multiterm_k5_idx1_pairwise_coprime",
+          "multiterm_k5_idx2_pairwise_coprime"
+        ]
+      }
+    },
+    {
+      "file": "ZarankiewiczKovariSosTuranTheorems.lean",
+      "total": 80,
+      "vacuous-constant": 0,
+      "numeric-literal": 46,
+      "needs-review": 34,
+      "examples": {
+        "vacuous-constant": [],
+        "numeric-literal": [
+          "zarankiewicz_reiman_threshold_n4",
+          "zarankiewicz_reiman_threshold_n5",
+          "zarankiewicz_reiman_threshold_n6"
+        ],
+        "needs-review": [
+          "pg2_universal_cherry_saturation",
+          "pg2_universal_reiman_saturation",
+          "cherry_variance_two_vertices"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "budget_sec": 0.8,
+  "candidates_distinct": 0,
+  "candidates_repeats": 0,
+  "candidates_total": 0,
+  "cvps": 0.0,
+  "deadline": {
+    "budget_sec": 0.8,
+    "compute_sec": 7.076199835864827e-05,
+    "elapsed_sec": 7.151399768190458e-05,
+    "overshoot_sec": 0.0,
+    "setup_sec": 7.519993232563138e-07,
+    "verification_sec": 0.0,
+    "warmup_sec": 0.0
+  },
+  "device_actual": "cuda",
+  "expression": null,
+  "extrap_mse": null,
+  "hidden_mse": null,
+  "method": "PySR-Adapter",
+  "program_size": null,
+  "reason": "missing_dependency: pysr unavailable (No module named 'pysr')",
+  "seed": 202,
+  "status": "not_run",
+  "success": null,
+  "suite": "Level-A",
+  "synthesized": false,
+  "target": "x_plus_1",
+  "time_sec": 7.151399768190458e-05,
+  "timestamp": "2026-10-21T01:19:22.874909+00:00",
+  "train_mse": null,
+  "vram_peak_mb": 0.0
+}

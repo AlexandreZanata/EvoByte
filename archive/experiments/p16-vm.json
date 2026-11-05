@@ -1,0 +1,149 @@
+{
+  "benchmark": "cvps_grid",
+  "git_commit": "7a4881d7d686",
+  "timestamp": "2026-09-30T11:11:03.506428+00:00",
+  "device": "cuda",
+  "hardware": {
+    "cpu": "x86_64",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "numpy": "2.4.6",
+    "torch": "2.14.0+cu130",
+    "cuda_version": "13.0",
+    "cuda_available": true,
+    "gpu0": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "total_memory_MB": 7805
+    },
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB"
+  },
+  "seed": 42,
+  "grid_results": [
+    {
+      "P": 100,
+      "B": 32,
+      "latency_ms": 56.617663799988804,
+      "cvps": 1766.2332439795896,
+      "evals_sec": 56519.46380734687,
+      "peak_alloc_vram_mb": 0.2041015625,
+      "peak_res_vram_mb": 2.0,
+      "conformance": true
+    },
+    {
+      "P": 500,
+      "B": 32,
+      "latency_ms": 91.83857059979346,
+      "cvps": 5444.335606864557,
+      "evals_sec": 174218.73941966583,
+      "peak_alloc_vram_mb": 0.97216796875,
+      "peak_res_vram_mb": 2.0,
+      "conformance": true
+    },
+    {
+      "P": 1000,
+      "B": 32,
+      "latency_ms": 93.54715019944706,
+      "cvps": 10689.796512966472,
+      "evals_sec": 342073.4884149271,
+      "peak_alloc_vram_mb": 1.93603515625,
+      "peak_res_vram_mb": 4.0,
+      "conformance": true
+    },
+    {
+      "P": 2000,
+      "B": 32,
+      "latency_ms": 96.61024379965966,
+      "cvps": 20701.738463132267,
+      "evals_sec": 662455.6308202326,
+      "peak_alloc_vram_mb": 3.8671875,
+      "peak_res_vram_mb": 24.0,
+      "conformance": true
+    },
+    {
+      "P": 100,
+      "B": 256,
+      "latency_ms": 64.45651760004694,
+      "cvps": 1551.433489170181,
+      "evals_sec": 397166.97322756634,
+      "peak_alloc_vram_mb": 1.60546875,
+      "peak_res_vram_mb": 24.0,
+      "conformance": true
+    },
+    {
+      "P": 500,
+      "B": 256,
+      "latency_ms": 86.1093018000247,
+      "cvps": 5806.573616880221,
+      "evals_sec": 1486482.8459213367,
+      "peak_alloc_vram_mb": 7.06396484375,
+      "peak_res_vram_mb": 24.0,
+      "conformance": true
+    },
+    {
+      "P": 1000,
+      "B": 256,
+      "latency_ms": 86.80991899964283,
+      "cvps": 11519.4209546966,
+      "evals_sec": 2948971.7644023295,
+      "peak_alloc_vram_mb": 14.140625,
+      "peak_res_vram_mb": 28.0,
+      "conformance": true
+    },
+    {
+      "P": 2000,
+      "B": 256,
+      "latency_ms": 89.90099820002797,
+      "cvps": 22246.69403058283,
+      "evals_sec": 5695153.671829204,
+      "peak_alloc_vram_mb": 28.7373046875,
+      "peak_res_vram_mb": 48.0,
+      "conformance": true
+    },
+    {
+      "P": 100,
+      "B": 1024,
+      "latency_ms": 58.73125180005445,
+      "cvps": 1702.6710130484105,
+      "evals_sec": 1743535.1173615723,
+      "peak_alloc_vram_mb": 8.0341796875,
+      "peak_res_vram_mb": 48.0,
+      "conformance": true
+    },
+    {
+      "P": 500,
+      "B": 1024,
+      "latency_ms": 83.82063799945172,
+      "cvps": 5965.1180417318055,
+      "evals_sec": 6108280.874733369,
+      "peak_alloc_vram_mb": 28.4697265625,
+      "peak_res_vram_mb": 48.0,
+      "conformance": true
+    },
+    {
+      "P": 1000,
+      "B": 1024,
+      "latency_ms": 87.72047020029277,
+      "cvps": 11399.847694804794,
+      "evals_sec": 11673444.039480109,
+      "peak_alloc_vram_mb": 57.19580078125,
+      "peak_res_vram_mb": 82.0,
+      "conformance": true
+    },
+    {
+      "P": 2000,
+      "B": 1024,
+      "latency_ms": 86.85499760031234,
+      "cvps": 23026.884523140066,
+      "evals_sec": 23579529.751695428,
+      "peak_alloc_vram_mb": 113.23681640625,
+      "peak_res_vram_mb": 146.0,
+      "conformance": true
+    }
+  ],
+  "comparison": {
+    "cpu_cvps": 139.12296513268353,
+    "gpu_cvps": 6182.4870864487675,
+    "speedup_ratio": 44.43901178035159
+  },
+  "verdict": "PASS"
+}

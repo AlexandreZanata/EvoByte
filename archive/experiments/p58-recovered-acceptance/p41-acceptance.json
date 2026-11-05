@@ -1,0 +1,140 @@
+{
+  "budgets": {
+    "smoke_actual_sec": 7.49058295299983,
+    "smoke_requested": {
+      "budgets_str": "0.05s",
+      "scale_factor": 0.05,
+      "seeds_count": 1
+    }
+  },
+  "claim_scope": "P41 immutability mechanism; historical inventory recorded, not repaired",
+  "counters": {
+    "historical_changed_by_smoke": 0,
+    "inventory": 9,
+    "inventory_ok": 8,
+    "inventory_rejected": 1
+  },
+  "demonstrations": {
+    "one_byte_tamper_detected": true,
+    "overwrite_refused": true
+  },
+  "dirty": "M benchmarks/gpu_limits.py\n M benchmarks/science_matrix.py\n M src/evobyte/provenance.py\n M tests/test_gpu_limits.py\n?? experiments/p41-config.json\n?? experiments/p41-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 7.528639991000091,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 8,
+    "torch": "2.14.0+cu130"
+  },
+  "historical_untouched_by_smoke": {
+    "changed": [],
+    "compared": 9
+  },
+  "inventory": [
+    {
+      "actual_sha256": "d9bd0b6fdd73231351dbb19a44a5dab02fe7877b8d2ff3ad6f38a7a9a8ed7b80",
+      "expected_sha256": "d9bd0b6fdd73231351dbb19a44a5dab02fe7877b8d2ff3ad6f38a7a9a8ed7b80",
+      "path": "experiments/p33-structured-search-raw.json",
+      "source_manifest": "experiments/p33-structured-search.json",
+      "verdict": "ok"
+    },
+    {
+      "actual_sha256": "5647d615f8e25c0dd2f1906753133df51933f9c817890ebb34b10a700fef7172",
+      "expected_sha256": "5647d615f8e25c0dd2f1906753133df51933f9c817890ebb34b10a700fef7172",
+      "path": "experiments/p34-raw/ckpt-p34.pt",
+      "source_manifest": "experiments/p34-throughput.json",
+      "verdict": "ok"
+    },
+    {
+      "actual_sha256": "3f7c7bb55990b3a866cb2c0971afbfa55127b471507648437bbd4a2bcb362222",
+      "expected_sha256": "52b554cdfe819c6a56c0f9ede91373fd41613751c6623fc0161cc5c516de4fcc",
+      "note": "post-seal drift; recorded, not rebuilt",
+      "path": "experiments/p34-raw/telemetry-p34.jsonl",
+      "source_manifest": "experiments/p34-throughput.json",
+      "verdict": "rejected"
+    },
+    {
+      "actual_sha256": "1506d04014ca417534dd36f888041c142e0220aef2dd42afdf41f55ae2f78c22",
+      "expected_sha256": "1506d04014ca417534dd36f888041c142e0220aef2dd42afdf41f55ae2f78c22",
+      "path": "experiments/p35-training-corpus-raw.json",
+      "source_manifest": "experiments/p35-training-corpus.json",
+      "verdict": "ok"
+    },
+    {
+      "actual_sha256": "d7b6a8dad8120858105695644f691bad2223c00cc43cb2d2c98babe1fb96eba3",
+      "expected_sha256": "d7b6a8dad8120858105695644f691bad2223c00cc43cb2d2c98babe1fb96eba3",
+      "path": "experiments/p36-specialist-raw.json",
+      "source_manifest": "experiments/p36-specialist.json",
+      "verdict": "ok"
+    },
+    {
+      "actual_sha256": "5e290bf98df9c2a27b6cbf29ce9cc84e1206a30d296394b60d3384eb21607190",
+      "expected_sha256": "5e290bf98df9c2a27b6cbf29ce9cc84e1206a30d296394b60d3384eb21607190",
+      "path": "experiments/p37-qrand-dependency-correlated-raw.json",
+      "source_manifest": "experiments/p37-qrand-dependency-correlated.json",
+      "verdict": "ok"
+    },
+    {
+      "actual_sha256": "83342ab776d973979de15e04da2491547ace747ed1947656ac9dc96cb5aba8ee",
+      "expected_sha256": "83342ab776d973979de15e04da2491547ace747ed1947656ac9dc96cb5aba8ee",
+      "path": "experiments/p38-confirmation-raw.json",
+      "source_manifest": "experiments/p38-confirmation.json",
+      "verdict": "ok"
+    },
+    {
+      "actual_sha256": "4ee3aefbecb16ef56b5dce3e3d4acf40f88148622b5bef4a3863fb00b55f0efd",
+      "expected_sha256": "4ee3aefbecb16ef56b5dce3e3d4acf40f88148622b5bef4a3863fb00b55f0efd",
+      "path": "experiments/p38-frozen-proposer.json",
+      "source_manifest": "experiments/p38-confirmation.json",
+      "verdict": "ok"
+    },
+    {
+      "actual_sha256": "a36c422ee85f546be564c712b5b60b601d8f2afc7d70573f60a2659e12583c3e",
+      "expected_sha256": "a36c422ee85f546be564c712b5b60b601d8f2afc7d70573f60a2659e12583c3e",
+      "path": "experiments/p39-science-raw.json",
+      "source_manifest": "experiments/p39-science.json",
+      "verdict": "ok"
+    }
+  ],
+  "limitations": [
+    "P41 audits the mechanism and records inventory; divergent history (P34 telemetry) is rejected, not rebuilt.",
+    "Smoke requires the CUDA reference GPU; otherwise recorded unavailable."
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P41",
+  "resolved_config": {
+    "acceptance_phase": "P41",
+    "config_path": "experiments/p41-config.json",
+    "config_sha256": "f0216b935fd9201a67f1f1163c597bab85e7cbf9107c46c0a12da727ec41dbc3"
+  },
+  "revision": "5a916707963055bec46ee3dc13d51fc3ba3d4708",
+  "run_id": "57fe15b32463887e",
+  "seeds_rng": "not-applicable: audit performs no search (reason: deterministic inspection + fixed smoke seed)",
+  "smoke": {
+    "actual_sec": 7.49058295299983,
+    "manifest": "/tmp/evobyte-p41-uai7usr5/p41-smoke.json",
+    "manifest_verifies": true,
+    "ran": true,
+    "requested": {
+      "budgets_str": "0.05s",
+      "scale_factor": 0.05,
+      "seeds_count": 1
+    },
+    "stable": true
+  },
+  "verdict": "MIXED"
+}

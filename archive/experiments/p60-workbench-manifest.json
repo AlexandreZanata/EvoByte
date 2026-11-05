@@ -1,0 +1,147 @@
+{
+  "phase": "P60",
+  "artifact": "hypothesis-workbench-manifest",
+  "version": 1,
+  "date": "2026-10-07",
+  "family": {
+    "name": "bounded Erdős–Straus constructions",
+    "candidate": "integer tuple or versioned numeric template with declared domain",
+    "certificate": "exact (immutable verifier across all ten arms)",
+    "development_reuse": "P57 instances as development only, never as fresh test"
+  },
+  "development_tasks": [
+    {
+      "task_id": "es-dev-04",
+      "n": 4,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-06",
+      "n": 6,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-08",
+      "n": 8,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-09",
+      "n": 9,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-10",
+      "n": 10,
+      "max_coord": 1000000000
+    },
+    {
+      "task_id": "es-dev-12",
+      "n": 12,
+      "max_coord": 1000000000
+    }
+  ],
+  "dev_note": "Small composite n with classical coverage; disjoint from any future P71 fresh final by construction (P71 finals will be newly frozen). Known/false controls stay outside the discovery metric.",
+  "seeds": [
+    7,
+    42,
+    101
+  ],
+  "seed_rule": "Repeated seeds are repeats within a task, not independent problems.",
+  "comparison": "baseline versus one hypothesis at a time",
+  "budgets": {
+    "search_cert_per_attempt_sec": 10,
+    "per_hypothesis_ceiling_min": 30,
+    "ten_pilots_initial_ceiling_h": 5,
+    "p71_per_method_h": 2,
+    "p72_h": 1,
+    "raw_data_per_run_gib": 1,
+    "model_reserve_params": 100000,
+    "model_absolute_cap_params": 1000000
+  },
+  "budget_rule": "Ceiling includes collection and training; full cost (collection+train+search+checker+tracking) presented; amortization projections labeled with horizon, never observations.",
+  "primary_outcome": "certified tasks on the same set; capped time-to-certificate as co-measure",
+  "screening": {
+    "PROMISING": "same set has more certified tasks, or at least 20% lower capped time-to-certificate without success drop",
+    "NULL": "registered effect absent",
+    "INCONCLUSIVE": "missing solutions/groups or precision",
+    "BLOCKED": "correctness, data, required-approval or isolation failure"
+  },
+  "screening_note": "Operational triage choice, not statistical proof; six tasks/three seeds do not guarantee power or confirmation.",
+  "censoring": "Timeouts are censored observations and never dropped from the analysis; report all arms, tasks and seeds, group intervals and distinct solutions.",
+  "grouping_unit": "task (instance)",
+  "mechanisms": [
+    {
+      "id": "H01",
+      "phase": "P62",
+      "phase_file": "docs/phases/P62-structured-error-repair.md",
+      "hypothesis": "Exact residue/divisibility patterns guide repairs better than smallest numeric error.",
+      "literature_overlap": "program repair and fault localization by error spectra; check before claiming novelty."
+    },
+    {
+      "id": "H02",
+      "phase": "P61",
+      "phase_file": "docs/phases/P61-modular-shadows.md",
+      "hypothesis": "Cheap modular filters reduce total cost of certificates in the same search.",
+      "literature_overlap": "modular pruning sieves in exact search; check before claiming novelty."
+    },
+    {
+      "id": "H03",
+      "phase": "P64",
+      "phase_file": "docs/phases/P64-learned-obstructions.md",
+      "hypothesis": "Proven impossibility conditions prune large regions with a small model.",
+      "literature_overlap": "nogood/unsatisfiable-core learning in SAT/CP; check before claiming novelty."
+    },
+    {
+      "id": "H04",
+      "phase": "P65",
+      "phase_file": "docs/phases/P65-backward-constructions.md",
+      "hypothesis": "Correct constructions generated before the target give short bridges to a hard task.",
+      "literature_overlap": "backward chaining, retrograde analysis and meet-in-the-middle construction; check before claiming novelty."
+    },
+    {
+      "id": "H05",
+      "phase": "P66",
+      "phase_file": "docs/phases/P66-composite-search-jumps.md",
+      "hypothesis": "Composite edit packets reach regions local mutations visit rarely.",
+      "literature_overlap": "macro-moves and large-neighborhood search; check before claiming novelty."
+    },
+    {
+      "id": "H06",
+      "phase": "P67",
+      "phase_file": "docs/phases/P67-verified-macros.md",
+      "hypothesis": "Reusable verified blocks shorten candidates and cut search cost without a bigger model.",
+      "literature_overlap": "macro actions and library learning for program synthesis; check before claiming novelty."
+    },
+    {
+      "id": "H07",
+      "phase": "P68",
+      "phase_file": "docs/phases/P68-adversarial-conjectures.md",
+      "hypothesis": "A counterexample attacker improves candidate-template selection.",
+      "literature_overlap": "counterexample-guided search (CEGIS) and adversarial example generation; check before claiming novelty."
+    },
+    {
+      "id": "H08",
+      "phase": "P63",
+      "phase_file": "docs/phases/P63-verifier-feedback.md",
+      "hypothesis": "Structured rejection codes guide better than a single score.",
+      "literature_overlap": "reward shaping by verifier signals; check before claiming novelty."
+    },
+    {
+      "id": "H09",
+      "phase": "P69",
+      "phase_file": "docs/phases/P69-residue-synchronized-islands.md",
+      "hypothesis": "Exchanging fragments by residue signatures beats elite migration.",
+      "literature_overlap": "island-model evolutionary computation with migration policies; check before claiming novelty."
+    },
+    {
+      "id": "H10",
+      "phase": "P70",
+      "phase_file": "docs/phases/P70-parametric-proof-search.md",
+      "hypothesis": "A small proposer finds a template solving many cases with a short proof.",
+      "literature_overlap": "parametric template search and lemma discovery; check before claiming novelty."
+    }
+  ],
+  "review_gate": "Identifiable math/stats review required before measuring (D019 delegation: owner and executor separated; no presumed independent reproduction).",
+  "p71_final": "reserved new and closed; defined by P71, disjoint from development tasks above"
+}

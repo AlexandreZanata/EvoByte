@@ -1,0 +1,14 @@
+{
+  "batch_size": 32,
+  "corpus_manifest": "experiments/p52-certified-data.json",
+  "device": "cpu",
+  "exploration_floor": 0.1,
+  "gru_width": 64,
+  "lr": 0.003,
+  "max_epochs": 20,
+  "max_train_min": 30.0,
+  "n_sample": 32,
+  "note": "Complete frozen configuration. One SequentialHistoryProposer (<=1M params), batch 32, max 20 epochs or 30 real min, checkpoint by validation, >=10% structured-random floor, standalone sampling, no architecture search. No TBD values.",
+  "phase": "P53",
+  "seed": 42
+}

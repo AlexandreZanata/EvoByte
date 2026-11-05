@@ -1,0 +1,11 @@
+{
+  "budget_sec": 3600.0,
+  "dossier_path": "docs/research/p104-diophantine-geometry-dossier.md",
+  "min_modules": 20,
+  "min_theorems": 1200,
+  "note": "P104 Diophantine geometry grand formal campaign and certified dossier final audit. Consolidates 22 formal modules in Lean 4 with > 1200 theorems (1,441 actual), cryptographic hash chain, and zero sorry tokens.",
+  "phase": "P104",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42
+}

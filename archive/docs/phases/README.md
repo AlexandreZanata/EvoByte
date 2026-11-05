@@ -1,0 +1,530 @@
+# Phases P00–P88 (executable plan)
+
+Direção proposta em 2026-11-05 — P222 arquivada com estado incompleto.
+O [programa P229–P234](../research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md)
+define a proposta seguinte. A primeira tarefa elegível após a revisão
+do plano e os pré-requisitos é P229. Os programas abaixo ficam como
+registro de seus contratos originais.
+
+One file per phase. Each phase states objective, scope (in/out),
+tasks, exit gate (artifact runs + measured), risks, and a **Commit & Push**
+block. Rules:
+
+- Exactly one phase in flight. Its declared prerequisite gates must be green.
+- Small diffs, reversible steps, no TODOs/stubs/placeholders.
+- Gates from the phase file block commit and push — never defer a red gate.
+
+## Index
+
+### Proposta de pesquisa com baixo custo, D051
+
+- [P229 — Auditoria das garantias e pré-registro](P229-low-compute-audit-preregistration.md).
+- [P230 — Piloto de distância exata por núcleo](P230-exact-distance-kernel-pilot.md).
+- [P231 — Piloto de decomposição BB certificada](P231-certified-subgroup-decomposition.md).
+- [P232 — Piloto de identidades CNOT+T exatas](P232-exact-cnot-t-identities.md).
+- [P233 — Reprodução e comparação com garantia equivalente](P233-independent-comparison.md).
+- [P234 — Decisão científica do ciclo](P234-scientific-decision.md).
+
+Todas estão propostas. O [contrato do novo programa](../research/next/EVOBYTE_NEXT_RESEARCH_PROGRAM.md)
+delimita pré-requisitos, revisão e a ordem de uma tarefa por vez.
+
+### Índice histórico
+
+- [P00 — Foundation, hardware probe, reproducibility harness](P00-foundation-hw-probe.md)
+- [P01 — Bytecode v0 frozen](P01-bytecode-v0.md)
+- [P02 — CPU reference interpreter](P02-cpu-interpreter.md)
+- [P03 — Random generators](P03-random-generators.md)
+- [P04 — Level-1 verifier + cascade + early stop](P04-verifier-l1.md)
+- [P05 — GPU interpreter + CVPS benchmark](P05-gpu-interpreter.md)
+- [P06 — Massive batching at scale](P06-massive-batching.md)
+- [P07 — Elite archive + checkpoints + resume](P07-elite-archive.md)
+- [P08 — Genetic evolution + first rediscovery](P08-genetic-evolution.md)
+- [P09 — Quality diversity (MAP-Elites + novelty)](P09-quality-diversity.md)
+- [P10 — Islands + migration](P10-islands.md)
+- [P11 — Constant optimization](P11-constant-optimization.md)
+- [P12 — Micro neural generator](P12-neural-generator.md)
+- [P13 — Full benchmark + baselines + ablations](P13-full-benchmark.md)
+- [P14 — Scientific datasets](P14-scientific-datasets.md)
+
+Status convention per file: `Proposed | Building | Done (commit SHA + date +
+measurement)`.
+
+## Added corrective phases
+
+- [P15 — Measurement integrity and reproducible harness](P15-measurement-integrity.md).
+- [P16 — Population-parallel GPU interpreter](P16-population-gpu-vm.md).
+- [P17 — GPU-resident evolutionary cycle](P17-resident-evolution.md).
+- [P18 — Streaming GPU cascade and bounded memory](P18-streaming-cascade.md).
+- [P19 — Strict verification and discovery evidence](P19-strict-verification.md).
+- [P20 — Sustained throughput and quality experiment](P20-sustained-throughput.md).
+- [P21 — Independent reproduction and usable model](P21-independent-reproduction.md).
+- [P22 — Optional learning across tasks](P22-cross-task-learning.md).
+- [P23 — Math specialist pilot (GSM8K chains, ≤5M, billed)](P23-math-specialist-pilot.md).
+- [P24 — Stable limits of the RTX 4060](P24-stable-limits.md).
+- [P25 — Math corpus consolidation](P25-math-corpus.md).
+- [P26 — Reproducible tracing and exploration map](P26-lineage-map.md).
+- [P27 — Quantum-inspired randomness hypotheses](P27-qrand-hypotheses.md).
+- [P28 — New specialist micro-model](P28-specialist-rematch.md).
+- [P29 — Open problems with verifiable certificates](P29-open-problems.md).
+
+## Acceptance and specialist program (P30–P39)
+
+- [P30 — Corpus isolation by original problem and template](P30-corpus-isolation.md).
+- [P31 — Independent answer verification and certificate bounds](P31-verifier-certificates.md).
+- [P32 — Replay, resume and honest evidence acceptance](P32-replay-acceptance.md).
+- [P33 — Structured candidate search for polynomial arithmetic](P33-structured-search.md).
+- [P34 — Profiled full-pipeline throughput and bounded tracing](P34-profiled-throughput.md).
+- [P35 — Certified program corpus for specialist training](P35-verified-training-corpus.md).
+- [P36 — Specialist learning from certified solutions](P36-specialist-learning.md).
+- [P37 — One controlled quantum-inspired sampling hypothesis](P37-controlled-qrand.md).
+- [P38 — Clean-environment confirmation and frozen model export](P38-independent-confirmation.md).
+- [P39 — Bounded mathematical campaign with novelty review](P39-certified-science.md).
+
+## Guided formal-search program (P40–P57)
+
+The historical P40–P57 program is defined by
+[the executor runbook](../FORMAL_SEARCH_PLAN.md). P40 first reconciles the
+accepted code base and audits P33–P39 evidence; historical Done labels do
+not waive its prerequisite checks. This plan implements no new benchmark
+flags and does not authorize executing all phases at once.
+
+- [P40 — Reconciliar a base e auditar as evidências](P40-evidence-reconciliation.md).
+- [P41 — Impedir sobrescrita de evidências](P41-immutable-artifacts.md).
+- [P42 — Corrigir a certificação matemática](P42-exact-certification.md).
+- [P43 — Demonstrar continuação real de checkpoint](P43-real-checkpoint-resume.md).
+- [P44 — Manter a evolução estruturada na GPU](P44-resident-grammar.md).
+- [P45 — Medir o ciclo inteiro dentro de limites seguros](P45-honest-gpu-envelope.md).
+- [P46 — Catalogar 100 problemas com fontes](P46-open-problem-catalogue.md).
+- [P47 — Congelar uma família e o primeiro experimento](P47-freeze-one-family.md).
+- [P48 — Adicionar a fronteira de prova formal](P48-formal-checker-boundary.md).
+- [P49 — Congelar uma representação compacta limitada](P49-compact-typed-candidates.md).
+- [P50 — Estabelecer buscas e baselines verificáveis](P50-structured-search-controls.md).
+- [P51 — Rastrear a busca sem guardar um universo infinito](P51-bounded-replay-map.md).
+- [P52 — Construir dados certificados para o micromodelo](P52-certified-learning-data.md).
+- [P53 — Treinar um único proponente pequeno](P53-small-conditional-proposer.md).
+- [P54 — Decidir se o micromodelo compensa](P54-matched-budget-pilot.md).
+- [P55 — Testar uma hipótese de aleatoriedade, opcional](P55-optional-sampling-hypothesis.md).
+- [P56 — Confirmar o método congelado em teste novo](P56-fresh-frozen-confirmation.md).
+- [P57 — Executar uma campanha matemática e revisar novidade](P57-bounded-discovery-campaign.md).
+
+Execute P40–P57 in order, with the negative-result routes in the runbook.
+Insufficient certified data blocks training but permits honest baseline
+comparisons. The optional sampler can be deferred. Correctness, integrity
+or isolation failures block advancement. Keep 100 problems as a curated
+catalogue; run one nominated family, never 100 simultaneous conjecture hunts.
+
+## Speculative hypothesis program (P58–P72)
+
+[The updated executor contract](../FORMAL_SEARCH_PLAN.md#programa-especulativo-p58p72)
+keeps prior results and scientific-review pendencies intact. P58 audits
+acceptance first; P59 fixes information/cost equality; P60 freezes the
+workbench. Ten hypotheses are isolated pilots, followed by fresh independent
+confirmation and one novelty nomination. P58–P72 are completed (Done).
+[D019](../FORMAL_SEARCH_PLAN.md#correção-de-atuação-e-continuidade-técnica-d019)
+specified P58 R1–R4; P59–P60 established controls and frozen workbench;
+P61–P70 evaluated ten isolated hypotheses (all NULL or pilot-efficiency);
+P71 confirmed INCONCLUSIVE without promotion; P72 concluded the campaign
+with honest instance classifications, closing the program under D020.
+
+- [P58 — Reconciliar evidências e liberar uma base de pesquisa](P58-accepted-research-baseline.md).
+- [P59 — Estabelecer comparações com a mesma informação](P59-equal-information-controls.md).
+- [P60 — Congelar a bancada e o pré-registro das dez hipóteses](P60-hypothesis-workbench.md).
+- [P61 — H02 — Buscar usando sombras aritméticas](P61-modular-shadows.md).
+- [P62 — H01 — Aprender a corrigir formatos de erro](P62-structured-error-repair.md).
+- [P63 — H08 — Orientar o modelo por códigos de rejeição](P63-verifier-feedback.md).
+- [P64 — H03 — Aprender regiões proibidas e tentar prová-las](P64-learned-obstructions.md).
+- [P65 — H04 — Inventar respostas e procurar pontes para o alvo](P65-backward-constructions.md).
+- [P66 — H05 — Atravessar a busca com saltos compostos](P66-composite-search-jumps.md).
+- [P67 — H06 — Criar novas instruções matemáticas verificadas](P67-verified-macros.md).
+- [P68 — H07 — Fazer dois modelos pequenos atacar construções](P68-adversarial-conjectures.md).
+- [P69 — H09 — Sincronizar ilhas por erros complementares](P69-residue-synchronized-islands.md).
+- [P70 — H10 — Buscar fórmulas para famílias de soluções](P70-parametric-proof-search.md).
+- [P71 — Confirmar as hipóteses selecionadas sem reabrir testes antigos](P71-independent-hypothesis-confirmation.md).
+- [P72 — Nominar um resultado matemático e verificar novidade](P72-novelty-nomination.md).
+
+Execute one micro-task at a time. P58–P60 integrity/review failures block
+new experiments. A valid NULL/INCONCLUSIVE pilot allows the next isolated
+hypothesis; rejected modules stay disabled. No presumed worldwide novelty,
+quantum advantage, promised throughput or automatically solved conjecture.
+
+## Algebraic discovery & Lean 4 formal verification program (P73–P80)
+
+[The algebraic search contract](../FORMAL_SEARCH_PLAN.md#programa-de-busca-algébrica-e-verificação-formal-lean-4-p73p80)
+defines the formal extension adopted under D021 following the conclusion of
+P58–P72. It addresses the fundamental bottleneck of finite numerical point-search
+by targeting parameterized polynomial identities that cover infinite residue classes,
+coupled directly to interactive theorem proving in Lean 4.
+The program is completed (Done, D022).
+
+- [P73 — Infraestrutura de verificação formal e harness Lean 4](P73-lean-formal-baseline.md).
+- [P74 — Síntese de identidades polinomiais algébricas](P74-algebraic-identity-synthesis.md).
+- [P75 — Matriz de cobertura de classes de congruência modulares](P75-residue-class-coverage.md).
+- [P76 — Crivo de fatoração racional e decomposição de divisores](P76-rational-divisor-sieve.md).
+- [P77 — Compilador bytecode para teoremas certificados em Lean 4](P77-bytecode-lean-proof-bridge.md).
+- [P78 — Generalização para famílias de Sierpiński e Schinzel](P78-sierpinski-schinzel-generalization.md).
+- [P79 — Confirmação cega e controle estatístico de seleção](P79-blind-residue-confirmation.md).
+- [P80 — Campanha formal bounded e dossiê de teoremas Lean 4](P80-certified-formal-campaign.md).
+
+P73–P80 are completed (Done, D022) with all measured gates passing, clean-tree
+verification, 149 Lean 4 kernel theorems with zero sorry, and PRs #102–#109.
+No worldwide novelty, quantum advantage, or unproven universal conjecture
+resolution is claimed.
+
+## Inductive proof, lemma synthesis & tactic automation program (P81–P88)
+
+[The inductive formal search contract](../FORMAL_SEARCH_PLAN.md#programa-de-prova-indutiva-síntese-de-lemas-e-automação-de-táticas-em-lean-4-p81p88)
+defines the formal extension adopted under D023 following the conclusion of
+P73–P80. It targets integer divisibility lemmas in $\mathbb{N}$, optimal divisor selection,
+multiparameter quadratic identities, and automated Lean 4 tactic dispatch (`omega`, `aesop`).
+
+- [P81 — Harness de prova indutiva e verificação estrutural Lean 4](P81-inductive-proof-baseline.md).
+- [P82 — Síntese automática de lemas de divisibilidade diofantina](P82-divisibility-lemma-synthesis.md).
+- [P83 — Crivo de fatoração estruturada e seleção de divisores ótimos](P83-optimal-divisor-selection.md).
+- [P84 — Síntese de identidades quadráticas multiparâmetro](P84-multiparameter-quadratic-identities.md).
+- [P85 — Compilação de provas com automação de táticas (omega/aesop)](P85-tactic-dispatch-omega-aesop.md).
+- [P86 — Generalização multitermo e frações egípcias coprimas](P86-multiterm-diophantine-generalization.md).
+- [P87 — Confirmação cega em grande escala com controle estatístico](P87-large-instance-blind-confirmation.md).
+- [P88 — Campanha formal de meta-teoremas e dossiê certificado](P88-meta-theorem-formal-campaign.md).
+
+P81–P88 are completed (Done, D023) with all measured gates passing, clean-tree
+verification, 406 Lean 4 kernel theorems with zero sorry across 10 modules, and PRs #110–#118.
+No worldwide novelty, quantum advantage, or unproven universal conjecture
+resolution is claimed.
+
+## Generalized modular resolution, meta-tactics & extended Schinzel program (P89–P96)
+
+[The generalized modular search contract](../FORMAL_SEARCH_PLAN.md#programa-de-resolução-modular-generalizada-meta-táticas-e-conjectura-de-schinzel-ampliada-em-lean-4-p89p96)
+defines the formal extension adopted under D025 following the conclusion of
+P81–P88. It targets custom Lean 4 metaprogramming tactics, Schinzel's generalized conjecture
+for arbitrary numerators $a \ge 4$, quadratic ring factorization sieves, extremal coordinate bounds,
+asymptotic modular density, and ultra-large instances ($10^7 \le n \le 10^9$).
+
+- [P89 — Meta-programação e tática customizada evobyte_solve em Lean 4](P89-custom-tactic-metaprogramming.md).
+- [P90 — Formalização unificada da conjectura de Schinzel (a/n)](P90-schinzel-generalized-numerator.md).
+- [P91 — Crivo algébrico em anéis quadráticos para classes resistentes](P91-quadratic-ring-sieve.md).
+- [P92 — Limites extremais certificados e minimização de coordenadas](P92-extremal-coordinate-bounds.md).
+- [P93 — Teoremas de densidade assintótica e cobertura modular completa](P93-asymptotic-density-coverage.md).
+- [P94 — Generalização multitermo universal e coprimalidade total](P94-universal-multiterm-coprimality.md).
+- [P95 — Confirmação cega em escala extrema (10^7 a 10^9) sob controle FWER](P95-extreme-scale-blind-confirmation.md).
+- [P96 — Grande campanha formal e dossiê certificado final em Lean 4](P96-grand-formal-dossier-campaign.md).
+
+P89–P96 are completed (Done, D026) with all measured gates passing, clean-tree
+verification, 965 Lean 4 kernel theorems with zero sorry across 16 modules, and PRs #119–#127.
+No worldwide novelty, quantum advantage, or unproven conjecture
+resolution is claimed.
+
+## Diophantine algebraic geometry, cubic surface fibrations & invariants program (P97–P104)
+
+[The Diophantine geometry contract](../FORMAL_SEARCH_PLAN.md#programa-de-geometria-algébrica-diofantina-fibrados-de-superfícies-cúbicas-e-invariantes-em-lean-4-p97p104)
+defines the formal extension adopted under D027 following the conclusion of
+P89–P96. It targets cubic surface conic fibrations over $\mathbb{Q}(x)$, rational conic
+parametrizations via the local-global principle, quaternion algebra sieves, the unified
+`dioph_surface` metaprogramming tactic, asymptotic solution moments $f_a(n)$, higher-power
+Diophantine fractions $a/n^k$, hyper-scale blind confirmation ($10^9 \le n \le 10^{12}$),
+and a consolidated grand formal campaign expanding to 1,200+ Lean 4 kernel theorems.
+
+- [P97 — Formalização de fibrados cônicos e superfícies cúbicas em Lean 4](P97-cubic-surface-fibrations.md).
+- [P98 — Síntese de parametrizações racionais via princípio local-global](P98-rational-conic-parametrizations.md).
+- [P99 — Crivo algébrico em ordens quaternônicas e álgebras de divisão](P99-quaternion-algebra-sieve.md).
+- [P100 — Meta-tática unificada dioph_surface com eliminação algébrica em Lean 4](P100-dioph-surface-metatactic.md).
+- [P101 — Teoremas de momentos assintóticos e limites de densidade de soluções](P101-solution-moments-asymptotics.md).
+- [P102 — Generalização para potências superiores e frações diofantinas de grau k](P102-higher-power-diophantine-fractions.md).
+- [P103 — Confirmação cega em hiper-escala (10^9 a 10^12) sob controle FWER](P103-hyper-scale-blind-confirmation.md).
+- [P104 — Grande campanha formal e dossiê de geometria diofantina em Lean 4](P104-diophantine-geometry-formal-campaign.md).
+
+P97–P104 are completed (Done, D029) with all measured gates passing, clean-tree
+verification, 1,441 Lean 4 kernel theorems with zero sorry across 22 modules, and PRs #129–#137.
+No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
+
+## Open problems formal discovery & proof-guided model program (P105–P112)
+
+[The open problems discovery contract](../FORMAL_SEARCH_PLAN.md#programa-de-descoberta-formal-em-problemas-abertos-e-teoria-de-modelos-guiada-por-provas-em-lean-4-p105p112)
+defines the formal research extension adopted under D028 following the conclusion of
+P97–P104. It tests EvoByte's methodology (lightweight conditional models, hermetic data
+orchestration, algebraic sieves, and Lean 4 formal proofs) directly on real open mathematical
+problems from the 100-problem catalog (`docs/research/open-problems.json`), including Erdős–Graham
+dense unit fraction sums and Pillai–Catalan exponential Diophantine equations.
+The program is completed (Done, D030).
+
+- [P105 — Banco de dados hermético de problemas abertos e tipagem formal dependente em Lean 4](P105-open-problems-formal-database.md).
+- [P106 — Motor de grafos de obstruções e espaços negativos de busca diofantina](P106-obstruction-graphs-data-engine.md).
+- [P107 — Modelo neural condicional leve (<= 5M) para proposição estruturada sem alucinação](P107-lightweight-conditional-proposer.md).
+- [P108 — Busca em árvore Monte Carlo (MCTS) guiada pelo kernel do Lean 4 no espaço de táticas](P108-tactic-tree-formal-mcts.md).
+- [P109 — Alvo aberto Erdős-Graham: formalização e busca de frações unitárias com denominadores densos](P109-erdos-graham-unit-fractions.md).
+- [P110 — Alvo aberto Pillai-Catalan: formas lineares em logaritmos e crivo de expoentes diofantinos](P110-pillai-exponential-diophantine.md).
+- [P111 — Confirmação cega multiproblema com controle estatístico rigoroso FWER (Bonferroni-Holm)](P111-multiproblem-blind-confirmation.md).
+- [P112 — Grande campanha de resolução e progresso formal com dossiê de literatura e 1.500+ teoremas](P112-open-problems-grand-dossier.md).
+
+P105–P112 are completed (Done, D030) with all measured gates passing, clean-tree
+verification, 1,929 Lean 4 kernel theorems with zero sorry across 26 modules, and PRs #138–#145.
+No worldwide novelty, quantum advantage, or unproven universal conjecture resolution is claimed.
+
+## Additive combinatorics, Sidon sets & density program (P113–P120)
+
+[The additive combinatorics contract](../FORMAL_SEARCH_PLAN.md#programa-de-combinatória-aditiva-conjuntos-de-sidon-e-teoria-de-densidade-em-lean-4-p113p120)
+defines the formal research extension adopted under D031 following the conclusion of
+P105–P112. It targets $B_2[g]$ Sidon sets, additive energy $E(A, B)$, Plünnecke–Ruzsa
+inequalities, Erdős–Turán additive bases, sum-free subsets, and 2,000+ Lean 4 theorems.
+
+- [P113 — Banco formal de combinatória aditiva e conjuntos de Sidon em Lean 4](P113-additive-combinatorics-formal-database.md).
+- [P114 — Algoritmo de busca estruturada de conjuntos de Sidon extremais e B_2[1]](P114-sidon-sets-extremal-search.md).
+- [P115 — Teoremas de energia aditiva e limitantes de Balog-Szemerédi-Gowers](P115-additive-energy-balog-szemeredi.md).
+- [P116 — Meta-tática customizada additive_norm e automação em Lean 4](P116-additive-norm-metatactic.md).
+- [P117 — Alvo aberto Erdős-Turán em bases aditivas e representações](P117-erdos-turan-additive-bases.md).
+- [P118 — Alvo aberto Erdős sobre conjuntos livres de soma e densidade de Schnirelmann](P118-sum-free-schnirelmann-density.md).
+- [P119 — Confirmação cega em larga escala com controle estatístico FWER (Bonferroni-Holm)](P119-additive-blind-confirmation.md).
+- [P120 — Grande campanha de combinatória aditiva e dossiê certificado final em Lean 4](P120-additive-combinatorics-grand-dossier.md).
+
+P113–P120 are completed (Done, D032) with all measured gates passing, clean-tree
+verification, 2,392 Lean 4 kernel theorems with zero sorry across 32 modules (463 additive combinatorics theorems), and PRs #149–#156.
+No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
+
+## Extremal graph theory, Ramsey numbers & arithmetic progressions program (P121–P128)
+
+[The extremal graph and Ramsey contract](../FORMAL_SEARCH_PLAN.md#programa-de-teoria-extremal-de-grafos-números-de-ramsey-e-progressões-aritméticas-em-lean-4-p121p128)
+defines the formal research extension adopted under D033 following the conclusion of
+P113–P120. It targets Mantel–Turán extremal bounds, Paley graphs and Ramsey numbers $R(s, t)$,
+Zarankiewicz $K_{s,t}$-free bipartite bounds, the `graph_ramsey_norm` metatactic, Roth/Salem–Spencer
+3-AP-free sets, Erdős–Gyárfás cycle/chromatic bounds, blind FWER confirmation, and 2,800+ Lean 4 theorems.
+
+- [P121 — Banco formal de grafos extremais, Mantel-Turán e invariantes de Ramsey em Lean 4](P121-extremal-graph-ramsey-formal-database.md).
+- [P122 — Grafos de Paley e construções algébricas de cotas inferiores de Ramsey R(s,t)](P122-paley-graphs-ramsey-constructions.md).
+- [P123 — Problema de Zarankiewicz e desigualdade de Kővári-Sós-Turán para grafos K_{s,t}-free](P123-zarankiewicz-kovari-sos-turan.md).
+- [P124 — Meta-tática customizada graph_ramsey_norm e automação combinatória em Lean 4](P124-graph-ramsey-norm-metatactic.md).
+- [P125 — Alvo aberto de Roth e Salem-Spencer sobre conjuntos livres de progressões de 3 termos](P125-roth-salem-spencer-ap-free.md).
+- [P126 — Alvo aberto de Erdős-Gyárfás sobre ciclos de potências de 2 e número cromático](P126-erdos-gyarfas-cycles-chromatic.md).
+- [P127 — Confirmação cega em larga escala em grafos e Ramsey sob controle FWER (Bonferroni-Holm)](P127-graph-ramsey-blind-confirmation.md).
+- [P128 — Grande campanha formal de grafos e Ramsey com dossiê certificado em Lean 4](P128-extremal-graph-ramsey-grand-dossier.md).
+
+P121–P128 are completed (Done, D034) with all measured gates passing, clean-tree
+verification, 2,873 Lean 4 kernel theorems with zero sorry across 38 modules (481 extremal graph and Ramsey theorems), and PRs #159–#166.
+No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
+
+## Discrete geometry, Erdős distinct distances & point configurations program (P129–P136)
+
+[The discrete geometry contract](../FORMAL_SEARCH_PLAN.md#programa-de-geometria-discreta-distâncias-distintas-de-erdős-e-configurações-de-pontos-em-lean-4-p129p136)
+defines the formal research extension adopted under D035 following the conclusion of
+P121–P128. It targets Euclidean point configurations, Erdős distinct distances, Guth–Katz
+partitioning, unit distances, Szemerédi–Trotter incidence theorems, the `geom_distance_norm`
+metatactic, Happy Ending convex polygons, Hadwiger–Nelson plane colorings, blind FWER confirmation, and 3,300+ Lean 4 theorems.
+
+- [P129 — Banco formal de geometria discreta, métricas e distâncias distintas de Erdős em Lean 4](P129-discrete-geometry-formal-database.md).
+- [P130 — Cota inferior de Guth-Katz e configurações extremais de distâncias distintas](P130-erdos-distinct-distances-guth-katz.md).
+- [P131 — Problema das distâncias unitárias e teorema de incidência de Szemerédi-Trotter](P131-unit-distances-szemeredi-trotter.md).
+- [P132 — Meta-tática customizada geom_distance_norm e automação geométrica em Lean 4](P132-geom-distance-norm-metatactic.md).
+- [P133 — Problema do Final Feliz e polígonos convexos de Erdős-Szekeres](P133-convex-polygons-happy-ending.md).
+- [P134 — Colorações de distâncias unitárias no plano e problema de Hadwiger-Nelson](P134-hadwiger-nelson-plane-coloring.md).
+- [P135 — Confirmação cega em larga escala em geometria discreta sob controle FWER (Bonferroni-Holm)](P135-discrete-geometry-blind-confirmation.md).
+- [P136 — Grande campanha formal de geometria discreta com dossiê certificado em Lean 4](P136-discrete-geometry-grand-dossier.md).
+
+P129–P136 are completed (Done, D036) with all measured gates passing, clean-tree
+verification, 3,466 Lean 4 kernel theorems with zero sorry across 44 modules (593 discrete geometry theorems), and PRs #168–#175.
+No worldwide novelty, quantum advantage, or unproven conjecture resolution is claimed.
+
+## Discrepancy theory, Erdős discrepancy problem & covering systems program (P137–P144)
+
+[The discrepancy and covering systems contract](../FORMAL_SEARCH_PLAN.md#programa-de-teoria-de-discrepância-problema-da-discrepância-de-erdős-e-sistemas-de-recobrimento-em-lean-4-p137p144)
+defines the formal research extension adopted under D037 following the conclusion of
+P129–P136. It targets combinatorial discrepancy, the Erdős Discrepancy Problem (EDP / Tao 2016),
+Roth's AP discrepancy lower bound $\Omega(N^{1/4})$, Spencer's six standard deviations theorem,
+the `discrepancy_norm` metatactic, Hough's minimum modulus covering theorem, Erdős primitive set divisor series,
+blind FWER confirmation, and 3,800+ Lean 4 theorems.
+
+- [P137 — Banco formal de teoria de discrepância combinatória e recobrimentos em Lean 4](P137-discrepancy-covering-formal-database.md).
+- [P138 — Problema da discrepância de Erdős (EDP) e multiplicatividade completa](P138-erdos-discrepancy-completely-multiplicative.md).
+- [P139 — Cota de Roth em progressões aritméticas e cota de Spencer de seis desvios](P139-roth-spencer-discrepancy-progressions.md).
+- [P140 — Meta-tática customizada discrepancy_norm e automação de discrepância em Lean 4](P140-discrepancy-norm-metatactic.md).
+- [P141 — Sistemas de recobrimento de congruências e teorema de Hough do módulo mínimo](P141-covering-systems-minimum-modulus-hough.md).
+- [P142 — Conjuntos primitivos e conjectura de Erdős sobre séries de divisores](P142-primitive-sets-divisor-series-erdos.md).
+- [P143 — Confirmação cega em larga escala em discrepância e recobrimentos sob controle FWER](P143-discrepancy-covering-blind-confirmation.md).
+- [P144 — Grande campanha formal de discrepância e recobrimentos com dossiê certificado em Lean 4](P144-discrepancy-covering-grand-dossier.md).
+
+## Constructive algebraic discovery & high-moduli Schinzel program (P145–P152)
+
+Defined under D038 to pivot from shallow broad lema enumeration to deep constructive discovery on narrow, computationally tractable problems. Targets high-moduli ($M \ge 840$) Schinzel open congruence orbits, quadratic ring sieves, parameterized polynomial identities in $\mathbb{Q}[k]$, extremal finite Sidon certificates, and dual-verifier international novelty audit.
+
+- [P145 — Banco formal de classes de congruência resistentes de Schinzel e recobrimentos modulares de alta ordem](P145-schinzel-high-moduli-congruence-database.md).
+- [P146 — Crivo diofantino acelerado em anéis quadráticos para classes resistentes de Schinzel](P146-quadratic-ring-sieve-resistant-schinzel.md).
+- [P147 — Síntese automatizada de identidades paramétricas polinomiais para classes residuais abertas](P147-automated-polynomial-identity-synthesis.md).
+- [P148 — Certificação formal no kernel Lean 4 das novas identidades paramétricas](P148-lean4-kernel-certification-identities.md).
+- [P149 — Síntese e verificação formal de certificados extremais construtivos em combinatória finita](P149-extremal-finite-constructive-certificates.md).
+- [P150 — Auditoria rigorosa de novidade contra literatura internacional e checadores duais](P150-world-literature-novelty-dual-audit.md).
+- [P151 — Confirmação cega em partição selada sob controle estatístico Holm FWER](P151-blind-confirmation-holm-fwer.md).
+- [P152 — Grande campanha formal de descoberta construtiva e dossiê de literatura](P152-constructive-algebraic-grand-dossier.md).
+
+## P13 clean reproduction closing & systems publication program (P153–P160)
+
+Defined under D039 to close the foundational H1 benchmark matrix with strict wall-clock time provenance post-D013 audit. Executes measured baselines (Random, GP, PySR), 9 full-pipeline ablations, strict hidden/extrapolation generalization splits, Holm FWER statistical verdict, containerized hermetic reproduction, and publication-ready systems research manuscript.
+
+- [P153 — Auditoria e isolamento do harness de reprodução limpa da matriz P13](P153-p13-clean-reproduction-harness-audit.md).
+- [P154 — Execução da matriz completa sob orçamentos estritos de tempo de parede](P154-wall-clock-benchmark-matrix-execution.md).
+- [P155 — Medição exata dos baselines competitivos pareados sob mesmo orçamento](P155-honest-baselines-gp-pysr-execution.md).
+- [P156 — Avaliação de generalização em splits ocultos e extrapolação estrita sem vazamento](P156-generalization-hidden-extrapolation-audit.md).
+- [P157 — Auditoria e medição sistemática das 9 ablações de pipeline e cascata](P157-full-cascade-gpu-ablations-measurement.md).
+- [P158 — Veredito estatístico dos 5 critérios de H1 e análise de fronteira de Pareto](P158-h1-statistical-verdict-pareto-analysis.md).
+- [P159 — Reprodutibilidade independente em contêiner hermético limpo](P159-clean-environment-container-reproducibility.md).
+- [P160 — Redação e consolidação do manuscrito científico de sistemas e publicação](P160-systems-research-manuscript-publication.md).
+
+## Programa de Descoberta Validada (P161–P170, D038)
+
+- [P161 — Retratação de alegações refutadas e guarda mecânica de integralidade](P161-claim-retraction-integrality-guard.md).
+- [P162 — Gate de fidelidade de enunciados Lean e registro de revisão humana](P162-lean-statement-fidelity-gate.md).
+- [P163 — Catálogo de alvos de recorde e conjecturas com verificadores independentes](P163-record-target-catalogue.md).
+- [P164 — Baselines combinatórios honestos pareados (Simulated Annealing, Tabu, Random)](P164-honest-combinatorial-baselines.md).
+- [P165 — Protocolo de redescoberta cega de recordes conhecidos da literatura](P165-blind-rediscovery-protocol.md).
+- [P166 — Campanha pré-registrada de busca por novos recordes mundiais sob orçamento fixo](P166-preregistered-record-campaign.md).
+- [P167 — Dossiê de validação externa e exportação de certificados autônomos](P167-external-validation-dossier.md).
+- [P168 — Certificados formais com fidelidade verificada em Lean 4](P168-faithful-formal-certificates.md).
+- [P169 — Veredito estatístico consolidado com controle FWER e registro de resultados nulos](P169-statistical-verdict-negative-results.md).
+- [P170 — Manuscrito de publicação auditado, pacote arquivável Zenodo e conclusão do programa](P170-publication-manuscript-archive.md).
+
+## Programa de Descoberta na Fronteira (P171–P190, D042)
+
+- [P171 — Congelamento do catálogo de alvos da fronteira v2](P171-frontier-target-catalogue-v2.md).
+- [P172 — Baselines combinatórios da fronteira e harness de resolução](P172-frontier-baselines-solver-harness.md).
+- [P173 — Busca construtiva e operadores de fronteira](P173-constructive-bytecode-priority-engine.md).
+- [P174 — Calibração H2 pré-registrada e confronto FunSearch](P174-h2-preregistered-calibration-funsearch.md).
+- [P175 — Síntese construtiva GPU e ablações de throughput](P175-gpu-constructive-synthesis-ablation.md).
+- [P176 — Campanha pré-registrada de covering designs](P176-preregistered-covering-designs-campaign.md).
+- [P177 — Campanha de Schur fraco com simetria cíclica](P177-weak-schur-symmetric-campaign.md).
+- [P178 — Veredito combinatório honesto e registro de resultados nulos](P178-honest-combinatorial-verdict-null-registration.md).
+- [P179 — Verificador quântico independente de códigos estabilizadores](P179-quantum-stabilizer-code-verifier.md).
+- [P180 — Catálogo de fronteira de códigos quânticos (Grassl bounds)](P180-grassl-bounds-frontier-catalogue.md).
+- [P181 — Operadores evolutivos para códigos estabilizadores com Q-Forge](P181-quantum-stabilizer-evolution.md).
+- [P182 — Redescoberta cega de códigos quânticos e campanha pré-registrada](P182-quantum-rediscovery-and-campaign.md).
+- [P183 — Busca por anomalias em estados fundamentais de Hamiltonianos](P183-hamiltonian-ground-state-anomaly-search.md).
+- [P184 — Validação externa: verificador autônomo e reprodução por terceiros](P184-external-validation-standalone-verifier.md).
+- [P185 — Certificados formais de descoberta e calibração em Lean 4](P185-lean4-discovery-certificates.md).
+- [P186 — Auditoria dupla de novidade e prioridade na literatura mundial](P186-world-literature-novelty-dual-audit.md).
+- [P187 — Dossiê de submissão formal a curadores e registro de custódia](P187-curator-submission-dossier.md).
+- [P188 — Pacote arquival Zenodo e contêiner de reprodutibilidade hermético](P188-zenodo-archive-reproducibility-container.md).
+- [P189 — Manuscrito científico: a descoberta inédita ou o avanço metodológico H2](P189-frontier-discovery-manuscript.md).
+- [P190 — Conclusão do programa Descoberta na Fronteira e registro D042](P190-program-conclusion-and-decisions.md).
+
+## Programa de Descoberta Algébrica Estruturada e Síntese Funcional (P191–P200, D043)
+
+- [P191 — Seleção e congelamento de alvos de fronteira com gap estreito (gap ≤ 2)](P191-narrow-gap-frontier-targets.md).
+- [P192 — Motor de simetrias algébricas e redução por órbitas (Automorphism Orbit Reduction)](P192-symmetry-groups-orbit-reduction.md).
+- [P193 — Motor de síntese de funções de prioridade em bytecode (EvoSearch Functional Priority)](P193-functional-priority-bytecode-engine.md).
+- [P194 — Ponte de hibridização EvoByte → Solver SAT (SAT Completion Bridge)](P194-sat-solver-exact-completion-bridge.md).
+- [P195 — Calibração cega em alvos históricos difíceis (Hard Records Calibration)](P195-hard-historical-records-calibration.md).
+- [P196 — Campanha pré-registrada estruturada nos alvos de gap estreito](P196-preregistered-structured-campaign.md).
+- [P197 — Extração de certificados autônomos e verificador independente de dependência zero](P197-autonomous-certificate-extraction.md).
+- [P198 — Certificação formal no kernel Lean 4 (Formal Verification Gate)](P198-lean4-kernel-formal-certification.md).
+- [P199 — Auditoria de novidade na literatura mundial e dossiê para curadores](P199-world-literature-audit-curator-dossier.md).
+- [P200 — Manuscrito de pesquisa, pacote arquival Zenodo e registro da decisão D043](P200-discovery-manuscript-decision-d043.md).
+
+P191–P200 are completed (Done, D044) with all measured gates passing, clean-tree
+verification, 5 Lean 4 kernel theorems with zero sorry, autonomous verification under 1.5 ms,
+and manuscript compiled in docs/structured-paper/main.pdf.
+
+## Programa de Descoberta com Simetrias Generalizadas e Códigos Quânticos Não-Circulantes (P201–P210, D045)
+
+- [P201 — Seleção e congelamento de alvos não-circulantes e afins (gap ≤ 2)](P201-generalized-symmetry-narrow-gap-targets.md).
+- [P202 — Motor de grupos de automorfismos generalizados (Affine, Dihedral & Projective Orbits)](P202-generalized-automorphism-orbit-reduction.md).
+- [P203 — Gerador e verificador de códigos quânticos quase-cíclicos e não-circulantes (Lifted Product & Quasi-Cyclic QECC)](P203-quasi-cyclic-non-circulant-qecc-engine.md).
+- [P204 — Codificação SAT exata para comutação simplética e distância mínima (Exact SAT QECC & Covering Formulations)](P204-exact-sat-distance-and-symplectic-encoder.md).
+- [P205 — Calibração cega em códigos quânticos não-circulantes e designs afins (Blind Historical Calibration)](P205-blind-calibration-affine-non-circulant.md).
+- [P206 — Campanha pré-registrada estruturada em alvos não-circulantes e afins (Preregistered Generalized Campaign)](P206-preregistered-generalized-campaign.md).
+- [P207 — Extração de certificados autônomos v3.0.0 e verificador independente de dependência zero (Zero-Dependency Standalone Verifier)](P207-v3-certificates-and-standalone-verifier.md).
+- [P208 — Certificação formal no kernel Lean 4 (Formal Verification Gate)](P208-lean4-kernel-formal-certification.md).
+- [P209 — Auditoria de novidade na literatura mundial e dossiês para curadores (Curator Dossiers)](P209-world-literature-audit-curator-dossiers.md).
+- [P210 — Manuscrito de pesquisa, pacote arquival Zenodo e registro da decisão D046](P210-discovery-manuscript-and-decision-d045.md).
+
+P201–P210 are completed (Done, D046) with all measured gates passing, clean-tree verification, tied world records in quantum stabilizer codes [[14, 3, 4]] and [[16, 5, 4]], rigorous structural NULL_BOUND theorems, zero-dependency standalone verification (< 2.0 ms), 8 Lean 4 kernel theorems with zero unproven gaps, curator submission packages under human custody, and compiled scientific manuscript (`docs/generalized-paper/main.pdf`).
+
+## Programa de Descoberta com Códigos Quânticos Bicíclicos Bivariados e Geometrias Projetivas (P211–P220, D047)
+
+- [P211 — Seleção e congelamento de alvos bivariados e projetivos de gap estreito (gap ≤ 2)](P211-bivariate-bicycle-projective-narrow-gap-targets.md).
+- [P212 — Motor de grupos projetivos e álgebras de grupo bivariadas (PGL(2, q) & Bivariate Group Algebras)](P212-projective-groups-and-bivariate-group-algebras.md).
+- [P213 — Gerador e verificador de códigos quânticos bicíclicos bivariados (Bivariate Bicycle & 2D Lifted Product Engine)](P213-bivariate-bicycle-2d-lifted-product-engine.md).
+- [P214 — Codificação SAT exata de distância quântica d ≥ 5 e decodificador BP-OSD](P214-exact-sat-distance-and-bposd-decoder.md).
+- [P215 — Calibração cega em códigos bivariados históricos e designs projetivos (Blind Bivariate Calibration)](P215-blind-calibration-bivariate-projective.md).
+- [P216 — Campanha pré-registrada estruturada em alvos bivariados e projetivos (Preregistered Bivariate Campaign)](P216-preregistered-bivariate-campaign.md).
+- [P217 — Extração de certificados autônomos v4.0.0 e verificador independente de dependência zero](P217-v4-certificates-and-standalone-verifier.md).
+- [P218 — Certificação formal no kernel Lean 4 (Formal Verification Gate)](P218-lean4-kernel-formal-certification.md).
+- [P219 — Auditoria de novidade na literatura mundial e dossiês para curadores (Curator Dossiers)](P219-world-literature-audit-curator-dossiers.md).
+- [P220 — Manuscrito de pesquisa, pacote arquival Zenodo e registro da decisão D048](P220-discovery-manuscript-and-decision-d048.md).
+
+P211–P220 are completed (Done, D048) with all measured gates passing, clean-tree verification, verified reconstructions of known quantum codes [[20, 2, 6]] and [[16, 2, 4]], parity invariant recognized as a known fact (Bravyi et al. 2024), weak computational orbit bounds under PGL(2, 13) and AΓL(2, 4), zero-dependency standalone verification (< 3.0 ms), scoped formal Lean 4 lemmas, and compiled scientific manuscript (`docs/bivariate-paper/main.pdf`).
+
+
+## Programa de Progresso Científico Verificável (P221–P228, D049)
+
+Origem: auditoria do revisor em 2026-10-28 concluiu que D042–D048 não produziram descoberta
+(empates/reconstruções, fato conhecido reformulado, cotas fracas, teoremas Lean de escopo
+limitado). Este programa troca "empilhar resultados" por: honestidade formal, verdade-terrestre
+exata, portões humanos de novidade e ablação do método.
+
+- [P221 — Honestidade formal: recálculo independente e Lean sobre os objetos reais](P221-formal-honesty-independent-recompute.md).
+- [P222 — Censo exaustivo e exato de códigos bicíclicos bivariados pequenos](P222-bb-code-exhaustive-census.md), arquivada no recorte `ℓ·m ≤ 10`. [Relatório do recorte](../research/p222-census-report.md).
+- [P223 — Auditoria de novidade com portão humano obrigatório](P223-novelty-audit-human-gate.md).
+- [P224 — Ablação do método contra baselines fortes](P224-method-ablation-strong-baselines.md).
+- [P225 — Busca de fronteira em escala (condicional)](P225-frontier-scale-search.md).
+- [P226 — Certificação exata de distância dos candidatos (condicional)](P226-exact-distance-certification.md).
+- [P227 — Mineração de conjecturas com portão humano](P227-conjecture-mining-human-gate.md).
+- [P228 — Conclusão do programa, nota técnica e decisão D050](P228-program-conclusion-submission-d050.md).
+
+Ordem: P220 → P221 → P222 → (P223 ∥ P224) → P225/P226 (só se os portões permitirem) → P227 → P228.
+Protocolo executor→revisor: cada fase termina em commit local + push + PR **sem merge**; o
+revisor audita (diff, gates reexecutados, números conferidos contra artefatos) e só então aprova.
+Regras extras para o agente executor deste programa: nenhum número no texto que não tenha
+sido impresso por um comando; nenhum adjetivo de avaliação ("notável", "definitivo", "recorde");
+qualquer divergência entre o esperado da fase e a saída medida é PARE, nunca "ajuste do esperado".
+
+All phases remain Proposed until measured and accepted under their explicit gates.
+
+## Historical execution and acceptance contract
+
+```text
+P12 -> P15 -> P16 -> P17 -> P18 -> P19 -> P20 -> P13 -> P21 -> P14
+                                                        P21 -> P14(mathdb) -> P23 -> P22 (optional)
+                                                        P23 -> P24 -> P25 -> P26 -> P27 -> P28 -> P29
+P29 recorded outcome -> P30 -> P31 -> P32 -> P33 -> P34 -> P35 -> P36 -> P37 -> P38 -> P39
+```
+
+P30 was the entry task of D014 and P40 of D017.
+P58 is the next proposed acceptance audit; P40–P57 labels remain historical.
+Numbers preserve historical references; the
+dependency order above, adopted in D013/D014, replaces numeric ordering.
+Assign an owner and freeze a machine-readable experiment configuration
+before Building.
+Proposed CLI flags in new phase files are implementation acceptance
+contracts; adding these documents does not implement those commands.
+No new phase is complete merely because the roadmap was edited. Retain
+P24–P29 records as historical evidence while P30–P32 repair acceptance;
+their Done labels cannot substitute for these corrective gates. A clean
+code revision, full configuration and retrievable raw hashes are required
+for final claims. Diagnostic dirty runs never become final claims merely
+because their code is committed later.
+
+P33–P37 use development train/validation groups; final-test access is
+reserved for frozen confirmation in P38. A valid negative model/sampler
+result completes its experiment and retains the accepted baseline. A
+correctness, isolation, replay or certificate failure blocks advancement.
+P39's discovery criterion is correctness + novelty + independent
+reproduction + appropriate certificate/proof, applied to one bounded target.
+
+Common gates before every implementation commit are `git diff --check`,
+`git status --short`, `python3 -m pytest tests -q` and `make verify`, plus the
+phase experiment and its artifact validation. P15 must first make lint/CI
+failures blocking; a suppressed failure never constitutes a green gate.
+Do not run later-phase experiments to bypass a failed prerequisite.
+
+## Commit and push contract
+
+Before editing, check the tree is clean and create the phase's `codex/`
+branch from the accepted predecessor. Use an isolated checkout when another
+task owns uncommitted changes. Work on one bounded micro-task at a time.
+Before the commit block, inspect and explicitly stage only reviewed files
+with `git add` and explicit paths; never use blanket staging. Include the
+small checksummed artifact manifest and a durable raw-artifact reference.
+Do not commit large results or private data.
+
+Write `/tmp/evobyte-pNN-pr.md` using the actual phase number, with the
+problem, resulting behavior, exact validation commands, measured outcomes,
+limitations and reproduction link. Run the phase's Commit & Push block and
+open/update a PR against the accepted predecessor branch. All gates must
+pass first; never push to main, force-push or bypass hooks. Confirm the tree
+is clean afterward. Each completed micro-task has exactly one atomic commit;
+mark the phase Done only after its final measured gate and push.

@@ -1,0 +1,31 @@
+{
+  "current_target": "covering_C_15_10_4_affine",
+  "current_seed": 46,
+  "trial_result": {
+    "target_id": "covering_C_15_10_4_affine",
+    "family": "covering_design",
+    "seed": 46,
+    "v": 15,
+    "k": 10,
+    "t": 4,
+    "published_best": 14,
+    "achieved_value": null,
+    "verdict": "NULL_BOUND",
+    "verified": true,
+    "wall_clock_seconds": 0.11702908300503623,
+    "candidate_sha256": "c0a8d62106af7956b59e41e1cabdf54aef0ed1f9d224ec9eb14b3233607c918a",
+    "details": {
+      "group": "D_15",
+      "group_order": 30,
+      "orbit_count": 111,
+      "orbit_lengths": [
+        3,
+        15,
+        30
+      ],
+      "min_non_trivial_orbit_length": 15,
+      "proof": "D_15 has 111 orbit representatives on 10-subsets of 15. Orbit lengths are in [3, 15, 30]. The single orbit of size 3 covers only 3 quadruples out of 1365. All other orbits have size >= 15. Since 15 > 14 (world record), no D_15-invariant covering design can match or beat 14 blocks. Structural obstruction NULL_BOUND rigorously proven."
+    }
+  },
+  "timestamp": 1793125614.003038
+}

@@ -1,0 +1,1359 @@
+{
+  "alpha": 0.01,
+  "checksum": "0984cbdd078024d3ed316d8f48ca6264e43f8329d4876571b50ba56560bd5f22",
+  "count_per_track": 25,
+  "description": "Sealed blind partition of 100 discrete geometry instances (Distinct Distances Grid, Szemeredi-Trotter Incidences, Happy Ending Convex, Hadwiger-Nelson Chromatic) for P135 confirmation under Bonferroni-Holm family-wise error rate control (alpha=0.01).",
+  "leakage_detected": false,
+  "seed": 135,
+  "split_id": "p135-discrete-geometry-blind-partition-v1",
+  "total_instances": 100,
+  "tracks": {
+    "distinct_distances_grid": {
+      "instances": [
+        {
+          "index": 0,
+          "instance_id": "P135_DDG_01",
+          "is_triangular": false,
+          "k_side": 2,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 1,
+          "instance_id": "P135_DDG_02",
+          "is_triangular": true,
+          "k_side": 3,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 2,
+          "instance_id": "P135_DDG_03",
+          "is_triangular": false,
+          "k_side": 4,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 3,
+          "instance_id": "P135_DDG_04",
+          "is_triangular": true,
+          "k_side": 5,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 4,
+          "instance_id": "P135_DDG_05",
+          "is_triangular": false,
+          "k_side": 6,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 5,
+          "instance_id": "P135_DDG_06",
+          "is_triangular": true,
+          "k_side": 7,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 6,
+          "instance_id": "P135_DDG_07",
+          "is_triangular": false,
+          "k_side": 2,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 7,
+          "instance_id": "P135_DDG_08",
+          "is_triangular": true,
+          "k_side": 3,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 8,
+          "instance_id": "P135_DDG_09",
+          "is_triangular": false,
+          "k_side": 4,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 9,
+          "instance_id": "P135_DDG_10",
+          "is_triangular": true,
+          "k_side": 5,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 10,
+          "instance_id": "P135_DDG_11",
+          "is_triangular": false,
+          "k_side": 6,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 11,
+          "instance_id": "P135_DDG_12",
+          "is_triangular": true,
+          "k_side": 7,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 12,
+          "instance_id": "P135_DDG_13",
+          "is_triangular": false,
+          "k_side": 2,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 13,
+          "instance_id": "P135_DDG_14",
+          "is_triangular": true,
+          "k_side": 3,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 14,
+          "instance_id": "P135_DDG_15",
+          "is_triangular": false,
+          "k_side": 4,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 15,
+          "instance_id": "P135_DDG_16",
+          "is_triangular": true,
+          "k_side": 5,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 16,
+          "instance_id": "P135_DDG_17",
+          "is_triangular": false,
+          "k_side": 6,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 17,
+          "instance_id": "P135_DDG_18",
+          "is_triangular": true,
+          "k_side": 7,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 18,
+          "instance_id": "P135_DDG_19",
+          "is_triangular": false,
+          "k_side": 2,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 19,
+          "instance_id": "P135_DDG_20",
+          "is_triangular": true,
+          "k_side": 3,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 20,
+          "instance_id": "P135_DDG_21",
+          "is_triangular": false,
+          "k_side": 4,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 21,
+          "instance_id": "P135_DDG_22",
+          "is_triangular": true,
+          "k_side": 5,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 22,
+          "instance_id": "P135_DDG_23",
+          "is_triangular": false,
+          "k_side": 6,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 23,
+          "instance_id": "P135_DDG_24",
+          "is_triangular": true,
+          "k_side": 7,
+          "track": "distinct_distances_grid"
+        },
+        {
+          "index": 24,
+          "instance_id": "P135_DDG_25",
+          "is_triangular": false,
+          "k_side": 2,
+          "track": "distinct_distances_grid"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Erdos distinct distances on integer and triangular grids with Guth-Katz estimates"
+    },
+    "hadwiger_nelson_chromatic": {
+      "instances": [
+        {
+          "index": 0,
+          "instance_id": "P135_HNC_01",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "moser_spindle"
+        },
+        {
+          "index": 1,
+          "instance_id": "P135_HNC_02",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "degrey_1581"
+        },
+        {
+          "index": 2,
+          "instance_id": "P135_HNC_03",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "exoo_553"
+        },
+        {
+          "index": 3,
+          "instance_id": "P135_HNC_04",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_510"
+        },
+        {
+          "index": 4,
+          "instance_id": "P135_HNC_05",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_509"
+        },
+        {
+          "index": 5,
+          "instance_id": "P135_HNC_06",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "moser_spindle"
+        },
+        {
+          "index": 6,
+          "instance_id": "P135_HNC_07",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "degrey_1581"
+        },
+        {
+          "index": 7,
+          "instance_id": "P135_HNC_08",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "exoo_553"
+        },
+        {
+          "index": 8,
+          "instance_id": "P135_HNC_09",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_510"
+        },
+        {
+          "index": 9,
+          "instance_id": "P135_HNC_10",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_509"
+        },
+        {
+          "index": 10,
+          "instance_id": "P135_HNC_11",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "moser_spindle"
+        },
+        {
+          "index": 11,
+          "instance_id": "P135_HNC_12",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "degrey_1581"
+        },
+        {
+          "index": 12,
+          "instance_id": "P135_HNC_13",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "exoo_553"
+        },
+        {
+          "index": 13,
+          "instance_id": "P135_HNC_14",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_510"
+        },
+        {
+          "index": 14,
+          "instance_id": "P135_HNC_15",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_509"
+        },
+        {
+          "index": 15,
+          "instance_id": "P135_HNC_16",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "moser_spindle"
+        },
+        {
+          "index": 16,
+          "instance_id": "P135_HNC_17",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "degrey_1581"
+        },
+        {
+          "index": 17,
+          "instance_id": "P135_HNC_18",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "exoo_553"
+        },
+        {
+          "index": 18,
+          "instance_id": "P135_HNC_19",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_510"
+        },
+        {
+          "index": 19,
+          "instance_id": "P135_HNC_20",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_509"
+        },
+        {
+          "index": 20,
+          "instance_id": "P135_HNC_21",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "moser_spindle"
+        },
+        {
+          "index": 21,
+          "instance_id": "P135_HNC_22",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "degrey_1581"
+        },
+        {
+          "index": 22,
+          "instance_id": "P135_HNC_23",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "exoo_553"
+        },
+        {
+          "index": 23,
+          "instance_id": "P135_HNC_24",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_510"
+        },
+        {
+          "index": 24,
+          "instance_id": "P135_HNC_25",
+          "scale_s": 0.44,
+          "track": "hadwiger_nelson_chromatic",
+          "variant": "heule_509"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Moser spindle invariants, Aubrey de Grey 5-chromatic lower bound, and Isbell 7-coloring"
+    },
+    "happy_ending_convex": {
+      "instances": [
+        {
+          "a": 3,
+          "b": 3,
+          "index": 0,
+          "instance_id": "P135_HEC_01",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 4,
+          "b": 3,
+          "index": 1,
+          "instance_id": "P135_HEC_02",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 5,
+          "b": 3,
+          "index": 2,
+          "instance_id": "P135_HEC_03",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 6,
+          "b": 3,
+          "index": 3,
+          "instance_id": "P135_HEC_04",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              -1,
+              4
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 3,
+          "b": 4,
+          "index": 4,
+          "instance_id": "P135_HEC_05",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 4,
+          "b": 4,
+          "index": 5,
+          "instance_id": "P135_HEC_06",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 5,
+          "b": 4,
+          "index": 6,
+          "instance_id": "P135_HEC_07",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 6,
+          "b": 4,
+          "index": 7,
+          "instance_id": "P135_HEC_08",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              -1,
+              4
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 3,
+          "b": 5,
+          "index": 8,
+          "instance_id": "P135_HEC_09",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 4,
+          "b": 5,
+          "index": 9,
+          "instance_id": "P135_HEC_10",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 5,
+          "b": 5,
+          "index": 10,
+          "instance_id": "P135_HEC_11",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 6,
+          "b": 5,
+          "index": 11,
+          "instance_id": "P135_HEC_12",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              -1,
+              4
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 3,
+          "b": 6,
+          "index": 12,
+          "instance_id": "P135_HEC_13",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 4,
+          "b": 6,
+          "index": 13,
+          "instance_id": "P135_HEC_14",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 5,
+          "b": 6,
+          "index": 14,
+          "instance_id": "P135_HEC_15",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 6,
+          "b": 6,
+          "index": 15,
+          "instance_id": "P135_HEC_16",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              -1,
+              4
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 3,
+          "b": 7,
+          "index": 16,
+          "instance_id": "P135_HEC_17",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 4,
+          "b": 7,
+          "index": 17,
+          "instance_id": "P135_HEC_18",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 5,
+          "b": 7,
+          "index": 18,
+          "instance_id": "P135_HEC_19",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 6,
+          "b": 7,
+          "index": 19,
+          "instance_id": "P135_HEC_20",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              -1,
+              4
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 3,
+          "b": 8,
+          "index": 20,
+          "instance_id": "P135_HEC_21",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 4,
+          "b": 8,
+          "index": 21,
+          "instance_id": "P135_HEC_22",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              5,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              0,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 5,
+          "b": 8,
+          "index": 22,
+          "instance_id": "P135_HEC_23",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              8,
+              4
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              1,
+              6
+            ],
+            [
+              3,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 6,
+          "b": 8,
+          "index": 23,
+          "instance_id": "P135_HEC_24",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              5,
+              0
+            ],
+            [
+              7,
+              3
+            ],
+            [
+              6,
+              6
+            ],
+            [
+              2,
+              7
+            ],
+            [
+              -1,
+              4
+            ],
+            [
+              2,
+              3
+            ]
+          ],
+          "track": "happy_ending_convex"
+        },
+        {
+          "a": 3,
+          "b": 9,
+          "index": 24,
+          "instance_id": "P135_HEC_25",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              4,
+              0
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              2,
+              1
+            ]
+          ],
+          "track": "happy_ending_convex"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Erdos-Szekeres cup-cap recurrence, convex k-gons, and Klein theorem"
+    },
+    "unit_distances_szemeredi": {
+      "instances": [
+        {
+          "index": 0,
+          "instance_id": "P135_UDS_01",
+          "m_lines": 4,
+          "n_points": 6,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 1,
+          "instance_id": "P135_UDS_02",
+          "m_lines": 7,
+          "n_points": 8,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 2,
+          "instance_id": "P135_UDS_03",
+          "m_lines": 10,
+          "n_points": 10,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 3,
+          "instance_id": "P135_UDS_04",
+          "m_lines": 13,
+          "n_points": 12,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 4,
+          "instance_id": "P135_UDS_05",
+          "m_lines": 16,
+          "n_points": 14,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 5,
+          "instance_id": "P135_UDS_06",
+          "m_lines": 4,
+          "n_points": 16,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 6,
+          "instance_id": "P135_UDS_07",
+          "m_lines": 7,
+          "n_points": 18,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 7,
+          "instance_id": "P135_UDS_08",
+          "m_lines": 10,
+          "n_points": 20,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 8,
+          "instance_id": "P135_UDS_09",
+          "m_lines": 13,
+          "n_points": 22,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 9,
+          "instance_id": "P135_UDS_10",
+          "m_lines": 16,
+          "n_points": 24,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 10,
+          "instance_id": "P135_UDS_11",
+          "m_lines": 4,
+          "n_points": 26,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 11,
+          "instance_id": "P135_UDS_12",
+          "m_lines": 7,
+          "n_points": 28,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 12,
+          "instance_id": "P135_UDS_13",
+          "m_lines": 10,
+          "n_points": 30,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 13,
+          "instance_id": "P135_UDS_14",
+          "m_lines": 13,
+          "n_points": 32,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 14,
+          "instance_id": "P135_UDS_15",
+          "m_lines": 16,
+          "n_points": 34,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 15,
+          "instance_id": "P135_UDS_16",
+          "m_lines": 4,
+          "n_points": 36,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 16,
+          "instance_id": "P135_UDS_17",
+          "m_lines": 7,
+          "n_points": 38,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 17,
+          "instance_id": "P135_UDS_18",
+          "m_lines": 10,
+          "n_points": 40,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 18,
+          "instance_id": "P135_UDS_19",
+          "m_lines": 13,
+          "n_points": 42,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 19,
+          "instance_id": "P135_UDS_20",
+          "m_lines": 16,
+          "n_points": 44,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 20,
+          "instance_id": "P135_UDS_21",
+          "m_lines": 4,
+          "n_points": 46,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 21,
+          "instance_id": "P135_UDS_22",
+          "m_lines": 7,
+          "n_points": 48,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 22,
+          "instance_id": "P135_UDS_23",
+          "m_lines": 10,
+          "n_points": 50,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 23,
+          "instance_id": "P135_UDS_24",
+          "m_lines": 13,
+          "n_points": 52,
+          "track": "unit_distances_szemeredi"
+        },
+        {
+          "index": 24,
+          "instance_id": "P135_UDS_25",
+          "m_lines": 16,
+          "n_points": 54,
+          "track": "unit_distances_szemeredi"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Spencer-Szemeredi-Trotter incidence bounds and Erdos KST unit distance bounds"
+    }
+  },
+  "zero_leakage_verified": true
+}

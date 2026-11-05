@@ -1,0 +1,11 @@
+{
+  "device": "cuda",
+  "determinism_gens": 30,
+  "engine": "GrammarResidentEvolution",
+  "formula": "x**2 + 3*x + 7",
+  "note": "Complete frozen configuration. Cross-backend bit equality is NOT required; per-backend reproducibility plus semantic conformance is. No CUDA marks resident claims NOT_MEASURED. No TBD values.",
+  "phase": "P44",
+  "pop_size": 64,
+  "profile_iters": 25,
+  "seed": 7
+}

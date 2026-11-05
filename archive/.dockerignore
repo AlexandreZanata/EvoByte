@@ -1,0 +1,21 @@
+# Docker ignore for hermetic reproducible environment
+.git/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.local/
+build/
+dist/*
+!dist/external-validation/
+lean_proofs/.lake/
+lean_proofs/build/
+experiments/*-matrix/
+experiments/*-baselines/
+experiments/*-generalization/
+experiments/*-ablations/
+experiments/*-verdict/
+*.tar.gz

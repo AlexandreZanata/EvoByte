@@ -1,0 +1,144 @@
+{
+  "budgets": "fixed generation counts 40+60 vs 100; wall-clock recorded, never an equality criterion",
+  "claim_scope": "kill-and-restore continuation equals the straight run in the pinned environment",
+  "counters": {
+    "comparisons": 8,
+    "matched": 8
+  },
+  "dirty": "M benchmarks/science_matrix.py\n M src/evobyte/grammar.py\n M src/evobyte/resident.py\n M tests/test_resident_evolution.py\n?? experiments/p43-config.json\n?? experiments/p43-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 2.384273752999434,
+  "equality": {
+    "counters_match": true,
+    "fields": {
+      "best_fitness": true,
+      "best_mse": true,
+      "best_program_sha256": true,
+      "generation": true,
+      "numpy_rng_sha256": true,
+      "population_sha256": true,
+      "torch_cpu_rng_sha256": true
+    },
+    "worker_generations": 60
+  },
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "Equality holds in the same pinned environment; cross-GPU/version binary equality is not promised.",
+    "Problem data travels inside the checkpoint by design (fresh process has no other source)."
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P43",
+  "refusals": [
+    {
+      "probe": "truncated",
+      "reason": "truncated_or_unreadable_checkpoint /tmp/evobyte-p43-qqli39yw/trunc.pt: [Errno 22] Invalid argument",
+      "refused": true
+    },
+    {
+      "probe": "version",
+      "reason": "version_mismatch on torch_version: checkpoint '2.14.0+cu130' vs required '0.0.0'",
+      "refused": true
+    },
+    {
+      "probe": "config",
+      "reason": "config_mismatch on pop_size: checkpoint 32 vs required -1",
+      "refused": true
+    }
+  ],
+  "resolved_config": {
+    "acceptance_phase": "P43",
+    "config_path": "experiments/p43-config.json",
+    "config_sha256": "49ad60529ef7df754bd929aeca1b0dca79c5f0937d894eb2dfbb5fc19846ad26"
+  },
+  "resumed": {
+    "pre_kill": {
+      "best_fitness": 7.831907272338867,
+      "best_mse": 7.831907272338867,
+      "best_program_sha256": "e44f86d5f88c79a711caea250ca0eea5ff64e0f202d088f90b59b848dab749ea",
+      "counters": {
+        "candidates_total": 1280,
+        "steps": 40
+      },
+      "generation": 40,
+      "numpy_rng_sha256": "409638b8a8a852ca63583e652361691748028749b0160b53f3aec3cb754f95e0",
+      "population_sha256": "a8550a242e430a1df6523abc90a0239246871b03271ea576a088732dd3d467da",
+      "torch_cpu_rng_sha256": "a4a81d50030490b5a7e77e4a7db912c335dd983494723112d668f19d186ce860"
+    },
+    "wall_sec": 1.8900648220005678,
+    "worker": {
+      "best_fitness": 7.831907272338867,
+      "best_mse": 7.831907272338867,
+      "best_program": [
+        184615439,
+        33554947,
+        117573391,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "candidates_total": 1920,
+      "fingerprint": {
+        "best_fitness": 7.831907272338867,
+        "best_mse": 7.831907272338867,
+        "best_program_sha256": "e44f86d5f88c79a711caea250ca0eea5ff64e0f202d088f90b59b848dab749ea",
+        "counters": {
+          "candidates_total": 3200,
+          "steps": 100
+        },
+        "generation": 100,
+        "numpy_rng_sha256": "409638b8a8a852ca63583e652361691748028749b0160b53f3aec3cb754f95e0",
+        "population_sha256": "70a433d2c383fb1a23cb9cfc7a87456a52f9476164a6cf3c8b956e66a013190d",
+        "torch_cpu_rng_sha256": "6643989d8ec69bd5d95e816452e62d289678641bfbe76c82d0278bae2048ad94"
+      },
+      "generations": 60
+    }
+  },
+  "revision": "a037ae5009642291f9d3115785055e8845630cb3",
+  "run_id": "d05fecee10b790ab",
+  "seeds_rng": "fixed seed 7 both arms; post-run RNG states compared byte-identical",
+  "straight": {
+    "fingerprint": {
+      "best_fitness": 7.831907272338867,
+      "best_mse": 7.831907272338867,
+      "best_program_sha256": "e44f86d5f88c79a711caea250ca0eea5ff64e0f202d088f90b59b848dab749ea",
+      "counters": {
+        "candidates_total": 3200,
+        "steps": 100
+      },
+      "generation": 100,
+      "numpy_rng_sha256": "409638b8a8a852ca63583e652361691748028749b0160b53f3aec3cb754f95e0",
+      "population_sha256": "70a433d2c383fb1a23cb9cfc7a87456a52f9476164a6cf3c8b956e66a013190d",
+      "torch_cpu_rng_sha256": "6643989d8ec69bd5d95e816452e62d289678641bfbe76c82d0278bae2048ad94"
+    },
+    "wall_sec": 0.35486441499961074
+  },
+  "verdict": "ACCEPTED"
+}

@@ -1,0 +1,9 @@
+{
+  "phase": "P88",
+  "budget_sec": 3600.0,
+  "min_theorems": 350,
+  "project_dir": "lean_proofs",
+  "dossier_path": "docs/research/p88-formal-dossier.md",
+  "seed": 42,
+  "require_clean_tree": true
+}

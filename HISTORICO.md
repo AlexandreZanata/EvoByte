@@ -81,6 +81,8 @@ Ao longo de 234 microfases (P00 a P234) e 51 decisões registradas em `DECISIONS
 
 O histórico integral do repositório pode ser explorado a qualquer momento:
 
+1. **Diretamente na árvore de arquivos:** na pasta [`archive/`](archive/) presente na raiz da branch `main`.
+2. **Via Git na branch ou tag arquivada:**
 ```bash
 # Obter e inspecionar a branch arquivada
 git fetch origin archive/legacy-history
@@ -90,4 +92,4 @@ git checkout archive/legacy-history
 git checkout archive-v1-legacy
 ```
 
-Todos os 200+ commits anteriores, relatórios de pesquisa, especificações de fases (`docs/phases/`), implementações e suítes de testes estão intactos nessas referências.
+Todos os 200+ commits anteriores, relatórios de pesquisa, especificações de fases (`docs/phases/`), implementações e suítes de testes estão intactos nessas referências e na pasta `archive/`.

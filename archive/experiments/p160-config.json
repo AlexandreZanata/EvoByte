@@ -1,0 +1,7 @@
+{
+  "phase": "P160",
+  "paper_dir": "docs/paper",
+  "dossier_path": "docs/research/p160-manuscript-dossier.md",
+  "require_pdf": true,
+  "require_clean_tree": true
+}

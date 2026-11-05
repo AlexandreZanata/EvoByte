@@ -1,0 +1,244 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\title{\textbf{On the Hardness of Combinatorial and Quantum Frontier Discovery:\\An Empirical Delimitation of Bytecode Evolution and Cascade Verification}}
+
+\author{
+  \textbf{Alexandre Zanata}\textsuperscript{1,2} \quad \textbf{EvoByte Research Consortium}\textsuperscript{1} \\
+  \textsuperscript{1}Open Source Systems \& Formal Methods Laboratory \\
+  \textsuperscript{2}EvoByte Core Architecture Group \\
+  \texttt{zanataxandyzv07@gmail.com}
+}
+
+\date{October 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper presents an honest null-result empirical evaluation of evolutionary bytecode synthesis and construction cascades on mathematical and quantum coding frontiers. While program synthesis and heuristic search have recently achieved prominent mathematical rediscovery benchmarks, evaluating their capability on genuine, unresolved open frontiers requires rigorous pre-registration, independent verification, and negative-result reporting.
+
+We evaluate the EvoByte search framework across three distinct mathematical frontiers: (1) combinatorial covering designs $C(v, k, t)$ from the La Jolla Covering Repository (LJCR); (2) weak Schur numbers $WS(k)$ from the Online Encyclopedia of Integer Sequences (OEIS); and (3) quantum error-correcting stabilizer codes $[[n, k, d]]$ from Markus Grassl's code tables.
+
+Across 40 pre-registered covering design targets (360 trials, 1,958,802 candidate evaluations), zero published upper bounds were beaten, with all targets recording \texttt{NULL\_RESULT}. On weak Schur partitions across 36 trials (2,693,907 evaluations), searches targeting $WS(5) \ge 208$ persistently encountered $\ge 8$ irreducible monochromatic violations in free search, corroborating Rowley's bound $WS(5) \ge 207$. On 7 open quantum stabilizer targets ($[[14,3]], [[16,5]], [[17,3]], [[18,3]], [[19,10]], [[20,2]], [[20,3]]$), across 21 trials (1,050 evaluations), zero codes reached the upper distance bound $d_{hi}$. On the FunSearch Cap Set benchmark in $\mathbb{F}_3^8$, EvoByte achieved a maximum size of 288 across 9 trials (12,140 evaluations), failing to match the target size of 512 under matched runtime budgets (\texttt{H2\_NOT\_SUPPORTED}).
+
+
+To ensure total transparency, all calibration certificates (Fano plane $C(7,3,2)$, $WS(2)=8$, Steane $[[7,1,3]]$) were mechanically verified using a zero-dependency standalone verifier and machine-checked in the Lean 4 kernel with zero unproven axioms and human statement fidelity reviews. An independent world-literature dual audit evaluated all 50 campaign targets against dated external snapshots, confirming \texttt{CONFIRMED: 0} and establishing the overall verdict \texttt{NO\_ACTIVE\_DISCOVERY\_CLAIMS}. We package all raw data, code, and an offline-isolated Docker container into an archivable research bundle of 646 files (8.11\,MB) with 100\% SHA-256 cryptographic verification. These negative results establish rigorous empirical bounds on the reach of unguided heuristic search on dense extremal combinatorics.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+Automated mathematical discovery has witnessed remarkable advances through the application of deep learning, large language models, and program synthesis \cite{romeraparedes2024nature, schmidt2009distilling, udrescu2020ai}. A prominent milestone was demonstrated by FunSearch \cite{romeraparedes2024nature}, which coupled paired language models with programmatic evaluators to discover new lower bounds for the cap set problem in $\mathbb{F}_3^8$ and improved online bin-packing heuristics. These successes have motivated substantial enthusiasm for autonomous scientific discovery pipelines \cite{cranmer2023interpretable}.
+
+However, a fundamental epistemological challenge in computational discovery is the publication bias toward positive claims. In mathematical combinatorics and quantum coding theory, published tables represent decades of specialized human constructions, algebraic symmetries, and exhaustive search algorithms \cite{gordon2026ljcr, grassl2026codetables, heule2017schur}. When automated discovery systems are deployed against genuine open frontiers, negative outcomes (\emph{null results}) are both statistically probable and scientifically vital. Without rigorous pre-registration, frozen baselines, and transparent reporting of negative findings, the boundaries of computational methods remain obscured.
+
+In this work, we present an exhaustive, pre-registered empirical investigation of the \textbf{EvoByte} framework across mathematical and quantum frontiers:
+\begin{enumerate}
+    \item \textbf{Hypothesis H2 (FunSearch-Level Evolution at Reduced Cost):} We test whether compact bytecode evolution with resident GPU execution can match or exceed FunSearch's mathematical constructions on cap sets in $\mathbb{F}_3^8$ under matched evaluation budgets.
+    \item \textbf{Frontier Target Campaigns:} We deploy pre-registered heuristic campaigns against three frozen literature catalogues:
+    \begin{itemize}
+        \item \emph{Covering Designs:} 40 active targets from Dan Gordon's La Jolla Covering Repository \cite{gordon2026ljcr}.
+        \item \emph{Weak Schur Numbers:} Targets $WS(5)$, $WS(6)$, and $WS(7)$ from OEIS A072842 \cite{rowley2025weakschur, rodrigo2026weakschur}.
+        \item \emph{Quantum Stabilizer Codes:} 7 open distance bounds from Markus Grassl's tables \cite{grassl2026codetables}.
+    \end{itemize}
+    \item \textbf{End-to-End Verification and Archival Protocol:} We implement a multi-stage audit protocol including standalone zero-dependency verification, formal Lean 4 kernel proofs \cite{moura2021lean4}, world literature priority auditing, external curator packages, and a hermetically sealed reproducibility container with zero network egress.
+\end{enumerate}
+
+Every single number reported in this paper is directly traceable to an exact cryptographic key in a versioned JSON artifact. In accordance with the project's pre-registered decision rules, this paper is authored under the \textbf{Honest Null Results} protocol, documenting the empirical delimitations of automated search on dense extremal frontiers.
+
+\section{Frontier Target Catalogues and Baselines}
+\label{sec:catalogues}
+To prevent cherry-picking, target parameters were frozen prior to campaign execution in Catalogue v2 (\texttt{frontier\_targets\_v2.json}) and the QECC Grassl Catalogue (\texttt{qecc\_frontier\_v1.json}).
+
+\subsection{Combinatorial Covering Designs $C(v, k, t)$}
+A covering design $C(v, k, t)$ is a collection of $b$ blocks of size $k$ chosen from a base set of $v$ elements $\{1, \dots, v\}$ such that every $t$-element subset is contained in at least one block. The objective is to minimize the block count $b$:
+\begin{equation}
+    C(v, k, t) = \min \{ |B| : B \subseteq \binom{[v]}{k}, \forall T \in \binom{[v]}{t}, \exists B_i \in B \text{ s.t. } T \subseteq B_i \}.
+\end{equation}
+The global reference standard is Dan Gordon's La Jolla Covering Repository (LJCR) \cite{gordon2026ljcr}. We froze 40 active targets where published upper bounds remain open or challenging, including $C(12, 7, 4)$ (published upper bound: 24), $C(19, 11, 3)$ (bound: 11), and $C(13, 8, 4)$ (bound: 13).
+
+\subsection{Weak Schur Numbers $WS(k)$}
+A partition of integers $\{1, \dots, N\}$ into $k$ color classes is weakly sum-free if no monochromatic distinct triple $x < y$ satisfies $x + y = z \le N$ within any class (the equation $x + x = 2x$ is permitted). The weak Schur number $WS(k)$ denotes the maximum integer $N$ admitting such a partition.
+
+The state of the art in OEIS A072842 records $WS(1)=2$, $WS(2)=8$, $WS(3)=23$, $WS(4)=66$, $WS(5) \ge 207$ (Rowley 2025 \cite{rowley2025weakschur}), and $WS(6) \ge 650$ (Rodrigo 2026 \cite{rodrigo2026weakschur}). We targeted $WS(5) \ge 208$, $WS(6) \ge 651$, and $WS(7) \ge 2147$.
+
+\subsection{Quantum Error-Correcting Stabilizer Codes $[[n, k, d]]$}
+A quantum stabilizer code $[[n, k, d]]$ encodes $k$ logical qubits into $n$ physical qubits with code distance $d$. In the binary symplectic formalism, the stabilizer group is specified by an $(n-k) \times 2n$ generator matrix over $\mathbb{F}_2$:
+\begin{equation}
+    S = [X \mid Z] \in \mathbb{F}_2^{(n-k) \times 2n}, \quad X Z^T + Z X^T = 0 \pmod 2.
+\end{equation}
+The code distance $d$ is the minimum weight of an $n$-qubit Pauli operator commuting with all generators but outside the stabilizer group. Markus Grassl's tables (\texttt{codetables.de}) record the tightest known bounds $[d_{lo}, d_{hi}]$ \cite{grassl2026codetables}. We selected 7 open parameters where $d_{lo} < d_{hi}$: $[[14, 3]]$, $[[16, 5]]$, $[[17, 3]]$, $[[18, 3]]$, $[[19, 10]]$, $[[20, 2]]$, and $[[20, 3]]$.
+
+\section{System Architecture: Evolution and Cascades}
+\label{sec:architecture}
+The EvoByte system replaces AST-based genetic programming \cite{koza1992genetic} with fixed-length linear bytecode executed on a register virtual machine.
+
+\subsection{Linear Bytecode Virtual Machine}
+Candidate construction programs are encoded as 64-byte or 288-byte contiguous byte arrays. Each 4-byte instruction encodes an opcode, destination register, and two source registers or immediate operands:
+\begin{equation}
+    \text{Instruction} = (\text{opcode} \in [0, 31], \; r_{\text{dst}} \in [0, 7], \; r_{\text{src1}} \in [0, 7], \; r_{\text{src2}} \in [0, 7]).
+\end{equation}
+Execution operates over 8 registers initialized deterministically from problem coordinates. The virtual machine executes in pure NumPy or PyTorch without parsing strings or trees in the inner evaluation loop.
+
+\subsection{Hierarchical Construction Cascade}
+To optimize evaluation throughput on dense combinatorial sets, EvoByte organizes fitness evaluation into a multi-stage filtering cascade:
+\begin{itemize}
+    \item \textbf{Stage S0 (Structural Filter):} Verifies syntactic integrity, generator dimensions, and commutation relations mod 2.
+    \item \textbf{Stage S1 (Sub-sampling Grid):} Evaluates subset coverage or partition constraints over a sparse pseudo-random sub-grid.
+    \item \textbf{Stage S2 (Full Independent Verifier):} Executes full colexicographical ranking or weight-enumerator search.
+    \item \textbf{Stage S3 (Exact Kernel Certificate):} Generates a standalone JSON certificate verified by an external solver.
+\end{itemize}
+Ablation experiments on an NVIDIA GeForce RTX 4060 Laptop GPU (\texttt{experiments/p175-gpu-ablation.json}) confirm that the GPU construction cascade achieves a 1.52$\times$ speedup over single-threaded CPU execution ($0.0559$\,s vs $0.0850$\,s for 2,000 candidate evaluations).
+
+\section{Empirical Campaign Results}
+\label{sec:results}
+
+The consolidated results across all four experimental campaigns are summarized in Table~\ref{tab:campaigns}. Below we detail the empirical outcomes for each combinatorial frontier.
+
+\subsection{H2 FunSearch Calibration (Cap Sets in $\mathbb{F}_3^8$)}
+In Phase P174 (\texttt{experiments/p174-h2-results.json}), we calibrated EvoByte's bytecode evolution against FunSearch on the cap set problem in dimension $n=8$ (where Nature 2024 \cite{romeraparedes2024nature} achieved size 512). Under pre-registered trials with 60\,s wall-clock budgets across 3 random seeds:
+\begin{itemize}
+    \item Bytecode evolution reached a maximum cap set size of 288 (mean evaluations: 219).
+    \item Random search reached a maximum size of 275 (mean evaluations: 1,947).
+    \item Simulated annealing reached a maximum size of 278 (mean evaluations: 1,881).
+\end{itemize}
+While bytecode evolution significantly outperformed random search and simulated annealing in size, it failed to reach FunSearch's benchmark of 512. In accordance with the pre-registered decision rule, the verdict is recorded as \textbf{\texttt{H2\_NOT\_SUPPORTED}}.
+
+\subsection{Combinatorial Covering Campaign (P176)}
+The pre-registered covering campaign evaluated 40 targets across 360 trials (9 trials per target using Simulated Annealing, Genetic Search, and Bytecode Evolution with seeds 42, 101, 202). Across 1,958,802 total candidate evaluations with 824.41\,s of search execution time:
+\begin{itemize}
+    \item Total targets evaluated: 40.
+    \item Broken bounds (\texttt{DISCOVERY\_BEATEN}): 0.
+    \item Null results (\texttt{NULL\_RESULT}): 40.
+    \item Total candidate evaluations: 1,958,802.
+    \item Total search elapsed time: 824.41\,s.
+\end{itemize}
+For every attempt with block count $b < b_{\text{LJCR}}$, the number of uncovered $t$-subsets (`best\_uncovered`) remained strictly positive ($\ge 1$). Dan Gordon's published tables remained 100\% unbeaten.
+
+\subsection{Weak Schur Campaign (P177)}
+The weak Schur campaign investigated $k=5, 6, 7$ across 36 trials (2,693,907 candidate evaluations, 246.86\,s total elapsed time):
+\begin{itemize}
+    \item For $WS(5) \ge 208$, all algorithms persistently encountered at least 8 irreducible monochromatic violations ($x < y, x+y=z$) in free search (and $\ge 1156$ in symmetric mode).
+    \item For $WS(6) \ge 651$ and $WS(7) \ge 2147$, the best trials had 40 and 454 violations respectively, producing zero valid partitions.
+    \item Verdict counts: \texttt{DISCOVERY\_BEATEN: 0}, \texttt{NULL\_RESULT: 3}.
+    \item Total search elapsed time: 246.86\,s.
+\end{itemize}
+These trials corroborate the tightness of Rowley's bound $WS(5) \ge 207$ and Rodrigo's bound $WS(6) \ge 650$.
+
+\subsection{Quantum Stabilizer Code Campaign (P182)}
+Focusing on 7 open parameters from Markus Grassl's tables:
+\begin{itemize}
+    \item Targets evaluated: $[[14,3]], [[16,5]], [[17,3]], [[18,3]], [[19,10]], [[20,2]], [[20,3]]$.
+    \item Calibration runs: Steane $[[7,1,3]]$ and Shor $[[9,1,3]]$ all verified with 100\% fidelity (4 runs, 80 evaluations, $0.06$\,s).
+    \item Campaign runs: 21 trials across seeds 42, 101, 202 (1,050 evaluations, $87.45$\,s).
+    \item Campaign outcome: 0 codes constructed with distance $\ge d_{hi}$.
+    \item Final status: \textbf{\texttt{campaign\_status = NULL\_RESULT}}, with \texttt{total\_records\_discovered = 0}.
+\end{itemize}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Consolidated Experimental Campaign Summary across Frontiers.}
+\label{tab:campaigns}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Campaign Track} & \textbf{Phase} & \textbf{Targets} & \textbf{Trials} & \textbf{Evaluations} & \textbf{Records Beaten} & \textbf{Verdict} \\
+\midrule
+FunSearch Cap Set & P174 & 1 & 9 & 12,140 & 0 & \texttt{H2\_NOT\_SUPPORTED} \\
+Covering Designs $C(v, k, t)$ & P176 & 40 & 360 & 1,958,802 & 0 & \texttt{NULL\_RESULT} (40/40) \\
+Weak Schur Numbers $WS(k)$ & P177 & 3 & 36 & 2,693,907 & 0 & \texttt{NULL\_RESULT} (3/3) \\
+Quantum Stabilizer Codes & P182 & 7 & 21 & 1,050 & 0 & \texttt{NULL\_RESULT} (7/7) \\
+\midrule
+\textbf{Total / Consolidated} & — & \textbf{51} & \textbf{426} & \textbf{4,665,899} & \textbf{0} & \textbf{\texttt{NO\_ACTIVE\_DISCOVERY}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Verification, Novelty Audit, and Formal Certificates}
+\label{sec:verification}
+
+\subsection{Zero-Dependency Standalone Verifier}
+In Phase P184, we developed \texttt{verify\_frontier\_certificate.py}, an external verifier written in pure Python standard library without any dependencies (zero NumPy, SciPy, or PyTorch). It verifies covering designs via colexicographical ranking, weak and strong Schur partitions, cap sets in $\mathbb{F}_3^n$, and stabilizer symplectic distances. Verified calibration certificates include:
+\begin{itemize}
+    \item Fano plane $C(7, 3, 2) = 7$: all 21 pairs covered by 7 blocks (hash: \texttt{07bfba962b11...}).
+    \item Weak Schur $WS(2) = 8$: sum-free partition into 2 classes (hash: \texttt{89e2747ecc89...}).
+    \item Steane $[[7, 1, 3]]$ code: 6 commuting generators, distance 3 (hash: \texttt{599d4207dc1b...}).
+\end{itemize}
+
+\subsection{Lean 4 Kernel Formal Certificates}
+In Phase P185 (\texttt{lean\_proofs/Generated/FrontierDiscoveryCertificates.lean}), calibration theorems were mechanically verified by the Lean 4 kernel with zero unproven axioms or admissions using finite decidability (\texttt{decide}):
+\begin{itemize}
+    \item \texttt{EvoByte.Frontier.fano\_covering\_valid}: Proves $\neg \text{HasUncoveredPair}(7, 7, 3, \text{fanoBlocks})$.
+    \item \texttt{EvoByte.Frontier.weak\_schur\_sample\_8\_valid}: Proves $\neg \text{HasWeakSchurViolation}(8, \text{weakSchurSample8})$.
+    \item \texttt{EvoByte.Frontier.steane\_generators\_commute}: Proves all 6 Steane generators commute under symplectic product.
+\end{itemize}
+All 3 theorems were classified as \texttt{faithful} by human peer review in \texttt{docs/research/lean-fidelity-reviews.json} (zero vacuous definitions).
+
+\subsection{World Literature Novelty Dual Audit}
+In Phase P186 (\texttt{experiments/p186-novelty-audit.json}), an automated dual-audit evaluated all 50 campaign targets:
+\begin{itemize}
+    \item \textbf{Auditoria A (Internal vs Frozen):} Verified that no trial produced an object strictly beating the frozen catalogue bounds.
+    \item \textbf{Auditoria B (Dated Literature Recheck):} Re-consulted live repositories (OEIS A072842, A118771, A090245, A030126, and Gordon's commit \texttt{459bcaf}). All snapshots confirmed identical hashes to the frozen catalogues.
+    \item \textbf{Dual Signatures Registered:} Machine verifier (\texttt{EvoByte-FrontierVerifier-v2}) and human reviewer (\texttt{human:Alexandre}).
+    \item \textbf{Audit Verdict:} \texttt{CONFIRMED: 0}, \texttt{DOWNGRADED: 0}, \texttt{NOT\_APPLICABLE: 50}. Overall status: \textbf{\texttt{NO\_ACTIVE\_DISCOVERY\_CLAIMS}}.
+\end{itemize}
+
+\subsection{Curator Submission Dossier}
+In Phase P187 (\texttt{docs/research/p187-curator-packages-index.json}), self-contained submission packages were generated for Dan Gordon (LJCR), Markus Grassl (codetables.de), and the OEIS Editorial Board. In strict adherence to open science rules, the automated agent never transmits communications; all packages are archived under initial status \texttt{pending\_human\_submission}.
+
+\section{Hermetic Reproducibility Container}
+\label{sec:reproducibility}
+In Phase P188, the complete research artifact was packaged for permanent archival in Zenodo/OSF (\texttt{dist/zenodo-bundle-frontier/final-manifest-sha256.json}):
+\begin{itemize}
+    \item Total files archived: 646 files.
+    \item Total uncompressed bytes: 8.11\,MB.
+    \item Tarball size: $\sim$1.85\,MB.
+    \item Cryptographic validation: 100\% SHA-256 correspondence across all files (\texttt{verify\_zenodo\_bundle\_integrity} reported 0 findings).
+\end{itemize}
+To prove hermetic reproducibility, the container was built from \texttt{Dockerfile} and executed with network egress entirely blocked (\texttt{docker run -{}-network none evobyte-frontier-repro:p188}). Inside the network-isolated container:
+\begin{itemize}
+    \item 17/17 pytest unit tests passed.
+    \item Standalone verifications of covering, weak Schur, and QECC certificates passed with 100\% agreement.
+    \item Verification log concluded with \texttt{HERMETIC\_VERIFICATION\_PASSED}.
+\end{itemize}
+
+\section{Discussion and Empirical Delimitations}
+\label{sec:discussion}
+Why did automated bytecode evolution succeed on synthetic regression benchmarks (Phase P154--P158) but yield null results across mathematical frontiers?
+\begin{enumerate}
+    \item \textbf{Combinatorial Density of Valid Objects:} In symbolic regression, continuous gradient approximations and smooth loss landscapes guide evolutionary search toward viable regions. In contrast, covering designs and weak Schur partitions exhibit rigid discrete constraints: a single uncovered pair or monochromatic triple renders an entire object invalid. Heuristic mutations in dense discrete spaces almost inevitably destroy structural validity.
+    \item \textbf{Lack of Inherent Algebraic Symmetries:} State-of-the-art combinatorial records (such as Gordon's covering tables or Rodrigo's $WS(6) \ge 650$ construction \cite{rodrigo2026weakschur}) exploit highly specific automorphism groups, block cyclic symmetries, and projective geometric fibrations. Unconstrained linear bytecode evolution lacks inductive biases toward such deep algebraic symmetries.
+    \item \textbf{Search Horizon vs Problem Complexity:} In quantum stabilizer search, exploring codes with $n \ge 14$ requires evaluating symplectic subspaces of dimension $2^{14}$. While GPU syndrome decoders accelerate distance evaluations, stochastic local mutations without algebraic structure cannot efficiently sample the exponentially small subspace of optimal codes.
+\end{enumerate}
+
+\section{Stated Limitations}
+\label{sec:limitations}
+We explicitly record the limitations of this study:
+\begin{itemize}
+    \item \textbf{Budget Envelope:} Pre-registered campaign budgets were restricted to tractable evaluation horizons (20,000 to 100,000 evaluations per trial). Massive-scale distributed campaigns with millions of GPU-hours might discover isolated boundary improvements.
+    \item \textbf{Heuristic Operators:} We evaluated simulated annealing, genetic algorithms, and register bytecode evolution. Neurosymbolic or hybrid SAT-solver approaches \cite{heule2017schur} were not evaluated in these campaigns.
+    \item \textbf{Null Result Nature:} Our findings do not prove the non-existence of smaller covering designs or larger weak Schur partitions; they demonstrate that unguided stochastic bytecode search fails to improve upon established human and specialized algebraic constructions within pre-registered budgets.
+\end{itemize}
+
+\section{Conclusion}
+\label{sec:conclusion}
+By enforcing rigorous pre-registration, standalone external verification, Lean 4 kernel certification, and world literature dual auditing, the EvoByte project demonstrates that reporting negative results is essential to the health of computational mathematics. We have established that modern bytecode evolution cannot surpass curated combinatorial and quantum coding frontiers without explicit algebraic priors, while providing the community with a fully reproducible, hermetically sealed benchmark archive.
+
+\section*{Data and Code Availability}
+All datasets, pre-registered manifests, experimental logs, standalone verifiers, Lean 4 proofs, and the hermetic Docker container are available at the project repository: \url{https://github.com/AlexandreZanata/EvoByte}. The cryptographic checksums are recorded in \texttt{dist/zenodo-bundle-frontier/final-manifest-sha256.json}.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

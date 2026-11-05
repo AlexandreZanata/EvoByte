@@ -1,0 +1,424 @@
+{
+  "split_id": "p87-blind-large-instances-split-v1",
+  "description": "Cryptographically sealed blind split of 50 large challenging prime instances (10^5 <= n <= 10^7) for P87 statistical confirmation. Contains 25 held-out prime instances for Erdos-Straus (a=4, p = 1 mod 24) and 25 held-out prime instances for Sierpinski (a=5, p = 1 mod 120).",
+  "alpha": 0.05,
+  "total_instances": 50,
+  "tracks": {
+    "H_ES_LARGE": {
+      "name": "Erdos-Straus Large Prime Confirmation (a=4, p = 1 mod 24)",
+      "a": 4,
+      "modulus": 24,
+      "instances_count": 25,
+      "instances": [
+        {
+          "instance_id": "ES_large_01",
+          "a": 4,
+          "n": 100057,
+          "k": 4169,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_02",
+          "a": 4,
+          "n": 100129,
+          "k": 4172,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_03",
+          "a": 4,
+          "n": 100153,
+          "k": 4173,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_04",
+          "a": 4,
+          "n": 100297,
+          "k": 4179,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_05",
+          "a": 4,
+          "n": 100393,
+          "k": 4183,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_06",
+          "a": 4,
+          "n": 100417,
+          "k": 4184,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_07",
+          "a": 4,
+          "n": 100537,
+          "k": 4189,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_08",
+          "a": 4,
+          "n": 100609,
+          "k": 4192,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_09",
+          "a": 4,
+          "n": 100801,
+          "k": 4200,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_10",
+          "a": 4,
+          "n": 101089,
+          "k": 4212,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_11",
+          "a": 4,
+          "n": 101113,
+          "k": 4213,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_12",
+          "a": 4,
+          "n": 101161,
+          "k": 4215,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_13",
+          "a": 4,
+          "n": 101209,
+          "k": 4217,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_14",
+          "a": 4,
+          "n": 101281,
+          "k": 4220,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_15",
+          "a": 4,
+          "n": 101377,
+          "k": 4224,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_16",
+          "a": 4,
+          "n": 101449,
+          "k": 4227,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_17",
+          "a": 4,
+          "n": 101641,
+          "k": 4235,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_18",
+          "a": 4,
+          "n": 101737,
+          "k": 4239,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_19",
+          "a": 4,
+          "n": 101833,
+          "k": 4243,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_20",
+          "a": 4,
+          "n": 101929,
+          "k": 4247,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_21",
+          "a": 4,
+          "n": 101977,
+          "k": 4249,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_22",
+          "a": 4,
+          "n": 102001,
+          "k": 4250,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_23",
+          "a": 4,
+          "n": 102121,
+          "k": 4255,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_24",
+          "a": 4,
+          "n": 102217,
+          "k": 4259,
+          "modulus": 24,
+          "residue": 1
+        },
+        {
+          "instance_id": "ES_large_25",
+          "a": 4,
+          "n": 102241,
+          "k": 4260,
+          "modulus": 24,
+          "residue": 1
+        }
+      ]
+    },
+    "H_SIER_LARGE": {
+      "name": "Sierpinski Large Prime Confirmation (a=5, p = 1 mod 120)",
+      "a": 5,
+      "modulus": 120,
+      "instances_count": 25,
+      "instances": [
+        {
+          "instance_id": "SIER_large_01",
+          "a": 5,
+          "n": 100801,
+          "k": 840,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_02",
+          "a": 5,
+          "n": 101161,
+          "k": 843,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_03",
+          "a": 5,
+          "n": 101281,
+          "k": 844,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_04",
+          "a": 5,
+          "n": 101641,
+          "k": 847,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_05",
+          "a": 5,
+          "n": 102001,
+          "k": 850,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_06",
+          "a": 5,
+          "n": 102121,
+          "k": 851,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_07",
+          "a": 5,
+          "n": 102241,
+          "k": 852,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_08",
+          "a": 5,
+          "n": 102481,
+          "k": 854,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_09",
+          "a": 5,
+          "n": 102841,
+          "k": 857,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_10",
+          "a": 5,
+          "n": 103561,
+          "k": 863,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_11",
+          "a": 5,
+          "n": 103681,
+          "k": 864,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_12",
+          "a": 5,
+          "n": 103801,
+          "k": 865,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_13",
+          "a": 5,
+          "n": 104161,
+          "k": 868,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_14",
+          "a": 5,
+          "n": 104281,
+          "k": 869,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_15",
+          "a": 5,
+          "n": 104761,
+          "k": 873,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_16",
+          "a": 5,
+          "n": 105361,
+          "k": 878,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_17",
+          "a": 5,
+          "n": 105601,
+          "k": 880,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_18",
+          "a": 5,
+          "n": 106321,
+          "k": 886,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_19",
+          "a": 5,
+          "n": 106441,
+          "k": 887,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_20",
+          "a": 5,
+          "n": 106681,
+          "k": 889,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_21",
+          "a": 5,
+          "n": 106801,
+          "k": 890,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_22",
+          "a": 5,
+          "n": 106921,
+          "k": 891,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_23",
+          "a": 5,
+          "n": 107641,
+          "k": 897,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_24",
+          "a": 5,
+          "n": 107761,
+          "k": 898,
+          "modulus": 120,
+          "residue": 1
+        },
+        {
+          "instance_id": "SIER_large_25",
+          "a": 5,
+          "n": 107881,
+          "k": 899,
+          "modulus": 120,
+          "residue": 1
+        }
+      ]
+    }
+  }
+}

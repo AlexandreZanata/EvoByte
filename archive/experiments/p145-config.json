@@ -1,0 +1,12 @@
+{
+  "phase": "P145",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 80,
+  "expected_sha256": "d260059205969979f4e0c5b25718502c8cb4d7c8a78f5bb9955c68d6fba770aa",
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P145 Schinzel high moduli congruence database and resistant residue classes baseline audit in Lean 4."
+}

@@ -1,0 +1,26 @@
+{
+  "certificate_version": "1.0.0",
+  "target_id": "qecc_steane_7_1_3",
+  "certificate_type": "qecc_stabilizer",
+  "candidate_length": 6,
+  "reference_literature": "Steane, A. (1996). Error detecting and correcting codes in quantum computers. Proc. Roy. Soc. Lond. A 452: 2551-2577.",
+  "sha256_checksum": "0dca9c61856f521754864caa5b95023002b7bbe6e3415f2d957bb4b9bf766ea6",
+  "sha256_scope": "SHA-256 of canonical JSON of {certificate_type, target_id, candidate, parameters}",
+  "reproduction_seed": 42,
+  "stabilizers": [
+    "IIIXXXX",
+    "IXXIIXX",
+    "XIXIXIX",
+    "IIIZZZZ",
+    "IZZIIZZ",
+    "ZIZIZIZ"
+  ],
+  "n": 7,
+  "k_claimed": 1,
+  "d_claimed": 3,
+  "provenance": {
+    "role": "calibration",
+    "family": "qecc_stabilizer",
+    "optimality": "proven_exact"
+  }
+}

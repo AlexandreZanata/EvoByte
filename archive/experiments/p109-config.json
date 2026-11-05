@@ -1,0 +1,15 @@
+{
+  "phase": "P109",
+  "acceptance_phase": "P109",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_path": "lean_proofs/Generated/ErdosGrahamTheorems.lean",
+  "max_len": 5,
+  "limit": 80,
+  "min_solutions": 50,
+  "min_theorems": 70,
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "allow_dirty": false
+}

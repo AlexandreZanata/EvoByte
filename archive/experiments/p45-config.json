@@ -1,0 +1,14 @@
+{
+  "checkpoint_every_sec": 120,
+  "device": "cuda",
+  "durations_60s": [60],
+  "durations_600s": [600],
+  "formula": "x**2 + 3*x + 7",
+  "note": "Complete frozen configuration. No 3600s claim is made (hour-stability requires a dedicated confirmation). Tracing selection rule frozen below. No TBD values.",
+  "phase": "P45",
+  "pop_size": 256,
+  "seed": 42,
+  "selection_rule": "600s tier runs the 60s tracing mode with most verified_exact (tie breaks toward tracing=true for fuller evidence); requires all 60s cells ok, else the long tier is skipped and the verdict is MIXED",
+  "tracing_modes_60s": [false, true],
+  "verify_every_gens": 10
+}

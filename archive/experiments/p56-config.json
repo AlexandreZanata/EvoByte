@@ -1,0 +1,23 @@
+{
+  "arms": ["evolution", "classical", "structured_random"],
+  "budget_sec": 10.0,
+  "campaign_cap_sec": 10800.0,
+  "device": "cpu",
+  "domain": [-3.0, 3.0],
+  "error_threshold": 0.0001,
+  "extra_exclusions": [],
+  "note": "Complete frozen preregistration. Frozen method (evolution kept post-P54-DROP; hybrid excluded) vs classical reference and structured random; 20 fresh seeds on six fresh sealed tasks at 10 s real. Tasks drawn blind from bank-exact enumeration minus all development-used targets; sealed before any trial with persistent access log. Loss and tie are valid; provisional label only, never discovery. No TBD values.",
+  "phase": "P56",
+  "pop_size": 64,
+  "seeds": [
+    900, 901, 902, 903, 904, 905, 906, 907, 908, 909,
+    910, 911, 912, 913, 914, 915, 916, 917, 918, 919
+  ],
+  "selected_method": {
+    "baseline": "structured_random grammar sampling",
+    "excluded": "hybrid proposer (P54 DROP)",
+    "reference": "classical exact construction",
+    "search": "evolution (GrammarResidentEvolution, kept post-P54-DROP)"
+  },
+  "task_rule": {"final_seed": 56056, "n_tasks": 6, "source": "p52-bank-exact-enumeration"}
+}

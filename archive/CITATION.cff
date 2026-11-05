@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+title: EvoByte
+message: If you use EvoByte, please cite it as below.
+type: software
+license: MIT
+repository-code: https://github.com/AlexandreZanata/EvoByte
+abstract: Massively parallel evolutionary discovery of symbolic programs via
+  ultra-compact bytecode and deterministic verification.
+authors:
+  - alias: EvoByte Contributors
+keywords:
+  - symbolic-regression
+  - evolutionary-computation
+  - program-synthesis
+  - gpu-computing
+  - quality-diversity

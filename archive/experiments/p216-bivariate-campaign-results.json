@@ -1,0 +1,1114 @@
+{
+  "protocol": "P216 Preregistered Bivariate & Projective Campaign",
+  "git_commit": "8f0b7b9426aa0251e3cee823bf37fb9f17e66438",
+  "hardware": {
+    "platform": "Linux-7.2.6-76070206-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python_version": "3.12.2",
+    "pysat_version": "1.9.dev17"
+  },
+  "seeds": [
+    42,
+    43,
+    44,
+    45,
+    46
+  ],
+  "timeout_per_trial": 30.0,
+  "solver_used": "cadical153",
+  "targets": {
+    "qecc_18_3_bivariate": {
+      "name": "[[18,3,d]]",
+      "family": "qecc_stabilizer",
+      "published_best": 5,
+      "trials_total": 5,
+      "trials": [
+        {
+          "target_id": "qecc_18_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 42,
+          "n": 18,
+          "k": 3,
+          "published_best": 5,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.7227722569950856,
+          "candidate_sha256": "60bd1830912beb38acb610408c0c0eb18853c5f3321abe9140ade7c496bf3a99",
+          "generators": [
+            "XXIIIIIXXIXIIXXXII",
+            "IIIIXXXXXXIXIIIIIX",
+            "XIIIXXIXXXXIXIIXXI",
+            "XIIXIXIIXIXIIXXXXX",
+            "XIIXXXIIIIIXIXXIXX",
+            "XIIXIXIIXIIIIXIXII",
+            "XIXIXXIXXIIXXXIIIX",
+            "ZZZZIIZIZZIZZZIIII",
+            "IIIIZZIZZZZIIZZZZZ",
+            "IIIZZZZIZIIZZIIZZZ",
+            "IIZZIZZIIZIIZIIIZZ",
+            "IIZZZZIIIIZIZIZIII",
+            "IIZIIIZIIIIZZZIZII",
+            "ZIZZZIZIIIIIIZZZZI",
+            "ZIZIZIIIIIIIIIIZZZ"
+          ],
+          "details": {
+            "m_x": 7,
+            "m_z": 8,
+            "symmetry_group": "Bivariate_Z9_x_Z2",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        },
+        {
+          "target_id": "qecc_18_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 43,
+          "n": 18,
+          "k": 3,
+          "published_best": 5,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.512040486006299,
+          "candidate_sha256": "ad55cadfa964deac5a9112d03c4f2a3a9ef09d13a1bd381cbf478fce111a86ea",
+          "generators": [
+            "XIIXIIIIXXIXIXXXIX",
+            "IIXXXXXIXIXIIIIIII",
+            "IXXXIXXIIIIIXXIXIX",
+            "IXIXIIXIXXIIIIXIIX",
+            "IXIXIIIXXIIIXIIIXI",
+            "IIIIIIIXIXXXIIIXIX",
+            "IIXIIIIXIIXXXIIXXI",
+            "ZIZIZIIIIZIZZIZIZI",
+            "IIIZIIZZIIIIZIIZZI",
+            "IIIIZZZIZIIIIIZZZZ",
+            "ZZIIIIZZZZIZIZIZZI",
+            "ZZIIIZIZZZIZZIZZII",
+            "IIIIIIIIZZZIIIIIZI",
+            "ZZIIIZIIIZZIIIIIZI",
+            "ZIIIIIIIIZIIIZIIIZ"
+          ],
+          "details": {
+            "m_x": 7,
+            "m_z": 8,
+            "symmetry_group": "Bivariate_Z9_x_Z2",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        },
+        {
+          "target_id": "qecc_18_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 44,
+          "n": 18,
+          "k": 3,
+          "published_best": 5,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.8350084389967378,
+          "candidate_sha256": "63033b0038b07d974f808b09e8548567dc9aab2a9c316cb8c7e9f3f9a7136217",
+          "generators": [
+            "IXIIXIIXIIIIXIIXXX",
+            "XIIXIXIXXIIXIXXXXI",
+            "IIXIXXXXIIIXXIXIXI",
+            "IIXIXXIXXXXIIXIXXX",
+            "XIIIIXIIIXXIXIXIXX",
+            "XIIIXIIIIIIXIIIXXX",
+            "IIXIIXIXIXIIXXIXXX",
+            "ZZIZIIZZZIZZIZZZIZ",
+            "IIIIZIIZIIIIZZZZII",
+            "IIIZIZZIIIZZZZIIIZ",
+            "IIIZIIIZIIIZIIIZII",
+            "ZIIIIIZIIZZIZZZIZI",
+            "IIIIIIZIZZIZZZZIIZ",
+            "ZIZIIIZIZZIIZIZZII",
+            "IIZIIIIIIIIIIZIIZZ"
+          ],
+          "details": {
+            "m_x": 7,
+            "m_z": 8,
+            "symmetry_group": "Bivariate_Z9_x_Z2",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        },
+        {
+          "target_id": "qecc_18_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 45,
+          "n": 18,
+          "k": 3,
+          "published_best": 5,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.9979519630142022,
+          "candidate_sha256": "eb38d7857ddf2c4d0fe91389b75dd750622b732594b1e62537b79524fad226d4",
+          "generators": [
+            "IXIXXIIXXIIXIXIXXX",
+            "XXXIXIXIXIXXIIIIIX",
+            "XIXXXIIIIIXXIIXIXX",
+            "XIXXIIIIIXIXIXXXIX",
+            "IIIXXIXIIIIIXXIXXX",
+            "XIXIIXIIIIIIIIXIIX",
+            "XXIXXIIIIIIIIIIXIX",
+            "ZZIZZIIIZZIIIIZIII",
+            "IIIIZIZIIIIIZZIZZI",
+            "IZIIZZIZZIZIZZZIZI",
+            "IIIIIIIIZIIIZZZZIZ",
+            "IZZIIZIIIZIZIZZIIZ",
+            "IIZIZIIIIIIZZZIIIZ",
+            "ZZIIZZIIIIZIZIIZZI",
+            "ZIZIIZIIIIZIIZIIIZ"
+          ],
+          "details": {
+            "m_x": 7,
+            "m_z": 8,
+            "symmetry_group": "Bivariate_Z9_x_Z2",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        },
+        {
+          "target_id": "qecc_18_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 46,
+          "n": 18,
+          "k": 3,
+          "published_best": 5,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 2.680473307002103,
+          "candidate_sha256": "1908ec21271edea6a070990468bc0bbbaa34301ed5cf6e0f82973001c4d3f3a9",
+          "generators": [
+            "IXXXXXIXXIXIIIIIIX",
+            "XIXXIXIIXIXXIXIXIX",
+            "IIXIXIXXXIIIXXXXXX",
+            "IIIIIIXIIIIXIIXXIX",
+            "XIIIIIIXXIXXIIXIIX",
+            "XIIIIIIIIXIXXXXXXI",
+            "IIIIIXIIIXIIXXXXIX",
+            "ZIZZIZIIZIIZIIZIZI",
+            "IZIIIZZIIZZZIIZIZZ",
+            "ZZIIIZIZZIIZZZIZZI",
+            "IZIIIIIIIZZZZZIZZI",
+            "ZIIIZIIIZIZIZZIZIZ",
+            "IZIIZIIIZIIZZIZZIZ",
+            "ZIZIIIIIIIIZIZZZZZ",
+            "IIZIZIIIZIIIIIIZZZ"
+          ],
+          "details": {
+            "m_x": 7,
+            "m_z": 8,
+            "symmetry_group": "Bivariate_Z9_x_Z2",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        }
+      ]
+    },
+    "qecc_20_3_bivariate": {
+      "name": "[[20,3,d]]",
+      "family": "qecc_stabilizer",
+      "published_best": 6,
+      "trials_total": 5,
+      "trials": [
+        {
+          "target_id": "qecc_20_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 42,
+          "n": 20,
+          "k": 3,
+          "published_best": 6,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 0.9529853329877369,
+          "candidate_sha256": "b2778b0672e28d10a36c53ace48935660f68a9cedce6c86d53e0b21bc89fa0b9",
+          "generators": [
+            "IXXXIIXXIIIXIIIXIIIX",
+            "IIXXXXIXXIXXIXIIIIII",
+            "IIXIIXXIIXXXXIIXXIXX",
+            "XIXXIXXIIIXIXXIIIIXI",
+            "IIXIIIXIIIIXXXXXIXXX",
+            "XIIXXIIIXIIXXIXXIXXX",
+            "XIXIIIXIXIIXIIXIXXXX",
+            "XIXXXXIIXIIIXIIIIXXI",
+            "IZIIZIIIZIIIZIZZZIZI",
+            "ZIZZIZZIZIZIIZZZIIZI",
+            "ZIZIIIZIIIIIIZZIIIII",
+            "IIZIIIIZZZZIZIZZZIZZ",
+            "ZIZIZZIIZZIIZIZIZIIZ",
+            "ZIIIZZIIIZIIIIZZIZIZ",
+            "IIZIIIIIIIIIZZIIIZZZ",
+            "ZIZIZZIIIIZZIZZZZZZZ",
+            "ZIIIIIIIIIZIIZIIIIZI"
+          ],
+          "details": {
+            "m_x": 8,
+            "m_z": 9,
+            "symmetry_group": "Bivariate_Z5_x_Z4",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        },
+        {
+          "target_id": "qecc_20_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 43,
+          "n": 20,
+          "k": 3,
+          "published_best": 6,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 1.211740421014838,
+          "candidate_sha256": "481a9557fc1e3e35a85ee73062adf448257c34e78cce30997236df272f2aa048",
+          "generators": [
+            "XXIIIXIXIIIXXIXIIIXX",
+            "IXXIIXXIIXIIIIXIXXII",
+            "IIIIXIXIXIXIXXXXIXIX",
+            "IXIXIIIXXXXIIIXIXIIX",
+            "IIXXXIIXIIXXIXXIIIXX",
+            "IXIIIIIXXIXXIIIXXXXX",
+            "IXIXXIIIIIXXXIIXIXIX",
+            "IIXXIIIXXIIIIIIIIIIX",
+            "IIZZIIIIIZIZIIIIIIZI",
+            "IZIZIIIIZZZIIZIIZZZI",
+            "IZIIIZIZIZZIZIZIIIIZ",
+            "ZZIIZIIZZIIZZIZIIIII",
+            "ZZIIIIZIZZIIIIZZZZIZ",
+            "ZIIIZIZIZIIIZZZIZZIZ",
+            "IZIIZIZIZIIZIIIZZZZZ",
+            "IZIIIIIIZIIIIZZIIIZZ",
+            "ZIIIIIIIZIIZIZZIZIIZ"
+          ],
+          "details": {
+            "m_x": 8,
+            "m_z": 9,
+            "symmetry_group": "Bivariate_Z5_x_Z4",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        },
+        {
+          "target_id": "qecc_20_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 44,
+          "n": 20,
+          "k": 3,
+          "published_best": 6,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 1.308564649982145,
+          "candidate_sha256": "14b51a291a3a1ac20cf38397ddf27ca28ea22c9b153d2b8fe921fac94f75c633",
+          "generators": [
+            "IXIIXIIXXIXXXIXIIIXX",
+            "IIXXXIIXXIXXXXXIXXIX",
+            "IIIIIXIXXIIIXXIXIXXX",
+            "XIXIIIIIXXIXIIIXIXII",
+            "XIIIIXXIIIIXIXIXXIXX",
+            "IIXIIXIIIIXIXIIIIXXX",
+            "XIIXIIXIIXXIIXXXXIXX",
+            "XIIXIIIIIIIIIIIXXIIX",
+            "ZZIIZZIZIIZIIZIZIIII",
+            "ZIIIIZIIZZIZZZZIIIZZ",
+            "IIZIIIZZZIIZZZZIIZZI",
+            "ZZIIIIIIZIZIZZZZIZZI",
+            "ZIIZIIZIIZZZZZIIZZIZ",
+            "ZIZIIIIIIIIZIZZIZZII",
+            "ZIZIIIZIIIIIIIIZZZZZ",
+            "IZZZIIIIIIIIIZZIZZII",
+            "ZIZZIIZIIIIIIZZIIIZI"
+          ],
+          "details": {
+            "m_x": 8,
+            "m_z": 9,
+            "symmetry_group": "Bivariate_Z5_x_Z4",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        },
+        {
+          "target_id": "qecc_20_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 45,
+          "n": 20,
+          "k": 3,
+          "published_best": 6,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 1.0126091400161386,
+          "candidate_sha256": "1dbe04bee03a48de72dfdb5802eaeb9d84f82377d90be1973421207927f1da86",
+          "generators": [
+            "XIIXIIIIXIIIXIIXIXXX",
+            "XXXIXXIIIXIXXIIIIXXX",
+            "XIIXIIIXIIXXXXIXIIXX",
+            "XIIIIIXXIIIIXIIIIIII",
+            "XIIXXXIIIIIIIXIIIXIX",
+            "XIXXXIIXIIIXIIXXIXXI",
+            "IIIIIIIXIIIIIIXIXXXX",
+            "IXIIIXIIIIIXIIIIIIXI",
+            "ZZZZZIIZZIIIIIZZIIZZ",
+            "IZIIZZZZIIZZIZIIZIZZ",
+            "ZZIIIIIZZZZZIZIIZZIZ",
+            "ZIZIZIIIZIZZZIIIZZZZ",
+            "ZIIIIIZIIIZZIIIZIIZZ",
+            "ZIZIIIZIIIIZIZIIZIZI",
+            "ZZIIIIIIIIIIZZIZZZZZ",
+            "ZZZIZIIIIZIIZZZIZZZI",
+            "IZIIZIZIIIIIZZZIIZZZ"
+          ],
+          "details": {
+            "m_x": 8,
+            "m_z": 9,
+            "symmetry_group": "Bivariate_Z5_x_Z4",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        },
+        {
+          "target_id": "qecc_20_3_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 46,
+          "n": 20,
+          "k": 3,
+          "published_best": 6,
+          "achieved_value": 4,
+          "verdict": "NULL_RESULT",
+          "verified": true,
+          "wall_clock_seconds": 2.1398546809796244,
+          "candidate_sha256": "8e7867bd5561bcb81174096d1cb2bb92e288c0f3fc0621d0455d9636ad1a27b2",
+          "generators": [
+            "XXIIXIXXXIIIIXIIXIXI",
+            "IIIXIIXXXIIIIIIIIIIX",
+            "IIXIXIXIXIXXIXXXIXXX",
+            "IIXIIXXXIXIIIIXXXIIX",
+            "XIXIIIIIXXIXIIIIIXXX",
+            "XIIIIXIXIIXIXXIXXXXI",
+            "IIIIIXIXXIIXIIIIIXXX",
+            "XIIIIIIXIIIIIXIXIXIX",
+            "ZIIZZIIIIZZZZZIZZIIZ",
+            "ZZZIZIZIZIIIZIZIZZII",
+            "IIIIIIIZIZIIZZIIZZZZ",
+            "ZIZIZZIIZZIIIZIIIZIZ",
+            "IZIIIIIIZIZIIIIZIIIZ",
+            "IIZIZZIIZIIZIIIZIIIZ",
+            "IZZIIZIIZIIIZZZIIIZZ",
+            "ZIZIZIIIZIIIIIZZIZZZ",
+            "ZZZIIIIIZIIIIIZIZIIZ"
+          ],
+          "details": {
+            "m_x": 8,
+            "m_z": 9,
+            "symmetry_group": "Bivariate_Z5_x_Z4",
+            "parity_invariant_obstruction": "Bivariate bicycle CSS codes require k = 2(lm - r) to be strictly even; k=3 necessitates symmetry-broken echelon CSS formulation."
+          }
+        }
+      ]
+    },
+    "qecc_20_2_bivariate": {
+      "name": "[[20,2,d]]",
+      "family": "qecc_stabilizer",
+      "published_best": 6,
+      "trials_total": 5,
+      "trials": [
+        {
+          "target_id": "qecc_20_2_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 42,
+          "n": 20,
+          "k": 2,
+          "published_best": 6,
+          "achieved_value": 6,
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.11051450797822326,
+          "candidate_sha256": "4eab88912ca479a0a8ee7a4d88e181ad5b38a70b7913c6c6c6775d67414ffec9",
+          "generators": [
+            "IIXXIXIIIXIIXIIIXIXX",
+            "IIXXXIIIXIIIIXIIIXXX",
+            "IXIIXXIXIIXXIIXIIIXI",
+            "XIIIXXXIIIXXIIIXIIIX",
+            "IIIXIIXXIXXIXXIIXIII",
+            "IIXIIIXXXIIXXXIIIXII",
+            "IXIIIXIIXXIIXIXXIIXI",
+            "XIIIXIIIXXIIIXXXIIIX",
+            "XXIXIIIXIIXIIIXIXXII",
+            "IIZZZIIIZIIIIZIIIZZZ",
+            "IIZZIZIIIZIIZIIIZIZZ",
+            "ZIIIZZZIIIZZIIIZIIIZ",
+            "IZIIZZIZIIZZIIZIIIZI",
+            "IIZIIIZZZIIZZZIIIZII",
+            "IIIZIIZZIZZIZZIIZIII",
+            "ZIIIZIIIZZIIIZZZIIIZ",
+            "IZIIIZIIZZIIZIZZIIZI",
+            "ZZZIIIZIIIIZIIIZZZII"
+          ],
+          "details": {
+            "l": 5,
+            "m": 2,
+            "terms_a": [
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "terms_b": [
+              [
+                1,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "tries": 38,
+            "sat_proof": {
+              "distance_verified": true,
+              "proven_lower_bound": 6,
+              "solve_time_seconds": 0.095176013011951
+            }
+          }
+        },
+        {
+          "target_id": "qecc_20_2_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 43,
+          "n": 20,
+          "k": 2,
+          "published_best": 6,
+          "achieved_value": 6,
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.4936117190227378,
+          "candidate_sha256": "6f67f34bd41acbead161decb9f2ca069824cd9d9125f8f3e3251c98ea2241cf2",
+          "generators": [
+            "XIIIXIIIXXIXIIIXXXII",
+            "IXIIIXIIXXXIIIXIXXII",
+            "XXXIIIXIIIIIIXIIIXXX",
+            "XXIXIIIXIIIIXIIIXIXX",
+            "IIXXXIIIXIXXIIIXIIIX",
+            "IIXXIXIIIXXXIIXIIIXI",
+            "XIIIXXXIIIIXXXIIIXII",
+            "IXIIXXIXIIXIXXIIXIII",
+            "IIXIIIXXXIIIIXXXIIIX",
+            "IZIIZZIZIIZIZZIIZIII",
+            "ZIIIZZZIIIIZZZIIIZII",
+            "IIIZIIZZIZIIZIZZIIZI",
+            "IIZIIIZZZIIIIZZZIIIZ",
+            "IZIIIZIIZZZIIIZIZZII",
+            "ZIIIZIIIZZIZIIIZZZII",
+            "ZZIZIIIZIIIIZIIIZIZZ",
+            "ZZZIIIZIIIIIIZIIIZZZ",
+            "IIZZIZIIIZZZIIZIIIZI"
+          ],
+          "details": {
+            "l": 5,
+            "m": 2,
+            "terms_a": [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                4,
+                0
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "terms_b": [
+              [
+                0,
+                1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "tries": 597,
+            "sat_proof": {
+              "distance_verified": true,
+              "proven_lower_bound": 6,
+              "solve_time_seconds": 0.10104397201212123
+            }
+          }
+        },
+        {
+          "target_id": "qecc_20_2_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 44,
+          "n": 20,
+          "k": 2,
+          "published_best": 6,
+          "achieved_value": 6,
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.2652088759932667,
+          "candidate_sha256": "5e80b55653420bbff04d2a3f347c3bdcb4d77fb3dfdbfe8c23e5dc6fb33e1712",
+          "generators": [
+            "IXXIIXIIIXXIIXXIXIII",
+            "XIIXXIIIXIIXXIIXIXII",
+            "IXIXXIIXIIIIXIIXXIXI",
+            "XIXIIXXIIIIIIXXIIXIX",
+            "IIIXIXXIIXXIIIXIIXXI",
+            "IIXIXIIXXIIXIIIXXIIX",
+            "IXIIIXIXXIXIXIIIXIIX",
+            "XIIIXIXIIXIXIXIIIXXI",
+            "XIIXIIIXIXIXXIXIIIXI",
+            "ZIIIZIZIIZIZIZIIIZZI",
+            "IZIIIZIZZIZIZIIIZIIZ",
+            "IZZIIIZIZIZIIZIZIIIZ",
+            "ZIIZIIIZIZIZZIZIIIZI",
+            "ZIIZZIIIZIIZZIIZIZII",
+            "IZZIIZIIIZZIIZZIZIII",
+            "ZIZIIZZIIIIIIZZIIZIZ",
+            "IZIZZIIZIIIIZIIZZIZI",
+            "IIZIZIIZZIIZIIIZZIIZ"
+          ],
+          "details": {
+            "l": 5,
+            "m": 2,
+            "terms_a": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "terms_b": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "tries": 161,
+            "sat_proof": {
+              "distance_verified": true,
+              "proven_lower_bound": 6,
+              "solve_time_seconds": 0.11335039098048583
+            }
+          }
+        },
+        {
+          "target_id": "qecc_20_2_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 45,
+          "n": 20,
+          "k": 2,
+          "published_best": 6,
+          "achieved_value": 6,
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.44409444901975803,
+          "candidate_sha256": "da3071b3ef834824642e274438f2114f04c30481fa97f4ac182bbbd20a09df1a",
+          "generators": [
+            "XIXIIXXIIIIIIXXIIXIX",
+            "IXIXXIIXIIIIXIIXXIXI",
+            "IIXIXIIXXIIXIIIXXIIX",
+            "IIIXIXXIIXXIIIXIIXXI",
+            "XIIIXIXIIXIXIXIIIXXI",
+            "IXIIIXIXXIXIXIIIXIIX",
+            "IXXIIIXIXIXIIXIXIIIX",
+            "XIIXIIIXIXIXXIXIIIXI",
+            "XIIXXIIIXIIXXIIXIXII",
+            "IIIZIZZIIZZIIIZIIZZI",
+            "IIZIZIIZZIIZIIIZZIIZ",
+            "IZIIIZIZZIZIZIIIZIIZ",
+            "ZIIIZIZIIZIZIZIIIZZI",
+            "ZIIZIIIZIZIZZIZIIIZI",
+            "IZZIIIZIZIZIIZIZIIIZ",
+            "IZZIIZIIIZZIIZZIZIII",
+            "ZIIZZIIIZIIZZIIZIZII",
+            "IZIZZIIZIIIIZIIZZIZI"
+          ],
+          "details": {
+            "l": 5,
+            "m": 2,
+            "terms_a": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                0
+              ]
+            ],
+            "terms_b": [
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                1
+              ],
+              [
+                4,
+                1
+              ]
+            ],
+            "tries": 326,
+            "sat_proof": {
+              "distance_verified": true,
+              "proven_lower_bound": 6,
+              "solve_time_seconds": 0.10076912201475352
+            }
+          }
+        },
+        {
+          "target_id": "qecc_20_2_bivariate",
+          "family": "qecc_stabilizer",
+          "seed": 46,
+          "n": 20,
+          "k": 2,
+          "published_best": 6,
+          "achieved_value": 6,
+          "verdict": "DISCOVERY_TIED",
+          "verified": true,
+          "wall_clock_seconds": 0.13351474900264293,
+          "candidate_sha256": "3aa742f289ff3896e0108a987321fe9ba2d87a8071fac67316650fe139e3f5c4",
+          "generators": [
+            "IXXIIXIXIIXIIXXIIIXI",
+            "XIIXXIXIIIIXXIIXIIIX",
+            "IIIXXIIXIXXIXIIXXIII",
+            "IIXIIXXIXIIXIXXIIXII",
+            "IXIIIXXIIXIIXIXIIXXI",
+            "XIIIXIIXXIIIIXIXXIIX",
+            "IXIXIIIXXIXIIIXIXIIX",
+            "XIXIIIXIIXIXIIIXIXXI",
+            "XIIXIXIIIXIXXIIIXIXI",
+            "ZIZIIIZIIZIZIIIZIZZI",
+            "IZIZIIIZZIZIIIZIZIIZ",
+            "IZZIZIIIZIZIIZIIIZIZ",
+            "ZIIZIZIIIZIZZIIIZIZI",
+            "ZIIZZIZIIIIZZIIZIIIZ",
+            "IZZIIZIZIIZIIZZIIIZI",
+            "IIZIIZZIZIIZIZZIIZII",
+            "IIIZZIIZIZZIZIIZZIII",
+            "ZIIIZIIZZIIIIZIZZIIZ"
+          ],
+          "details": {
+            "l": 5,
+            "m": 2,
+            "terms_a": [
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                3,
+                1
+              ]
+            ],
+            "terms_b": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                4,
+                0
+              ]
+            ],
+            "tries": 89,
+            "sat_proof": {
+              "distance_verified": true,
+              "proven_lower_bound": 6,
+              "solve_time_seconds": 0.2628339929797221
+            }
+          }
+        }
+      ]
+    },
+    "covering_C_14_6_3_projective": {
+      "name": "C(14,6,3)",
+      "family": "covering_design",
+      "published_best": 25,
+      "trials_total": 5,
+      "trials": [
+        {
+          "target_id": "covering_C_14_6_3_projective",
+          "family": "covering_design",
+          "seed": 42,
+          "v": 14,
+          "k": 6,
+          "t": 3,
+          "published_best": 25,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.1120401160151232,
+          "candidate_sha256": "14a15dfda1310b03bd57759823763b8a82c5bb16a04c4911e61d8611f63114aa",
+          "details": {
+            "group": "PGL(2, 13)",
+            "group_order": 2184,
+            "orbit_count": 5,
+            "orbit_lengths": [
+              91,
+              182,
+              546,
+              1092
+            ],
+            "min_orbit_length": 91,
+            "proof": "PGL(2, 13) has order 2184 acting on P^1(F_13) with 5 canonical orbits on 6-subsets. All orbit lengths are in [91, 182, 546, 1092], with minimal orbit length 91. Since 91 > 25 (world record), no PGL(2, 13)-invariant covering design can match or beat 25 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        },
+        {
+          "target_id": "covering_C_14_6_3_projective",
+          "family": "covering_design",
+          "seed": 43,
+          "v": 14,
+          "k": 6,
+          "t": 3,
+          "published_best": 25,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.1461785690044053,
+          "candidate_sha256": "14a15dfda1310b03bd57759823763b8a82c5bb16a04c4911e61d8611f63114aa",
+          "details": {
+            "group": "PGL(2, 13)",
+            "group_order": 2184,
+            "orbit_count": 5,
+            "orbit_lengths": [
+              91,
+              182,
+              546,
+              1092
+            ],
+            "min_orbit_length": 91,
+            "proof": "PGL(2, 13) has order 2184 acting on P^1(F_13) with 5 canonical orbits on 6-subsets. All orbit lengths are in [91, 182, 546, 1092], with minimal orbit length 91. Since 91 > 25 (world record), no PGL(2, 13)-invariant covering design can match or beat 25 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        },
+        {
+          "target_id": "covering_C_14_6_3_projective",
+          "family": "covering_design",
+          "seed": 44,
+          "v": 14,
+          "k": 6,
+          "t": 3,
+          "published_best": 25,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.08345118397846818,
+          "candidate_sha256": "14a15dfda1310b03bd57759823763b8a82c5bb16a04c4911e61d8611f63114aa",
+          "details": {
+            "group": "PGL(2, 13)",
+            "group_order": 2184,
+            "orbit_count": 5,
+            "orbit_lengths": [
+              91,
+              182,
+              546,
+              1092
+            ],
+            "min_orbit_length": 91,
+            "proof": "PGL(2, 13) has order 2184 acting on P^1(F_13) with 5 canonical orbits on 6-subsets. All orbit lengths are in [91, 182, 546, 1092], with minimal orbit length 91. Since 91 > 25 (world record), no PGL(2, 13)-invariant covering design can match or beat 25 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        },
+        {
+          "target_id": "covering_C_14_6_3_projective",
+          "family": "covering_design",
+          "seed": 45,
+          "v": 14,
+          "k": 6,
+          "t": 3,
+          "published_best": 25,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.12039242900209501,
+          "candidate_sha256": "14a15dfda1310b03bd57759823763b8a82c5bb16a04c4911e61d8611f63114aa",
+          "details": {
+            "group": "PGL(2, 13)",
+            "group_order": 2184,
+            "orbit_count": 5,
+            "orbit_lengths": [
+              91,
+              182,
+              546,
+              1092
+            ],
+            "min_orbit_length": 91,
+            "proof": "PGL(2, 13) has order 2184 acting on P^1(F_13) with 5 canonical orbits on 6-subsets. All orbit lengths are in [91, 182, 546, 1092], with minimal orbit length 91. Since 91 > 25 (world record), no PGL(2, 13)-invariant covering design can match or beat 25 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        },
+        {
+          "target_id": "covering_C_14_6_3_projective",
+          "family": "covering_design",
+          "seed": 46,
+          "v": 14,
+          "k": 6,
+          "t": 3,
+          "published_best": 25,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.15058694599429145,
+          "candidate_sha256": "14a15dfda1310b03bd57759823763b8a82c5bb16a04c4911e61d8611f63114aa",
+          "details": {
+            "group": "PGL(2, 13)",
+            "group_order": 2184,
+            "orbit_count": 5,
+            "orbit_lengths": [
+              91,
+              182,
+              546,
+              1092
+            ],
+            "min_orbit_length": 91,
+            "proof": "PGL(2, 13) has order 2184 acting on P^1(F_13) with 5 canonical orbits on 6-subsets. All orbit lengths are in [91, 182, 546, 1092], with minimal orbit length 91. Since 91 > 25 (world record), no PGL(2, 13)-invariant covering design can match or beat 25 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        }
+      ]
+    },
+    "covering_C_16_7_3_affine2d": {
+      "name": "C(16,7,3)",
+      "family": "covering_design",
+      "published_best": 24,
+      "trials_total": 5,
+      "trials": [
+        {
+          "target_id": "covering_C_16_7_3_affine2d",
+          "family": "covering_design",
+          "seed": 42,
+          "v": 16,
+          "k": 7,
+          "t": 3,
+          "published_best": 24,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.06835907601634972,
+          "candidate_sha256": "d9e029a742570a1da875861292fda59e63717e5eb6a6a3cc54f4b41ce84a5382",
+          "details": {
+            "group": "AGL(2, 4)",
+            "group_order": 5760,
+            "orbit_count": 9,
+            "orbit_lengths": [
+              160,
+              240,
+              480,
+              960,
+              1440,
+              2880
+            ],
+            "min_orbit_length": 160,
+            "proof": "AGL(2, 4) has order 5760 acting on F_4^2 with exactly 9 canonical orbits on 7-subsets of 16. All orbit lengths are in [160, 240, 480, 960, 1440, 2880], with minimal orbit length 160. Since 160 > 24 (world record), no AGL(2, 4)-invariant covering design can match or beat 24 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        },
+        {
+          "target_id": "covering_C_16_7_3_affine2d",
+          "family": "covering_design",
+          "seed": 43,
+          "v": 16,
+          "k": 7,
+          "t": 3,
+          "published_best": 24,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.049165759002789855,
+          "candidate_sha256": "d9e029a742570a1da875861292fda59e63717e5eb6a6a3cc54f4b41ce84a5382",
+          "details": {
+            "group": "AGL(2, 4)",
+            "group_order": 5760,
+            "orbit_count": 9,
+            "orbit_lengths": [
+              160,
+              240,
+              480,
+              960,
+              1440,
+              2880
+            ],
+            "min_orbit_length": 160,
+            "proof": "AGL(2, 4) has order 5760 acting on F_4^2 with exactly 9 canonical orbits on 7-subsets of 16. All orbit lengths are in [160, 240, 480, 960, 1440, 2880], with minimal orbit length 160. Since 160 > 24 (world record), no AGL(2, 4)-invariant covering design can match or beat 24 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        },
+        {
+          "target_id": "covering_C_16_7_3_affine2d",
+          "family": "covering_design",
+          "seed": 44,
+          "v": 16,
+          "k": 7,
+          "t": 3,
+          "published_best": 24,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.029741273989202455,
+          "candidate_sha256": "d9e029a742570a1da875861292fda59e63717e5eb6a6a3cc54f4b41ce84a5382",
+          "details": {
+            "group": "AGL(2, 4)",
+            "group_order": 5760,
+            "orbit_count": 9,
+            "orbit_lengths": [
+              160,
+              240,
+              480,
+              960,
+              1440,
+              2880
+            ],
+            "min_orbit_length": 160,
+            "proof": "AGL(2, 4) has order 5760 acting on F_4^2 with exactly 9 canonical orbits on 7-subsets of 16. All orbit lengths are in [160, 240, 480, 960, 1440, 2880], with minimal orbit length 160. Since 160 > 24 (world record), no AGL(2, 4)-invariant covering design can match or beat 24 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        },
+        {
+          "target_id": "covering_C_16_7_3_affine2d",
+          "family": "covering_design",
+          "seed": 45,
+          "v": 16,
+          "k": 7,
+          "t": 3,
+          "published_best": 24,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.031187034997856244,
+          "candidate_sha256": "d9e029a742570a1da875861292fda59e63717e5eb6a6a3cc54f4b41ce84a5382",
+          "details": {
+            "group": "AGL(2, 4)",
+            "group_order": 5760,
+            "orbit_count": 9,
+            "orbit_lengths": [
+              160,
+              240,
+              480,
+              960,
+              1440,
+              2880
+            ],
+            "min_orbit_length": 160,
+            "proof": "AGL(2, 4) has order 5760 acting on F_4^2 with exactly 9 canonical orbits on 7-subsets of 16. All orbit lengths are in [160, 240, 480, 960, 1440, 2880], with minimal orbit length 160. Since 160 > 24 (world record), no AGL(2, 4)-invariant covering design can match or beat 24 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        },
+        {
+          "target_id": "covering_C_16_7_3_affine2d",
+          "family": "covering_design",
+          "seed": 46,
+          "v": 16,
+          "k": 7,
+          "t": 3,
+          "published_best": 24,
+          "achieved_value": null,
+          "verdict": "NULL_BOUND",
+          "verified": true,
+          "wall_clock_seconds": 0.03988474700599909,
+          "candidate_sha256": "d9e029a742570a1da875861292fda59e63717e5eb6a6a3cc54f4b41ce84a5382",
+          "details": {
+            "group": "AGL(2, 4)",
+            "group_order": 5760,
+            "orbit_count": 9,
+            "orbit_lengths": [
+              160,
+              240,
+              480,
+              960,
+              1440,
+              2880
+            ],
+            "min_orbit_length": 160,
+            "proof": "AGL(2, 4) has order 5760 acting on F_4^2 with exactly 9 canonical orbits on 7-subsets of 16. All orbit lengths are in [160, 240, 480, 960, 1440, 2880], with minimal orbit length 160. Since 160 > 24 (world record), no AGL(2, 4)-invariant covering design can match or beat 24 blocks. Structural obstruction NULL_BOUND rigorously proven."
+          }
+        }
+      ]
+    }
+  },
+  "total_campaign_time_seconds": 69.63188511398039,
+  "verdict_counts": {
+    "DISCOVERY_BEATEN": 0,
+    "DISCOVERY_TIED": 5,
+    "NULL_BOUND": 10,
+    "NULL_RESULT": 10
+  },
+  "verdict": "DISCOVERY_TIED"
+}

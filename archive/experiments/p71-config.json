@@ -1,0 +1,9 @@
+{
+  "phase": "P71",
+  "note": "P71 confirmation run. Frozen final only; operator reproduction pending.",
+  "device": "cpu",
+  "seed": 0,
+  "require_clean_tree": true,
+  "final_path": "experiments/p71-final.json",
+  "final_sha256": "69894f32ad09c67c21562dcf7ea108c236be1f5c8ab28eb85216b8790d52dcbd"
+}

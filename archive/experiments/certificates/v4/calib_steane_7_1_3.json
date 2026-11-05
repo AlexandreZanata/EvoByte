@@ -1,0 +1,29 @@
+{
+  "certificate_type": "qecc_stabilizer",
+  "target_id": "calib_steane_7_1_3",
+  "verdict": "CALIBRATION_REPRODUCED",
+  "parameters": {
+    "n": 7,
+    "k": 1,
+    "claimed_d": 3
+  },
+  "candidate": {
+    "code_structure": "projective_plane_fano_css",
+    "generators": [
+      "IIIXXXX",
+      "IXXIIXX",
+      "XIXIXIX",
+      "IIIZZZZ",
+      "IZZIIZZ",
+      "ZIZIZIZ"
+    ],
+    "num_generators": 6
+  },
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine v4.0.0",
+    "git_commit": "ec02e30f2f8b9dca82f6530ba09a8587bd7f792d",
+    "timestamp_utc": "2026-10-28T09:45:47Z"
+  },
+  "certificate_version": "4.0.0",
+  "sha256_checksum": "4d9ab80d6013383d12b0f8e41c4addcc34970893dc747039ac9223efd96814e5"
+}

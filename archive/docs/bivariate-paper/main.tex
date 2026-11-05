@@ -1,0 +1,268 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\title{\textbf{Verified Reconstruction of Bivariate Bicycle Codes and Computational Orbit Bounds: A Negative-Results Report}}
+
+\author{
+  \textbf{Alexandre Zanata}\textsuperscript{1,2} \quad \textbf{EvoByte Research Consortium}\textsuperscript{1} \\
+  \textsuperscript{1}Open Source Systems \& Formal Methods Laboratory \\
+  \textsuperscript{2}EvoByte Core Architecture Group \\
+  \texttt{https://github.com/AlexandreZanata/EvoByte}
+}
+
+\date{October 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Structured algebraic synthesis has emerged as a computational methodology for exploring combinatorial designs and quantum error-correcting codes (QECC). In prior campaigns, one-dimensional cyclic and quasi-cyclic parity architectures enabled the synthesis of stabilizer codes up to distance $d=4$ (EvoByte Program D045). In this paper, we report the evaluation and verification results of \textbf{EvoByte Program D047}, examining two-dimensional group algebras $\mathbb{F}_2[\mathbb{Z}_\ell \times \mathbb{Z}_m]$ (bivariate bicycle codes / 2D lifted products) alongside projective and affine group actions $\operatorname{PGL}(2, q)$ and $\operatorname{A\Gamma L}(2, q)$.
+
+Our investigation delivers two core contributions:
+\begin{enumerate}
+    \item \textbf{A Reproducible Multi-Tier Verification Pipeline:} We implement an end-to-end reproducible verification workflow combining exact incremental propositional satisfiability (SAT) with CaDiCaL, canonical v4.0.0 cryptographic certificates, a zero-dependency standalone verifier in pure Python 3 executing in $< 3$\,ms, and machine-checked Lean 4 formal lemmas.
+    \item \textbf{An Honest Empirical and Theoretical Classification:} Rather than novel mathematical breakthroughs, our campaign establishes a rigorous classification of all evaluated targets into four transparent categories:
+    \begin{itemize}
+        \item \emph{Verified Reconstructions:} Over the group algebra $\mathbb{F}_2[\mathbb{Z}_5 \times \mathbb{Z}_2]$, our pipeline reconstructed an explicit $[[20, 2, 6]]$ bivariate bicycle CSS code ($d=6$ verified via incremental SAT), matching the known literature parameter bound in Markus Grassl's tables (\texttt{KNOWN\_PARAMETERS\_RECONSTRUCTED}). Similarly, an explicit $[[16, 2, 4]]$ bivariate bicycle code was reconstructed over $\mathbb{F}_2[\mathbb{Z}_2 \times \mathbb{Z}_4]$ (\texttt{KNOWN\_PARAMETERS\_RECONSTRUCTED}).
+        \item \emph{Known Fact Reformulated:} We observe that in symmetric bivariate bicycle CSS codes ($H_X = (\mathbf{A} \mid \mathbf{B})$, $H_Z = (\mathbf{B}^T \mid \mathbf{A}^T)$) over commutative group rings, the row ranks satisfy $\operatorname{rank}(H_X) = \operatorname{rank}(H_Z) = r$, forcing the logical dimension $k = 2(\ell m - r)$ to be even. This parity fact is known (Bravyi et al., 2024) and accounts for the structural impossibility of symmetric configurations for $[[20, 3, 5]]$ and $[[16, 3, 4]]$.
+        \item \emph{Weak Computational Bounds:} Orbit enumeration under $\operatorname{PGL}(2, 13)$ on 6-subsets of 14 points (minimal orbit length $91 > 25$) and under $\operatorname{A\Gamma L}(2, 4)$ on 7-subsets of 16 points (minimal orbit length $160 > 24$) rules out invariant covering designs under these specific symmetry groups (\texttt{NULL\_BOUND}), representing weak computational bounds rather than general design non-existence.
+        \item \emph{Null Results:} Targets $[[20, 3, 5]]$ and $[[18, 3, 5]]$ were not attained under pre-registered search budgets.
+    \end{itemize}
+\end{enumerate}
+All certificates (v4.0.0), a zero-dependency Python 3 verifier executing in $< 3$\,ms, and curator submission dossiers are archived and fully reproducible offline.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+The realization of fault-tolerant quantum computing relies fundamentally on quantum low-density parity-check (qLDPC) codes and stabilizer codes capable of encoding multiple logical qubits with high code distance and low physical qubit overhead \cite{gottesman1996stabilizer, steane1996error, shor1995scheme, calderbank1996good, calderbank1998quantum}. While topological surface codes require large physical footprints due to vanishing code rates ($k/n \to 0$), generalized hypergraph product and lifted product codes \cite{tillich2014quantum, kovalev2013quantum, panteleev2022asymptotically} achieve non-zero asymptotic rates with favorable distance scaling.
+
+Recently, Bravyi, Cross, Gambetta, Maslov, Rall, and Yoder \cite{bravyi2024bivariate} demonstrated that \emph{bivariate bicycle codes}---a specific family of two-dimensional lifted product codes defined over commutative group algebras $\mathbb{F}_2[\mathbb{Z}_\ell \times \mathbb{Z}_m]$---exhibit high fault-tolerance thresholds and low qubit overhead for quantum memory architectures, exemplifying this with their notable $[[72, 12, 6]]$ code.
+
+In previous work (EvoByte Programs D043 and D045 \cite{zanata2026structured, zanata2026generalized}), automated algebraic synthesis was investigated for one-dimensional cyclic groups $\mathbb{Z}_m$ and quasi-cyclic block structures. Although this yielded codes matching table bounds at distance $d=4$ (such as $[[14, 3, 4]]$ and $[[16, 5, 4]]$), exhaustive verification proved a fundamental ceiling: one-dimensional circulant CSS codes cannot exceed $d=3$, and 1D quasi-cyclic codes saturated before reaching $d=5$ or $d=6$.
+
+These empirical and theoretical frontiers motivated \textbf{EvoByte Program D047}:
+\begin{itemize}
+    \item Generalizing the algebraic synthesis engine from 1D polynomial rings to the bivariate group algebra $\mathbb{F}_2[x, y] / \langle x^\ell - 1, y^m - 1 \rangle$, exploring symmetric and asymmetric bivariate bicycle code spaces.
+    \item Investigating higher-order geometric group actions, specifically the projective general linear group $\operatorname{PGL}(2, q)$ acting on the projective line $\mathbb{P}^1(\mathbb{F}_q)$ and the two-dimensional affine semilinear group $\operatorname{A\Gamma L}(2, q)$ acting on $\mathbb{F}_q^2$.
+    \item Deploying exact incremental propositional satisfiability (SAT) methods with CaDiCaL \cite{biere2020cadical, ignatiev2018pysat} alongside Belief Propagation with Ordered Statistics Decoding (BP-OSD) to verify exact code distance $d \ge 5$ and $d \ge 6$.
+\end{itemize}
+
+In this paper, we present the verified reconstruction of known bivariate bicycle code parameters, review the known algebraic parity invariant governing symmetric bivariate bicycle codes, report computational orbit obstruction bounds for projective and affine covering designs, and document our multi-tier verification pipeline.
+
+\section{Mathematical Architecture}
+\label{sec:architecture}
+
+\subsection{Bivariate Bicycle Code Formulation}
+\label{sec:bivariate_formulation}
+Let $\mathcal{R} = \mathbb{F}_2[x, y] / \langle x^\ell - 1, y^m - 1 \rangle$ denote the group algebra of the abelian group $\mathbb{Z}_\ell \times \mathbb{Z}_m$ over the binary field $\mathbb{F}_2$. Elements in $\mathcal{R}$ are bivariate polynomials:
+\begin{equation}
+\label{eq:poly}
+A(x, y) = \sum_{i=0}^{\ell-1} \sum_{j=0}^{m-1} a_{i, j} x^i y^j, \quad a_{i, j} \in \mathbb{F}_2.
+\end{equation}
+Because $\mathcal{R}$ is commutative, for any two polynomials $A, B \in \mathcal{R}$, the product commutes: $A B = B A$.
+
+Each element $A \in \mathcal{R}$ has a regular matrix representation $\mathbf{A} \in \mathbb{F}_2^{(\ell m) \times (\ell m)}$ defined by the linear action of polynomial multiplication on the canonical basis $\{x^i y^j\}$. The transpose $\mathbf{A}^T$ corresponds to the involution $A^*(x, y) = A(x^{-1}, y^{-1}) = A(x^{\ell-1}, y^{m-1})$.
+
+A \emph{symmetric bivariate bicycle CSS code} on $n = 2\ell m$ physical qubits is specified by choosing two polynomials $A, B \in \mathcal{R}$. The parity check matrices $H_X, H_Z \in \mathbb{F}_2^{(\ell m) \times (2\ell m)}$ are defined by:
+\begin{equation}
+\label{eq:bivariate_hx_hz}
+H_X = \begin{pmatrix} \mathbf{A} & \mathbf{B} \end{pmatrix}, \quad H_Z = \begin{pmatrix} \mathbf{B}^T & \mathbf{A}^T \end{pmatrix}.
+\end{equation}
+The CSS symplectic commutativity condition requires:
+\begin{equation}
+\label{eq:bivariate_comm}
+H_X H_Z^T = \mathbf{A} (\mathbf{B}^T)^T + \mathbf{B} (\mathbf{A}^T)^T = \mathbf{A} \mathbf{B} + \mathbf{B} \mathbf{A} \pmod 2.
+\end{equation}
+Because polynomial multiplication in $\mathcal{R}$ is strictly commutative, $\mathbf{A} \mathbf{B} = \mathbf{B} \mathbf{A}$, and therefore $H_X H_Z^T = 0 \pmod 2$ holds identically for \emph{any} choice of polynomials $A, B \in \mathcal{R}$.
+
+\subsection{The Bivariate Bicycle Parity Invariant}
+\label{sec:parity_invariant}
+A central structural property governing symmetric bivariate bicycle codes is the parity of the logical dimension $k$.
+
+\begin{proposition}[Parity Invariant (known)]
+\label{prop:parity_invariant}
+This fact is known; see Bravyi et al. (2024) \cite{bravyi2024bivariate}.
+Let $\mathcal{C}$ be a symmetric bivariate bicycle CSS code on $n = 2\ell m$ qubits defined by parity check matrices $H_X = (\mathbf{A} \mid \mathbf{B})$ and $H_Z = (\mathbf{B}^T \mid \mathbf{A}^T)$ over the commutative group ring $\mathcal{R} = \mathbb{F}_2[\mathbb{Z}_\ell \times \mathbb{Z}_m]$. Then the number of encoded logical qubits $k$ is strictly even:
+\begin{equation}
+k = 2(\ell m - r), \quad \text{where } r = \operatorname{rank}_{\mathbb{F}_2}(H_X) = \operatorname{rank}_{\mathbb{F}_2}(H_Z).
+\end{equation}
+In particular, $k$ cannot be odd; for any parameter configuration with odd target dimension $k$, no symmetric bivariate bicycle code exists.
+\end{proposition}
+
+\begin{proof}
+In the commutative ring $\mathcal{R} = \mathbb{F}_2[\mathbb{Z}_\ell \times \mathbb{Z}_m]$, the row rank of $H_X = (\mathbf{A} \mid \mathbf{B})$ is $\dim_{\mathbb{F}_2}(A \mathcal{R} + B \mathcal{R})$. Transposition of $\mathbf{A}$ corresponds to multiplication by $\iota(A)$, where $\iota \colon x \mapsto x^{-1}, y \mapsto y^{-1}$ is an automorphism of the group algebra $\mathcal{R}$. Therefore,
+\begin{equation}
+\operatorname{rank}(B^T \mid A^T) = \dim(\iota(B)\mathcal{R} + \iota(A)\mathcal{R}) = \dim(\iota(A\mathcal{R} + B\mathcal{R})) = \dim(A\mathcal{R} + B\mathcal{R}).
+\end{equation}
+Consequently, $r_X = r_Z = r$ and the logical dimension is:
+\begin{equation}
+k = n - r_X - r_Z = 2\ell m - 2r = 2(\ell m - r),
+\end{equation}
+which is strictly even.
+\end{proof}
+
+\begin{corollary}
+\label{cor:k3_obstruction}
+Target parameters $[[20, 3, 5]]$ and $[[16, 3, 4]]$ have odd logical dimension $k=3$. Consequently, they cannot be realized by any symmetric bivariate bicycle CSS code over any abelian group ring $\mathbb{F}_2[\mathbb{Z}_\ell \times \mathbb{Z}_m]$.
+\end{corollary}
+
+This property clarifies that target configurations with odd logical dimension $k$ cannot be produced by symmetric bivariate bicycle constructions.
+
+\subsection{Projective and 2D Affine Groups}
+\label{sec:projective_groups}
+To explore combinatorial covering designs beyond cyclic and dihedral automorphisms, we examine two geometric group actions:
+\begin{enumerate}
+    \item \textbf{Projective General Linear Group $\operatorname{PGL}(2, q)$:} The group of fractional linear transformations $z \mapsto \frac{az + b}{cz + d}$ with $ad - bc \ne 0$ over the finite field $\mathbb{F}_q$, acting sharply 3-transitively on the projective line $\mathbb{P}^1(\mathbb{F}_q) = \mathbb{F}_q \cup \{\infty\}$. The order of the group is $|\operatorname{PGL}(2, q)| = (q + 1) q (q - 1)$.
+    \item \textbf{Two-Dimensional Affine Semilinear Group $\operatorname{A\Gamma L}(2, 4)$ and Affine Group $\operatorname{AGL}(2, q)$:} The affine general linear group $\operatorname{AGL}(2, q)$ consists of transformations $\mathbf{v} \mapsto \mathbf{M} \mathbf{v} + \mathbf{b}$ where $\mathbf{M} \in \operatorname{GL}(2, q)$ and $\mathbf{b} \in \mathbb{F}_q^2$, having order $|\operatorname{AGL}(2, q)| = q^2 (q^2 - 1)(q^2 - q)$ (which equals 2,880 for $q=4$). The codebase in Program D047 incorporates the field Frobenius automorphism $z \mapsto z^2$ on $\mathbb{F}_4$, generating the full affine semilinear group $\operatorname{A\Gamma L}(2, 4)$ of order 5,760. We note that $\operatorname{AGL}(2, 4)$ (order 2,880) is recomputed in P221.
+\end{enumerate}
+
+Any covering design $\mathcal{B} \subseteq \binom{V}{k}$ invariant under an automorphism group $G \le \operatorname{Sym}(V)$ must be a union of full orbits under the induced action of $G$ on $k$-subsets:
+\begin{equation}
+\mathcal{B} = \bigcup_{i=1}^u \mathcal{O}_G(B_i), \quad |\mathcal{B}| = \sum_{i=1}^u |\mathcal{O}_G(B_i)| \ge \min_{B} |\mathcal{O}_G(B)|.
+\end{equation}
+If the minimum non-trivial orbit size $\min |\mathcal{O}_G(B)|$ strictly exceeds the best known upper bound $C_{\text{best}}(v, k, t)$, then no $G$-invariant design can match or surpass that bound.
+
+\subsection{Exact Dual Distance via Incremental SAT}
+\label{sec:sat_method}
+For a CSS code with parity check matrices $H_X$ and $H_Z$, code distance $d = \min(d_X, d_Z)$ is determined by the minimum weight of an undetectable logical operator:
+\begin{align}
+d_X &= \min \{ \operatorname{wt}(e) : e \in \mathbb{F}_2^n \setminus \operatorname{row}(H_X), \, H_Z e^T = 0 \pmod 2 \}, \\
+d_Z &= \min \{ \operatorname{wt}(e) : e \in \mathbb{F}_2^n \setminus \operatorname{row}(H_Z), \, H_X e^T = 0 \pmod 2 \}.
+\end{align}
+To establish $d \ge d^*$, we verify unsatisfiability for all error weights $1 \le w < d^*$. For $n=20$ and $w \in \{1, 2, 3, 4, 5\}$, there are $\sum_{w=1}^5 \binom{20}{w} = 20 + 190 + 1140 + 4845 + 15504 = 21699$ candidate error vectors. We encode parity checks, syndrome verification, and row-space membership into propositional logic in CNF, resolved via CaDiCaL \cite{biere2020cadical, ignatiev2018pysat}.
+
+\section{Empirical Reconstructions and Structural Bounds}
+\label{sec:results}
+
+\subsection{Reconstructed Quantum Codes}
+\label{sec:qecc_reconstructions}
+During the pre-registered campaign, EvoByte reconstructed two parameter sets matching known bounds in the global literature:
+\begin{enumerate}
+    \item $[[20, 2, 6]]$ \textbf{Bivariate Bicycle Code:} Defined over $\mathbb{F}_2[\mathbb{Z}_5 \times \mathbb{Z}_2]$ with $\ell=5, m=2$. The polynomial coefficients are:
+    \begin{align}
+    A(x, y) &= 1 + y + x y + x^2 y, \\
+    B(x, y) &= y + x y + x^2 + x^2 y.
+    \end{align}
+    The parity matrices $H_X, H_Z \in \mathbb{F}_2^{10 \times 20}$ each have rank $r=9$, yielding $k = 20 - 9 - 9 = 2$ logical qubits. Exhaustive SAT testing confirmed that no undetected logical operator of weight $w \le 5$ exists, establishing minimum distance $d=6$. On Markus Grassl's table (codetables.de \cite{grassl2026codetables}), the optimal entry for $n=20, k=2$ has upper bound 6 and lower bound 6. Our bivariate bicycle construction achieves $d=6$ in a compact 2D algebraic representation (\texttt{KNOWN\_PARAMETERS\_RECONSTRUCTED}).
+    \item $[[16, 2, 4]]$ \textbf{Bivariate Bicycle Code:} Defined over $\mathbb{F}_2[\mathbb{Z}_2 \times \mathbb{Z}_4]$ with $\ell=2, m=4$. The polynomial coefficients are:
+    \begin{align}
+    A(x, y) &= 1 + y^2 + x + x y^3, \\
+    B(x, y) &= y + x + x y^2 + x y^3.
+    \end{align}
+    The parity matrices have rank $r=7$, yielding $k = 16 - 7 - 7 = 2$ logical qubits and verified minimum distance $d=4$, matching the table bound on codetables.de (\texttt{KNOWN\_PARAMETERS\_RECONSTRUCTED}).
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Bivariate Bicycle Quantum Stabilizer Codes in Program D047.}
+\label{tab:bivariate_codes}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Target Code} & \textbf{Algebra $\mathbb{Z}_\ell \times \mathbb{Z}_m$} & \textbf{Rank $r$} & \textbf{Claimed $d$} & \textbf{Literature Bound\footnotemark} & \textbf{Verdict} & \textbf{Solve Time} \\
+\midrule
+$[[7, 1, 3]]$ & $\text{PG}(2, 2)$ (Fano) & 3 & 3 & 3 (Exact) & \texttt{CALIB\_REPRODUCED} & 0.004 s \\
+$[[72, 12, 6]]$ & $\mathbb{Z}_6 \times \mathbb{Z}_6$ (Bravyi) & 30 & 6 & 6 (Exact) & \texttt{CALIB\_REPRODUCED} & 0.812 s \\
+$[[16, 2, 4]]$ & $\mathbb{Z}_2 \times \mathbb{Z}_4$ & 7 & 4 & 4 (Upper) & \texttt{KNOWN\_PARAMETERS\_RECONSTRUCTED} & 0.418 s \\
+$[[20, 2, 6]]$ & $\mathbb{Z}_5 \times \mathbb{Z}_2$ & 9 & 6 & 6 (Upper) & \texttt{KNOWN\_PARAMETERS\_RECONSTRUCTED} & 1.240 s \\
+$[[20, 3, 5]]$ & $\mathbb{Z}_5 \times \mathbb{Z}_2$ & --- & --- & 5 (Upper) & \texttt{NULL\_RESULT} (Parity Invariant) & 0.001 s \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+\footnotetext{Literature bound values from project snapshot; not re-checked by a human; $[[16,2,4]]$ \texttt{A\_CONFIRMAR\_HUMANO}.}
+
+\subsection{Structural Obstruction Propositions: NULL\_BOUND}
+\label{sec:structural_null}
+In covering design exploration, determining whether an algorithm reached its search limit or whether symmetry constraints preclude a solution provides clarity for research planning. We establish two computational orbit propositions:
+
+\begin{proposition}[$\operatorname{PGL}(2, 13)$ Computational Obstruction on $C(14, 6, 3)$]
+\label{prop:pgl2_13}
+The projective general linear group $\operatorname{PGL}(2, 13)$ acting on the projective line $\mathbb{P}^1(\mathbb{F}_{13})$ has order 2,184. Under its induced action on the 3,003 6-subsets of 14 points, the subsets partition into 5 distinct orbits with lengths:
+\begin{equation}
+\{91, 182, 546, 1092, 1092\}.
+\end{equation}
+The minimal orbit length is $\min |\mathcal{O}| = 91$. Because $91 > 25$ (the literature bound in the La Jolla Covering Repository \cite{gordon2026ljcr}), no non-trivial $\operatorname{PGL}(2, 13)$-invariant covering design can match or surpass 25 blocks (\texttt{NULL\_BOUND}).
+\end{proposition}
+
+\begin{proposition}[$\operatorname{A\Gamma L}(2, 4)$ Computational Obstruction on $C(16, 7, 3)$]
+\label{prop:agl2_4}
+The two-dimensional affine semilinear group $\operatorname{A\Gamma L}(2, 4)$ acting on $\mathbb{F}_4^2$ has order 5,760 (incorporating the field Frobenius automorphism). Under its induced action on the 11,440 7-subsets of 16 points, the subsets partition into 9 orbits with lengths belonging to:
+\begin{equation}
+\{160, 240, 480, 960, 1440, 2880\}.
+\end{equation}
+The minimal orbit length is $\min |\mathcal{O}| = 160$. Because $160 > 24$ (the literature bound in the La Jolla Covering Repository \cite{gordon2026ljcr}), no non-trivial $\operatorname{A\Gamma L}(2, 4)$-invariant covering design can match or surpass 24 blocks (\texttt{NULL\_BOUND}). We note that the linear affine group $\operatorname{AGL}(2, 4)$ without Frobenius has order 2,880 and is recomputed in P221.
+\end{proposition}
+
+These computational propositions provide negative bounds for these specific automorphism groups: their orbit granularities are too coarse to accommodate covering designs matching the literature bounds under these symmetry constraints.
+
+\section{Multi-Tier Verification Hierarchy}
+\label{sec:verification}
+
+Every empirical claim in this study is validated through a three-stage verification architecture:
+
+\subsection{Canonical Cryptographic Certificates (v4.0.0)}
+\label{sec:certs}
+All results are preserved as canonical JSON files under schema v4.0.0 in \path{experiments/certificates/v4/}, containing generator definitions, group action orbits, empirical timings, and cryptographic SHA-256 digests.
+
+\subsection{Zero-Dependency Standalone Verifier}
+\label{sec:standalone}
+We constructed \path{scripts/verify_bivariate_certificate.py}, a standalone verifier utilizing strictly Python 3 standard libraries (\texttt{sys}, \texttt{json}, \texttt{hashlib}, \texttt{math}, \texttt{itertools}). Executed with \texttt{python3 -S} (disabling \texttt{site-packages}):
+\begin{itemize}
+    \item Bivariate bicycle codes: Verifies generator linear independence, pairwise binary symplectic commutativity, and minimum distance via bitwise error testing.
+    \item Covering designs: Verifies pair coverage and block ordering.
+    \item Structural null bounds: Verifies orbit partition sizes and comparison against literature bounds.
+\end{itemize}
+Verification of all certificates completes in $< 3.0$\,ms per file, comfortably satisfying the verification threshold.
+
+\subsection{Interactive Formal Verification in Lean 4}
+\label{sec:lean4}
+In \path{lean_proofs/Generated/BivariateDiscovery.lean} and \path{formal/lean/EvoByte/BivariateDiscovery.lean}, 8 formal lemmas were formulated in the Lean 4 interactive theorem prover \cite{moura2021lean4}:
+\begin{enumerate}
+    \item \texttt{qecc\_20\_2\_6\_commute}: Pairwise binary symplectic commutativity of 18 generators of the $[[20, 2, 6]]$ code.
+    \item \texttt{bivariate\_16\_2\_4\_commute}: Pairwise commutativity of 14 generators of the $[[16, 2, 4]]$ code.
+    \item \texttt{steane\_7\_1\_3\_projective\_commute}: Commutativity of 6 Steane generators from $\text{PG}(2, 2)$.
+    \item \texttt{bivariate\_bicycle\_parity\_invariant}: Proof via \texttt{omega} that $2(\ell m - r) \ne 3$ for natural numbers $\ell m, r$.
+    \item \texttt{calib\_ag23\_covering\_valid}: Proof via \texttt{decide} that concrete $AG(2, 3)$ blocks cover all 36 pairs on 9 points.
+    \item \texttt{calib\_ag23\_blocks\_strictly\_sorted}: Proof via \texttt{decide} that all 12 concrete blocks of $AG(2, 3)$ are strictly sorted.
+    \item \texttt{pgl2\_13\_orbit\_obstruction}: Proof via \texttt{decide} that on a hand-written list of 5 orbit lengths for $\operatorname{PGL}(2, 13)$, no element is $\le 25$.
+    \item \texttt{agl2\_4\_orbit\_obstruction}: Proof via \texttt{decide} that on a hand-written list of 6 orbit lengths for $\operatorname{A\Gamma L}(2, 4)$, no element is $\le 24$.
+\end{enumerate}
+We emphasize the exact scope of these formal lemmas: items 1--3 and 5--6 are computational lemmas over concrete binary matrices and block incidence tables; items 4, 7, and 8 are arithmetic or data lemmas (\texttt{omega} over $\mathbb{N}$; \texttt{decide} over hand-written lists of sizes) and do \textbf{not} prove the general mathematical properties over the actual group actions or code spaces. Phase P221 is designed to replace these scoped lemmas with proofs directly over the genuine mathematical objects.
+
+\section{Curator Submissions and Responsible Disclosure}
+\label{sec:curators}
+In accordance with EvoByte's AI safety protocols, autonomous systems are strictly prohibited from transmitting unsolicited emails or accessing external APIs. We packaged all artifacts in \path{dist/curator-submissions/p219/}:
+\begin{enumerate}
+    \item \textbf{Markus Grassl (codetables.de):} Complete polynomial coefficients, generator matrices, and 1-click reproduction script for the $[[20, 2, 6]]$ and $[[16, 2, 4]]$ bivariate bicycle codes. These packages represent \textbf{reconstructions} of known parameters rather than novel discoveries; their submission remains strictly at human discretion with no expectation of novelty.
+    \item \textbf{Dan Gordon (LJCR):} Structural NULL\_BOUND certificates for $C(14, 6, 3)$ under $\operatorname{PGL}(2, 13)$ and $C(16, 7, 3)$ under $\operatorname{A\Gamma L}(2, 4)$, documenting computational group orbit bounds.
+    \item \textbf{Neil Sloane (OEIS):} Certified minimal affine plane $AG(2, 3) = C(9, 3, 2) = 12$ and Steane code calibration.
+\end{enumerate}
+Each submission package operates offline via \path{reproduce.sh} in $< 5$\,ms and remains designated as \texttt{pending\_human\_submission}.
+
+\section{Conclusion}
+\label{sec:conclusion}
+EvoByte Program D047 evaluated bivariate bicycle quantum codes and projective/affine covering designs under a reproducible verification pipeline. Our results establish the verified reconstruction of known code parameters ($[[20, 2, 6]]$ and $[[16, 2, 4]]$), the algebraic reformulation of a known parity invariant ($k$ is even for symmetric bivariate bicycle codes), and weak computational orbit bounds for covering designs under $\operatorname{PGL}(2, 13)$ and $\operatorname{A\Gamma L}(2, 4)$. No new mathematical records and no unrecorded discoveries were achieved. All empirical outputs, cryptographic certificates, and scoped formal artifacts are preserved for audit and reproduction.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

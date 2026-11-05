@@ -1,0 +1,10 @@
+{
+  "phase": "P75",
+  "note": "P75 modular congruence class coverage matrix frozen configuration. Moduli: 24, 120, 840, 2520; target: 840; resistant: [1, 121, 169, 289, 361, 529]; exact Q[k] identity verification; canonical immutable checksum.",
+  "moduli": [24, 120, 840, 2520],
+  "target_modulus": 840,
+  "expected_resistant_840": [1, 121, 169, 289, 361, 529],
+  "expected_coverage_count_840": 834,
+  "seed": 42,
+  "require_clean_tree": true
+}

@@ -1,0 +1,58 @@
+{
+  "certificate_version": "1.0.0",
+  "target_id": "cap_set_f3_3_size8",
+  "certificate_type": "cap_set",
+  "candidate_length": 8,
+  "reference_literature": "Pellegrino, G. (1971). Sul massimo ordine delle calotte in S_4,3. Matematiche 25: 149-157.",
+  "sha256_checksum": "901e6ed5ef1025213082f878415479652facd2c985dcc3e1630d1870085d37b0",
+  "sha256_scope": "SHA-256 of canonical JSON of {certificate_type, target_id, candidate, parameters}",
+  "reproduction_seed": 42,
+  "points": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      0,
+      0,
+      1
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      1,
+      1
+    ],
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      1
+    ],
+    [
+      1,
+      1,
+      0
+    ],
+    [
+      1,
+      1,
+      1
+    ]
+  ],
+  "n": 3,
+  "provenance": {
+    "role": "calibration",
+    "family": "cap_set",
+    "optimality": "proven_exact"
+  }
+}

@@ -1,0 +1,207 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{microtype}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\title{\textbf{Discovery with Generalized Symmetries and Non-Circulant Quantum Stabilizer Codes}}
+
+\author{
+  \textbf{Alexandre Zanata}\textsuperscript{1,2} \quad \textbf{EvoByte Research Consortium}\textsuperscript{1} \\
+  \textsuperscript{1}Open Source Systems \& Formal Methods Laboratory \\
+  \textsuperscript{2}EvoByte Core Architecture Group \\
+  \texttt{https://github.com/AlexandreZanata/EvoByte}
+}
+
+\date{October 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Automated search for optimal combinatorial coverings and quantum error-correcting codes (QECC) has recently transitioned from unguided stochastic sampling to structured algebraic synthesis. In prior cyclic search campaigns, Calderbank-Shor-Steane (CSS) stabilizer codes over circulant blocks were proven to encounter an unyielding distance ceiling of $d \le 3$ for $[[14, 3]]$ and $[[16, 5]]$ configurations, while cyclic orbits saturated on dense covering designs. In this paper, we present the methodology and empirical outcomes of \textbf{EvoByte Program D045}, investigating generalized symmetry groups and non-circulant parity architectures.
+
+Our framework introduces three core contributions:
+\begin{enumerate}
+    \item \textbf{Quasi-Cyclic Non-Circulant CSS Synthesis:} By breaking circulant block symmetry and introducing cross-coupling between generator blocks, our engine synthesized explicit $[[14, 3, 4]]$ and $[[16, 5, 4]]$ stabilizer codes (\texttt{DISCOVERY\_TIED}), matching the best known bounds on Markus Grassl's official repository (codetables.de).
+    \item \textbf{Generalized Automorphism Orbit Reduction and Structural Bounds:} Expanding beyond cyclic groups $\mathbb{Z}_m$ to affine groups $\operatorname{AGL}(1, q)$ and dihedral groups $D_m$, we rigorously establish structural obstruction theorems (\texttt{NULL\_BOUND}). For $C(13, 5, 3)$ under $\operatorname{AGL}(1, 13)$, the minimal orbit size is $39 > 34$; for $C(15, 10, 4)$ under $D_{15}$, non-trivial orbits have size $\ge 15 > 14$. Hence, no equivariant solutions under these groups can match the world records.
+    \item \textbf{Complete Verification Stack:} All discoveries and bounds are captured in canonical v3.0.0 cryptographic JSON certificates, validated by an independent zero-dependency pure Python 3 verifier in $< 2.0$\,ms per certificate, and formally proven in the Lean 4 interactive theorem prover kernel across 8 theorems with zero unproven gaps and standard core axioms.
+\end{enumerate}
+Finally, packages for international curators (Markus Grassl, Dan Gordon, Neil Sloane) are generated with reproducible offline execution under strict human custody.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+Constructing optimal quantum error-correcting codes and minimal combinatorial covering designs represents a core objective in discrete mathematics and fault-tolerant quantum computation \cite{mills1979sqs, gottesman1996stabilizer, steane1996error, shor1995scheme, calderbank1998quantum}. While machine learning and heuristic program synthesis (such as FunSearch \cite{romeraparedes2024nature}) have shown capability on certain structured tasks, empirical delimitation on dense extremal frontiers (EvoByte D042 \cite{zanata2026frontier}) proved that unguided stochastic mutation rapidly saturates without structural inductive bias.
+
+To overcome this saturation, structured algebraic synthesis under finite group actions was developed in EvoByte Program D043 \cite{zanata2026structured}, tying the world record for $C(15, 8, 4) = 30$ using 2 cyclic orbits under $\mathbb{Z}_{15}$. However, D043 also identified fundamental structural barriers:
+\begin{itemize}
+    \item \textbf{The Circulant Ceiling:} When parity check matrices $H_X$ and $H_Z$ are composed of pure circulant blocks of orders 7 or 8, exhaustive SAT search proved that code distance is bounded by $d \le 3$. No pure circulant CSS code can achieve $d=4$ on 14 or 16 qubits with $k=3$ or $k=5$.
+    \item \textbf{The Cyclic Covering Deficit:} Cyclic groups $\mathbb{Z}_m$ lack sufficient transitive richness to cover dense configurations such as $C(13, 5, 3)$ and $C(15, 10, 4)$ within the established world record bounds.
+\end{itemize}
+
+These findings motivated **Program D045**: expanding the mathematical discovery engine to \emph{generalized symmetries}---specifically 1-dimensional affine groups $\operatorname{AGL}(1, q)$ and dihedral groups $D_m$---and developing \emph{quasi-cyclic non-circulant parity architectures} for quantum stabilizer codes.
+
+\section{Generalized Mathematical Framework}
+\label{sec:framework}
+
+\subsection{Quasi-Cyclic Non-Circulant Quantum Codes}
+\label{sec:qecc_framework}
+A binary quantum stabilizer code $[[n, k, d]]$ encodes $k$ logical qubits into $n$ physical qubits with code distance $d$ \cite{gottesman1996stabilizer, calderbank1998quantum}. In CSS codes, the stabilizer group is specified by two binary matrices $H_X \in \mathbb{F}_2^{m_X \times n}$ and $H_Z \in \mathbb{F}_2^{m_Z \times n}$ satisfying the symplectic orthogonality condition:
+\begin{equation}
+\label{eq:symplectic}
+H_X H_Z^T = 0 \pmod 2.
+\end{equation}
+The number of encoded logical qubits is $k = n - \operatorname{rank}(H_X) - \operatorname{rank}(H_Z)$.
+
+In quasi-cyclic non-circulant codes of index 2 ($n = 2\ell$), parity check matrices are partitioned into block matrices:
+\begin{equation}
+\label{eq:block_matrix}
+H_X = \begin{pmatrix} A_X & B_X \end{pmatrix}, \quad H_Z = \begin{pmatrix} A_Z & B_Z \end{pmatrix},
+\end{equation}
+where $A_X, B_X, A_Z, B_Z \in \mathbb{F}_2^{m \times \ell}$. Unlike pure circulant codes where each submatrix is a circulant matrix $C(c)$ fully determined by cyclic shifts of a single vector, our non-circulant generator introduces cross-coupling shift operators and linear row-combinations:
+\begin{equation}
+\label{eq:commutation_condition}
+A_X A_Z^T + B_X B_Z^T = 0 \pmod 2.
+\end{equation}
+By decoupling the cyclic constraint across rows, the code gains the degrees of freedom required to avoid low-weight undetected logical operators while strictly preserving pairwise symplectic commutativity.
+
+\subsection{Generalized Automorphism Orbit Reduction}
+\label{sec:orbit_framework}
+Let $V$ be a ground set of $v$ elements, and let $G \le \operatorname{Sym}(V)$ be a permutation group acting on $V$. The induced action on $k$-subsets $\binom{V}{k}$ partitions the $\binom{v}{k}$ candidate blocks into disjoint orbits:
+\begin{equation}
+\label{eq:orbit_def}
+\mathcal{O}_G(B) = \{ g(B) : g \in G \}.
+\end{equation}
+In this work, we deploy two non-trivial group families:
+\begin{enumerate}
+    \item \textbf{Affine Linear Groups $\operatorname{AGL}(1, q)$:} For prime $q$, $V = \mathbb{F}_q$, and $g_{a, b}(x) = ax + b$ with $a \in \mathbb{F}_q^\times, b \in \mathbb{F}_q$. The group order is $|G| = q(q - 1)$.
+    \item \textbf{Dihedral Groups $D_m$:} For $V = \mathbb{Z}_m$, reflections and rotations $r^i s^j$ with $r(x) = x + 1 \pmod m$ and $s(x) = -x \pmod m$. The group order is $|G| = 2m$.
+\end{enumerate}
+
+Any $G$-invariant covering design $\mathcal{B}$ must be a union of full orbits: $\mathcal{B} = \bigcup_{i=1}^u \mathcal{O}_G(B_i)$. Consequently, the cardinality of any $G$-invariant design satisfies:
+\begin{equation}
+\label{eq:cardinality_bound}
+|\mathcal{B}| = \sum_{i=1}^u |\mathcal{O}_G(B_i)| \ge \min_{B} |\mathcal{O}_G(B)|.
+\end{equation}
+
+\subsection{Exact Dual Distance and SAT Encoding}
+\label{sec:sat_framework}
+For CSS codes with $H_X$ and $H_Z$, distance $d \ge 4$ requires that every Pauli $X$-error $E_X$ of weight $1 \le \operatorname{wt}(E_X) \le 3$ is either detected by $H_Z$ ($H_Z E_X^T \ne 0$) or lies in the row space of $H_X$, and symmetrically for $Z$-errors with $H_X$.
+
+For $n=14$, there are $\binom{14}{1} + \binom{14}{2} + \binom{14}{3} = 14 + 91 + 364 = 469$ potential low-weight error vectors; for $n=16$, there are 696 error vectors. We encode generator choice, orthogonality, and error-detection constraints into propositional logic in Conjunctive Normal Form (CNF), solved via CaDiCaL \cite{biere2020cadical, ignatiev2018pysat}.
+
+\section{Empirical Discoveries and Closed Bounds}
+\label{sec:results}
+
+\subsection{Record-Tied Non-Circulant Quantum Codes}
+\label{sec:qecc_results}
+Across the pre-registered campaign, EvoByte achieved two notable ties with the best known codes in the literature:
+\begin{enumerate}
+    \item $[[14, 3, 4]]$: On 14 qubits, with $m_X = 6, m_Z = 5$ (11 total generators), our engine constructed a stabilizer code with minimum distance $d=4$. On codetables.de \cite{grassl2026codetables}, the entry for $n=14, k=3$ lists an upper bound of 4 and lower bound of 4. Our explicit quasi-cyclic non-circulant CSS construction achieves $d=4$, confirming the upper bound with an explicit, compact representation (\texttt{DISCOVERY\_TIED}).
+    \item $[[16, 5, 4]]$: On 16 qubits, with $m_X = 6, m_Z = 5$ (11 total generators), our engine constructed a stabilizer code with minimum distance $d=4$. On codetables.de, the entry for $n=16, k=5$ lists an upper bound of 4 and lower bound of 4. Our construction matches the optimal bound (\texttt{DISCOVERY\_TIED}).
+\end{enumerate}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Quantum Error-Correcting Stabilizer Codes in Program D045.}
+\label{tab:qecc}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Target Code} & \textbf{Generators} & \textbf{Code Type} & \textbf{Claimed $d$} & \textbf{Literature Bound} & \textbf{Verdict} & \textbf{Solve Time} \\
+\midrule
+$[[7, 1, 3]]$ & 6 (3X, 3Z) & Steane CSS & 3 & 3 (Exact) & \texttt{CALIB\_REPRODUCED} & 0.005 s \\
+$[[9, 1, 3]]$ & 8 (6Z, 2X) & Non-Circulant & 3 & 3 (Exact) & \texttt{CALIB\_REPRODUCED} & 0.261 s \\
+$[[14, 3, 4]]$ & 11 (6X, 5Z) & QC Non-Circulant & 4 & 4 (Upper) & \texttt{DISCOVERY\_TIED} & 0.554 s \\
+$[[16, 5, 4]]$ & 11 (6X, 5Z) & QC Non-Circulant & 4 & 4 (Upper) & \texttt{DISCOVERY\_TIED} & 0.326 s \\
+$[[18, 3, 4]]$ & 11 (6X, 5Z) & QC Non-Circulant & 3 & 4 (Upper) & \texttt{NULL\_RESULT} & 1.482 s \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Structural Obstruction Theorems: NULL\_BOUND}
+\label{sec:covering_results}
+In covering design exploration, empirical failures often obscure whether the algorithm lacked search budget or whether the requested configuration is mathematically obstructed by the chosen symmetry. In D045, we establish rigorous \emph{negative structural theorems}:
+
+\begin{theorem}[$\operatorname{AGL}(1, 13)$ Obstruction on $C(13, 5, 3)$]
+\label{thm:agl13}
+The affine group $\operatorname{AGL}(1, 13)$ acting on 5-subsets of 13 elements has 10 distinct orbit representatives. The orbit lengths belong strictly to $\{39, 78, 156\}$, with minimal orbit length $\min |\mathcal{O}| = 39$. Since $39 > 34$ (the world record in the La Jolla Covering Repository \cite{gordon2026ljcr}), no non-trivial $\operatorname{AGL}(1, 13)$-invariant covering design can match or surpass 34 blocks (\texttt{NULL\_BOUND}).
+\end{theorem}
+
+\begin{theorem}[$D_{15}$ Obstruction on $C(15, 10, 4)$]
+\label{thm:dihedral15}
+The dihedral group $D_{15}$ acting on 10-subsets of 15 elements has 111 distinct orbit representatives. Orbit lengths belong to $\{3, 15, 30\}$. The single orbit of size 3 covers only 3 quadruples out of 1,365. Every non-trivial orbit has cardinality $\ge 15$. Since $15 > 14$ (the world record in LJCR \cite{gordon2026ljcr}), no $D_{15}$-invariant covering design can match or surpass 14 blocks (\texttt{NULL\_BOUND}).
+\end{theorem}
+
+These two results illustrate the scientific value of structured search: rather than reporting inconclusive heuristic runs, the engine delivers definitive negative theorems explaining \emph{why} certain symmetries cannot reach optimal bounds.
+
+\section{Multi-Stage Formal Verification Stack}
+\label{sec:verification}
+
+To guarantee absolute scientific integrity and eliminate false positives, every empirical claim is subjected to a three-tier verification hierarchy:
+
+\subsection{Canonical Cryptographic Certificates (v3.0.0)}
+\label{sec:certs}
+Each discovered code and structural bound is exported as a canonical JSON document following schema v3.0.0, containing full generator matrices, block lists, parameters, execution timestamps, random seeds, and SHA-256 integrity hashes.
+
+\subsection{Zero-Dependency Standalone Verifier}
+\label{sec:standalone}
+We implemented \texttt{verify\_generalized\_certificate.py}, a zero-dependency verification script in pure Python 3 standard library (\texttt{sys}, \texttt{json}, \texttt{hashlib}, \texttt{math}, \texttt{itertools}, \texttt{time}). Running with \texttt{python3 -S} (isolated from \texttt{site-packages}):
+\begin{itemize}
+    \item Quantum codes: Verifies generator linear independence, pairwise symplectic commutativity ($H_X H_Z^T \equiv 0$), and dual distance $d \ge 4$ via bitwise popcount error testing.
+    \item Covering designs: Verifies exhaustive $t$-tuple coverage and block strict sorting.
+    \item Structural null bounds: Verifies minimal orbit length arithmetic against world record bounds.
+\end{itemize}
+Across all 10 certificates generated in D045, average verification time is $0.51$\,ms per certificate (maximum $1.60$\,ms for $[[16, 5, 4]]$), vastly faster than the 2.0\,ms gate requirement.
+
+\subsection{Interactive Formal Certification in Lean 4}
+\label{sec:lean4}
+In \texttt{lean\_proofs/Generated/GeneralizedDiscovery.lean}, all 8 primary properties were formulated and proven in the Lean 4 interactive theorem prover \cite{moura2021lean4}:
+\begin{enumerate}
+    \item \texttt{steane\_7\_1\_3\_commute}: Steane $[[7, 1, 3]]$ generators commute pairwise.
+    \item \texttt{shor\_9\_1\_3\_commute}: Shor $[[9, 1, 3]]$ generators commute pairwise.
+    \item \texttt{qecc\_14\_3\_4\_commute}: Non-circulant $[[14, 3, 4]]$ generators commute pairwise.
+    \item \texttt{qecc\_16\_5\_4\_commute}: Non-circulant $[[16, 5, 4]]$ generators commute pairwise.
+    \item \texttt{ag23\_affine\_covering\_valid}: $AG(2, 3)$ blocks cover all 36 pairs on 9 points.
+    \item \texttt{ag23\_blocks\_strictly\_sorted}: All 12 blocks of $AG(2, 3)$ are strictly sorted.
+    \item \texttt{agl13\_orbit\_obstruction}: Under $\operatorname{AGL}(1, 13)$, all orbit sizes on 5-subsets exceed 34.
+    \item \texttt{dihedral15\_orbit\_obstruction}: Under $D_{15}$, all non-trivial orbit sizes on 10-subsets exceed 14.
+\end{enumerate}
+Every theorem compiles in the Lean 4 kernel via \texttt{decide} with \textbf{zero unproven assertions or admitted proof gaps} and axioms restricted strictly to core standard axioms (\texttt{propext}, \texttt{Classical.choice}, \texttt{Quot.sound}).
+
+\section{World Literature Audit and Curator Dossiers}
+\label{sec:curators}
+In accordance with EvoByte's safety protocols, an autonomous system must never contact external curators directly. We generated three self-contained submission dossiers in \texttt{dist/curator-submissions/p209/}:
+\begin{enumerate}
+    \item \textbf{Markus Grassl (codetables.de):} Dossier documenting the explicit quasi-cyclic non-circulant CSS $[[14, 3, 4]]$ and $[[16, 5, 4]]$ constructions tying the world record distance.
+    \item \textbf{Dan Gordon (LJCR):} Dossier presenting the formal NULL\_BOUND obstruction theorems for $C(13, 5, 3)$ and $C(15, 10, 4)$.
+    \item \textbf{Neil Sloane (OEIS):} Dossier detailing the minimal affine plane $AG(2, 3) = C(9, 3, 2) = 12$ calibration.
+\end{enumerate}
+Each package contains a 1-click reproduction script (\texttt{reproduce.sh}) executing in $< 20$\,ms offline, canonical certificates, standalone verifier, and draft communication letters with status \texttt{pending\_human\_submission}.
+
+\section{Conclusion and Future Outlook}
+\label{sec:conclusion}
+EvoByte Program D045 successfully demonstrated that moving beyond cyclic symmetries and circulant matrix constraints unlocks significant mathematical progress. By synthesizing quasi-cyclic non-circulant CSS parity check matrices, we tied the world record bounds for $[[14, 3, 4]]$ and $[[16, 5, 4]]$ quantum stabilizer codes. Concurrently, by formalizing generalized orbit actions under affine and dihedral groups, we proved definitive structural obstruction theorems (NULL\_BOUND) for $C(13, 5, 3)$ and $C(15, 10, 4)$.
+
+All code, certificates, standalone verifiers, and Lean 4 kernel proofs are publicly archived and fully reproducible. Future work will investigate non-abelian lifted product codes and two-dimensional affine planes over non-prime fields to push beyond current world records.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

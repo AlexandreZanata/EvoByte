@@ -1,0 +1,8 @@
+{
+  "phase": "P159",
+  "bundle_output_dir": "dist/zenodo-bundle",
+  "create_tarball": true,
+  "require_docker": true,
+  "min_bundle_files": 50,
+  "require_clean_tree": true
+}

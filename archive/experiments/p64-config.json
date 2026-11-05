@@ -1,0 +1,54 @@
+{
+  "phase": "P64",
+  "note": "Frozen P64 obstruction audit. Declared boxes and development scans only; sealed finals excluded.",
+  "device": "cpu",
+  "seed": 0,
+  "require_clean_tree": true,
+  "rules": [
+    {
+      "rule": {
+        "kind": "interval",
+        "bound": "sum_le",
+        "value": 4
+      },
+      "n": 4,
+      "proof_box": 6
+    },
+    {
+      "rule": {
+        "kind": "parity",
+        "coord": 0,
+        "residue": 1
+      },
+      "n": 4,
+      "proof_box": 6
+    }
+  ],
+  "search_box": 12,
+  "max_checks": 200000,
+  "explore_frac": 0.1,
+  "known_valid": [
+    [
+      2,
+      3,
+      6
+    ],
+    [
+      2,
+      4,
+      4
+    ],
+    [
+      3,
+      3,
+      3
+    ]
+  ],
+  "priority_rules": [
+    {
+      "kind": "parity",
+      "coord": 0,
+      "residue": 1
+    }
+  ]
+}

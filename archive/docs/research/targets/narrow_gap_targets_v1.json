@@ -1,0 +1,387 @@
+{
+  "calibrations": [
+    {
+      "certificate_object": [
+        [
+          1,
+          2,
+          3
+        ],
+        [
+          1,
+          4,
+          5
+        ],
+        [
+          1,
+          6,
+          7
+        ],
+        [
+          2,
+          4,
+          6
+        ],
+        [
+          2,
+          5,
+          7
+        ],
+        [
+          3,
+          4,
+          7
+        ],
+        [
+          3,
+          5,
+          6
+        ]
+      ],
+      "description": "Fano plane 2-(7,3,1) Steiner system: exactly 7 blocks covering all 21 pairs.",
+      "expected_value": 7,
+      "family": "covering_design",
+      "name": "C(7,3,2)",
+      "params": {
+        "k": 3,
+        "t": 2,
+        "v": 7
+      },
+      "proven_optimal": true,
+      "role": "calibration",
+      "target_id": "covering_C_7_3_2",
+      "verifier_name": "verify_covering_design"
+    },
+    {
+      "certificate_object": [
+        [
+          1,
+          3,
+          5,
+          7
+        ],
+        [
+          2,
+          4,
+          6,
+          8
+        ],
+        [
+          1,
+          2,
+          5,
+          6
+        ],
+        [
+          3,
+          4,
+          7,
+          8
+        ],
+        [
+          1,
+          4,
+          5,
+          8
+        ],
+        [
+          2,
+          3,
+          6,
+          7
+        ],
+        [
+          1,
+          2,
+          3,
+          4
+        ],
+        [
+          5,
+          6,
+          7,
+          8
+        ],
+        [
+          1,
+          3,
+          6,
+          8
+        ],
+        [
+          2,
+          4,
+          5,
+          7
+        ],
+        [
+          1,
+          2,
+          7,
+          8
+        ],
+        [
+          3,
+          4,
+          5,
+          6
+        ],
+        [
+          1,
+          4,
+          6,
+          7
+        ],
+        [
+          2,
+          3,
+          5,
+          8
+        ]
+      ],
+      "description": "Affine geometry AG(3,2) 3-(8,4,1) design: exactly 14 blocks covering all 56 triples.",
+      "expected_value": 14,
+      "family": "covering_design",
+      "name": "C(8,4,3)",
+      "params": {
+        "k": 4,
+        "t": 3,
+        "v": 8
+      },
+      "proven_optimal": true,
+      "role": "calibration",
+      "target_id": "covering_C_8_4_3",
+      "verifier_name": "verify_covering_design"
+    },
+    {
+      "certificate_object": [
+        "IIIXXXX",
+        "IXXIIXX",
+        "XIXIXIX",
+        "IIIZZZZ",
+        "IZZIIZZ",
+        "ZIZIZIZ"
+      ],
+      "description": "Steane 7-qubit CSS code [[7,1,3]]: distance 3.",
+      "expected_value": 3,
+      "family": "qecc_stabilizer",
+      "name": "[[7,1,3]]",
+      "params": {
+        "k": 1,
+        "n": 7
+      },
+      "proven_optimal": true,
+      "role": "calibration",
+      "target_id": "steane_7_1_3",
+      "verifier_name": "code_distance"
+    },
+    {
+      "certificate_object": [
+        "ZZIIIIIII",
+        "IZZIIIIII",
+        "IIIZZIIII",
+        "IIIIZZIII",
+        "IIIIIIZZI",
+        "IIIIIIIZZ",
+        "XXXXXXIII",
+        "IIIXXXXXX"
+      ],
+      "description": "Shor 9-qubit code [[9,1,3]]: distance 3.",
+      "expected_value": 3,
+      "family": "qecc_stabilizer",
+      "name": "[[9,1,3]]",
+      "params": {
+        "k": 1,
+        "n": 9
+      },
+      "proven_optimal": true,
+      "role": "calibration",
+      "target_id": "shor_9_1_3",
+      "verifier_name": "code_distance"
+    },
+    {
+      "certificate_object": [
+        "XZZXI",
+        "IXZZX",
+        "XIXZZ",
+        "ZXIXZ"
+      ],
+      "description": "Perfect 5-qubit code [[5,1,3]]: distance 3.",
+      "expected_value": 3,
+      "family": "qecc_stabilizer",
+      "name": "[[5,1,3]]",
+      "params": {
+        "k": 1,
+        "n": 5
+      },
+      "proven_optimal": true,
+      "role": "calibration",
+      "target_id": "five_qubit_5_1_3",
+      "verifier_name": "code_distance"
+    }
+  ],
+  "freeze_date": "2026-10-26",
+  "num_calibration_targets": 5,
+  "num_record_targets": 5,
+  "program": "P191-P200 Structured Discovery (D043)",
+  "targets": [
+    {
+      "best_known_value": 21,
+      "candidate_symmetry_group": "Z_13",
+      "certificate_status": "site_unreachable",
+      "description": "Covering design C(13,6,3): 286 3-subsets of 13 points covered by 6-element blocks. Stale record of 21 blocks since 1996; theoretical lower bound 20. Gap=1. Automorphism candidates: Z_13 cyclic orbits.",
+      "family": "covering_design",
+      "gap": 1,
+      "name": "C(13,6,3)",
+      "objective": "minimize",
+      "params": {
+        "k": 6,
+        "t": 3,
+        "v": 13
+      },
+      "proven_optimal": false,
+      "record_condition": "size <= 20",
+      "reference_object": null,
+      "role": "record",
+      "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+      "source_id": "ljcr-coverdata-459bcaf",
+      "source_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json",
+      "symmetry_order": 13,
+      "target_id": "covering_C_13_6_3",
+      "theoretical_bound": 20,
+      "tie_condition": "size == 21 non-isomorphic",
+      "verifier_name": "verify_covering_design"
+    },
+    {
+      "best_known_value": 25,
+      "candidate_symmetry_group": "Z_14",
+      "certificate_status": "site_unreachable",
+      "description": "Covering design C(14,6,3): 364 3-subsets of 14 points covered by 6-element blocks. Stale record of 25 blocks since 1996; theoretical lower bound 24. Gap=1. Automorphism candidates: Z_14 cyclic or Z_13 + fixed point.",
+      "family": "covering_design",
+      "gap": 1,
+      "name": "C(14,6,3)",
+      "objective": "minimize",
+      "params": {
+        "k": 6,
+        "t": 3,
+        "v": 14
+      },
+      "proven_optimal": false,
+      "record_condition": "size <= 24",
+      "reference_object": null,
+      "role": "record",
+      "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+      "source_id": "ljcr-coverdata-459bcaf",
+      "source_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json",
+      "symmetry_order": 14,
+      "target_id": "covering_C_14_6_3",
+      "theoretical_bound": 24,
+      "tie_condition": "size == 25 non-isomorphic",
+      "verifier_name": "verify_covering_design"
+    },
+    {
+      "best_known_value": 30,
+      "candidate_symmetry_group": "Z_15",
+      "certificate_status": "site_unreachable",
+      "description": "Covering design C(15,8,4): 1365 4-subsets of 15 points covered by 8-element blocks. Stale record of 30 blocks since 1996; theoretical lower bound 29. Gap=1. Automorphism candidates: Z_15 cyclic or Z_5 x Z_3 factorization.",
+      "family": "covering_design",
+      "gap": 1,
+      "name": "C(15,8,4)",
+      "objective": "minimize",
+      "params": {
+        "k": 8,
+        "t": 4,
+        "v": 15
+      },
+      "proven_optimal": false,
+      "record_condition": "size <= 29",
+      "reference_object": null,
+      "role": "record",
+      "snapshot_sha256": "0984bb8b4c89fe07268569b9814794e3c8852302d075f0794140f202e83d7fef",
+      "source_id": "ljcr-coverdata-459bcaf",
+      "source_url": "https://raw.githubusercontent.com/dmgordo/LJCR/459bcaf247bd8d34610d946b0465864f7d4dfa37/coverings/coverdata.json",
+      "symmetry_order": 15,
+      "target_id": "covering_C_15_8_4",
+      "theoretical_bound": 29,
+      "tie_condition": "size == 30 non-isomorphic",
+      "verifier_name": "verify_covering_design"
+    },
+    {
+      "best_known_value": 4,
+      "candidate_symmetry_group": "circulant_Z_14",
+      "certificate_status": "verified_snapshot",
+      "description": "Quantum stabilizer code [[14,3,d]]: n=14 qubits, k=3 encoded qubits. Markus Grassl tables document d_lo=4, d_hi=5. Gap=1. Automorphism candidates: circulant block generators over Z_14.",
+      "family": "qecc_stabilizer",
+      "gap": 1,
+      "name": "[[14,3,4-5]]",
+      "objective": "maximize",
+      "params": {
+        "k": 3,
+        "n": 14
+      },
+      "proven_optimal": false,
+      "record_condition": "distance >= 5",
+      "reference_object": [
+        "XIIIYIIXZZYZII",
+        "ZIIZXYIZYIYZII",
+        "IXIIZXIXIIIXII",
+        "IZIZYXIZIYZYII",
+        "IIXIXYIIXYYXII",
+        "IIZZZZIIZZYYII",
+        "IIIXIZIIIZXYII",
+        "IIIIIIXXXXXXII",
+        "IIIIIIZZZZZZII",
+        "IIIIIIIIIIIIXI",
+        "IIIIIIIIIIIIIX"
+      ],
+      "role": "record",
+      "snapshot_sha256": "47188e2033fbd0227efdaa1d7a2d424109702fbec7389a2e4bd9b25a8bedd714",
+      "source_id": "grassl-codetables-14-3",
+      "source_url": "https://codetables.de/QECC.php?q=4&n=14&k=3",
+      "symmetry_order": 14,
+      "target_id": "qecc_14_3_open",
+      "theoretical_bound": 5,
+      "tie_condition": "distance == 4 non-isomorphic",
+      "verifier_name": "code_distance"
+    },
+    {
+      "best_known_value": 4,
+      "candidate_symmetry_group": "circulant_Z_16",
+      "certificate_status": "verified_snapshot",
+      "description": "Quantum stabilizer code [[16,5,d]]: n=16 qubits, k=5 encoded qubits. Markus Grassl tables document d_lo=4, d_hi=5. Gap=1. Automorphism candidates: circulant block generators over Z_16.",
+      "family": "qecc_stabilizer",
+      "gap": 1,
+      "name": "[[16,5,4-5]]",
+      "objective": "maximize",
+      "params": {
+        "k": 5,
+        "n": 16
+      },
+      "proven_optimal": false,
+      "record_condition": "distance >= 5",
+      "reference_object": [
+        "XIIIYZIXYYXXIXII",
+        "ZIIZXYIZXYZIYXII",
+        "IXIIZYIXZZIIIXII",
+        "IZIZYXIZYXIZYXII",
+        "IIXIXXIIIXXIYYII",
+        "IIZZZZIIIIZZZZII",
+        "IIIXIIIIIXIXZZII",
+        "IIIIIIXXXXXXXXII",
+        "IIIIIIZZZZZZZZII",
+        "IIIIIIIIIIIIIIXI",
+        "IIIIIIIIIIIIIIIX"
+      ],
+      "role": "record",
+      "snapshot_sha256": "2a74240fb793bb88e3edfedd2b34d737595ba1080af2972498d1c0fee221316e",
+      "source_id": "grassl-codetables-16-5",
+      "source_url": "https://codetables.de/QECC.php?q=4&n=16&k=5",
+      "symmetry_order": 16,
+      "target_id": "qecc_16_5_open",
+      "theoretical_bound": 5,
+      "tie_condition": "distance == 4 non-isomorphic",
+      "verifier_name": "code_distance"
+    }
+  ],
+  "version": "1.0"
+}

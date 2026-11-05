@@ -1,0 +1,62 @@
+{
+  "manifest_version": "1.0.0",
+  "phase": "P166",
+  "campaign_id": "p166-preregistered-record-campaign",
+  "preregistered_at": "2026-10-22T12:58:51Z",
+  "statement": "Pre-registration of a fixed-budget search for records that beat the published literature bounds. The goal, the budget, the seeds, the algorithms and the win criterion are frozen in this file before the campaign runs; none of them may change during the campaign.",
+  "targets": [
+    "vanderwaerden_w3_3",
+    "vanderwaerden_w2_6",
+    "schur_s5"
+  ],
+  "excluded_targets": [
+    {
+      "target_id": "spectral_graph_diam_mu2",
+      "reason": "The registered conjecture AH_diam_mu2 asks for a connected graph with diameter + mu_2 < 2.0. For every connected graph with n >= 2 this is unreachable: diameter = 1 implies a complete graph, whose algebraic connectivity is mu_2 = n >= 2, and diameter >= 2 already gives diameter + mu_2 >= 2. The target therefore has no reachable candidate space for a combinatorial search, and is excluded before the campaign rather than searched and reported as a vacuous null result."
+    }
+  ],
+  "target_parameters": {
+    "vanderwaerden_w3_3": {
+      "kind": "vanderwaerden",
+      "published_bound": 26.0,
+      "colors": 3,
+      "terms": 3,
+      "reference": "Chvatal (1970); known exact value W(3,3)=27"
+    },
+    "vanderwaerden_w2_6": {
+      "kind": "vanderwaerden",
+      "published_bound": 1131.0,
+      "colors": 2,
+      "terms": 6,
+      "reference": "Kouril (2008); known exact value W(2,6)=1132"
+    },
+    "schur_s5": {
+      "kind": "schur",
+      "published_bound": 160.0,
+      "classes": 5,
+      "reference": "Exoo (1994), Heule (2018); known bound S(5) >= 160"
+    }
+  },
+  "sizes": {
+    "tie": "published_bound",
+    "beat": "published_bound + 1"
+  },
+  "budget_sec_per_seed": 10.0,
+  "seeds": [42, 101, 202, 303, 404, 505, 606, 707, 808, 909],
+  "algorithms": ["SimulatedAnnealing", "TabuSearch"],
+  "verdict_rule": {
+    "DISCOVERY_BEATEN": "at least one candidate certified by the independent verifier at the beat size (published_bound + 1), i.e. strictly beyond the published literature bound",
+    "DISCOVERY_TIED": "no certified candidate at the beat size, but at least one certified candidate at the tie size (published_bound), i.e. equal to the published literature bound",
+    "NULL_RESULT": "the fixed budget was exhausted for every seed and algorithm without a certified candidate at the beat size or at the tie size"
+  },
+  "integrity_rule": {
+    "catalogue_path": "docs/research/targets/open_targets.json",
+    "catalogue_sha256": "400eeb5a188564402dfbbd4cac9b6abcf51d63498b04c837a15d27d4ffd338d5",
+    "max_overshoot_factor": 3.0,
+    "note": "A trial whose elapsed wall-clock exceeds max_overshoot_factor times the budget invalidates the campaign and must abort it. A candidate that the local search considers solved but that the independent verifier rejects invalidates the campaign and must abort it."
+  },
+  "reproducibility": {
+    "timer": "time.perf_counter()",
+    "note": "Evaluation counts and wall-clock times depend on machine speed; target ids, sizes, seeds, algorithms and budget are frozen above."
+  }
+}

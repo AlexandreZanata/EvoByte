@@ -1,0 +1,21 @@
+{
+  "approved_budget_sec": 0.0,
+  "budget_reference": {
+    "P52_collection_sec": 3600.0,
+    "P53_training_sec": 1800.0,
+    "P54_comparison_sec": 10800.0,
+    "P57_campaign_sec": 3600.0,
+    "note": "Runbook caps cover P52/P53/P54/P57 only; no compute budget is approved for P55."
+  },
+  "continuation": "P56 with the classical sampler",
+  "mechanism": "",
+  "note": "Complete frozen configuration. No approved P55 budget and no preregistered single mechanism, so the mechanical gate records DEFERRED with zero compute cost; P37 stays NULL history (not rerun); no quantum-advantage or quantum-hardware language is used. No TBD values.",
+  "p37_historical": {
+    "hypothesis": "dependency-correlated",
+    "note": "Reused as history only; not rerun and not a general equivalence proof.",
+    "phase": "P37",
+    "result": "NULL"
+  },
+  "phase": "P55",
+  "procedure": {}
+}

@@ -1,0 +1,32 @@
+{
+  "candidate": {
+    "code_structure": "non_circulant_stabilizer",
+    "generators": [
+      "XIYZZYZIY",
+      "ZYYIXZIYZ",
+      "ZIZYZXZZI",
+      "ZYIIXXIXZ",
+      "ZYIZIYIIX",
+      "ZIZIZZXZY",
+      "IIZZIIIYX",
+      "IXIIZIIZY"
+    ],
+    "num_generators": 8
+  },
+  "certificate_type": "qecc_stabilizer",
+  "certificate_version": "3.0.0",
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine",
+    "seed": 42,
+    "solve_time_seconds": 0.2612413650058443,
+    "timestamp_utc": "2026-10-27T18:41:19Z"
+  },
+  "parameters": {
+    "claimed_d": 3,
+    "k": 1,
+    "n": 9
+  },
+  "sha256_checksum": "85d9b46647e561a6329ff14a9448fa59a9cd394fe76c0ea2fb502b5667cf0041",
+  "target_id": "calib_shor_9_1_3",
+  "verdict": "CALIBRATION_REPRODUCED"
+}

@@ -1,0 +1,46 @@
+{
+  "challenge_file": "lean_proofs/P48Proofs.lean",
+  "challenges": [
+    {
+      "statement": "∀ x : ℚ, x ^ 2 - 1 = (x - 1) * (x + 1)",
+      "statement_sha256_prefix": "1445e5851eb68956",
+      "theorem": "es_identity"
+    },
+    {
+      "statement": "(4 : ℚ) / 1009 = 1 / 253 + 1 / 85100 + 1 / 944524900",
+      "statement_sha256_prefix": "aa67d4657edea44f",
+      "theorem": "erdos_straus_1009"
+    }
+  ],
+  "controls": [
+    {
+      "expected": "rejected_compile",
+      "file": "lean_proofs/controls/false_equality.lean",
+      "id": "false_equality",
+      "theorem": "false_identity"
+    },
+    {
+      "expected": "rejected_mismatch",
+      "file": "lean_proofs/controls/swapped_statement.lean",
+      "id": "swapped_statement",
+      "theorem": "es_identity"
+    },
+    {
+      "expected": "rejected_sorry",
+      "file": "lean_proofs/controls/sorry_proof.lean",
+      "id": "sorry_proof",
+      "theorem": "sorry_identity"
+    },
+    {
+      "expected": "rejected_axiom",
+      "file": "lean_proofs/controls/extra_axiom.lean",
+      "id": "extra_axiom",
+      "theorem": "assumed_identity"
+    }
+  ],
+  "note": "Complete frozen configuration. Compiler output is diagnostic; only a checked certificate counts. Translation review by a mathematician is recorded separately and stays pending. No TBD values.",
+  "phase": "P48",
+  "project_dir": "lean_proofs",
+  "timeout_sec": 900,
+  "toolchain_pin": "leanprover/lean4:v4.34.0"
+}

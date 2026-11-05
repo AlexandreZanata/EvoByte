@@ -1,0 +1,911 @@
+{
+  "negatives": [
+    {
+      "extrap_mse": 27.15277777777777,
+      "item_id": "sym_poly_0000_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 2944,
+        "engine": "grammar_resident_p33",
+        "generations": 23,
+        "pop_size": 128,
+        "seed": 7409,
+        "teacher_best_mse": 7.127660274505615
+      },
+      "test_mse": 6.984193548387096
+    },
+    {
+      "extrap_mse": 552.2935956790124,
+      "item_id": "sym_poly_0001_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4352,
+        "engine": "grammar_resident_p33",
+        "generations": 34,
+        "pop_size": 128,
+        "seed": 6753,
+        "teacher_best_mse": 20.342552185058594
+      },
+      "test_mse": 19.040460484710152
+    },
+    {
+      "extrap_mse": 6200.464841070812,
+      "item_id": "sym_poly_0002_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 3209,
+        "teacher_best_mse": 79.58990478515625
+      },
+      "test_mse": 73.1711594054264
+    },
+    {
+      "extrap_mse": 482.8352623456789,
+      "item_id": "sym_poly_0004_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 3621,
+        "teacher_best_mse": 10.959562301635742
+      },
+      "test_mse": 10.087879839548865
+    },
+    {
+      "extrap_mse": 1056.6547067901236,
+      "item_id": "sym_poly_0005_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 3006,
+        "teacher_best_mse": 84.15104675292969
+      },
+      "test_mse": 79.6927185492263
+    },
+    {
+      "extrap_mse": 105.09423225308643,
+      "item_id": "sym_poly_0006_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4608,
+        "engine": "grammar_resident_p33",
+        "generations": 36,
+        "pop_size": 128,
+        "seed": 4926,
+        "teacher_best_mse": 2.144146680831909
+      },
+      "test_mse": 2.033824798596891
+    },
+    {
+      "extrap_mse": 567.4463734567901,
+      "item_id": "sym_poly_0007_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 7676,
+        "teacher_best_mse": 15.470211029052734
+      },
+      "test_mse": 14.024654033097242
+    },
+    {
+      "extrap_mse": 2067.3224799597047,
+      "item_id": "sym_poly_0008_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4224,
+        "engine": "grammar_resident_p33",
+        "generations": 33,
+        "pop_size": 128,
+        "seed": 6768,
+        "teacher_best_mse": 13.102747917175293
+      },
+      "test_mse": 13.237982784970562
+    },
+    {
+      "extrap_mse": 1.0000000000000004,
+      "item_id": "sym_poly_0010_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 4040,
+        "teacher_best_mse": 1.0000007152557373
+      },
+      "test_mse": 0.9999999999999989
+    },
+    {
+      "extrap_mse": 9771.406817986968,
+      "item_id": "sym_poly_0011_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4352,
+        "engine": "grammar_resident_p33",
+        "generations": 34,
+        "pop_size": 128,
+        "seed": 2002,
+        "teacher_best_mse": 58.800323486328125
+      },
+      "test_mse": 56.152344852077206
+    },
+    {
+      "extrap_mse": 593.5991512345678,
+      "item_id": "sym_poly_0014_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 7284,
+        "teacher_best_mse": 21.59786033630371
+      },
+      "test_mse": 20.008847581484353
+    },
+    {
+      "extrap_mse": 371.44444444444457,
+      "item_id": "sym_poly_0015_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 4343,
+        "teacher_best_mse": 51.04255294799805
+      },
+      "test_mse": 48.74709677419355
+    },
+    {
+      "extrap_mse": 482.835262345679,
+      "item_id": "sym_poly_0018_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4352,
+        "engine": "grammar_resident_p33",
+        "generations": 34,
+        "pop_size": 128,
+        "seed": 9823,
+        "teacher_best_mse": 10.959567070007324
+      },
+      "test_mse": 10.087879839548858
+    },
+    {
+      "extrap_mse": 24.152777777777754,
+      "item_id": "sym_poly_0021_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 6024,
+        "teacher_best_mse": 4.127657890319824
+      },
+      "test_mse": 3.9841935483870987
+    },
+    {
+      "extrap_mse": 636.9047067901236,
+      "item_id": "sym_poly_0022_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 2353,
+        "teacher_best_mse": 24.853185653686523
+      },
+      "test_mse": 22.97723467825853
+    },
+    {
+      "extrap_mse": 482.8352623456791,
+      "item_id": "sym_poly_0027_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 6679,
+        "teacher_best_mse": 10.959569931030273
+      },
+      "test_mse": 10.087879839548854
+    },
+    {
+      "extrap_mse": 24.152777777777814,
+      "item_id": "sym_poly_0030_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 1238,
+        "teacher_best_mse": 4.127659797668457
+      },
+      "test_mse": 3.9841935483870965
+    },
+    {
+      "extrap_mse": 2226.39192440415,
+      "item_id": "sym_poly_0032_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4352,
+        "engine": "grammar_resident_p33",
+        "generations": 34,
+        "pop_size": 128,
+        "seed": 4365,
+        "teacher_best_mse": 31.996381759643555
+      },
+      "test_mse": 31.12733762368023
+    },
+    {
+      "extrap_mse": 9963.408746999314,
+      "item_id": "sym_poly_0033_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 915,
+        "teacher_best_mse": 19.227981567382812
+      },
+      "test_mse": 17.4299021109809
+    },
+    {
+      "extrap_mse": 636.9047067901236,
+      "item_id": "sym_poly_0034_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4608,
+        "engine": "grammar_resident_p33",
+        "generations": 36,
+        "pop_size": 128,
+        "seed": 4524,
+        "teacher_best_mse": 24.853195190429688
+      },
+      "test_mse": 22.97723467825854
+    },
+    {
+      "extrap_mse": 337.61304012345676,
+      "item_id": "sym_poly_0036_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4352,
+        "engine": "grammar_resident_p33",
+        "generations": 34,
+        "pop_size": 128,
+        "seed": 6424,
+        "teacher_best_mse": 25.938289642333984
+      },
+      "test_mse": 26.21433145245208
+    },
+    {
+      "extrap_mse": 459.6824845679012,
+      "item_id": "sym_poly_0037_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 3128,
+        "teacher_best_mse": 7.831906318664551
+      },
+      "test_mse": 7.103686291161761
+    },
+    {
+      "extrap_mse": 23.152777777777782,
+      "item_id": "sym_poly_0040_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 9471,
+        "teacher_best_mse": 3.127659559249878
+      },
+      "test_mse": 2.9841935483870943
+    },
+    {
+      "extrap_mse": 459.68248456790116,
+      "item_id": "sym_poly_0042_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 5009,
+        "teacher_best_mse": 7.831908702850342
+      },
+      "test_mse": 7.10368629116176
+    },
+    {
+      "extrap_mse": 778.82137345679,
+      "item_id": "sym_poly_0043_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 9326,
+        "teacher_best_mse": 46.6191520690918
+      },
+      "test_mse": 43.88239596858112
+    },
+    {
+      "extrap_mse": 0.9999999999999982,
+      "item_id": "sym_poly_0044_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 4159,
+        "teacher_best_mse": 0.999999463558197
+      },
+      "test_mse": 1.0000000000000018
+    },
+    {
+      "extrap_mse": 2911.229115762175,
+      "item_id": "sym_poly_0045_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 205,
+        "teacher_best_mse": 13.383581161499023
+      },
+      "test_mse": 12.492774722132792
+    },
+    {
+      "extrap_mse": 636.9047067901233,
+      "item_id": "sym_poly_0046_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 5118,
+        "teacher_best_mse": 24.853191375732422
+      },
+      "test_mse": 22.977234678258537
+    },
+    {
+      "extrap_mse": 567.4463734567902,
+      "item_id": "sym_poly_0047_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 3824,
+        "teacher_best_mse": 15.470210075378418
+      },
+      "test_mse": 14.024654033097242
+    },
+    {
+      "extrap_mse": 1.0000000000000004,
+      "item_id": "sym_poly_0048_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "train",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 3968,
+        "engine": "grammar_resident_p33",
+        "generations": 31,
+        "pop_size": 128,
+        "seed": 6483,
+        "teacher_best_mse": 1.0
+      },
+      "test_mse": 0.999999999999999
+    },
+    {
+      "extrap_mse": 2491.8521867498284,
+      "item_id": "sym_poly_0017_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "val",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4352,
+        "engine": "grammar_resident_p33",
+        "generations": 34,
+        "pop_size": 128,
+        "seed": 1668,
+        "teacher_best_mse": 5.806994438171387
+      },
+      "test_mse": 5.357475527745226
+    },
+    {
+      "extrap_mse": 2063.3224799597047,
+      "item_id": "sym_poly_0020_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "val",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4096,
+        "engine": "grammar_resident_p33",
+        "generations": 32,
+        "pop_size": 128,
+        "seed": 3361,
+        "teacher_best_mse": 9.10274887084961
+      },
+      "test_mse": 9.23798278497056
+    },
+    {
+      "extrap_mse": 1821.8271604938273,
+      "item_id": "sym_poly_0028_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "val",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4352,
+        "engine": "grammar_resident_p33",
+        "generations": 34,
+        "pop_size": 128,
+        "seed": 2891,
+        "teacher_best_mse": 34.44996643066406
+      },
+      "test_mse": 31.680551616259947
+    },
+    {
+      "extrap_mse": 24.152777777777793,
+      "item_id": "sym_poly_0031_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "val",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4352,
+        "engine": "grammar_resident_p33",
+        "generations": 34,
+        "pop_size": 128,
+        "seed": 7603,
+        "teacher_best_mse": 4.127659797668457
+      },
+      "test_mse": 3.984193548387097
+    },
+    {
+      "extrap_mse": 27.152777777777775,
+      "item_id": "sym_poly_0038_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "val",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 5959,
+        "teacher_best_mse": 7.127660274505615
+      },
+      "test_mse": 6.984193548387098
+    },
+    {
+      "extrap_mse": 1861.882716049383,
+      "item_id": "sym_poly_0049_find",
+      "label": "negative",
+      "lineage": "teacher_search",
+      "reason": "REJECTED: test_error_exceeds_threshold, extrapolation_divergence",
+      "split": "val",
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 4480,
+        "engine": "grammar_resident_p33",
+        "generations": 35,
+        "pop_size": 128,
+        "seed": 1745,
+        "teacher_best_mse": 34.45528030395508
+      },
+      "test_mse": 31.39893871303414
+    }
+  ],
+  "positives": [
+    {
+      "canonical_sympy": "(x - 4)**2",
+      "certificate": {
+        "canonical_reordered": 0,
+        "decision": "VERIFIED_DISCOVERY",
+        "extrap_mse": 5.271200029053369e-29,
+        "ordinary_math_valid": true,
+        "symbolic_notes": "Symbolic residual exists: residual: -x**2 + 8*x + (x - 4)**2 - 16",
+        "test_mse": 5.888723397958412e-30
+      },
+      "feature_schema": "stats16_from_train_observations_only",
+      "features_inference_only": [
+        0.3984929025173187,
+        2.735776424407959,
+        0.049682874232530594,
+        2.4344608783721924,
+        0.5049067735671997,
+        -0.8927235007286072,
+        0.7714336514472961,
+        0.0,
+        -0.6811585426330566,
+        1.4958925247192383,
+        -3.108081102371216,
+        -0.4766990542411804,
+        1.9997985363006592,
+        0.00010207574814558029,
+        -0.9810312986373901,
+        0.8204984664916992
+      ],
+      "ground_truth_expr": "x**2 - 8*x + 16",
+      "group_id": "symbolic_math:polynomial_arithmetic:9",
+      "item_id": "sym_poly_0009_find",
+      "label": "positive",
+      "lineage": "teacher_search",
+      "live_count": 6,
+      "program_sha256": "7d9833a14d988bd394891b93987b09f472a50e275fa061f9e0db6c372ae0c518",
+      "program_words": [
+        16777986,
+        33751823,
+        66575,
+        184812559,
+        67305986,
+        33687299,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "proof_type": "numerical_evidence",
+      "split": "train",
+      "symbolic_equivalent": false,
+      "teacher": {
+        "budget_sec": 0.5,
+        "candidates_total": 3200,
+        "engine": "grammar_resident_p33",
+        "generations": 25,
+        "pop_size": 128,
+        "seed": 7789,
+        "teacher_best_mse": 2.845131682333024e-12
+      },
+      "template_id": "tpl_60d60b1bd86c952e"
+    },
+    {
+      "canonical_sympy": "x**2 - 1",
+      "certificate": {
+        "canonical_reordered": 2,
+        "decision": "VERIFIED_DISCOVERY",
+        "extrap_mse": 0.0,
+        "ordinary_math_valid": true,
+        "symbolic_notes": "Symbolic residual exists: residual: -x**2 + x**2",
+        "test_mse": 0.0
+      },
+      "feature_schema": "stats16_from_train_observations_only",
+      "features_inference_only": [
+        0.23651368916034698,
+        1.3338536024093628,
+        -0.3184252381324768,
+        2.5578231811523438,
+        0.6351284980773926,
+        -0.889957845211029,
+        0.7189615368843079,
+        0.042553190141916275,
+        -3.2180373988870034e-18,
+        1.4958925247192383,
+        -1.3156894445419312,
+        1.3156894445419312,
+        1.999967098236084,
+        1.6607420548098162e-05,
+        7.485103596252531e-18,
+        -0.3184252381324768
+      ],
+      "ground_truth_expr": "x**2 - 1",
+      "group_id": "symbolic_math:polynomial_arithmetic:23",
+      "item_id": "sym_poly_0023_find",
+      "label": "positive",
+      "lineage": "exact_construction",
+      "live_count": 4,
+      "program_sha256": "f80924940a38bd943c86d31ff8db6e2b8b8c9b3f5f00e08eb4925e1bcb147205",
+      "program_words": [
+        16843279,
+        131587,
+        131587,
+        33687311,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "proof_type": "numerical_evidence",
+      "split": "train",
+      "symbolic_equivalent": false,
+      "teacher": {
+        "engine": "exact_horner",
+        "seed": 42
+      },
+      "template_id": "tpl_60d60b1bd86c952e"
+    },
+    {
+      "canonical_sympy": "x*(3*x + 1)",
+      "certificate": {
+        "canonical_reordered": 3,
+        "decision": "VERIFIED_DISCOVERY",
+        "extrap_mse": 3.6287601640166543e-29,
+        "ordinary_math_valid": true,
+        "symbolic_notes": "Symbolic residual exists: residual: -3*x**2 - x + x*(3*x + 1)",
+        "test_mse": 1.8982447014366693e-30
+      },
+      "feature_schema": "stats16_from_train_observations_only",
+      "features_inference_only": [
+        0.3119187355041504,
+        2.258774995803833,
+        -0.007847924716770649,
+        2.8893442153930664,
+        0.7067068815231323,
+        -0.8921985030174255,
+        0.7239309549331665,
+        0.042553190141916275,
+        0.02838163822889328,
+        2.4327316284179688,
+        -1.458919882774353,
+        1.634512186050415,
+        5.999704360961914,
+        4.93984371132683e-05,
+        0.20632895827293396,
+        -0.004970352165400982
+      ],
+      "ground_truth_expr": "3*x**2 + x",
+      "group_id": "symbolic_math:polynomial_arithmetic:25",
+      "item_id": "sym_poly_0025_find",
+      "label": "positive",
+      "lineage": "exact_construction",
+      "live_count": 5,
+      "program_sha256": "afb1e53a2a9819205af9a4f06c4e9be38cb4e507886742d0b78ab605dc62bf14",
+      "program_words": [
+        184615439,
+        131587,
+        16908815,
+        131587,
+        16910081,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "proof_type": "numerical_evidence",
+      "split": "train",
+      "symbolic_equivalent": false,
+      "teacher": {
+        "engine": "exact_horner",
+        "seed": 42
+      },
+      "template_id": "tpl_60d60b1bd86c952e"
+    },
+    {
+      "canonical_sympy": "x*(3*x - 10) + 3",
+      "certificate": {
+        "canonical_reordered": 2,
+        "decision": "VERIFIED_DISCOVERY",
+        "extrap_mse": 7.346267179870672e-29,
+        "ordinary_math_valid": true,
+        "symbolic_notes": "Symbolic residual exists: residual: -3*x**2 + 10*x + x*(3*x - 10)",
+        "test_mse": 7.796164414879531e-30
+      },
+      "feature_schema": "stats16_from_train_observations_only",
+      "features_inference_only": [
+        0.18956340849399567,
+        3.023984670639038,
+        -0.39779457449913025,
+        4.483306884765625,
+        0.9880181550979614,
+        -0.8080580830574036,
+        0.6323058009147644,
+        0.042553190141916275,
+        -0.2838163673877716,
+        2.4327316284179688,
+        -2.424683094024658,
+        0.668749213218689,
+        5.999507904052734,
+        8.220558083849028e-05,
+        -0.9035454392433167,
+        0.2727733850479126
+      ],
+      "ground_truth_expr": "3*x**2 - 10*x + 3",
+      "group_id": "symbolic_math:polynomial_arithmetic:13",
+      "item_id": "sym_poly_0013_find",
+      "label": "positive",
+      "lineage": "exact_construction",
+      "live_count": 5,
+      "program_sha256": "f544a5ca35032097148d978b23de7914734c8198e99d01c40fa17f3c06e50f2c",
+      "program_words": [
+        184615439,
+        131587,
+        235012623,
+        131587,
+        184682255,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "proof_type": "numerical_evidence",
+      "split": "val",
+      "symbolic_equivalent": false,
+      "teacher": {
+        "engine": "exact_horner",
+        "seed": 42
+      },
+      "template_id": "tpl_60d60b1bd86c952e"
+    }
+  ]
+}
