@@ -1,0 +1,12 @@
+{
+  "phase": "P113",
+  "acceptance_phase": "P113",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "lean_file": "lean_proofs/Generated/AdditiveCombinatoricsSignatures.lean",
+  "min_theorems": 50,
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P113 formal additive combinatorics and Sidon sets baseline audit in Lean 4 with zero sorry tokens and dependent types."
+}

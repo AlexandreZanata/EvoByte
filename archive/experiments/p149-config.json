@@ -1,0 +1,13 @@
+{
+  "phase": "P149",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 80,
+  "expected_sha256": "5269a15261ef33fd2ff0866973ab002fc7b6852d536d9def47cbc70a05083d24",
+  "expected_checksum": "b95c5d8541c08cce8f646de35bf05febf42d280369b39962c64254bf56d19a64",
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P149 extremal constructive certificates in finite additive combinatorics (B_2[1] Sidon sets N <= 2000)."
+}

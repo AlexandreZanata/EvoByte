@@ -1,0 +1,69 @@
+{
+  "chains_computed": 3614,
+  "chains_match": 3614,
+  "chains_total": 3614,
+  "deadline": {
+    "budget_sec": 120.0,
+    "compute_sec": 0.21263060600176686,
+    "elapsed_sec": 0.21631607400195207,
+    "overshoot_sec": 0.0,
+    "setup_sec": 2.5120025384239852e-06,
+    "verification_sec": 1.0639996617101133e-06,
+    "warmup_sec": 0.003681891997985076
+  },
+  "device_actual": "cuda",
+  "gpu_checksum": 19376884.0,
+  "hidden_touched": false,
+  "manifest_sha256": "bc05de3a3f1d309ee632d07a50b1040fd2da49b8758ac28f6d7a204aecc0ce46",
+  "n_hidden_sealed": 199,
+  "n_visible": 1120,
+  "parse_ok": 1120,
+  "phase": "p14-mathdb-gsm8k-smoke",
+  "problems_per_sec": 5177.364081657467,
+  "provenance": {
+    "clean_tree": true,
+    "commit": "2b857e93eb2f702ac92f6fe49213ad6d2fe288d6",
+    "config": {
+      "limit": 1319
+    },
+    "config_hash": "1aa8c85e647e2401",
+    "dataset_hashes": {
+      "gsm8k-test": "3730d312f6e34405"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/math_db.py",
+      "--smoke",
+      "--limit",
+      "1319",
+      "--output",
+      "experiments/mathdb-full.json"
+    ],
+    "seed_numpy": 0,
+    "seed_torch_cpu": 0,
+    "seed_torch_cuda": 0
+  },
+  "raw_artifacts": [
+    {
+      "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/benchmarks/math_db.py",
+      "sha256": "38f7f7d09806407ee22b25b8e985160a0be173d55a249b8b3bc67849d7b7ee1a"
+    }
+  ]
+}

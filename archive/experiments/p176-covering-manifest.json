@@ -1,0 +1,69 @@
+{
+ "phase": "P176",
+ "targets": [
+  "covering_C_12_7_4",
+  "covering_C_19_11_3",
+  "covering_C_19_11_4",
+  "covering_C_19_13_6",
+  "covering_C_20_12_4",
+  "covering_C_20_12_5",
+  "covering_C_21_9_6",
+  "covering_C_22_13_3",
+  "covering_C_22_15_6",
+  "covering_C_23_16_5",
+  "covering_C_23_16_6",
+  "covering_C_24_14_3",
+  "covering_C_25_16_4",
+  "covering_C_26_15_3",
+  "covering_C_26_16_4",
+  "covering_C_28_16_3",
+  "covering_C_28_9_5",
+  "covering_C_32_16_6",
+  "covering_C_40_18_5",
+  "covering_C_40_21_6",
+  "covering_C_42_18_5",
+  "covering_C_43_13_5",
+  "covering_C_44_18_5",
+  "covering_C_44_22_6",
+  "covering_C_46_14_5",
+  "covering_C_48_11_4",
+  "covering_C_49_18_5",
+  "covering_C_50_15_3",
+  "covering_C_51_11_4",
+  "covering_C_53_11_4",
+  "covering_C_54_16_2",
+  "covering_C_56_18_5",
+  "covering_C_59_20_4",
+  "covering_C_62_23_4",
+  "covering_C_64_22_5",
+  "covering_C_65_15_4",
+  "covering_C_84_11_2",
+  "covering_C_86_16_3",
+  "covering_C_88_21_4",
+  "covering_C_98_22_2"
+ ],
+ "targets_source": "docs/research/targets/frontier_targets_v2.json",
+ "attempt_sizes": [
+  "published_size - 1"
+ ],
+ "attempt_rule": "Primeira tentativa de quebra usa exatamente published_size - 1 blocos; tamanhos menores entram na fila so se o anterior for encontrado e certificado.",
+ "budget_sec_per_seed": 2.0,
+ "budget_note": "Orcamento de sondagem por ensaio (alvo,tamanho,algoritmo,semente): tempo OU max_evaluations_per_trial, o que estourar primeiro. Inicializacao do desenho aleatorio e medida separadamente (init_sec) e somada ao tempo total reportado.",
+ "max_evaluations_per_trial": 20000,
+ "seeds": [
+  42,
+  101,
+  202
+ ],
+ "algorithms": [
+  "SimulatedAnnealing",
+  "HillClimbing",
+  "GreedyPlusLocalSearch"
+ ],
+ "verifier": "frontier_catalogue.verify_covering_design",
+ "verdict_rule": {
+  "DISCOVERY_BEATEN": "candidato certificado com blocos < published_size",
+  "NULL_RESULT": "orcamento esgotado sem certificado abaixo de published_size"
+ },
+ "created_at": "2026-10-23T23:56:31.875250+00:00"
+}

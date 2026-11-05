@@ -1,0 +1,1486 @@
+{
+  "budgets": [
+    10.0,
+    60.0,
+    600.0
+  ],
+  "confirm": {
+    "aborted": false,
+    "budget_sec": 3600.0,
+    "config": {
+      "length": "standard",
+      "mix": "full",
+      "n_points": 256,
+      "n_streams": 1,
+      "n_workers": 1,
+      "pop_size": 20000
+    },
+    "degenerate_rate": 0.07857253359264497,
+    "distinct_per_sec": 130048.91257206268,
+    "elapsed_sec": 3600.025388451999,
+    "end_alloc_mb": 240.2138671875,
+    "iters": 24145,
+    "lat_ms": {
+      "max": 2148.2466169982217,
+      "p50": 115.33869100094307,
+      "p95": 270.97914159821806
+    },
+    "nop_fraction": 0.7057107496463932,
+    "oom_events": 0,
+    "peak_alloc_mb": 336.20751953125,
+    "raw_per_sec": 134137.9429014654,
+    "reconciled": {
+      "distinct_per_iter_sum": 468179387,
+      "generated": 482900000,
+      "global_distinct_reservoir": 500000,
+      "global_dup_rate": 0.9595542555394492,
+      "global_reservoir_total": 12362240,
+      "global_reservoir_truncated": true,
+      "iters": 24145,
+      "oom_events": 0,
+      "s0_valid_est": 482742583,
+      "s0_valid_rate": 0.9996740187411598,
+      "s1_scored": 482900000
+    },
+    "s0_valid_rate": 0.9996740187411598,
+    "seed": 404,
+    "start_alloc_mb": 177.69580078125
+  },
+  "confirm_rate": 130048.91257206268,
+  "headline_distinct_per_sec": 138468.1857464283,
+  "ladder": [
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.0546875,
+      "distinct_per_sec": 153267.15575530892,
+      "elapsed_sec": 10.117771106000873,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 80,
+      "lat_ms": {
+        "max": 147.80313899973407,
+        "p50": 122.77246750090853,
+        "p95": 139.27913595325663
+      },
+      "nop_fraction": 0.6966552734375,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.7919921875,
+      "raw_per_sec": 158137.59604138864,
+      "reconciled": {
+        "distinct_per_iter_sum": 1550722,
+        "generated": 1600000,
+        "global_distinct_reservoir": 39216,
+        "global_dup_rate": 0.042578125,
+        "global_reservoir_total": 40960,
+        "global_reservoir_truncated": false,
+        "iters": 80,
+        "oom_events": 0,
+        "s0_valid_est": 1600000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 1600000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.09375,
+      "distinct_per_sec": 154017.68803969014,
+      "elapsed_sec": 10.072583348999615,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 80,
+      "lat_ms": {
+        "max": 186.34406400087755,
+        "p50": 121.2249515010626,
+        "p95": 147.2693152983993
+      },
+      "nop_fraction": 0.702880859375,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.7919921875,
+      "raw_per_sec": 158847.03502194482,
+      "reconciled": {
+        "distinct_per_iter_sum": 1551356,
+        "generated": 1600000,
+        "global_distinct_reservoir": 39231,
+        "global_dup_rate": 0.0422119140625,
+        "global_reservoir_total": 40960,
+        "global_reservoir_truncated": false,
+        "iters": 80,
+        "oom_events": 0,
+        "s0_valid_est": 1600000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 1600000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 101,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.091796875,
+      "distinct_per_sec": 162524.95206834198,
+      "elapsed_sec": 10.022098018001998,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 84,
+      "lat_ms": {
+        "max": 232.01315900223562,
+        "p50": 112.81343950031442,
+        "p95": 154.61941075482173
+      },
+      "nop_fraction": 0.7138671875,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.79833984375,
+      "raw_per_sec": 167629.57187031425,
+      "reconciled": {
+        "distinct_per_iter_sum": 1628841,
+        "generated": 1680000,
+        "global_distinct_reservoir": 41008,
+        "global_dup_rate": 0.04650297619047619,
+        "global_reservoir_total": 43008,
+        "global_reservoir_truncated": false,
+        "iters": 84,
+        "oom_events": 0,
+        "s0_valid_est": 1680000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 1680000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 202,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.07552083333333333,
+      "distinct_per_sec": 105539.90132005888,
+      "elapsed_sec": 10.470172761000867,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 57,
+      "lat_ms": {
+        "max": 1465.9955570023158,
+        "p50": 121.4617170044221,
+        "p95": 541.1392212015924
+      },
+      "nop_fraction": 0.7049153645833334,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.79833984375,
+      "raw_per_sec": 108880.72489560572,
+      "reconciled": {
+        "distinct_per_iter_sum": 1105021,
+        "generated": 1140000,
+        "global_distinct_reservoir": 28065,
+        "global_dup_rate": 0.03834292763157895,
+        "global_reservoir_total": 29184,
+        "global_reservoir_truncated": false,
+        "iters": 57,
+        "oom_events": 0,
+        "s0_valid_est": 1140000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 1140000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 303,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.083984375,
+      "distinct_per_sec": 93093.31284857949,
+      "elapsed_sec": 10.2065118419996,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 49,
+      "lat_ms": {
+        "max": 582.569655001862,
+        "p50": 166.78292799770134,
+        "p95": 400.68849759845745
+      },
+      "nop_fraction": 0.7113037109375,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.7890625,
+      "raw_per_sec": 96017.13251018031,
+      "reconciled": {
+        "distinct_per_iter_sum": 950158,
+        "generated": 980000,
+        "global_distinct_reservoir": 24219,
+        "global_dup_rate": 0.03463807397959184,
+        "global_reservoir_total": 25088,
+        "global_reservoir_truncated": false,
+        "iters": 49,
+        "oom_events": 0,
+        "s0_valid_est": 980000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 980000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 404,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 60.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.08268229166666667,
+      "distinct_per_sec": 134549.34345288,
+      "elapsed_sec": 60.09066110999993,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 417,
+      "lat_ms": {
+        "max": 556.4818240018212,
+        "p50": 107.66349199548131,
+        "p95": 275.0305210065562
+      },
+      "nop_fraction": 0.7069498697916666,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.810546875,
+      "raw_per_sec": 138790.28531127455,
+      "reconciled": {
+        "distinct_per_iter_sum": 8085159,
+        "generated": 8340000,
+        "global_distinct_reservoir": 199637,
+        "global_dup_rate": 0.0649496028177458,
+        "global_reservoir_total": 213504,
+        "global_reservoir_truncated": false,
+        "iters": 417,
+        "oom_events": 0,
+        "s0_valid_est": 8334570,
+        "s0_valid_rate": 0.9993489583333334,
+        "s1_scored": 8340000
+      },
+      "s0_valid_rate": 0.9993489583333334,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 60.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.08333333333333333,
+      "distinct_per_sec": 144196.98599446376,
+      "elapsed_sec": 60.10835067199514,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 447,
+      "lat_ms": {
+        "max": 535.9389160003047,
+        "p50": 103.66770700056804,
+        "p95": 269.3615247015259
+      },
+      "nop_fraction": 0.7048136393229166,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.81689453125,
+      "raw_per_sec": 148731.41418876432,
+      "reconciled": {
+        "distinct_per_iter_sum": 8667443,
+        "generated": 8940000,
+        "global_distinct_reservoir": 214153,
+        "global_dup_rate": 0.06427834871364653,
+        "global_reservoir_total": 228864,
+        "global_reservoir_truncated": false,
+        "iters": 447,
+        "oom_events": 0,
+        "s0_valid_est": 8937089,
+        "s0_valid_rate": 0.9996744791666666,
+        "s1_scored": 8940000
+      },
+      "s0_valid_rate": 0.9996744791666666,
+      "seed": 101,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 60.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.076171875,
+      "distinct_per_sec": 124606.17717314795,
+      "elapsed_sec": 60.064718859001005,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 386,
+      "lat_ms": {
+        "max": 513.5593099985272,
+        "p50": 111.82849850229104,
+        "p95": 254.8856905013963
+      },
+      "nop_fraction": 0.6992594401041666,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.8046875,
+      "raw_per_sec": 128528.03020892054,
+      "reconciled": {
+        "distinct_per_iter_sum": 7484435,
+        "generated": 7720000,
+        "global_distinct_reservoir": 185132,
+        "global_dup_rate": 0.06324886658031088,
+        "global_reservoir_total": 197632,
+        "global_reservoir_truncated": false,
+        "iters": 386,
+        "oom_events": 0,
+        "s0_valid_est": 7720000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 7720000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 202,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 60.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.0859375,
+      "distinct_per_sec": 127785.95140516607,
+      "elapsed_sec": 60.08822500099632,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 396,
+      "lat_ms": {
+        "max": 913.1365220018779,
+        "p50": 125.83136250032112,
+        "p95": 269.6147842507344
+      },
+      "nop_fraction": 0.7109375,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.810546875,
+      "raw_per_sec": 131806.18997929594,
+      "reconciled": {
+        "distinct_per_iter_sum": 7678431,
+        "generated": 7920000,
+        "global_distinct_reservoir": 189867,
+        "global_dup_rate": 0.06355054450757576,
+        "global_reservoir_total": 202752,
+        "global_reservoir_truncated": false,
+        "iters": 396,
+        "oom_events": 0,
+        "s0_valid_est": 7920000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 7920000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 303,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 60.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.08138020833333333,
+      "distinct_per_sec": 140484.70671847687,
+      "elapsed_sec": 60.04237896800623,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 435,
+      "lat_ms": {
+        "max": 442.5038310000673,
+        "p50": 106.49254400050268,
+        "p95": 287.2536052003851
+      },
+      "nop_fraction": 0.70526123046875,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.8134765625,
+      "raw_per_sec": 144897.65644755386,
+      "reconciled": {
+        "distinct_per_iter_sum": 8435036,
+        "generated": 8700000,
+        "global_distinct_reservoir": 208388,
+        "global_dup_rate": 0.06434985632183908,
+        "global_reservoir_total": 222720,
+        "global_reservoir_truncated": false,
+        "iters": 435,
+        "oom_events": 0,
+        "s0_valid_est": 8700000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 8700000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 404,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 600.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.07865466101694915,
+      "distinct_per_sec": 141964.68186952965,
+      "elapsed_sec": 600.0107271629968,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 4393,
+      "lat_ms": {
+        "max": 1787.3271080025006,
+        "p50": 105.90729000250576,
+        "p95": 247.49003960168912
+      },
+      "nop_fraction": 0.7066753840042372,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.826171875,
+      "raw_per_sec": 146430.7153564144,
+      "reconciled": {
+        "distinct_per_iter_sum": 85180332,
+        "generated": 87860000,
+        "global_distinct_reservoir": 500000,
+        "global_dup_rate": 0.7777003186888232,
+        "global_reservoir_total": 2249216,
+        "global_reservoir_truncated": true,
+        "iters": 4393,
+        "oom_events": 0,
+        "s0_valid_est": 87822189,
+        "s0_valid_rate": 0.9995696504237288,
+        "s1_scored": 87860000
+      },
+      "s0_valid_rate": 0.9995696504237288,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 600.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.0802436440677966,
+      "distinct_per_sec": 138468.1857464283,
+      "elapsed_sec": 600.0525936849954,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 4285,
+      "lat_ms": {
+        "max": 1044.915498001501,
+        "p50": 107.29463200550526,
+        "p95": 250.11715640139286
+      },
+      "nop_fraction": 0.7042650125794492,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.8359375,
+      "raw_per_sec": 142820.81421181094,
+      "reconciled": {
+        "distinct_per_iter_sum": 83088194,
+        "generated": 85700000,
+        "global_distinct_reservoir": 500000,
+        "global_dup_rate": 0.7720974329054843,
+        "global_reservoir_total": 2193920,
+        "global_reservoir_truncated": true,
+        "iters": 4285,
+        "oom_events": 0,
+        "s0_valid_est": 85668793,
+        "s0_valid_rate": 0.9996358580508474,
+        "s1_scored": 85700000
+      },
+      "s0_valid_rate": 0.9996358580508474,
+      "seed": 101,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 600.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.08045561974789917,
+      "distinct_per_sec": 150121.23728952612,
+      "elapsed_sec": 600.0809720630059,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 4646,
+      "lat_ms": {
+        "max": 1216.0535539951525,
+        "p50": 101.01030949954293,
+        "p95": 235.27843950250826
+      },
+      "nop_fraction": 0.7061798352153361,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.826171875,
+      "raw_per_sec": 154845.76969763308,
+      "reconciled": {
+        "distinct_per_iter_sum": 90084898,
+        "generated": 92920000,
+        "global_distinct_reservoir": 500000,
+        "global_dup_rate": 0.7898057468790357,
+        "global_reservoir_total": 2378752,
+        "global_reservoir_truncated": true,
+        "iters": 4646,
+        "oom_events": 0,
+        "s0_valid_est": 92892548,
+        "s0_valid_rate": 0.9997045693277311,
+        "s1_scored": 92920000
+      },
+      "s0_valid_rate": 0.9997045693277311,
+      "seed": 202,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 600.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.08052127100840337,
+      "distinct_per_sec": 147466.98426399726,
+      "elapsed_sec": 600.1293607629996,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 4564,
+      "lat_ms": {
+        "max": 1992.3530840023886,
+        "p50": 102.12976400362095,
+        "p95": 235.7139669518801
+      },
+      "nop_fraction": 0.7054412585346639,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.8359375,
+      "raw_per_sec": 152100.54026343147,
+      "reconciled": {
+        "distinct_per_iter_sum": 88499267,
+        "generated": 91280000,
+        "global_distinct_reservoir": 500000,
+        "global_dup_rate": 0.7860292506573181,
+        "global_reservoir_total": 2336768,
+        "global_reservoir_truncated": true,
+        "iters": 4564,
+        "oom_events": 0,
+        "s0_valid_est": 91262022,
+        "s0_valid_rate": 0.9998030462184874,
+        "s1_scored": 91280000
+      },
+      "s0_valid_rate": 0.9998030462184874,
+      "seed": 303,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 600.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.07653601694915255,
+      "distinct_per_sec": 142310.17343881432,
+      "elapsed_sec": 600.0724328869983,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 4404,
+      "lat_ms": {
+        "max": 1451.5219130043988,
+        "p50": 104.56210549818934,
+        "p95": 253.39669100285386
+      },
+      "nop_fraction": 0.7055270954713984,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.83251953125,
+      "raw_per_sec": 146782.2802261384,
+      "reconciled": {
+        "distinct_per_iter_sum": 85396412,
+        "generated": 88080000,
+        "global_distinct_reservoir": 500000,
+        "global_dup_rate": 0.7782555631244323,
+        "global_reservoir_total": 2254848,
+        "global_reservoir_truncated": true,
+        "iters": 4404,
+        "oom_events": 0,
+        "s0_valid_est": 88047926,
+        "s0_valid_rate": 0.9996358580508474,
+        "s1_scored": 88080000
+      },
+      "s0_valid_rate": 0.9996358580508474,
+      "seed": 404,
+      "start_alloc_mb": 161.32080078125
+    }
+  ],
+  "ladder_rates": {
+    "10.0": [
+      153267.15575530892,
+      154017.68803969014,
+      162524.95206834198,
+      105539.90132005888,
+      93093.31284857949
+    ],
+    "60.0": [
+      134549.34345288,
+      144196.98599446376,
+      124606.17717314795,
+      127785.95140516607,
+      140484.70671847687
+    ],
+    "600.0": [
+      141964.68186952965,
+      138468.1857464283,
+      150121.23728952612,
+      147466.98426399726,
+      142310.17343881432
+    ]
+  },
+  "leak": {
+    "max_growth_mb": 62.51806640625,
+    "passed": true
+  },
+  "manifest_sha256": "1c284c838e3272c29f6edd22b56733aa31d8af5374d442f3516aababe0a4ec0c",
+  "parity": {
+    "n_points": 64,
+    "n_programs": 128,
+    "passed": true,
+    "worst_abs_err": 7.62939453125e-06
+  },
+  "phase": "P24",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "5f9c129f1880b810b6fa40b73e2add3c1cd1092b",
+    "config": {
+      "budgets": [
+        10.0,
+        60.0,
+        600.0
+      ],
+      "grid_hash": "112fd9810360eca9"
+    },
+    "config_hash": "030ed7253ae83c76",
+    "dataset_hashes": {},
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "?? benchmarks/gpu_limits.py\n?? experiments/p24-raw/\n?? tests/test_gpu_limits.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/gpu_limits.py",
+      "--budgets",
+      "10s,1m,10m",
+      "--confirm-1h",
+      "--seeds",
+      "5",
+      "--output",
+      "experiments/p24-limits.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p24-raw/p24-confirm-checkpoint.pt",
+      "sha256": "4ccf9109c1896a2a8c620e8971777683a5887fb4b87c324eec32bf28bc5f486f"
+    },
+    {
+      "path": "experiments/p24-raw/p24-telemetry.jsonl",
+      "sha256": "36d2f44f73eef169a453f4c6664e51a6ee805bbea651884b6601b95ea126e028"
+    }
+  ],
+  "resident_crosscheck": {
+    "candidates_total": 524000,
+    "converged": false,
+    "elapsed_sec": 60.132789695999236,
+    "engine": "GPUResidentEvolution",
+    "generations": 262,
+    "points": 256,
+    "pop_size": 2000,
+    "search_cvps": 8714.059507528136
+  },
+  "resume": {
+    "checkpoint_generated": 424480000,
+    "checkpoint_iters": 21224,
+    "checkpoint_pop": 20000,
+    "passed": true
+  },
+  "scout": [
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 2000
+      },
+      "degenerate_rate": 0.0703125,
+      "distinct_per_sec": 22730.539696772576,
+      "elapsed_sec": 10.070592386000499,
+      "end_alloc_mb": 22.650390625,
+      "iters": 115,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 102.01449300075183,
+        "p50": 86.05368199641816,
+        "p95": 92.03942120075226
+      },
+      "nop_fraction": 0.700927734375,
+      "oom_events": 0,
+      "peak_alloc_mb": 32.08154296875,
+      "raw_per_sec": 22838.775633470326,
+      "reconciled": {
+        "distinct_per_iter_sum": 228910,
+        "generated": 230000,
+        "global_distinct_reservoir": 55995,
+        "global_dup_rate": 0.048997961956521736,
+        "global_reservoir_total": 58880,
+        "global_reservoir_truncated": false,
+        "iters": 115,
+        "oom_events": 0,
+        "s0_valid_est": 230000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 230000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 16.5390625
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 8000
+      },
+      "degenerate_rate": 0.056640625,
+      "distinct_per_sec": 86755.84543213934,
+      "elapsed_sec": 10.071874645997013,
+      "end_alloc_mb": 88.994140625,
+      "iters": 111,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 98.43651200208114,
+        "p50": 88.9137009944534,
+        "p95": 96.51389699865831
+      },
+      "nop_fraction": 0.6954345703125,
+      "oom_events": 0,
+      "peak_alloc_mb": 127.119140625,
+      "raw_per_sec": 88166.30778391672,
+      "reconciled": {
+        "distinct_per_iter_sum": 873794,
+        "generated": 888000,
+        "global_distinct_reservoir": 54064,
+        "global_dup_rate": 0.04870495495495496,
+        "global_reservoir_total": 56832,
+        "global_reservoir_truncated": false,
+        "iters": 111,
+        "oom_events": 0,
+        "s0_valid_est": 888000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 888000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 64.54931640625
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.0625,
+      "distinct_per_sec": 197969.95532723758,
+      "elapsed_sec": 10.086606306998874,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 103,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 111.37329600023804,
+        "p50": 96.55735999695025,
+        "p95": 102.25128599995513
+      },
+      "nop_fraction": 0.695068359375,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.7919921875,
+      "raw_per_sec": 204231.22875040848,
+      "reconciled": {
+        "distinct_per_iter_sum": 1996845,
+        "generated": 2060000,
+        "global_distinct_reservoir": 50285,
+        "global_dup_rate": 0.04647679004854369,
+        "global_reservoir_total": 52736,
+        "global_reservoir_truncated": false,
+        "iters": 103,
+        "oom_events": 0,
+        "s0_valid_est": 2060000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 2060000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 2,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.083984375,
+      "distinct_per_sec": 105295.32481139428,
+      "elapsed_sec": 10.126631946004636,
+      "end_alloc_mb": 384.65771484375,
+      "iters": 55,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 199.79044399951817,
+        "p50": 181.47348600177793,
+        "p95": 191.6844734994811
+      },
+      "nop_fraction": 0.7076416015625,
+      "oom_events": 0,
+      "peak_alloc_mb": 422.4140625,
+      "raw_per_sec": 108624.46723305613,
+      "reconciled": {
+        "distinct_per_iter_sum": 1066287,
+        "generated": 1100000,
+        "global_distinct_reservoir": 27153,
+        "global_dup_rate": 0.03575994318181818,
+        "global_reservoir_total": 28160,
+        "global_reservoir_truncated": false,
+        "iters": 55,
+        "oom_events": 0,
+        "s0_valid_est": 1100000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 1100000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 322.6083984375
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 4,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.068359375,
+      "distinct_per_sec": 48754.961055852866,
+      "elapsed_sec": 10.340363094997883,
+      "end_alloc_mb": 707.23291015625,
+      "iters": 26,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 435.0429729965981,
+        "p50": 391.21726249868516,
+        "p95": 416.97233124614286
+      },
+      "nop_fraction": 0.6983642578125,
+      "oom_events": 0,
+      "peak_alloc_mb": 733.78466796875,
+      "raw_per_sec": 50288.369491739446,
+      "reconciled": {
+        "distinct_per_iter_sum": 504144,
+        "generated": 520000,
+        "global_distinct_reservoir": 13026,
+        "global_dup_rate": 0.021484375,
+        "global_reservoir_total": 13312,
+        "global_reservoir_truncated": false,
+        "iters": 26,
+        "oom_events": 0,
+        "s0_valid_est": 520000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 520000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 645.18359375
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 2,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.0859375,
+      "distinct_per_sec": 184524.68740609311,
+      "elapsed_sec": 10.08553395299532,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 96,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 114.77392799861263,
+        "p50": 103.39773549640086,
+        "p95": 109.95452074894274
+      },
+      "nop_fraction": 0.7008056640625,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.7919921875,
+      "raw_per_sec": 190371.6758030224,
+      "reconciled": {
+        "distinct_per_iter_sum": 1861030,
+        "generated": 1920000,
+        "global_distinct_reservoir": 46913,
+        "global_dup_rate": 0.045552571614583336,
+        "global_reservoir_total": 49152,
+        "global_reservoir_truncated": false,
+        "iters": 96,
+        "oom_events": 0,
+        "s0_valid_est": 1920000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 1920000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 4,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.064453125,
+      "distinct_per_sec": 195711.17651858434,
+      "elapsed_sec": 10.004599813000823,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 101,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 121.95241900190013,
+        "p50": 96.55808500247076,
+        "p95": 107.59222599881468
+      },
+      "nop_fraction": 0.6939697265625,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.7919921875,
+      "raw_per_sec": 201907.12649745782,
+      "reconciled": {
+        "distinct_per_iter_sum": 1958012,
+        "generated": 2020000,
+        "global_distinct_reservoir": 49332,
+        "global_dup_rate": 0.046024133663366336,
+        "global_reservoir_total": 51712,
+        "global_reservoir_truncated": false,
+        "iters": 101,
+        "oom_events": 0,
+        "s0_valid_est": 2016054,
+        "s0_valid_rate": 0.998046875,
+        "s1_scored": 2020000
+      },
+      "s0_valid_rate": 0.998046875,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 8,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.064453125,
+      "distinct_per_sec": 187464.04613514128,
+      "elapsed_sec": 10.030771440004173,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 97,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 126.38513999991119,
+        "p50": 102.30752100324025,
+        "p95": 108.82048459752696
+      },
+      "nop_fraction": 0.6939697265625,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.7919921875,
+      "raw_per_sec": 193404.86537884796,
+      "reconciled": {
+        "distinct_per_iter_sum": 1880409,
+        "generated": 1940000,
+        "global_distinct_reservoir": 47393,
+        "global_dup_rate": 0.04572728737113402,
+        "global_reservoir_total": 49664,
+        "global_reservoir_truncated": false,
+        "iters": 97,
+        "oom_events": 0,
+        "s0_valid_est": 1936210,
+        "s0_valid_rate": 0.998046875,
+        "s1_scored": 1940000
+      },
+      "s0_valid_rate": 0.998046875,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 32,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.0625,
+      "distinct_per_sec": 157151.9664953261,
+      "elapsed_sec": 10.114400954997109,
+      "end_alloc_mb": 30.638671875,
+      "iters": 82,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 274.0879359989776,
+        "p50": 94.16521700040903,
+        "p95": 240.5659897471196
+      },
+      "nop_fraction": 0.695068359375,
+      "oom_events": 0,
+      "peak_alloc_mb": 57.6591796875,
+      "raw_per_sec": 162145.04519812847,
+      "reconciled": {
+        "distinct_per_iter_sum": 1589498,
+        "generated": 1640000,
+        "global_distinct_reservoir": 40185,
+        "global_dup_rate": 0.04284965701219512,
+        "global_reservoir_total": 41984,
+        "global_reservoir_truncated": false,
+        "iters": 82,
+        "oom_events": 0,
+        "s0_valid_est": 1640000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 1640000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 20.79638671875
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "full",
+        "n_points": 1024,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.072265625,
+      "distinct_per_sec": 54176.10869300057,
+      "elapsed_sec": 10.022406797004805,
+      "end_alloc_mb": 883.0927734375,
+      "iters": 28,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 727.5304810027592,
+        "p50": 293.89442849787883,
+        "p95": 642.708778297674
+      },
+      "nop_fraction": 0.706298828125,
+      "oom_events": 0,
+      "peak_alloc_mb": 1257.4208984375,
+      "raw_per_sec": 55874.80246434977,
+      "reconciled": {
+        "distinct_per_iter_sum": 542975,
+        "generated": 560000,
+        "global_distinct_reservoir": 14012,
+        "global_dup_rate": 0.022600446428571428,
+        "global_reservoir_total": 14336,
+        "global_reservoir_truncated": false,
+        "iters": 28,
+        "oom_events": 0,
+        "s0_valid_est": 560000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 560000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 646.19970703125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "short",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.240234375,
+      "distinct_per_sec": 229162.49103685352,
+      "elapsed_sec": 10.056152687000576,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 135,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 341.7465379970963,
+        "p50": 56.61960299767088,
+        "p95": 153.84647350001615
+      },
+      "nop_fraction": 0.8544921875,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.9150390625,
+      "raw_per_sec": 268492.34334819176,
+      "reconciled": {
+        "distinct_per_iter_sum": 2304493,
+        "generated": 2700000,
+        "global_distinct_reservoir": 56187,
+        "global_dup_rate": 0.187109375,
+        "global_reservoir_total": 69120,
+        "global_reservoir_truncated": false,
+        "iters": 135,
+        "oom_events": 0,
+        "s0_valid_est": 2700000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 2700000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "long",
+        "mix": "full",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.0,
+      "distinct_per_sec": 81071.13745304622,
+      "elapsed_sec": 10.114512091000506,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 41,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 793.7940749980044,
+        "p50": 178.01549199793953,
+        "p95": 473.78956399916206
+      },
+      "nop_fraction": 0.5841064453125,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.98486328125,
+      "raw_per_sec": 81071.63179226447,
+      "reconciled": {
+        "distinct_per_iter_sum": 819995,
+        "generated": 820000,
+        "global_distinct_reservoir": 20992,
+        "global_dup_rate": 0.0,
+        "global_reservoir_total": 20992,
+        "global_reservoir_truncated": false,
+        "iters": 41,
+        "oom_events": 0,
+        "s0_valid_est": 820000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 820000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "standard",
+        "mix": "arith",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.07421875,
+      "distinct_per_sec": 311207.0736524698,
+      "elapsed_sec": 10.030199388995243,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 162,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 95.80983899650164,
+        "p50": 59.43204549475922,
+        "p95": 70.18074504449031
+      },
+      "nop_fraction": 0.7138671875,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.8046875,
+      "raw_per_sec": 323024.4857898644,
+      "reconciled": {
+        "distinct_per_iter_sum": 3121469,
+        "generated": 3240000,
+        "global_distinct_reservoir": 77679,
+        "global_dup_rate": 0.0634765625,
+        "global_reservoir_total": 82944,
+        "global_reservoir_truncated": false,
+        "iters": 162,
+        "oom_events": 0,
+        "s0_valid_est": 3240000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 3240000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "short",
+        "mix": "arith",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.23828125,
+      "distinct_per_sec": 516579.56673708867,
+      "elapsed_sec": 10.000815620005596,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 312,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 43.91881199990166,
+        "p50": 30.985949997557327,
+        "p95": 34.44001840180135
+      },
+      "nop_fraction": 0.858154296875,
+      "oom_events": 0,
+      "peak_alloc_mb": 319.94384765625,
+      "raw_per_sec": 623949.1094623848,
+      "reconciled": {
+        "distinct_per_iter_sum": 5166217,
+        "generated": 6240000,
+        "global_distinct_reservoir": 121813,
+        "global_dup_rate": 0.23744866786858973,
+        "global_reservoir_total": 159744,
+        "global_reservoir_truncated": false,
+        "iters": 312,
+        "oom_events": 0,
+        "s0_valid_est": 6240000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 6240000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    },
+    {
+      "aborted": false,
+      "budget_sec": 10.0,
+      "config": {
+        "length": "long",
+        "mix": "arith",
+        "n_points": 256,
+        "n_streams": 1,
+        "n_workers": 1,
+        "pop_size": 20000
+      },
+      "degenerate_rate": 0.0,
+      "distinct_per_sec": 274072.47730604344,
+      "elapsed_sec": 10.070179344998905,
+      "end_alloc_mb": 223.8388671875,
+      "iters": 138,
+      "kind": "SCOUT",
+      "lat_ms": {
+        "max": 117.47522500081686,
+        "p50": 70.53909699970973,
+        "p95": 93.46322895398771
+      },
+      "nop_fraction": 0.613037109375,
+      "oom_events": 0,
+      "peak_alloc_mb": 320.0380859375,
+      "raw_per_sec": 274076.5487330355,
+      "reconciled": {
+        "distinct_per_iter_sum": 2759959,
+        "generated": 2760000,
+        "global_distinct_reservoir": 70652,
+        "global_dup_rate": 5.661231884057971e-05,
+        "global_reservoir_total": 70656,
+        "global_reservoir_truncated": false,
+        "iters": 138,
+        "oom_events": 0,
+        "s0_valid_est": 2760000,
+        "s0_valid_rate": 1.0,
+        "s1_scored": 2760000
+      },
+      "s0_valid_rate": 1.0,
+      "seed": 42,
+      "start_alloc_mb": 161.32080078125
+    }
+  ],
+  "scout_B_variants": {
+    "32": 157151.9664953261,
+    "1024": 54176.10869300057
+  },
+  "scout_mix_variants": {
+    "arith/long": 274072.47730604344,
+    "arith/short": 516579.56673708867,
+    "arith/standard": 311207.0736524698,
+    "full/long": 81071.13745304622,
+    "full/short": 229162.49103685352
+  },
+  "seeds": [
+    42,
+    101,
+    202,
+    303,
+    404
+  ],
+  "stability_checks": {
+    "confirm_within_tolerance": true,
+    "cross_seed_floor": true,
+    "leak_ok": true,
+    "no_abort": true,
+    "parity_ok": true,
+    "resume_ok": true
+  },
+  "stable": true,
+  "target": "quad-x2-3x-7",
+  "thresholds": {
+    "confirm_tolerance": 0.15,
+    "cross_seed_floor": 0.9,
+    "leak_max_growth_mb": 64.0,
+    "parity_atol": 1e-05,
+    "parity_rtol": 1e-05
+  },
+  "vram_budget": {
+    "budget_mb": 6471.75,
+    "free_mb": 7671.75,
+    "reserve_mb": 1200.0,
+    "total_mb": 7805.5625
+  },
+  "winner_config": {
+    "length": "standard",
+    "mix": "full",
+    "n_points": 256,
+    "n_streams": 1,
+    "n_workers": 1,
+    "pop_size": 20000
+  },
+  "workload_grid_hash": "112fd9810360eca9"
+}

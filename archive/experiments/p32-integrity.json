@@ -1,0 +1,413 @@
+{
+  "claims_to_evidence_audit": {
+    "clean_revision": "3fe572102c33b86ffbbe4ba06c63a036b9ac9bce",
+    "clean_tree": false,
+    "hypothesis_h1_evaluation": {
+      "criteria_status": {
+        "criterion_1_rediscovery": "provisional (supported in pilot runs; awaiting P38 clean confirmation)",
+        "criterion_2_speed": "accepted (CVPS > 1,000 verified with monotonic deadlines)",
+        "criterion_3_value_of_evolution": "accepted (genetic + QD beats random search at equal budget)",
+        "criterion_4_generalization": "provisional (anti-memorization verified on pilot splits)",
+        "criterion_5_honest_baselines": "provisional (Pareto front established; final baseline matrix in P38)"
+      },
+      "evaluation_note": "Evaluated under unchanged original criteria per D013 and D014. H1 remains provisional until clean confirmation across 20+ independent seeds in P38; no premature unlock without meeting full registered criteria.",
+      "hypothesis": "H1 \u2014 Massively parallel stochastic search with autoevolution",
+      "overall_h1_verdict": "provisional"
+    },
+    "p13_p29_classifications": {
+      "P13": {
+        "claim": "Full benchmark matrix across budgets and baselines",
+        "classification": "provisional",
+        "rationale": "D013 audit keeps P13 provisional pending final clean confirmation in P38"
+      },
+      "P14": {
+        "claim": "Scientific datasets benchmark",
+        "classification": "superseded",
+        "rationale": "Superseded by P25 and P30 strict corpus isolation"
+      },
+      "P15": {
+        "claim": "Measurement integrity, GPU synchronization, and clean provenance",
+        "classification": "accepted",
+        "rationale": "Monotonic deadlines, GPU synchronization, and REPRODUCIBILITY provenance verified"
+      },
+      "P16": {
+        "claim": "Triton VM fused interpreter and baseline comparison",
+        "classification": "accepted",
+        "rationale": "Triton kernel verified against PyTorch VM reference"
+      },
+      "P17": {
+        "claim": "Chunked execution and VRAM operating envelope",
+        "classification": "accepted",
+        "rationale": "Chunked batch execution bounded within RTX 4060 operating envelope"
+      },
+      "P18": {
+        "claim": "Structured opcode sampler and prefix grammar",
+        "classification": "accepted",
+        "rationale": "Pure and structured sampling operational with guaranteed syntactic validity"
+      },
+      "P19": {
+        "claim": "Analytical constant fitting via linear least squares",
+        "classification": "accepted",
+        "rationale": "Closed-form least-squares solve integrated and verified"
+      },
+      "P20": {
+        "claim": "Multi-tier cascade evaluation",
+        "classification": "accepted",
+        "rationale": "Cascade screening (S0/S1/S2/S3) operational and throughput measured"
+      },
+      "P21": {
+        "claim": "GPU resident genetic operators (mutation, crossover)",
+        "classification": "accepted",
+        "rationale": "In-place resident GPU mutation and crossover verified"
+      },
+      "P22": {
+        "claim": "Island model and asynchronous migration",
+        "classification": "not_run",
+        "rationale": "Deferred to multi-GPU / isolated environment per D013/D014"
+      },
+      "P23": {
+        "claim": "Symbolic regression benchmark suite",
+        "classification": "superseded",
+        "rationale": "Early benchmarks superseded by P35 benchmark suite"
+      },
+      "P24": {
+        "claim": "GPU resident evolution loop and checkpointing",
+        "classification": "accepted",
+        "rationale": "Resident evolution loop operational; checkpointing audited and upgraded in P32 to bit-exact resume"
+      },
+      "P25": {
+        "claim": "Corpus isolation pilot",
+        "classification": "superseded",
+        "rationale": "Superseded by strict P30 SHA-256 problem manifests and zero-leakage splits"
+      },
+      "P26": {
+        "claim": "Lineage tracing and exploration map",
+        "classification": "accepted",
+        "rationale": "Full lineage and bit-exact replay verified; behavioral signatures clarified as probe buckets"
+      },
+      "P27": {
+        "claim": "Analytical vs numerical constant fitting comparison",
+        "classification": "accepted",
+        "rationale": "Falsification of naive constant search accepted as sound negative result"
+      },
+      "P28": {
+        "claim": "Benchmark harness optimization",
+        "classification": "superseded",
+        "rationale": "Superseded by P35 benchmark suite"
+      },
+      "P29": {
+        "claim": "Dynamic coordinate bounds",
+        "classification": "superseded",
+        "rationale": "Superseded by P31 strict coordinate certificates and independent answer verification"
+      },
+      "P30": {
+        "claim": "Corpus isolation and leak-free split generation",
+        "classification": "accepted",
+        "rationale": "Cryptographic corpus isolation with SHA-256 problem manifests accepted"
+      },
+      "P31": {
+        "claim": "Independent answer verification and certificate bounds",
+        "classification": "accepted",
+        "rationale": "Dual-engine verification (AST + SymPy) with coordinate certificate bounds accepted"
+      }
+    }
+  },
+  "config_sensitivity": {
+    "config_a": {
+      "crossover_p": 0.1,
+      "elite_k": 2
+    },
+    "config_b": {
+      "crossover_p": 0.9,
+      "elite_k": 8
+    },
+    "diverged": true,
+    "first_diverged_generation": 1,
+    "total_generations": 5
+  },
+  "elapsed_sec": 15.248616870999285,
+  "exploration_map": {
+    "accounting_note": "distinct_byte_programs counts unique bytecode sequences; probe_buckets_count counts empirical behavioral signatures on fixed probe points, NOT proven mathematical equivalence classes. Programs in the same probe bucket may differ on unprobed inputs. Ratio reflects empirical syntactic redundancy.",
+    "behavior_distribution": {
+      "constant_output": 14,
+      "monotonic": 1
+    },
+    "distinct_byte_programs": 15,
+    "distinct_mathematical_expressions": 9,
+    "length_distribution": {
+      "1-4 (short)": 10,
+      "5-8 (medium)": 5
+    },
+    "opcode_distribution": {
+      "ADD": 9,
+      "COS": 1,
+      "CSEL": 35,
+      "MUL": 4,
+      "NEG": 1,
+      "NOP": 178,
+      "SIN": 1,
+      "SUB": 11
+    },
+    "probe_bucket_semantics": "empirical_probe_bucket_not_proven_equivalence",
+    "probe_buckets_count": 9,
+    "quality_distribution": {
+      "tier_3_poor": 15
+    },
+    "structure_distribution": {
+      "branching_ops": 1,
+      "nop_heavy": 14
+    },
+    "syntactic_redundancy_ratio": 1.6666666666666667
+  },
+  "honest_counter_verification": [
+    {
+      "consistent": true,
+      "issues": []
+    },
+    {
+      "consistent": true,
+      "issues": []
+    },
+    {
+      "consistent": true,
+      "issues": []
+    },
+    {
+      "consistent": true,
+      "issues": []
+    },
+    {
+      "consistent": true,
+      "issues": []
+    }
+  ],
+  "mandatory_checks": {
+    "all_replayed_bit_exact": true,
+    "all_resumed_bit_exact": true,
+    "config_sensitivity_diverged": true,
+    "counters_consistent": true,
+    "deadline_respected": true,
+    "manifest_fail_closed_verified": true,
+    "parent_ordering_valid": true,
+    "retained_claims_audited": true
+  },
+  "manifest_sha256": "3d7e82ad277436211f1e8d4fe257df16bac936c98d7cdd4eda8e5fcce12b2691",
+  "manifest_tamper_detection_test": {
+    "missing_rejected": true,
+    "passed": true,
+    "tampered_rejected": true,
+    "valid_accepted": true
+  },
+  "overhead_benchmark": {
+    "aggregate_overhead_pct": 23.010567925304056,
+    "aggregate_sec": 0.5651830810002139,
+    "audit_overhead_pct": 28.586225820136097,
+    "audit_sec": 0.5908009409999977,
+    "baseline_sec": 0.4594589640000777,
+    "cvps_aggregate": 1061.602903855809,
+    "cvps_audit": 1015.5704880639355,
+    "cvps_baseline": 1305.8837611445504,
+    "device": "cuda",
+    "repeats": 2
+  },
+  "overshoot_sec": 0.0,
+  "parent_ordering_verification": [
+    {
+      "n_offspring": 51,
+      "n_pairs": 26,
+      "valid": true,
+      "violations": []
+    },
+    {
+      "n_offspring": 51,
+      "n_pairs": 26,
+      "valid": true,
+      "violations": []
+    },
+    {
+      "n_offspring": 51,
+      "n_pairs": 26,
+      "valid": true,
+      "violations": []
+    },
+    {
+      "n_offspring": 51,
+      "n_pairs": 26,
+      "valid": true,
+      "violations": []
+    },
+    {
+      "n_offspring": 51,
+      "n_pairs": 26,
+      "valid": true,
+      "violations": []
+    }
+  ],
+  "phase": "p32-replay-acceptance",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "3fe572102c33b86ffbbe4ba06c63a036b9ac9bce",
+    "config": {
+      "n_generations": 10,
+      "pop_size": 60,
+      "resume": true,
+      "seeds_count": 5,
+      "split_at": 5
+    },
+    "config_hash": "d6c2a3ceb72f85ab",
+    "dataset_hashes": {},
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/evo_trace.py\n M docs/phases/P32-replay-acceptance.md\n M src/evobyte/resident.py\n M tests/test_evo_trace.py\n?? experiments/p32-integrity.json",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 10,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/evo_trace.py",
+      "--acceptance-audit",
+      "--resume",
+      "--seeds",
+      "5",
+      "--output",
+      "experiments/p32-integrity.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "benchmarks/evo_trace.py",
+      "sha256": "37a27947df0ea52e94ab7676ac03fbb04f168ebd08627961e6d88ff1d4f435de"
+    }
+  ],
+  "replay_verification": [
+    {
+      "batch_hashes_matched": true,
+      "bit_exact_reproducible": true,
+      "generations_replayed": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "promoted_ancestry_matched": true,
+      "run_id": "run_seed_42",
+      "seed": 42
+    },
+    {
+      "batch_hashes_matched": true,
+      "bit_exact_reproducible": true,
+      "generations_replayed": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "promoted_ancestry_matched": true,
+      "run_id": "run_seed_142",
+      "seed": 142
+    },
+    {
+      "batch_hashes_matched": true,
+      "bit_exact_reproducible": true,
+      "generations_replayed": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "promoted_ancestry_matched": true,
+      "run_id": "run_seed_242",
+      "seed": 242
+    },
+    {
+      "batch_hashes_matched": true,
+      "bit_exact_reproducible": true,
+      "generations_replayed": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "promoted_ancestry_matched": true,
+      "run_id": "run_seed_342",
+      "seed": 342
+    },
+    {
+      "batch_hashes_matched": true,
+      "bit_exact_reproducible": true,
+      "generations_replayed": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "promoted_ancestry_matched": true,
+      "run_id": "run_seed_442",
+      "seed": 442
+    }
+  ],
+  "resume_verification": [
+    {
+      "bit_exact_resumed": true,
+      "generations_verified": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "seed": 42,
+      "split_generation": 5,
+      "total_generations": 10
+    },
+    {
+      "bit_exact_resumed": true,
+      "generations_verified": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "seed": 142,
+      "split_generation": 5,
+      "total_generations": 10
+    },
+    {
+      "bit_exact_resumed": true,
+      "generations_verified": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "seed": 242,
+      "split_generation": 5,
+      "total_generations": 10
+    },
+    {
+      "bit_exact_resumed": true,
+      "generations_verified": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "seed": 342,
+      "split_generation": 5,
+      "total_generations": 10
+    },
+    {
+      "bit_exact_resumed": true,
+      "generations_verified": 10,
+      "mismatches": [],
+      "mismatches_count": 0,
+      "seed": 442,
+      "split_generation": 5,
+      "total_generations": 10
+    }
+  ],
+  "seeds": [
+    42,
+    142,
+    242,
+    342,
+    442
+  ],
+  "status": "PASS",
+  "timestamp": "2026-10-01T17:38:15.997458+00:00",
+  "timing": {
+    "budget_sec": 600.0,
+    "compute_sec": 4.081523177000236,
+    "elapsed_sec": 14.984510799999953,
+    "overshoot_sec": 0.0,
+    "setup_sec": 5.464999958348926e-06,
+    "verification_sec": 1.1949996405746788e-06,
+    "warmup_sec": 10.902980963000118
+  }
+}

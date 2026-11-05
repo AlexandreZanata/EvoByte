@@ -1,0 +1,50 @@
+{
+  "checks": {
+    "final_test_closed": true,
+    "freeze_intact": true,
+    "hypothesis_frozen": true,
+    "p38_excluded": true,
+    "schema_ok": true
+  },
+  "claim_scope": "nomination completeness and freeze integrity; approval is a human gate",
+  "controls": {
+    "false": 4,
+    "known": 3
+  },
+  "elapsed_sec": 0.00041008399421116337,
+  "errors": [],
+  "final_test": {
+    "access_log_empty": true,
+    "forbidden_p38_ids": 10,
+    "material": [],
+    "status": "closed"
+  },
+  "freeze_recorded": "18af5df916836e5aa3872029d3e39fef0ad03d73a80e5fd76edfd3cac2d2f9c4",
+  "human_review": {
+    "gate_note": "P48 is blocked until a mathematician approves this nomination; this audit cannot grant approval.",
+    "required": true,
+    "scope": "nomination + thresholds (P47); P46 curation review still pending",
+    "status": "pending"
+  },
+  "nomination_sha256": "18af5df916836e5aa3872029d3e39fef0ad03d73a80e5fd76edfd3cac2d2f9c4",
+  "phase": "P47",
+  "resolved_config": {
+    "acceptance_phase": "P47",
+    "config_path": "experiments/p47-config.json",
+    "config_sha256": "1502a5a1254a8983e07ca8149d0d51a56b63352cbba0eec8fad55885abed6ecb",
+    "nomination_path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/experiments/p47-nomination.json"
+  },
+  "scopes": [
+    "proposer_development",
+    "scientific_campaign"
+  ],
+  "status": "PASS",
+  "threshold_quantities": [
+    "min_certified_success_rate_gain",
+    "max_time_to_certified_ratio",
+    "min_seeds",
+    "min_tasks",
+    "min_budgets"
+  ],
+  "verdict": "PENDING_HUMAN_REVIEW"
+}

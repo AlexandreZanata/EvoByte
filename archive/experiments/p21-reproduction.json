@@ -1,0 +1,192 @@
+{
+  "h1_criteria": {
+    "generalization": true,
+    "honest_baselines_pareto": true,
+    "rediscovery": true,
+    "speedup_cascade": "True",
+    "value_of_evolution": true
+  },
+  "h1_verdict": "SUPPORTED",
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu0": {
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "total_memory_MB": 7805
+    },
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "manifest_reproduced": "experiments/p13-manifest.json",
+  "manifest_sha256": "59c4733f59824329e68ecaf1cdc355c3e58ef46b5859c4e83c04a7fbebead7c2",
+  "models_reproduced": [
+    {
+      "dataset_hash": "003fc3fd05ad0b5d",
+      "expression": "1.165 * (CSEL r3, r4, const=0.1 ; MAX r6, r3, 0x00 ; ADD r7, r6, 0x00) + -0.013072",
+      "method": "EvoByte",
+      "program_size": 3,
+      "recorded_hidden_mse": 0.04130068522120586,
+      "status": "reproduced",
+      "target": "nguyen_1"
+    },
+    {
+      "dataset_hash": "003fc3fd05ad0b5d",
+      "expression": "MIN r2, r7, 0x04 ; EXP r3, r0, 0x04 ; SUB r6, r6, 0x02 ; MUL r7, r3, 0x00",
+      "method": "Random",
+      "program_size": 4,
+      "recorded_hidden_mse": 0.03537571543660353,
+      "status": "reproduced",
+      "target": "nguyen_1"
+    },
+    {
+      "dataset_hash": "003fc3fd05ad0b5d",
+      "expression": "poly_deg5",
+      "method": "Classical-SR",
+      "program_size": 6,
+      "recorded_hidden_mse": 1.568208434071944e-15,
+      "status": "reproduced",
+      "target": "nguyen_1"
+    },
+    {
+      "dataset_hash": "192f5c9ab6574384",
+      "expression": "CSEL r7, r0, 0x09",
+      "method": "Random",
+      "program_size": 1,
+      "recorded_hidden_mse": 0.28025651586675016,
+      "status": "reproduced",
+      "target": "rational"
+    },
+    {
+      "dataset_hash": "192f5c9ab6574384",
+      "expression": "0.8287 * (CSEL r7, r0, const=-0.98815 ; ABS r7, r7, 0x06) + 0.33319",
+      "method": "EvoByte",
+      "program_size": 2,
+      "recorded_hidden_mse": 0.034602228546388225,
+      "status": "reproduced",
+      "target": "rational"
+    },
+    {
+      "dataset_hash": "192f5c9ab6574384",
+      "expression": "0.89192 * (SIN r2, r0, 0x02 ; CSEL r7, r0, const=-1 ; MAX r7, r7, 0x02) + 0.16433",
+      "method": "EvoByte",
+      "program_size": 3,
+      "recorded_hidden_mse": 0.015562258135471952,
+      "status": "reproduced",
+      "target": "rational"
+    },
+    {
+      "dataset_hash": "192f5c9ab6574384",
+      "expression": "0.76077 * (EXP r3, r7, 0x01 ; CSEL r0, r0, const=0.1 ; MAX r4, r0, 0x03 ; SUB r7, r4, 0x03) + 0.47507",
+      "method": "EvoByte",
+      "program_size": 4,
+      "recorded_hidden_mse": 0.00406099317614321,
+      "status": "reproduced",
+      "target": "rational"
+    },
+    {
+      "dataset_hash": "192f5c9ab6574384",
+      "expression": "poly_deg5",
+      "method": "Classical-SR",
+      "program_size": 6,
+      "recorded_hidden_mse": 1.7567270612433077e-06,
+      "status": "reproduced",
+      "target": "rational"
+    },
+    {
+      "dataset_hash": "1dcf6125b800a8ba",
+      "expression": "0.99938 * (CSEL r3, r0, const=0.33648 ; MUL r7, r3, 0x00) + 0.0019153",
+      "method": "EvoByte",
+      "program_size": 2,
+      "recorded_hidden_mse": 0.16863348219241026,
+      "status": "reproduced",
+      "target": "sin_x2"
+    },
+    {
+      "dataset_hash": "1dcf6125b800a8ba",
+      "expression": "1.0043 * (CSEL r0, r0, const=0.1848 ; MUL r7, r0, 0x00 ; MAX r7, r0, 0x07) + -0.075147",
+      "method": "EvoByte",
+      "program_size": 3,
+      "recorded_hidden_mse": 0.1655593223400987,
+      "status": "reproduced",
+      "target": "sin_x2"
+    },
+    {
+      "dataset_hash": "1dcf6125b800a8ba",
+      "expression": "MUL r1, r3, 0x06 ; MUL r3, r0, 0x00 ; SIN r6, r0, 0x06 ; ADD r7, r6, 0x03 ; MAX r4, r7, 0x00",
+      "method": "EvoByte",
+      "program_size": 5,
+      "recorded_hidden_mse": 4.440892098500626e-15,
+      "status": "reproduced",
+      "target": "sin_x2"
+    },
+    {
+      "dataset_hash": "1dcf6125b800a8ba",
+      "expression": "GP_tree(size=6)",
+      "method": "Classic-GP",
+      "program_size": 6,
+      "recorded_hidden_mse": 0.0,
+      "status": "reproduced",
+      "target": "sin_x2"
+    },
+    {
+      "dataset_hash": "7156ce87c01a4c52",
+      "expression": "CSEL r1, r0, 0x0b ; MUL r7, r0, 0x01",
+      "method": "Random",
+      "program_size": 2,
+      "recorded_hidden_mse": 49.000001825393255,
+      "status": "reproduced",
+      "target": "x2_3x_7"
+    },
+    {
+      "dataset_hash": "7156ce87c01a4c52",
+      "expression": "1 * (CSEL r0, r0, const=1.5 ; MUL r0, r0, 0x00 ; CSEL r7, r0, const=4.6232) + 0.1268",
+      "method": "EvoByte",
+      "program_size": 3,
+      "recorded_hidden_mse": 1.77280412572145e-12,
+      "status": "reproduced",
+      "target": "x2_3x_7"
+    },
+    {
+      "dataset_hash": "7156ce87c01a4c52",
+      "expression": "poly_deg5",
+      "method": "Classical-SR",
+      "program_size": 6,
+      "recorded_hidden_mse": 7.796497999162588e-13,
+      "status": "reproduced",
+      "target": "x2_3x_7"
+    },
+    {
+      "dataset_hash": "7156ce87c01a4c52",
+      "expression": "EXP r6, r7, 0x6c ; MUL r7, r0, 0x00 ; CSEL r3, r6, 0x03 ; MUL r0, r3, 0x00 ; SUB r5, r7, 0x04 ; ADD r7, r0, 0x05 ; CSEL r2, r7, 0x07 ; SUB r7, r2, 0x03",
+      "method": "EvoByte",
+      "program_size": 8,
+      "recorded_hidden_mse": 6.394884621840902e-14,
+      "status": "reproduced",
+      "target": "x2_3x_7"
+    },
+    {
+      "dataset_hash": "a24124265e6dfaec",
+      "expression": "ADD r6, r6, 0x05 ; CSEL r7, r0, 0x01",
+      "method": "Random",
+      "program_size": 2,
+      "recorded_hidden_mse": 0.0,
+      "status": "reproduced",
+      "target": "x_plus_1"
+    }
+  ],
+  "p14_eligible": true,
+  "phase": "P21-independent-reproduction",
+  "raw_artifacts_verified": [
+    {
+      "path": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/experiments/p13-raw.json",
+      "sha256": "6227aa9168543aa43406a3c8e719766c1f72d00ab5229cd511836c5330e014cc",
+      "verified": true
+    }
+  ],
+  "status": "PASS",
+  "timestamp": "2026-09-30T12:59:14.780906+00:00"
+}

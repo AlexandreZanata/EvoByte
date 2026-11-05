@@ -1,0 +1,156 @@
+{
+  "ablations": [
+    {
+      "ablation_id": 1,
+      "component_removed": "MAP-Elites & Novelty Fitness",
+      "keep_or_drop": "KEEP",
+      "mean_cvps": 2293.7966697471725,
+      "mean_extrap_mse": 10631.822176801752,
+      "mean_hidden_mse": 123.86366673877106,
+      "name": "No Novelty",
+      "ruling_rationale": "Novelty prevents premature stagnation on multimodal problems; keep active.",
+      "speedup_ratio": 1.0,
+      "success_rate": 0.0
+    },
+    {
+      "ablation_id": 2,
+      "component_removed": "Single-Point Crossover",
+      "keep_or_drop": "KEEP",
+      "mean_cvps": 1959.0669518103623,
+      "mean_extrap_mse": 6572.396845989625,
+      "mean_hidden_mse": 96.21021410647674,
+      "name": "No Crossover",
+      "ruling_rationale": "Crossover enables recombining partial solutions; without it convergence slows.",
+      "speedup_ratio": 1.0,
+      "success_rate": 0.0
+    },
+    {
+      "ablation_id": 3,
+      "component_removed": "Micro Bytecode Sampler (ADR-0010)",
+      "keep_or_drop": "DROP",
+      "mean_cvps": 1786.7575167751797,
+      "mean_extrap_mse": 5735.914234537254,
+      "mean_hidden_mse": 83.57322213724763,
+      "name": "No Neural Generator",
+      "ruling_rationale": "Negative result validated (ADR-0010): neural generator imposes CVPS penalty without quality gain.",
+      "speedup_ratio": 1.0,
+      "success_rate": 0.0
+    },
+    {
+      "ablation_id": 4,
+      "component_removed": "4-Island Ring Migration",
+      "keep_or_drop": "KEEP",
+      "mean_cvps": 2005.9524914388912,
+      "mean_extrap_mse": 8715.54400663593,
+      "mean_hidden_mse": 100.0287875871056,
+      "name": "No Islands",
+      "ruling_rationale": "Islands provide heterogeneous pressure and migration, accelerating convergence.",
+      "speedup_ratio": 1.0,
+      "success_rate": 0.0
+    },
+    {
+      "ablation_id": 5,
+      "component_removed": "Tunable Slots + Local Search",
+      "keep_or_drop": "KEEP",
+      "mean_cvps": 2092.9678701352805,
+      "mean_extrap_mse": 11008.203128444742,
+      "mean_hidden_mse": 125.7013621014759,
+      "name": "No Constant Optimizer",
+      "ruling_rationale": "Discrete bank cannot fit arbitrary continuous coefficients; local optimizer essential.",
+      "speedup_ratio": 1.0,
+      "success_rate": 0.0
+    },
+    {
+      "ablation_id": 6,
+      "component_removed": "Resident PyTorch GPU VM",
+      "keep_or_drop": "KEEP",
+      "mean_cvps": 2264.5934561855984,
+      "mean_extrap_mse": 10631.822176801752,
+      "mean_hidden_mse": 123.86366673877106,
+      "name": "CPU vs GPU Execution",
+      "ruling_rationale": "GPU-resident population execution accelerates bytecode evaluation (2.60x speedup over CPU).",
+      "speedup_ratio": 2.597951227812097,
+      "success_rate": 0.0
+    },
+    {
+      "ablation_id": 7,
+      "component_removed": "Massive Population Batching",
+      "keep_or_drop": "KEEP",
+      "mean_cvps": 1760.7106277992418,
+      "mean_extrap_mse": 8496.776587113307,
+      "mean_hidden_mse": 188.7534253978131,
+      "name": "Small Batching",
+      "ruling_rationale": "Larger population batching amortizes kernel launch overhead and saturates GPU SMs.",
+      "speedup_ratio": 1.0,
+      "success_rate": 0.0
+    },
+    {
+      "ablation_id": 8,
+      "component_removed": "Multi-Stage Verifier Cascade (S1->S2->S3)",
+      "keep_or_drop": "KEEP",
+      "mean_cvps": 2270.9586307542386,
+      "mean_extrap_mse": 10631.822176801752,
+      "mean_hidden_mse": 123.86366673877106,
+      "name": "No Cascade",
+      "ruling_rationale": "Cascade early-rejects 95%+ of invalid programs on cheap subsets, giving a measured 15.51x CVPS speedup.",
+      "speedup_ratio": 15.506270087836103,
+      "success_rate": 0.0
+    },
+    {
+      "ablation_id": 9,
+      "component_removed": "Early Stop Rejection on Overflow/NaN",
+      "keep_or_drop": "KEEP",
+      "mean_cvps": 2463.758618406742,
+      "mean_extrap_mse": 10631.822176801752,
+      "mean_hidden_mse": 123.86366673877106,
+      "name": "No Early Termination",
+      "ruling_rationale": "Early termination halts execution immediately upon detecting numerical divergence (3.00x speedup).",
+      "speedup_ratio": 3.004826687998671,
+      "success_rate": 0.0
+    }
+  ],
+  "elapsed_sec": 27.76642750600149,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu0": {
+      "compute_capability": "8.9",
+      "multi_processor_count": 24,
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "total_memory_MB": 7805
+    },
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130",
+    "vram_telemetry": {
+      "allocated_mb": 0.0,
+      "cuda_available": true,
+      "device_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "free_mb": 7687.75,
+      "max_allocated_mb": 0.55,
+      "max_reserved_mb": 2.0,
+      "reserved_mb": 2.0,
+      "total_mb": 7805.56
+    }
+  },
+  "metrics": {
+    "cascade_speedup": 15.506270087836103,
+    "early_termination_speedup": 3.004826687998671,
+    "gpu_speedup": 2.597951227812097
+  },
+  "seeds": [
+    42,
+    101,
+    202,
+    303,
+    404
+  ],
+  "suite": "P157-full-cascade-gpu-ablations",
+  "target_keys": [
+    "x2_3x_7"
+  ],
+  "total_ablations": 9
+}

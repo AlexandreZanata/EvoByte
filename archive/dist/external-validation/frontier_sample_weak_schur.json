@@ -1,0 +1,26 @@
+{
+  "certificate_version": "1.0.0",
+  "target_id": "weak_schur_k2_n8",
+  "certificate_type": "weak_schur",
+  "candidate_length": 8,
+  "reference_literature": "Bornsztein, P. (2002). On an extension of a theorem of Schur. Integers 2: A04.",
+  "sha256_checksum": "fadb83c9ab89d8fb413af07dfd877fd967d04f6a49907753d17cf4d3af4db5b1",
+  "sha256_scope": "SHA-256 of canonical JSON of {certificate_type, target_id, candidate, parameters}",
+  "reproduction_seed": 42,
+  "partition": [
+    1,
+    1,
+    2,
+    1,
+    2,
+    2,
+    2,
+    1
+  ],
+  "k": 2,
+  "provenance": {
+    "role": "calibration",
+    "family": "weak_schur",
+    "optimality": "proven_exact"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ablation_id": 3,
+  "component_removed": "Micro Bytecode Sampler (ADR-0010)",
+  "keep_or_drop": "DROP",
+  "mean_cvps": 1786.7575167751797,
+  "mean_extrap_mse": 5735.914234537254,
+  "mean_hidden_mse": 83.57322213724763,
+  "name": "No Neural Generator",
+  "ruling_rationale": "Negative result validated (ADR-0010): neural generator imposes CVPS penalty without quality gain.",
+  "speedup_ratio": 1.0,
+  "success_rate": 0.0
+}

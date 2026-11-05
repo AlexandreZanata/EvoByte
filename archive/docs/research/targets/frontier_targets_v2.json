@@ -1,0 +1,1651 @@
+{
+  "version": "2.0.0",
+  "catalogue_date": "2026-10-22",
+  "targets": [
+    {
+      "target_id": "covering_C_32_16_6",
+      "family": "covering_design",
+      "params": {
+        "v": 32,
+        "k": 16,
+        "t": 6
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 286,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 286,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 154,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 1.2701
+    },
+    {
+      "target_id": "covering_C_22_15_6",
+      "family": "covering_design",
+      "params": {
+        "v": 22,
+        "k": 15,
+        "t": 6
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 46,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 46,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 31,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.1302
+    },
+    {
+      "target_id": "covering_C_23_16_6",
+      "family": "covering_design",
+      "params": {
+        "v": 23,
+        "k": 16,
+        "t": 6
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 38,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 38,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 26,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.1664
+    },
+    {
+      "target_id": "covering_C_19_13_6",
+      "family": "covering_design",
+      "params": {
+        "v": 19,
+        "k": 13,
+        "t": 6
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 42,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 42,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 30,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0372
+    },
+    {
+      "target_id": "covering_C_44_22_6",
+      "family": "covering_design",
+      "params": {
+        "v": 44,
+        "k": 22,
+        "t": 6
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 342,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 342,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 140,
+      "proven_optimal": false,
+      "last_improvement": "2009-01-21",
+      "last_method": "LJCR Multiple of (22,11,6) covering",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 12.9511
+    },
+    {
+      "target_id": "covering_C_20_12_4",
+      "family": "covering_design",
+      "params": {
+        "v": 20,
+        "k": 12,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 20,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 20,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 15,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0042
+    },
+    {
+      "target_id": "covering_C_46_14_5",
+      "family": "covering_design",
+      "params": {
+        "v": 46,
+        "k": 14,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 1948,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 1948,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 845,
+      "proven_optimal": false,
+      "last_improvement": "2009-02-18",
+      "last_method": "LJCR Multiple of (23,7,5) covering",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 1.7361
+    },
+    {
+      "target_id": "covering_C_20_12_5",
+      "family": "covering_design",
+      "params": {
+        "v": 20,
+        "k": 12,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 42,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 42,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 32,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0141
+    },
+    {
+      "target_id": "covering_C_25_16_4",
+      "family": "covering_design",
+      "params": {
+        "v": 25,
+        "k": 16,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 17,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 17,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 13,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0138
+    },
+    {
+      "target_id": "covering_C_64_22_5",
+      "family": "covering_design",
+      "params": {
+        "v": 64,
+        "k": 22,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 861,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 861,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 367,
+      "proven_optimal": false,
+      "last_improvement": "2010-04-30",
+      "last_method": "LJCR Dynamic programming construction",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 9.7379
+    },
+    {
+      "target_id": "covering_C_23_16_5",
+      "family": "covering_design",
+      "params": {
+        "v": 23,
+        "k": 16,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 20,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 20,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 16,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0356
+    },
+    {
+      "target_id": "covering_C_56_18_5",
+      "family": "covering_design",
+      "params": {
+        "v": 56,
+        "k": 18,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 1216,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 1216,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 545,
+      "proven_optimal": false,
+      "last_improvement": "2010-08-04",
+      "last_method": "LJCR Multiple of (28,9,5) covering",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 4.4939
+    },
+    {
+      "target_id": "covering_C_19_11_3",
+      "family": "covering_design",
+      "params": {
+        "v": 19,
+        "k": 11,
+        "t": 3
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 11,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 11,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 9,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0007
+    },
+    {
+      "target_id": "covering_C_22_13_3",
+      "family": "covering_design",
+      "params": {
+        "v": 22,
+        "k": 13,
+        "t": 3
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 11,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 11,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 9,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0011
+    },
+    {
+      "target_id": "covering_C_24_14_3",
+      "family": "covering_design",
+      "params": {
+        "v": 24,
+        "k": 14,
+        "t": 3
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 11,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 11,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 9,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0014
+    },
+    {
+      "target_id": "covering_C_26_15_3",
+      "family": "covering_design",
+      "params": {
+        "v": 26,
+        "k": 15,
+        "t": 3
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 11,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 11,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 9,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0018
+    },
+    {
+      "target_id": "covering_C_28_16_3",
+      "family": "covering_design",
+      "params": {
+        "v": 28,
+        "k": 16,
+        "t": 3
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 11,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 11,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 9,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0023
+    },
+    {
+      "target_id": "covering_C_19_11_4",
+      "family": "covering_design",
+      "params": {
+        "v": 19,
+        "k": 11,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 23,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 23,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 19,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0031
+    },
+    {
+      "target_id": "covering_C_12_7_4",
+      "family": "covering_design",
+      "params": {
+        "v": 12,
+        "k": 7,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 24,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 24,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 20,
+      "proven_optimal": false,
+      "last_improvement": "1996-11-14",
+      "last_method": "JCD article",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0004
+    },
+    {
+      "target_id": "covering_C_26_16_4",
+      "family": "covering_design",
+      "params": {
+        "v": 26,
+        "k": 16,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "stale_construction",
+      "best_known_value": 18,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 18,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 15,
+      "proven_optimal": false,
+      "last_improvement": "1997-01-15",
+      "last_method": "Simple Construction: Multiple of smaller covering",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0128
+    },
+    {
+      "target_id": "covering_C_44_18_5",
+      "family": "covering_design",
+      "params": {
+        "v": 44,
+        "k": 18,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 338,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 338,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 181,
+      "proven_optimal": false,
+      "last_improvement": "2022-04-11",
+      "last_method": "Alessandro Jurcovich",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 1.2797
+    },
+    {
+      "target_id": "covering_C_40_18_5",
+      "family": "covering_design",
+      "params": {
+        "v": 40,
+        "k": 18,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 186,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 186,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 114,
+      "proven_optimal": false,
+      "last_improvement": "2021-02-04",
+      "last_method": "777ch Private Tools",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.7004
+    },
+    {
+      "target_id": "covering_C_49_18_5",
+      "family": "covering_design",
+      "params": {
+        "v": 49,
+        "k": 18,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 635,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 635,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 303,
+      "proven_optimal": false,
+      "last_improvement": "2021-09-26",
+      "last_method": "Terenzio Lazzarotto",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 2.3517
+    },
+    {
+      "target_id": "covering_C_21_9_6",
+      "family": "covering_design",
+      "params": {
+        "v": 21,
+        "k": 9,
+        "t": 6
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 1060,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 1060,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 766,
+      "proven_optimal": false,
+      "last_improvement": "2021-02-01",
+      "last_method": "Marco Meoli",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0442
+    },
+    {
+      "target_id": "covering_C_51_11_4",
+      "family": "covering_design",
+      "params": {
+        "v": 51,
+        "k": 11,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 1497,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 1497,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 835,
+      "proven_optimal": false,
+      "last_improvement": "2022-02-22",
+      "last_method": "Dietmar Pree Local search",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.2033
+    },
+    {
+      "target_id": "covering_C_53_11_4",
+      "family": "covering_design",
+      "params": {
+        "v": 53,
+        "k": 11,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 1700,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 1700,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 1003,
+      "proven_optimal": false,
+      "last_improvement": "2022-02-15",
+      "last_method": "Dietmar Pree Local search",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.2329
+    },
+    {
+      "target_id": "covering_C_59_20_4",
+      "family": "covering_design",
+      "params": {
+        "v": 59,
+        "k": 20,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 153,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 153,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 121,
+      "proven_optimal": false,
+      "last_improvement": "2021-03-28",
+      "last_method": "777ch korelacje_777ch v5",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.3005
+    },
+    {
+      "target_id": "covering_C_40_21_6",
+      "family": "covering_design",
+      "params": {
+        "v": 40,
+        "k": 21,
+        "t": 6
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 226,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 226,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 113,
+      "proven_optimal": false,
+      "last_improvement": "2021-12-14",
+      "last_method": "Jiang Yong Ming and Jiang Kun Xi JYMCCDD Programming",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 5.8761
+    },
+    {
+      "target_id": "covering_C_42_18_5",
+      "family": "covering_design",
+      "params": {
+        "v": 42,
+        "k": 18,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 247,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 247,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 143,
+      "proven_optimal": false,
+      "last_improvement": "2021-01-05",
+      "last_method": "777ch Private Tools",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.8477
+    },
+    {
+      "target_id": "covering_C_43_13_5",
+      "family": "covering_design",
+      "params": {
+        "v": 43,
+        "k": 13,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "active_frontier",
+      "best_known_value": 1835,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 1835,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 870,
+      "proven_optimal": false,
+      "last_improvement": "2022-11-08",
+      "last_method": "Sveta Marjanovic Wheel Generator v2",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 1.0734
+    },
+    {
+      "target_id": "covering_C_84_11_2",
+      "family": "covering_design",
+      "params": {
+        "v": 84,
+        "k": 11,
+        "t": 2
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 73,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 73,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 70,
+      "proven_optimal": false,
+      "last_improvement": "2011-07-01",
+      "last_method": "Jan de Heer and Steve Muir Private tools",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0015
+    },
+    {
+      "target_id": "covering_C_86_16_3",
+      "family": "covering_design",
+      "params": {
+        "v": 86,
+        "k": 16,
+        "t": 3
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 258,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 258,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 210,
+      "proven_optimal": false,
+      "last_improvement": "2011-10-10",
+      "last_method": "Jan de Heer and Steve Muir Private tools",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0503
+    },
+    {
+      "target_id": "covering_C_62_23_4",
+      "family": "covering_design",
+      "params": {
+        "v": 62,
+        "k": 23,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 127,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 127,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 92,
+      "proven_optimal": false,
+      "last_improvement": "2010-06-02",
+      "last_method": "Jan de Heer and Steve Muir Private tools",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.4292
+    },
+    {
+      "target_id": "covering_C_48_11_4",
+      "family": "covering_design",
+      "params": {
+        "v": 48,
+        "k": 11,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 1159,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 1159,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 681,
+      "proven_optimal": false,
+      "last_improvement": "2022-01-25",
+      "last_method": "Enzo Franzese Private tools",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.1486
+    },
+    {
+      "target_id": "covering_C_50_15_3",
+      "family": "covering_design",
+      "params": {
+        "v": 50,
+        "k": 15,
+        "t": 3
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 68,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 68,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 54,
+      "proven_optimal": false,
+      "last_improvement": "2009-01-07",
+      "last_method": "LJCR Simple construction from (51,15,3)",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.011
+    },
+    {
+      "target_id": "covering_C_28_9_5",
+      "family": "covering_design",
+      "params": {
+        "v": 28,
+        "k": 9,
+        "t": 5
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 1216,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 1216,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 906,
+      "proven_optimal": false,
+      "last_improvement": "2010-08-04",
+      "last_method": "Jan de Heer and Steve Muir Private tools",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0683
+    },
+    {
+      "target_id": "covering_C_65_15_4",
+      "family": "covering_design",
+      "params": {
+        "v": 65,
+        "k": 15,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 831,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 831,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 598,
+      "proven_optimal": false,
+      "last_improvement": "2013-08-06",
+      "last_method": "Jan de Heer and Steve Muir Dynamic programming construction",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.4831
+    },
+    {
+      "target_id": "covering_C_88_21_4",
+      "family": "covering_design",
+      "params": {
+        "v": 88,
+        "k": 21,
+        "t": 4
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 859,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 859,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 457,
+      "proven_optimal": false,
+      "last_improvement": "2017-05-05",
+      "last_method": "Jan de Heer and Steve Muir Private tools",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 1.9805
+    },
+    {
+      "target_id": "covering_C_98_22_2",
+      "family": "covering_design",
+      "params": {
+        "v": 98,
+        "k": 22,
+        "t": 2
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 27,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 27,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 24,
+      "proven_optimal": false,
+      "last_improvement": "2009-01-08",
+      "last_method": "LJCR Multiple of (49,11,2) covering",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0021
+    },
+    {
+      "target_id": "covering_C_54_16_2",
+      "family": "covering_design",
+      "params": {
+        "v": 54,
+        "k": 16,
+        "t": 2
+      },
+      "objective": "minimize",
+      "role": "record",
+      "stratum": "random_control",
+      "best_known_value": 16,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set in Gordon LJCR repository.",
+      "claimed_values": [
+        {
+          "value": 16,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 14,
+      "proven_optimal": false,
+      "last_improvement": "2010-05-03",
+      "last_method": "LJCR Simple construction from (55,16,2)",
+      "certificate_status": "site_unreachable",
+      "certificate_path": null,
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0007
+    },
+    {
+      "target_id": "covering_C_7_3_2",
+      "family": "covering_design",
+      "params": {
+        "v": 7,
+        "k": 3,
+        "t": 2
+      },
+      "objective": "minimize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 7,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set. Proven exact.",
+      "claimed_values": [
+        {
+          "value": 7,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 7,
+      "proven_optimal": true,
+      "last_improvement": "1890-01-01",
+      "last_method": "Fano plane PG(2,2)",
+      "certificate_status": "constructed_calibration",
+      "certificate_path": "docs/research/targets/certificates/covering_C_7_3_2.json",
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0
+    },
+    {
+      "target_id": "covering_C_9_3_2",
+      "family": "covering_design",
+      "params": {
+        "v": 9,
+        "k": 3,
+        "t": 2
+      },
+      "objective": "minimize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 12,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set. Proven exact.",
+      "claimed_values": [
+        {
+          "value": 12,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 12,
+      "proven_optimal": true,
+      "last_improvement": "1900-01-01",
+      "last_method": "Affine plane AG(2,3)",
+      "certificate_status": "constructed_calibration",
+      "certificate_path": "docs/research/targets/certificates/covering_C_9_3_2.json",
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0
+    },
+    {
+      "target_id": "covering_C_8_4_3",
+      "family": "covering_design",
+      "params": {
+        "v": 8,
+        "k": 4,
+        "t": 3
+      },
+      "objective": "minimize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 14,
+      "source_convention": "Number of k-element blocks covering all t-subsets of a v-set. Proven exact.",
+      "claimed_values": [
+        {
+          "value": 14,
+          "source_id": "ljcr-coverdata-459bcaf",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 14,
+      "proven_optimal": true,
+      "last_improvement": "1938-01-01",
+      "last_method": "Steiner system S(3,4,8)",
+      "certificate_status": "constructed_calibration",
+      "certificate_path": "docs/research/targets/certificates/covering_C_8_4_3.json",
+      "verifier": "verify_covering_design",
+      "verifier_runtime_s": 0.0
+    },
+    {
+      "target_id": "weak_schur_5",
+      "family": "weak_schur",
+      "params": {
+        "k": 5
+      },
+      "objective": "maximize",
+      "role": "record",
+      "stratum": "named_open",
+      "best_known_value": 207,
+      "source_convention": "Largest N such that [1..N] can be partitioned into 5 weakly sum-free subsets (OEIS A072842). Corresponding A118771 value is N+1=208.",
+      "claimed_values": [
+        {
+          "value": 207,
+          "source_id": "oeis-A072842",
+          "verified_object": true
+        },
+        {
+          "value": 196,
+          "source_id": "oeis-A072842",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 207,
+      "proven_optimal": false,
+      "last_improvement": "2025-08-29",
+      "last_method": "Fred Rowley template-based coloring",
+      "certificate_status": "verified_published_object",
+      "certificate_path": "docs/research/targets/certificates/weak_schur_5.json",
+      "verifier": "verify_weak_schur_partition",
+      "verifier_runtime_s": 3.5e-05
+    },
+    {
+      "target_id": "weak_schur_6",
+      "family": "weak_schur",
+      "params": {
+        "k": 6
+      },
+      "objective": "maximize",
+      "role": "record",
+      "stratum": "named_open",
+      "best_known_value": 650,
+      "source_convention": "Largest N such that [1..N] can be partitioned into 6 weakly sum-free subsets (OEIS A072842). Corresponding A118771 value is N+1=651.",
+      "claimed_values": [
+        {
+          "value": 650,
+          "source_id": "zenodo-20633634",
+          "verified_object": true
+        },
+        {
+          "value": 646,
+          "source_id": "oeis-A072842",
+          "verified_object": true
+        },
+        {
+          "value": 582,
+          "source_id": "oeis-A072842",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 650,
+      "proven_optimal": false,
+      "last_improvement": "2026-06-10",
+      "last_method": "Sebasti\u00e1n E. Rodrigo Tabu search with perturbation",
+      "certificate_status": "verified_published_object",
+      "certificate_path": "docs/research/targets/certificates/weak_schur_6.json",
+      "verifier": "verify_weak_schur_partition",
+      "verifier_runtime_s": 9.4e-05
+    },
+    {
+      "target_id": "weak_schur_7",
+      "family": "weak_schur",
+      "params": {
+        "k": 7
+      },
+      "objective": "maximize",
+      "role": "record",
+      "stratum": "named_open",
+      "best_known_value": 2146,
+      "source_convention": "Largest N such that [1..N] can be partitioned into 7 weakly sum-free subsets (OEIS A072842). Corresponding A118771 value is N+1=2147.",
+      "claimed_values": [
+        {
+          "value": 2146,
+          "source_id": "oeis-A072842",
+          "verified_object": false
+        },
+        {
+          "value": 1740,
+          "source_id": "oeis-A072842",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 2146,
+      "proven_optimal": false,
+      "last_improvement": "2021-01-01",
+      "last_method": "Fred Rowley template-based partition (Integers 21)",
+      "certificate_status": "not_obtained",
+      "certificate_path": null,
+      "verifier": "verify_weak_schur_partition",
+      "verifier_runtime_s": 0.000293
+    },
+    {
+      "target_id": "schur_5",
+      "family": "schur",
+      "params": {
+        "k": 5
+      },
+      "objective": "maximize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 160,
+      "source_convention": "Largest N such that [1..N] can be partitioned into 5 sum-free subsets (OEIS A030126 version 1 value minus 1).",
+      "claimed_values": [
+        {
+          "value": 160,
+          "source_id": "oeis-A030126",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 160,
+      "proven_optimal": true,
+      "last_improvement": "2017-11-26",
+      "last_method": "Marijn Heule SAT solver certificate (AAAI 2018)",
+      "certificate_status": "verified_published_object",
+      "certificate_path": "docs/research/targets/certificates/schur_5.json",
+      "verifier": "verify_schur_partition",
+      "verifier_runtime_s": 7.1e-05
+    },
+    {
+      "target_id": "schur_6",
+      "family": "schur",
+      "params": {
+        "k": 6
+      },
+      "objective": "maximize",
+      "role": "record",
+      "stratum": "named_open",
+      "best_known_value": 536,
+      "source_convention": "Largest N such that [1..N] can be partitioned into 6 sum-free subsets (OEIS A030126 version 1 value minus 1).",
+      "claimed_values": [
+        {
+          "value": 536,
+          "source_id": "fredricksen-sweet-2000",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 536,
+      "proven_optimal": false,
+      "last_improvement": "2000-01-01",
+      "last_method": "Fredricksen & Sweet symmetric partition (ElJC 7)",
+      "certificate_status": "verified_published_object",
+      "certificate_path": "docs/research/targets/certificates/schur_6.json",
+      "verifier": "verify_schur_partition",
+      "verifier_runtime_s": 6.4e-05
+    },
+    {
+      "target_id": "schur_7",
+      "family": "schur",
+      "params": {
+        "k": 7
+      },
+      "objective": "maximize",
+      "role": "record",
+      "stratum": "named_open",
+      "best_known_value": 1680,
+      "source_convention": "Largest N such that [1..N] can be partitioned into 7 sum-free subsets (OEIS A030126 version 1 value minus 1).",
+      "claimed_values": [
+        {
+          "value": 1680,
+          "source_id": "fredricksen-sweet-2000",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 1680,
+      "proven_optimal": false,
+      "last_improvement": "2000-01-01",
+      "last_method": "Fredricksen & Sweet symmetric partition (ElJC 7)",
+      "certificate_status": "verified_published_object",
+      "certificate_path": "docs/research/targets/certificates/schur_7.json",
+      "verifier": "verify_schur_partition",
+      "verifier_runtime_s": 0.000179
+    },
+    {
+      "target_id": "cap_set_3",
+      "family": "cap_set",
+      "params": {
+        "n": 3
+      },
+      "objective": "maximize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 9,
+      "source_convention": "Maximum size of a cap set in F3^3 (no collinear triples).",
+      "claimed_values": [
+        {
+          "value": 9,
+          "source_id": "oeis-A090245",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 9,
+      "proven_optimal": true,
+      "last_improvement": "1970-01-01",
+      "last_method": "Exact classical geometry",
+      "certificate_status": "constructed_calibration",
+      "certificate_path": "docs/research/targets/certificates/cap_set_3.json",
+      "verifier": "verify_cap_set",
+      "verifier_runtime_s": 1.2e-05
+    },
+    {
+      "target_id": "cap_set_4",
+      "family": "cap_set",
+      "params": {
+        "n": 4
+      },
+      "objective": "maximize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 20,
+      "source_convention": "Maximum size of a cap set in F3^4 (no collinear triples).",
+      "claimed_values": [
+        {
+          "value": 20,
+          "source_id": "oeis-A090245",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 20,
+      "proven_optimal": true,
+      "last_improvement": "1970-01-01",
+      "last_method": "Pellegrino (1970)",
+      "certificate_status": "not_obtained",
+      "certificate_path": null,
+      "verifier": "verify_cap_set",
+      "verifier_runtime_s": 7e-06
+    },
+    {
+      "target_id": "cap_set_5",
+      "family": "cap_set",
+      "params": {
+        "n": 5
+      },
+      "objective": "maximize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 45,
+      "source_convention": "Maximum size of a cap set in F3^5 (no collinear triples).",
+      "claimed_values": [
+        {
+          "value": 45,
+          "source_id": "oeis-A090245",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 45,
+      "proven_optimal": true,
+      "last_improvement": "2002-01-01",
+      "last_method": "Edel, Ferret, Landjev, Storme (2002)",
+      "certificate_status": "not_obtained",
+      "certificate_path": null,
+      "verifier": "verify_cap_set",
+      "verifier_runtime_s": 1.4e-05
+    },
+    {
+      "target_id": "cap_set_6",
+      "family": "cap_set",
+      "params": {
+        "n": 6
+      },
+      "objective": "maximize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 112,
+      "source_convention": "Maximum size of a cap set in F3^6 (no collinear triples).",
+      "claimed_values": [
+        {
+          "value": 112,
+          "source_id": "oeis-A090245",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 112,
+      "proven_optimal": true,
+      "last_improvement": "2008-01-01",
+      "last_method": "Aaron Potechin (2008)",
+      "certificate_status": "not_obtained",
+      "certificate_path": null,
+      "verifier": "verify_cap_set",
+      "verifier_runtime_s": 5.1e-05
+    },
+    {
+      "target_id": "cap_set_7",
+      "family": "cap_set",
+      "params": {
+        "n": 7
+      },
+      "objective": "maximize",
+      "role": "record",
+      "stratum": "named_open",
+      "best_known_value": 236,
+      "source_convention": "Maximum size of a cap set in F3^7 (no collinear triples).",
+      "claimed_values": [
+        {
+          "value": 236,
+          "source_id": "edel-248-7-3",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 236,
+      "proven_optimal": false,
+      "last_improvement": "1994-01-01",
+      "last_method": "Calderbank & Fishburn (1994) / Edel (2004)",
+      "certificate_status": "verified_published_object",
+      "certificate_path": "docs/research/targets/certificates/cap_set_7.json",
+      "verifier": "verify_cap_set",
+      "verifier_runtime_s": 1.7e-05
+    },
+    {
+      "target_id": "cap_set_8",
+      "family": "cap_set",
+      "params": {
+        "n": 8
+      },
+      "objective": "maximize",
+      "role": "calibration",
+      "stratum": "calibration",
+      "best_known_value": 512,
+      "source_convention": "Maximum size of a cap set in F3^8 (no collinear triples).",
+      "claimed_values": [
+        {
+          "value": 512,
+          "source_id": "funsearch-nature-2024",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 512,
+      "proven_optimal": false,
+      "last_improvement": "2023-12-14",
+      "last_method": "Romera-Paredes et al., FunSearch (Nature 2024)",
+      "certificate_status": "verified_published_object",
+      "certificate_path": "docs/research/targets/certificates/cap_set_8.json",
+      "verifier": "verify_cap_set",
+      "verifier_runtime_s": 0.00018
+    },
+    {
+      "target_id": "cap_set_9",
+      "family": "cap_set",
+      "params": {
+        "n": 9
+      },
+      "objective": "maximize",
+      "role": "record",
+      "stratum": "named_open",
+      "best_known_value": 1082,
+      "source_convention": "Maximum size of a cap set in F3^9 (no collinear triples).",
+      "claimed_values": [
+        {
+          "value": 1082,
+          "source_id": "funsearch-nature-2024",
+          "verified_object": true
+        }
+      ],
+      "lower_bound": 1082,
+      "proven_optimal": false,
+      "last_improvement": "2004-01-01",
+      "last_method": "Yves Edel (2004) / FunSearch (2024)",
+      "certificate_status": "verified_published_object",
+      "certificate_path": "docs/research/targets/certificates/cap_set_9.json",
+      "verifier": "verify_cap_set",
+      "verifier_runtime_s": 0.000257
+    },
+    {
+      "target_id": "cap_set_10",
+      "family": "cap_set",
+      "params": {
+        "n": 10
+      },
+      "objective": "maximize",
+      "role": "record",
+      "stratum": "named_open",
+      "best_known_value": 2240,
+      "source_convention": "Maximum size of a cap set in F3^10 (no collinear triples).",
+      "claimed_values": [
+        {
+          "value": 2240,
+          "source_id": "edel-caps-tables",
+          "verified_object": false
+        }
+      ],
+      "lower_bound": 2240,
+      "proven_optimal": false,
+      "last_improvement": "2004-01-01",
+      "last_method": "Yves Edel product construction (2004)",
+      "certificate_status": "not_obtained",
+      "certificate_path": null,
+      "verifier": "verify_cap_set",
+      "verifier_runtime_s": 0.000414
+    }
+  ]
+}

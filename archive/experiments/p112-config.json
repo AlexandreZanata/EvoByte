@@ -1,0 +1,14 @@
+{
+  "phase": "P112",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 1500,
+  "min_modules": 24,
+  "expected_chain_hash": "0ee06b77b0f6019362c34070d3ea7b13903d020f26be441d8aebc1f8170c3268",
+  "dossier_path": "docs/research/p112-open-problems-dossier.md",
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P112 Open problems grand formal campaign and certified literature dossier audit. Consolidates 26 formal modules in Lean 4 with 1,929 theorems, zero sorry, and SHA-256 cryptographic hash chain."
+}

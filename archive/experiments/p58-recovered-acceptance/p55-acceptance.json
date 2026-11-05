@@ -1,0 +1,72 @@
+{
+  "budgets": {
+    "approved_budget_sec": 0.0,
+    "compute_sec": 0.0
+  },
+  "certificate_references": [],
+  "claim_scope": "no new sampling claim; P56 proceeds with the classical sampler",
+  "continuation": "P56 with the classical sampler",
+  "counters": {
+    "comparisons_run": 0
+  },
+  "dirty": "M benchmarks/qrand_ab.py\n M benchmarks/science_matrix.py\n M tests/test_qrand_ab.py\n M tests/test_science.py\n?? experiments/p55-config.json\n?? experiments/p55-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 0.05690529600542504,
+  "gate": {
+    "approved_budget_sec": 0.0,
+    "compute_sec": 0.0,
+    "execute": false,
+    "historical": {
+      "hypothesis": "dependency-correlated",
+      "note": "Reused as history only; not rerun and not a general equivalence proof.",
+      "phase": "P37",
+      "result": "NULL"
+    },
+    "mechanism": null,
+    "missing": [
+      "no approved compute budget for P55 in any frozen manifest (runbook caps cover P52/P53/P54/P57 only)",
+      "no preregistered single mechanism",
+      "procedure.metric not preregistered",
+      "procedure.paired_analysis not preregistered",
+      "procedure.multiple_comparison_correction not preregistered",
+      "procedure.keep_rule not preregistered"
+    ],
+    "reason": "no approved compute budget for P55 in any frozen manifest (runbook caps cover P52/P53/P54/P57 only); no preregistered single mechanism; procedure.metric not preregistered; procedure.paired_analysis not preregistered; procedure.multiple_comparison_correction not preregistered; procedure.keep_rule not preregistered"
+  },
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 10,
+    "torch": "2.14.0+cu130"
+  },
+  "justification": "No approved P55 compute budget exists in any frozen manifest (runbook caps cover P52/P53/P54/P57 only); no single mechanism is preregistered; P37 stays NULL history and P54 DROP keeps the classical sampler. Useful research is not blocked: P56 proceeds.",
+  "language_guard": "no quantum-advantage or quantum-hardware terms used; classical ops only",
+  "limitations": [
+    "DEFERRED is terminal for this microtask, not a verdict on quantum-inspired search.",
+    "A future approved budget plus a preregistered mechanism needs its own branch."
+  ],
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P55",
+  "resolved_config": {
+    "acceptance_phase": "P55",
+    "config_path": "experiments/p55-config.json",
+    "config_sha256": "e78ec7553838ebaffb2d2af0f99e9d23bad24406fe761a620b9a52388b946090"
+  },
+  "revision": "c1aa7afa21868bd7af9a075a1f192822f2ddb8bc",
+  "run_id": "f7cbde504c5a0c6c",
+  "seeds_rng": "no sampling ran; no RNG consumed",
+  "verdict": "DEFERRED"
+}

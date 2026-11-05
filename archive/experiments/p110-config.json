@@ -1,0 +1,15 @@
+{
+  "phase": "P110",
+  "acceptance_phase": "P110",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_path": "lean_proofs/Generated/PillaiCatalanTheorems.lean",
+  "max_c": 100,
+  "limit": 120,
+  "min_solutions": 80,
+  "min_theorems": 120,
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "allow_dirty": false
+}

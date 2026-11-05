@@ -1,0 +1,14 @@
+{
+  "phase": "P135",
+  "acceptance_phase": "P135",
+  "seed": 135,
+  "device": "cpu",
+  "alpha": 0.01,
+  "count_per_track": 25,
+  "min_total_instances": 100,
+  "min_wins": 80,
+  "split_path": "experiments/p135-blind-split.json",
+  "split_sha256": "4170b9b156344314d07ebb756e416afff5e49f5ad5d12ee525389e0e0fb22e41",
+  "require_clean_tree": true,
+  "allow_dirty": false
+}

@@ -1,0 +1,31 @@
+{
+  "candidate": {
+    "group_name": "D_15",
+    "group_order": 30,
+    "min_orbit_length": 15,
+    "orbit_count": 111,
+    "orbit_lengths": [
+      3,
+      15,
+      30
+    ],
+    "proof_statement": "D_15 has 111 orbit representatives on 10-subsets of 15. Orbit lengths are in [3, 15, 30]. The single orbit of size 3 covers only 3 quadruples out of 1365. All other orbits have size >= 15. Since 15 > 14 (world record), no D_15-invariant covering design can match or beat 14 blocks. Structural obstruction NULL_BOUND rigorously proven.",
+    "published_best": 14
+  },
+  "certificate_type": "structural_null_bound",
+  "certificate_version": "3.0.0",
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine",
+    "provenance": "P206 Preregistered Generalized Campaign",
+    "timestamp_utc": "2026-10-27T18:41:19Z"
+  },
+  "parameters": {
+    "k": 10,
+    "published_best": 14,
+    "t": 4,
+    "v": 15
+  },
+  "sha256_checksum": "9e2a185cdc82f365ce4fff779b2dd5893c3b24b4463052ed220fea4dce6bf3ac",
+  "target_id": "covering_C_15_10_4_affine",
+  "verdict": "NULL_BOUND"
+}

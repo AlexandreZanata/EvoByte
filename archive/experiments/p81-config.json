@@ -1,0 +1,9 @@
+{
+  "phase": "P81",
+  "note": "P81 inductive proof baseline and Presburger structural verification frozen configuration. Generates and verifies 33 formal inductive and Presburger lemmas in Nat for modular progressions and Diophantine coordinate positivity in the Lean 4 kernel with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "project_dir": "lean_proofs",
+  "min_lemmas": 20,
+  "seed": 42,
+  "require_clean_tree": true
+}

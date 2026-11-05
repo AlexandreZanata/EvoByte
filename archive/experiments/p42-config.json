@@ -1,0 +1,13 @@
+{
+  "corpus_manifest": "experiments/p35-training-corpus.json",
+  "domain": [-3.0, 3.0],
+  "identities": [
+    {"ground_truth": "x**2 - 8*x + 16", "item_id": "sym_poly_0009_find"},
+    {"ground_truth": "x**2 - 1", "item_id": "sym_poly_0023_find"},
+    {"ground_truth": "3*x**2 + x", "item_id": "sym_poly_0025_find"},
+    {"ground_truth": "3*x**2 - 10*x + 3", "item_id": "sym_poly_0013_find"}
+  ],
+  "note": "Complete frozen configuration. Outcomes are NOT preregistered: each identity is accepted or rejected by reproducible exact verification. Original P35 record is read-only; revalidation writes nothing to it. No TBD values.",
+  "phase": "P42",
+  "smoke": {"teacher_budget_sec": 0.06, "teacher_pop_size": 32}
+}

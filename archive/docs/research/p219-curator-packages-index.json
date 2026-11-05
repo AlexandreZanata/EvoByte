@@ -1,0 +1,150 @@
+{
+  "index_version": "4.0.0",
+  "provenance": "EvoByte Autonomous Discovery Engine v4.0.0 (P219)",
+  "program": "Bivariate Bicycle Codes & Projective Geometry (D047)",
+  "overall_campaign_verdict": "DISCOVERY_TIED",
+  "safety_guarantee": {
+    "autonomous_emails_sent": 0,
+    "external_api_calls": 0,
+    "human_submission_status": "pending_human_submission",
+    "corresponding_author": "Alexandre Zanata",
+    "statement": "No automated external network submissions were made. All packages are generated locally and held under human custody."
+  },
+  "curator_packages": {
+    "markus_grassl_codetables": {
+      "curator_id": "markus_grassl_codetables",
+      "curator_name": "Markus Grassl (codetables.de / QECC)",
+      "curator_channel": "http://www.codetables.de/",
+      "verdict_type": "discovery_tied",
+      "status": "pending_human_submission",
+      "package_dir": "dist/curator-submissions/p219/markus_grassl_codetables",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p219/markus_grassl_codetables/README.md",
+          "sha256": "901b58a77cd90d18bf8301342964604448a686fc3333e40e4b389cf3f578884b"
+        },
+        {
+          "name": "certificate_qecc_20_2.json",
+          "path": "dist/curator-submissions/p219/markus_grassl_codetables/certificate_qecc_20_2.json",
+          "sha256": "f432cd3f8008aee2ce24ea7790beac553304db5034da604a5097ae73dced7227"
+        },
+        {
+          "name": "certificate_bivariate_16_2.json",
+          "path": "dist/curator-submissions/p219/markus_grassl_codetables/certificate_bivariate_16_2.json",
+          "sha256": "0c604cd8eeaeb19add3490cb4e75ad2b57f04e5772951a27342b938116adff20"
+        },
+        {
+          "name": "verify_bivariate_certificate.py",
+          "path": "dist/curator-submissions/p219/markus_grassl_codetables/verify_bivariate_certificate.py",
+          "sha256": "5354a5fbe043ad5bc0d0694ce1dfaa8b27d8af8c62d8a027b04c1981ab11b6ee"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p219/markus_grassl_codetables/reproduce.sh",
+          "sha256": "55a3ff479083893ce2639cd6f98d46773dd1f3af7a5f7a50c9f269b8a6bf4996"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p219/markus_grassl_codetables/submission-letter.md",
+          "sha256": "b9aeab31f94d92aa7fdde6905e08f36aeea6c97755e06b2e0890a707d83690a0"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p219/markus_grassl_codetables/submission-letter.txt",
+          "sha256": "b9aeab31f94d92aa7fdde6905e08f36aeea6c97755e06b2e0890a707d83690a0"
+        }
+      ]
+    },
+    "dan_gordon_ljcr": {
+      "curator_id": "dan_gordon_ljcr",
+      "curator_name": "Dan Gordon (LJCR / Covering Designs)",
+      "curator_channel": "https://dmgordon.org/cover/",
+      "verdict_type": "null_bound",
+      "status": "pending_human_submission",
+      "package_dir": "dist/curator-submissions/p219/dan_gordon_ljcr",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p219/dan_gordon_ljcr/README.md",
+          "sha256": "5509ed2434ea5075a323b0a227cbf4798966562a512e2b417a9c49af64a8137a"
+        },
+        {
+          "name": "certificate_C_14_6_3.json",
+          "path": "dist/curator-submissions/p219/dan_gordon_ljcr/certificate_C_14_6_3.json",
+          "sha256": "1c027552c349c9cd55e80b6b63bed2f8fa71397d395571edf2b5f780c9e7d8d6"
+        },
+        {
+          "name": "certificate_C_16_7_3.json",
+          "path": "dist/curator-submissions/p219/dan_gordon_ljcr/certificate_C_16_7_3.json",
+          "sha256": "745f6d08d07b631717a86a9bf819d3e3e8a6224844ec5905cca28f3bce29bb1d"
+        },
+        {
+          "name": "verify_bivariate_certificate.py",
+          "path": "dist/curator-submissions/p219/dan_gordon_ljcr/verify_bivariate_certificate.py",
+          "sha256": "5354a5fbe043ad5bc0d0694ce1dfaa8b27d8af8c62d8a027b04c1981ab11b6ee"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p219/dan_gordon_ljcr/reproduce.sh",
+          "sha256": "3d2df220dc86d5a7800a01c0348bf8e1bdf63ef8bfd55d7bf68fd942bcaf3269"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p219/dan_gordon_ljcr/submission-letter.md",
+          "sha256": "e5403c44abc3c1d3518f1068f75f6f75f8f6d9c299536de0b77f7a140efaf986"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p219/dan_gordon_ljcr/submission-letter.txt",
+          "sha256": "e5403c44abc3c1d3518f1068f75f6f75f8f6d9c299536de0b77f7a140efaf986"
+        }
+      ]
+    },
+    "neil_sloane_oeis": {
+      "curator_id": "neil_sloane_oeis",
+      "curator_name": "Neil Sloane & OEIS Editorial Board (OEIS / Finite Geometries)",
+      "curator_channel": "https://oeis.org/",
+      "verdict_type": "calibration_reproduced",
+      "status": "pending_human_submission",
+      "package_dir": "dist/curator-submissions/p219/neil_sloane_oeis",
+      "files": [
+        {
+          "name": "README.md",
+          "path": "dist/curator-submissions/p219/neil_sloane_oeis/README.md",
+          "sha256": "34f5c320dfb59e57c8e67be82c49a081c181797fd2e0c162a65b5be2a58d99b0"
+        },
+        {
+          "name": "certificate_C_9_3_2.json",
+          "path": "dist/curator-submissions/p219/neil_sloane_oeis/certificate_C_9_3_2.json",
+          "sha256": "3d4327635edf27aac12365eb093c9c886a89d79e9647f75a6bbb9df6e0e316b0"
+        },
+        {
+          "name": "certificate_steane_7_1_3.json",
+          "path": "dist/curator-submissions/p219/neil_sloane_oeis/certificate_steane_7_1_3.json",
+          "sha256": "32abc5fdbf663983847a56f175f904a70e4b25e35d7d86f6d958415d11bacb38"
+        },
+        {
+          "name": "verify_bivariate_certificate.py",
+          "path": "dist/curator-submissions/p219/neil_sloane_oeis/verify_bivariate_certificate.py",
+          "sha256": "5354a5fbe043ad5bc0d0694ce1dfaa8b27d8af8c62d8a027b04c1981ab11b6ee"
+        },
+        {
+          "name": "reproduce.sh",
+          "path": "dist/curator-submissions/p219/neil_sloane_oeis/reproduce.sh",
+          "sha256": "e59bceca19c91f9b8b43f247cd23a7c2a329b7185b3bec16d2b23aa718bd112b"
+        },
+        {
+          "name": "submission-letter.md",
+          "path": "dist/curator-submissions/p219/neil_sloane_oeis/submission-letter.md",
+          "sha256": "a6cd7c565475b766af2b5287fed4c73592f052866d1b989e801fb6ce524b2aa6"
+        },
+        {
+          "name": "submission-letter.txt",
+          "path": "dist/curator-submissions/p219/neil_sloane_oeis/submission-letter.txt",
+          "sha256": "a6cd7c565475b766af2b5287fed4c73592f052866d1b989e801fb6ce524b2aa6"
+        }
+      ]
+    }
+  }
+}

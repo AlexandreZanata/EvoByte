@@ -1,0 +1,49 @@
+{
+  "device": "cpu",
+  "es_instances": [
+    4,
+    6,
+    9
+  ],
+  "es_space": {
+    "max_coord": 1000000000,
+    "warm_start": [],
+    "x_steps": 50,
+    "y_cap": 200000
+  },
+  "families": [
+    "erdos-straus"
+  ],
+  "note": "Frozen P59 equal-information controls. Development instances only (small n, all classically covered); sealed finals excluded. Same public inputs for every arm; compilation kept separate from discovery; full cost ledgers; no statistical gain claimed.",
+  "phase": "P59",
+  "require_clean_tree": true,
+  "restricted_families": {
+    "diophantine-quintuple": "no matched baseline implemented",
+    "taxicab": "no matched baseline implemented"
+  },
+  "seeds": [
+    7
+  ],
+  "sentinel_arms": [
+    "structured_random",
+    "evolution"
+  ],
+  "sentinel_batches": {
+    "batch_size": 8,
+    "max_generations": 2,
+    "n_batches": 2,
+    "pop_size": 8
+  },
+  "symbolic_tasks": [
+    {
+      "domain": [
+        -3.0,
+        3.0
+      ],
+      "n_points": 24,
+      "private_a": "x**2 + 3*x + 10",
+      "private_b": "x**2 - 1",
+      "seed": 7
+    }
+  ]
+}

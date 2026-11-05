@@ -1,0 +1,308 @@
+{
+  "metadata": {
+    "program": "Bivariate Bicycle & Projective Geometries Program (P211-P220, D047)",
+    "phase": "P215",
+    "protocol": "Blind Historical Calibration",
+    "timestamp": "2026-10-28T08:47:07Z",
+    "python_version": "3.12.2",
+    "machine": "x86_64",
+    "os": "Linux-7.2.6-76070206-generic-x86_64-with-glibc2.39"
+  },
+  "summary": {
+    "total_runs": 12,
+    "successful_runs": 12,
+    "success_rate": 1.0,
+    "all_passed": true,
+    "verdict": "CALIBRATION_REPRODUCED",
+    "total_wall_clock_seconds": 0.9887,
+    "budget_seconds": 90.0,
+    "budget_passed": true
+  },
+  "results": [
+    {
+      "target_id": "calib_bravyi_72_12_6",
+      "target_name": "[[72,12,6]]",
+      "seed": 42,
+      "verified": true,
+      "wall_clock_seconds": 0.13755640501040034,
+      "trials": 349,
+      "parameters": {
+        "l": 6,
+        "m": 6,
+        "n": 72,
+        "k": 12,
+        "d": 6
+      },
+      "verification_payload": {
+        "n": 72,
+        "k": 12,
+        "rank_X": 30,
+        "rank_Z": 30,
+        "d": 6
+      },
+      "sha256_hash": "e81e35f7eedfd58b8e85bce235416330cef138b17f91dec07f358d85caf20624",
+      "solution_summary": "A=((1, 2), (4, 3), (4, 4)), B=((0, 0), (1, 5), (5, 4))"
+    },
+    {
+      "target_id": "calib_steane_7_1_3",
+      "target_name": "[[7,1,3]]",
+      "seed": 42,
+      "verified": true,
+      "wall_clock_seconds": 0.004164101992500946,
+      "trials": 1,
+      "parameters": {
+        "n": 7,
+        "k": 1,
+        "d": 3
+      },
+      "verification_payload": {
+        "check": {
+          "n": 7,
+          "k": 1,
+          "rank": 6
+        },
+        "distance": {
+          "n": 7,
+          "k": 1,
+          "d": 3,
+          "logical": "XXXIIII"
+        }
+      },
+      "sha256_hash": "98cef1505c58c4675cb749022c79f71472c417484c39cf31666e5d2c1532a85f",
+      "solution_summary": "gens=['XIXIXIX', 'IXXIXXI', 'IXXXIIX', 'ZIZIZIZ', 'IZZIZZI', 'IZZZIIZ']"
+    },
+    {
+      "target_id": "calib_bivariate_16_2_4",
+      "target_name": "[[16,2,4]]",
+      "seed": 42,
+      "verified": true,
+      "wall_clock_seconds": 0.003334289009217173,
+      "trials": 1,
+      "parameters": {
+        "l": 2,
+        "m": 4,
+        "n": 16,
+        "k": 2,
+        "d": 4
+      },
+      "verification_payload": {
+        "n": 16,
+        "k": 2,
+        "d": 4,
+        "sat_verified": true,
+        "is_symplectic": true
+      },
+      "sha256_hash": "5cd193b9f96eae05250938a79f12a6b3f1bcedc5354e6fd0b9afa41b7dfb2ee1",
+      "solution_summary": "A=((0, 0), (0, 3), (1, 0), (1, 2)), B=((0, 0), (0, 1), (0, 3), (1, 0))"
+    },
+    {
+      "target_id": "calib_covering_C_9_3_2",
+      "target_name": "C(9,3,2)",
+      "seed": 42,
+      "verified": true,
+      "wall_clock_seconds": 0.10138636600458995,
+      "trials": 1,
+      "parameters": {
+        "v": 9,
+        "k": 3,
+        "t": 2,
+        "b": 12
+      },
+      "verification_payload": {
+        "msg": "all 36 2-subsets covered"
+      },
+      "sha256_hash": "5f2f8e2be11a8d988b6c5beb02a7d755dbaa61bdf8861ece68eae77f1c6d8862",
+      "solution_summary": "12 blocks"
+    },
+    {
+      "target_id": "calib_bravyi_72_12_6",
+      "target_name": "[[72,12,6]]",
+      "seed": 43,
+      "verified": true,
+      "wall_clock_seconds": 0.2521199579932727,
+      "trials": 664,
+      "parameters": {
+        "l": 6,
+        "m": 6,
+        "n": 72,
+        "k": 12,
+        "d": 6
+      },
+      "verification_payload": {
+        "n": 72,
+        "k": 12,
+        "rank_X": 30,
+        "rank_Z": 30,
+        "d": 6
+      },
+      "sha256_hash": "5e3b4ebbca08260ef809cd115e033684b689e2a651b8c110a7ddabf5277ad812",
+      "solution_summary": "A=((0, 2), (0, 4), (3, 3)), B=((0, 4), (3, 2), (3, 3))"
+    },
+    {
+      "target_id": "calib_steane_7_1_3",
+      "target_name": "[[7,1,3]]",
+      "seed": 43,
+      "verified": true,
+      "wall_clock_seconds": 0.003908433980541304,
+      "trials": 1,
+      "parameters": {
+        "n": 7,
+        "k": 1,
+        "d": 3
+      },
+      "verification_payload": {
+        "check": {
+          "n": 7,
+          "k": 1,
+          "rank": 6
+        },
+        "distance": {
+          "n": 7,
+          "k": 1,
+          "d": 3,
+          "logical": "XXIXIII"
+        }
+      },
+      "sha256_hash": "85cc23c953b4d2b66663f8947a8e70093f5ce64b47aa449f8cb04c0b36b548ab",
+      "solution_summary": "gens=['XIXXIIX', 'XIIXXXI', 'XXIIXIX', 'ZIIZZZI', 'IZIZIZZ', 'IIZIZZZ']"
+    },
+    {
+      "target_id": "calib_bivariate_16_2_4",
+      "target_name": "[[16,2,4]]",
+      "seed": 43,
+      "verified": true,
+      "wall_clock_seconds": 0.0038724509940948337,
+      "trials": 5,
+      "parameters": {
+        "l": 2,
+        "m": 4,
+        "n": 16,
+        "k": 2,
+        "d": 4
+      },
+      "verification_payload": {
+        "n": 16,
+        "k": 2,
+        "d": 4,
+        "sat_verified": true,
+        "is_symplectic": true
+      },
+      "sha256_hash": "ea5a1a1868063ceec3a4d9108bf9519d56a1fd4ea9cc275d5a93c4271bbdfdbf",
+      "solution_summary": "A=((0, 0), (0, 2), (1, 1), (1, 2)), B=((0, 0), (0, 2), (0, 3), (1, 1))"
+    },
+    {
+      "target_id": "calib_covering_C_9_3_2",
+      "target_name": "C(9,3,2)",
+      "seed": 43,
+      "verified": true,
+      "wall_clock_seconds": 0.13887873399653472,
+      "trials": 1,
+      "parameters": {
+        "v": 9,
+        "k": 3,
+        "t": 2,
+        "b": 12
+      },
+      "verification_payload": {
+        "msg": "all 36 2-subsets covered"
+      },
+      "sha256_hash": "5f2f8e2be11a8d988b6c5beb02a7d755dbaa61bdf8861ece68eae77f1c6d8862",
+      "solution_summary": "12 blocks"
+    },
+    {
+      "target_id": "calib_bravyi_72_12_6",
+      "target_name": "[[72,12,6]]",
+      "seed": 44,
+      "verified": true,
+      "wall_clock_seconds": 0.15600829201866873,
+      "trials": 403,
+      "parameters": {
+        "l": 6,
+        "m": 6,
+        "n": 72,
+        "k": 12,
+        "d": 6
+      },
+      "verification_payload": {
+        "n": 72,
+        "k": 12,
+        "rank_X": 30,
+        "rank_Z": 30,
+        "d": 6
+      },
+      "sha256_hash": "9379e8ee3f9ef5a9c29d0d17c2f692b8c8e70b39a807b04892876711f2073ada",
+      "solution_summary": "A=((0, 0), (2, 2), (4, 1)), B=((0, 1), (4, 2), (5, 0))"
+    },
+    {
+      "target_id": "calib_steane_7_1_3",
+      "target_name": "[[7,1,3]]",
+      "seed": 44,
+      "verified": true,
+      "wall_clock_seconds": 0.004171003994997591,
+      "trials": 1,
+      "parameters": {
+        "n": 7,
+        "k": 1,
+        "d": 3
+      },
+      "verification_payload": {
+        "check": {
+          "n": 7,
+          "k": 1,
+          "rank": 6
+        },
+        "distance": {
+          "n": 7,
+          "k": 1,
+          "d": 3,
+          "logical": "XXXIIII"
+        }
+      },
+      "sha256_hash": "4227f745ad3bbcb1365e9e64c4a3cd8967d271e03606156d8abe0944733d2a7a",
+      "solution_summary": "gens=['XXIXIXI', 'IXXXIIX', 'IXXIXXI', 'ZZIIZIZ', 'IZZZIIZ', 'IIIZZZZ']"
+    },
+    {
+      "target_id": "calib_bivariate_16_2_4",
+      "target_name": "[[16,2,4]]",
+      "seed": 44,
+      "verified": true,
+      "wall_clock_seconds": 0.0036082180158700794,
+      "trials": 1,
+      "parameters": {
+        "l": 2,
+        "m": 4,
+        "n": 16,
+        "k": 2,
+        "d": 4
+      },
+      "verification_payload": {
+        "n": 16,
+        "k": 2,
+        "d": 4,
+        "sat_verified": true,
+        "is_symplectic": true
+      },
+      "sha256_hash": "5625a669277ff47e7e56e36e4aee1b1158178bc09cc6a1ef40c849eda2bbd6c1",
+      "solution_summary": "A=((0, 0), (0, 2), (0, 3), (1, 1)), B=((0, 1), (0, 3), (1, 0), (1, 3))"
+    },
+    {
+      "target_id": "calib_covering_C_9_3_2",
+      "target_name": "C(9,3,2)",
+      "seed": 44,
+      "verified": true,
+      "wall_clock_seconds": 0.12377827800810337,
+      "trials": 1,
+      "parameters": {
+        "v": 9,
+        "k": 3,
+        "t": 2,
+        "b": 12
+      },
+      "verification_payload": {
+        "msg": "all 36 2-subsets covered"
+      },
+      "sha256_hash": "e2a4fcd38e5fcbf6cc03daf1751d86e9e7f49dfd3027902d1164a0131437e45e",
+      "solution_summary": "12 blocks"
+    }
+  ]
+}

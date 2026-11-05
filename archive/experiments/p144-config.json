@@ -1,0 +1,14 @@
+{
+  "phase": "P144",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 3800,
+  "min_modules": 50,
+  "expected_chain_hash": "937b60b65fca489722598725a2325d086890acd6a4cbcac08e25bfaae96a7fbd",
+  "dossier_path": "docs/research/p144-discrepancy-covering-dossier.md",
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P144 Discrepancy theory, Erdős discrepancy problem, covering systems, and primitive sets grand formal campaign and certified literature dossier audit. Consolidates 50 formal modules in Lean 4 with 4,340 theorems, zero sorry, and SHA-256 cryptographic hash chain."
+}

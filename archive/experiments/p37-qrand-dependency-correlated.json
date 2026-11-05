@@ -1,0 +1,190 @@
+{
+  "aggregates_by_arm": {
+    "dependency-correlated": {
+      "censored_trials": 45,
+      "cert_fraction": 0.0,
+      "mean_distinct_expressions": 147.53333333333333,
+      "mean_sample_sec": 0.0989129117096632,
+      "mean_trace_sec": 4.7362119568895045,
+      "mean_update_sec": 1.5796165065316017,
+      "mean_verified_per_sec": 0.0,
+      "mean_warmup_sec": 0.13007560515555572,
+      "median_time_to_certified_sec": null,
+      "trials": 45
+    },
+    "genetic": {
+      "censored_trials": 37,
+      "cert_fraction": 0.17777777777777778,
+      "mean_distinct_expressions": 224.51111111111112,
+      "mean_sample_sec": 0.0797181708203425,
+      "mean_trace_sec": 5.356072104399937,
+      "mean_update_sec": 0.36751106364532055,
+      "mean_verified_per_sec": 0.012463498743758664,
+      "mean_warmup_sec": 0.09920827902205928,
+      "median_time_to_certified_sec": 6.0214298970004165,
+      "trials": 45
+    },
+    "matched-classical": {
+      "censored_trials": 45,
+      "cert_fraction": 0.0,
+      "mean_distinct_expressions": 181.73333333333332,
+      "mean_sample_sec": 0.09246644486690153,
+      "mean_trace_sec": 5.020977806821813,
+      "mean_update_sec": 0.9895129126442448,
+      "mean_verified_per_sec": 0.0,
+      "mean_warmup_sec": 0.14810910539979685,
+      "median_time_to_certified_sec": null,
+      "trials": 45
+    }
+  },
+  "comparisons": {
+    "mean_verified_per_sec": {
+      "matched_classical": 0.0,
+      "proposed": 0.0
+    },
+    "paired_diff_ci95": [
+      0.0,
+      0.0
+    ],
+    "relative_gain_vs_matched_pct": 0.0
+  },
+  "elapsed_sec": 1533.368551484,
+  "hypothesis": {
+    "literature_check": {
+      "novelty_boundary": "Bigram transition laws with rotation-gate updates applied to register-bytecode opcode sequences under fixed V0 interpreter constraints. Quantum inspiration is classical distribution dynamics, not quantum execution, hardware, or advantage.",
+      "prior_art": [
+        {
+          "citation": "Han & Kim (2002), Quantum-inspired Evolutionary Algorithm, IEEE TEVC 6(6)",
+          "mechanism": "Q-bit angle representation and rotation-gate update of sampling distributions"
+        },
+        {
+          "citation": "Manning & Schutze (1999), Foundations of Statistical NLP, MIT Press (n-gram models with Laplace/Lidstone smoothing)",
+          "mechanism": "Classical bigram frequency tables with additive smoothing (matched control)"
+        },
+        {
+          "citation": "EvoByte P27 amplitude-distribution pilot (FALSIFIED_NULL)",
+          "mechanism": "Independent per-slot Q-bit rotation showed no gain; motivates testing dependency (bigram) structure instead of slot independence"
+        }
+      ]
+    },
+    "name": "dependency-correlated",
+    "preregistration_hash": "c4d6ec52f8402d2120aed2b8303facd1a7ad351ec9d964eed61d28a23a7defba",
+    "preregistration_spec": "HYPOTHESIS: dependency-correlated\nPREREGISTRATION DATE: 2026-10-01\nMECHANISM (exactly one per cycle): opcode bigram sampling. Slot 0 opcode is drawn\nfrom a start distribution; slot j>0 opcode is drawn conditioned on the opcode\nsampled at slot j-1 through a per-slot 16x16 transition law. Same parameter\ncount, update cadence and wall-clock budget as the matched classical control.\nEQUATIONS (proposed arm):\n1. Phase state: start angles psi[k], transition angles Phi_j[a,k],\n   psi, Phi in [0.01*pi, 0.49*pi].\n2. Sampling law: P(k | slot j, prev a) = sin^2(Phi_j[a,k]) / sum_m sin^2(Phi_j[a,m]);\n   slot 0 uses psi analogously. Classical implementation on GPU/CPU; no quantum hardware.\n3. Rotation-gate update toward elite bigrams (top 10% by train fitness, same as control):\n   Phi_j[a,k*] <- min(Phi_j[a,k*] + Delta, 0.49*pi) for each elite pair (a -> k*);\n   Phi_j[a,k]  <- max(Phi_j[a,k]  - Delta/15, 0.01*pi) for k != k*;\n   Delta = 0.05*pi. Start vector updated analogously toward elite slot-0 opcodes.\nMATCHED CLASSICAL CONTROL (same expressive capacity and update budget):\nper-slot bigram frequency table with Laplace smoothing (alpha = 1.0):\nP(k | j, a) = C_j[a,k] / sum_m C_j[a,m]; update C <- 0.85*C + 0.15*(elite bigram\ncounts + 1.0) each iteration. Only the update rule differs from the proposed arm.\nBASELINE: classical genetic evolution (tournament + crossover + mutation).\nPREDICTION: dependency-correlated sampling yields >= 15% higher verified\nsolutions/sec than the matched classical control on development polynomial tasks.\nFALSIFICATION / VERDICT RULE (single frozen rule, no post-hoc OR/AND):\npaired differences (proposed minus control) of verified solutions/sec over paired\n(task, seed, budget) trials; deterministic percentile bootstrap (2000 resamples,\nseed 0) for the 95% CI of the paired mean difference.\nGAIN iff relative gain >= 15% AND CI lower bound > 0. LOSS iff relative gain\n<= -15% AND CI upper bound < 0. Otherwise NULL. Genetic comparison is descriptive\nonly and cannot award the verdict.\nUNCERTAINTY: paired bootstrap 95% CI as above; means alone never imply significance.\nCONTROLS: matched-classical bigram (verdict control), genetic (descriptive baseline).\nEVALUATION: paired (task, seed, budget) trials; >= 5 seeds; nominal budgets\n10s/1m/10m wall-clock-enforced per arm (effective budgets disclosed via scale factor);\n3 development polynomial tasks; independent RNG streams per arm; rotated arm order;\nmatched warmup; sampling/update/tracing costs billed; final test untouched.\nPRIMARY OUTCOMES: verified solutions/sec, censored time-to-certified-solution.\nSECONDARY: distinct behavioral expressions (finite probe signatures = behaviors)."
+  },
+  "manifest_sha256": "2477958d87c4b4eab5cf1221e6353f332c7fe6e8ed39841eaabb318c21203984",
+  "phase": "p37-controlled-qrand",
+  "preregistration": {
+    "arms": [
+      "genetic",
+      "matched-classical",
+      "dependency-correlated"
+    ],
+    "budgets_effective_sec": [
+      [
+        "10s",
+        0.5
+      ],
+      [
+        "1m",
+        3.0
+      ],
+      [
+        "10m",
+        30.0
+      ]
+    ],
+    "budgets_nominal": "10s,1m,10m",
+    "effect_pct": 15.0,
+    "rng": "independent per-arm streams; rotated arm order; matched warmup/pop/verify",
+    "seeds": [
+      42,
+      59,
+      76,
+      93,
+      110
+    ],
+    "tasks": [
+      {
+        "formula": "x**2+3*x+7",
+        "key": "quad_offset"
+      },
+      {
+        "formula": "2*x+5",
+        "key": "affine"
+      },
+      {
+        "formula": "x**2-2*x+1",
+        "key": "quad_square"
+      }
+    ],
+    "uncertainty": "paired percentile bootstrap 95% CI, 2000 resamples, seed 0"
+  },
+  "provenance": {
+    "clean_tree": false,
+    "commit": "d26c700f3602c2b1e93257365d345adf446d083c",
+    "config": {
+      "budgets": "10s,1m,10m",
+      "hypothesis": "dependency-correlated",
+      "scale": 0.05,
+      "seeds": [
+        42,
+        59,
+        76,
+        93,
+        110
+      ],
+      "tasks": [
+        "quad_offset",
+        "affine",
+        "quad_square"
+      ]
+    },
+    "config_hash": "23be6a0d5f72b493",
+    "dataset_hashes": {
+      "p37_tasks": "e8a50d3e61bb2ac3"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/qrand_ab.py\n M tests/test_qrand_ab.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/qrand_ab.py",
+      "--hypothesis",
+      "dependency-correlated",
+      "--controlled",
+      "--budgets",
+      "10s,1m,10m",
+      "--seeds",
+      "5",
+      "--output",
+      "experiments/p37-qrand-dependency-correlated.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p37-qrand-dependency-correlated-raw.json",
+      "sha256": "5e290bf98df9c2a27b6cbf29ce9cc84e1206a30d296394b60d3384eb21607190"
+    }
+  ],
+  "status": "complete",
+  "timestamp": "2026-10-01T20:11:46.564549+00:00",
+  "verdict": "NULL",
+  "verdict_summary": "No preregistered effect: relative gain 0.0% with 95% CI [0.0000, 0.0000]. Sound null completes the cycle; baseline selected."
+}

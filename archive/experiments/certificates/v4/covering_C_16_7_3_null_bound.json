@@ -1,0 +1,35 @@
+{
+  "certificate_type": "structural_null_bound",
+  "target_id": "covering_C_16_7_3_affine2d",
+  "verdict": "NULL_BOUND",
+  "parameters": {
+    "v": 16,
+    "k": 7,
+    "t": 3,
+    "published_best": 24
+  },
+  "candidate": {
+    "group_name": "AGL(2, 4)",
+    "group_order": 5760,
+    "action": "affine_plane_F4_sq",
+    "orbit_count": 9,
+    "orbit_lengths": [
+      160,
+      240,
+      480,
+      960,
+      1440,
+      2880
+    ],
+    "min_orbit_length": 160,
+    "proof_statement": "AGL(2, 4) of order 5760 partitions 11440 7-subsets into 9 orbits with minimal length 160. Since 160 > 24, no AGL(2, 4)-invariant covering design can match or beat 24 blocks."
+  },
+  "metadata": {
+    "generator": "EvoByte Autonomous Discovery Engine v4.0.0",
+    "provenance": "P216 Preregistered Bivariate Campaign",
+    "git_commit": "ec02e30f2f8b9dca82f6530ba09a8587bd7f792d",
+    "timestamp_utc": "2026-10-28T09:45:47Z"
+  },
+  "certificate_version": "4.0.0",
+  "sha256_checksum": "a9253e43a7da136a17e5ffd35618b309a306f70dc9e906293da27942c54576a2"
+}

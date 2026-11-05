@@ -1,0 +1,737 @@
+{
+  "alpha": 0.01,
+  "checksum": "3313b16c13de23755892eda74b595bf756c5a5708aa060fb261be97d4678f34d",
+  "count_per_track": 25,
+  "description": "Sealed blind partition of 100 multi-problem open instances (Erd\u0151s-Graham, Pillai, Schinzel, Giuga) for P111 confirmation under Bonferroni-Holm family-wise error rate control (alpha=0.01).",
+  "leakage_detected": false,
+  "seed": 42,
+  "split_id": "p111-multiproblem-blind-partition-v1",
+  "total_instances": 100,
+  "tracks": {
+    "erdos_graham": {
+      "instances": [
+        {
+          "instance_id": "P111_EG_01",
+          "max_len": 4,
+          "target_den": 12,
+          "target_num": 5,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_02",
+          "max_len": 4,
+          "target_den": 5,
+          "target_num": 2,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_03",
+          "max_len": 4,
+          "target_den": 18,
+          "target_num": 7,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_04",
+          "max_len": 4,
+          "target_den": 21,
+          "target_num": 8,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_05",
+          "max_len": 4,
+          "target_den": 8,
+          "target_num": 3,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_06",
+          "max_len": 4,
+          "target_den": 27,
+          "target_num": 5,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_07",
+          "max_len": 4,
+          "target_den": 5,
+          "target_num": 1,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_08",
+          "max_len": 4,
+          "target_den": 33,
+          "target_num": 7,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_09",
+          "max_len": 4,
+          "target_den": 9,
+          "target_num": 2,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_10",
+          "max_len": 4,
+          "target_den": 13,
+          "target_num": 3,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_11",
+          "max_len": 4,
+          "target_den": 42,
+          "target_num": 5,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_12",
+          "max_len": 4,
+          "target_den": 15,
+          "target_num": 2,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_13",
+          "max_len": 4,
+          "target_den": 48,
+          "target_num": 7,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_14",
+          "max_len": 4,
+          "target_den": 51,
+          "target_num": 8,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_15",
+          "max_len": 4,
+          "target_den": 6,
+          "target_num": 1,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_16",
+          "max_len": 4,
+          "target_den": 57,
+          "target_num": 5,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_17",
+          "max_len": 4,
+          "target_den": 10,
+          "target_num": 1,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_18",
+          "max_len": 4,
+          "target_den": 9,
+          "target_num": 1,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_19",
+          "max_len": 4,
+          "target_den": 33,
+          "target_num": 4,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_20",
+          "max_len": 4,
+          "target_den": 23,
+          "target_num": 3,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_21",
+          "max_len": 4,
+          "target_den": 72,
+          "target_num": 5,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_22",
+          "max_len": 4,
+          "target_den": 25,
+          "target_num": 2,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_23",
+          "max_len": 4,
+          "target_den": 78,
+          "target_num": 7,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_24",
+          "max_len": 4,
+          "target_den": 81,
+          "target_num": 8,
+          "track": "erdos_graham"
+        },
+        {
+          "instance_id": "P111_EG_25",
+          "max_len": 4,
+          "target_den": 28,
+          "target_num": 3,
+          "track": "erdos_graham"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Erd\u0151s-Graham unit fraction decomposition"
+    },
+    "giuga": {
+      "instances": [
+        {
+          "instance_id": "P111_GIU_01",
+          "n": 100000,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_02",
+          "n": 103571,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_03",
+          "n": 107142,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_04",
+          "n": 110713,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_05",
+          "n": 114284,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_06",
+          "n": 117855,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_07",
+          "n": 121426,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_08",
+          "n": 124997,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_09",
+          "n": 128568,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_10",
+          "n": 132139,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_11",
+          "n": 135710,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_12",
+          "n": 139281,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_13",
+          "n": 142852,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_14",
+          "n": 146423,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_15",
+          "n": 149994,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_16",
+          "n": 153565,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_17",
+          "n": 157136,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_18",
+          "n": 160707,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_19",
+          "n": 164278,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_20",
+          "n": 167849,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_21",
+          "n": 171420,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_22",
+          "n": 174991,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_23",
+          "n": 178562,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_24",
+          "n": 182133,
+          "track": "giuga"
+        },
+        {
+          "instance_id": "P111_GIU_25",
+          "n": 185704,
+          "track": "giuga"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Giuga prime congruence and divisibility test"
+    },
+    "pillai": {
+      "instances": [
+        {
+          "c": 1,
+          "instance_id": "P111_PIL_01",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "c": 3,
+          "instance_id": "P111_PIL_02",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 3,
+          "y": 2
+        },
+        {
+          "c": 5,
+          "instance_id": "P111_PIL_03",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 2,
+          "y": 5
+        },
+        {
+          "c": 7,
+          "instance_id": "P111_PIL_04",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 5,
+          "y": 2
+        },
+        {
+          "c": 9,
+          "instance_id": "P111_PIL_05",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 3,
+          "y": 5
+        },
+        {
+          "c": 11,
+          "instance_id": "P111_PIL_06",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 5,
+          "y": 3
+        },
+        {
+          "c": 13,
+          "instance_id": "P111_PIL_07",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 2,
+          "y": 7
+        },
+        {
+          "c": 15,
+          "instance_id": "P111_PIL_08",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 7,
+          "y": 2
+        },
+        {
+          "c": 17,
+          "instance_id": "P111_PIL_09",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 3,
+          "y": 4
+        },
+        {
+          "c": 19,
+          "instance_id": "P111_PIL_10",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 4,
+          "y": 3
+        },
+        {
+          "c": 21,
+          "instance_id": "P111_PIL_11",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "c": 23,
+          "instance_id": "P111_PIL_12",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 3,
+          "y": 2
+        },
+        {
+          "c": 25,
+          "instance_id": "P111_PIL_13",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 2,
+          "y": 5
+        },
+        {
+          "c": 27,
+          "instance_id": "P111_PIL_14",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 5,
+          "y": 2
+        },
+        {
+          "c": 29,
+          "instance_id": "P111_PIL_15",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 3,
+          "y": 5
+        },
+        {
+          "c": 31,
+          "instance_id": "P111_PIL_16",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 5,
+          "y": 3
+        },
+        {
+          "c": 33,
+          "instance_id": "P111_PIL_17",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 2,
+          "y": 7
+        },
+        {
+          "c": 35,
+          "instance_id": "P111_PIL_18",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 7,
+          "y": 2
+        },
+        {
+          "c": 37,
+          "instance_id": "P111_PIL_19",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 3,
+          "y": 4
+        },
+        {
+          "c": 39,
+          "instance_id": "P111_PIL_20",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 4,
+          "y": 3
+        },
+        {
+          "c": 41,
+          "instance_id": "P111_PIL_21",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 2,
+          "y": 3
+        },
+        {
+          "c": 43,
+          "instance_id": "P111_PIL_22",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 3,
+          "y": 2
+        },
+        {
+          "c": 45,
+          "instance_id": "P111_PIL_23",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 2,
+          "y": 5
+        },
+        {
+          "c": 47,
+          "instance_id": "P111_PIL_24",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 5,
+          "y": 2
+        },
+        {
+          "c": 49,
+          "instance_id": "P111_PIL_25",
+          "max_p": 30,
+          "max_q": 30,
+          "track": "pillai",
+          "x": 3,
+          "y": 5
+        }
+      ],
+      "instances_count": 25,
+      "name": "Pillai-Catalan exponential Diophantine sieve"
+    },
+    "schinzel": {
+      "instances": [
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_01",
+          "max_coord": 1000000000000000000000000,
+          "n": 100000073,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_02",
+          "max_coord": 1000000000000000000000000,
+          "n": 100010080,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_03",
+          "max_coord": 1000000000000000000000000,
+          "n": 100020087,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_04",
+          "max_coord": 1000000000000000000000000,
+          "n": 100030094,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_05",
+          "max_coord": 1000000000000000000000000,
+          "n": 100040101,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_06",
+          "max_coord": 1000000000000000000000000,
+          "n": 100050108,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_07",
+          "max_coord": 1000000000000000000000000,
+          "n": 100060115,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_08",
+          "max_coord": 1000000000000000000000000,
+          "n": 100070122,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_09",
+          "max_coord": 1000000000000000000000000,
+          "n": 100080129,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_10",
+          "max_coord": 1000000000000000000000000,
+          "n": 100090136,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_11",
+          "max_coord": 1000000000000000000000000,
+          "n": 100100143,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_12",
+          "max_coord": 1000000000000000000000000,
+          "n": 100110150,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_13",
+          "max_coord": 1000000000000000000000000,
+          "n": 100120157,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_14",
+          "max_coord": 1000000000000000000000000,
+          "n": 100130164,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_15",
+          "max_coord": 1000000000000000000000000,
+          "n": 100140171,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_16",
+          "max_coord": 1000000000000000000000000,
+          "n": 100150178,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_17",
+          "max_coord": 1000000000000000000000000,
+          "n": 100160185,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_18",
+          "max_coord": 1000000000000000000000000,
+          "n": 100170192,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_19",
+          "max_coord": 1000000000000000000000000,
+          "n": 100180199,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_20",
+          "max_coord": 1000000000000000000000000,
+          "n": 100190206,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_21",
+          "max_coord": 1000000000000000000000000,
+          "n": 100200213,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_22",
+          "max_coord": 1000000000000000000000000,
+          "n": 100210220,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_23",
+          "max_coord": 1000000000000000000000000,
+          "n": 100220227,
+          "track": "schinzel"
+        },
+        {
+          "a": 5,
+          "instance_id": "P111_SCH_24",
+          "max_coord": 1000000000000000000000000,
+          "n": 100230234,
+          "track": "schinzel"
+        },
+        {
+          "a": 4,
+          "instance_id": "P111_SCH_25",
+          "max_coord": 1000000000000000000000000,
+          "n": 100240241,
+          "track": "schinzel"
+        }
+      ],
+      "instances_count": 25,
+      "name": "Schinzel generalized Egyptian fraction sieve"
+    }
+  },
+  "zero_leakage_verified": true
+}

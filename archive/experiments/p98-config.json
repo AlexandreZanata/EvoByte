@@ -1,0 +1,10 @@
+{
+  "budget_sec": 3600.0,
+  "min_theorems": 40,
+  "note": "P98 rational conic parametrizations formalization in Lean 4 via local-global principle. Verifies Legendre ternary quadratic form, affine conic fiber equivalence, unipotent rational parametrization, split central discriminant Delta = 4*(nx)^2, trivial Hilbert symbols across Q_p, parametric rational sections in Q[k], and exact rational points on the conic with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "phase": "P98",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42
+}

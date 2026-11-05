@@ -1,0 +1,10 @@
+{
+  "budget_sec": 3600.0,
+  "min_theorems": 40,
+  "note": "P99 algebraic sieve on quaternion orders and division algebras formalization in Lean 4. Verifies quaternion algebra H(alpha, beta), reduced norm form Nrd(x), Euler four-square identity, multiplicativity of general quaternion reduced norm, conic norm sieve decompositions u*v = (nx)^2, parametric rational sections in Q[k], and exact certified four-square coordinates with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "phase": "P99",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42
+}

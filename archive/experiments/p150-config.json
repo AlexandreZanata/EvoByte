@@ -1,0 +1,14 @@
+{
+  "phase": "P150",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_instances": 100,
+  "max_classes_per_pair": 5,
+  "k0": 1,
+  "expected_checksum": "f287dae053f975121278c6b224af7092dc4513fe94eaf65e2fc7d77831795572",
+  "report_path": "docs/research/p150-novelty-audit-report.md",
+  "verify_lake": true,
+  "require_clean_tree": true
+}

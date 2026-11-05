@@ -1,0 +1,20 @@
+{
+  "budget_sec": 0.8,
+  "candidates_total": 5,
+  "cvps": 29044.10021626439,
+  "expression": "poly_deg5",
+  "extrap_mse": 1.2036297586782672e-13,
+  "hidden_mse": 2.9631498848757627e-15,
+  "method": "Classical-SR",
+  "program_size": 6,
+  "seed": 404,
+  "status": "completed",
+  "success": true,
+  "suite": "Level-A",
+  "synthesized": false,
+  "target": "x_plus_1",
+  "time_sec": 0.000172152002051007,
+  "timestamp": "2026-10-21T01:19:22.860527+00:00",
+  "train_mse": 2.7578431445206038e-15,
+  "vram_peak_mb": 0.0
+}

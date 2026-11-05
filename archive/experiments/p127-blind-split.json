@@ -1,0 +1,687 @@
+{
+  "split_id": "p127-graph-ramsey-blind-partition-v1",
+  "description": "Sealed blind partition of 100 extremal graph and Ramsey instances (Tur\u00e1n/Paley/Ramsey, Zarankiewicz/KST, Roth/Salem-Spencer, Erd\u0151s-Gy\u00e1rf\u00e1s/Chromatic) for P127 confirmation under Bonferroni-Holm family-wise error rate control (alpha=0.01).",
+  "seed": 127,
+  "count_per_track": 25,
+  "total_instances": 100,
+  "alpha": 0.01,
+  "leakage_detected": false,
+  "zero_leakage_verified": true,
+  "tracks": {
+    "turan_paley_ramsey": {
+      "name": "Tur\u00e1n multipartite extremal bounds, Paley SRG parameters, and Ramsey certificates",
+      "instances_count": 25,
+      "instances": [
+        {
+          "instance_id": "P127_TPR_01",
+          "track": "turan_paley_ramsey",
+          "n": 6,
+          "r": 2,
+          "paley_q": 5
+        },
+        {
+          "instance_id": "P127_TPR_02",
+          "track": "turan_paley_ramsey",
+          "n": 8,
+          "r": 3,
+          "paley_q": 13
+        },
+        {
+          "instance_id": "P127_TPR_03",
+          "track": "turan_paley_ramsey",
+          "n": 10,
+          "r": 4,
+          "paley_q": 17
+        },
+        {
+          "instance_id": "P127_TPR_04",
+          "track": "turan_paley_ramsey",
+          "n": 12,
+          "r": 5,
+          "paley_q": 29
+        },
+        {
+          "instance_id": "P127_TPR_05",
+          "track": "turan_paley_ramsey",
+          "n": 14,
+          "r": 2,
+          "paley_q": 37
+        },
+        {
+          "instance_id": "P127_TPR_06",
+          "track": "turan_paley_ramsey",
+          "n": 16,
+          "r": 3,
+          "paley_q": 41
+        },
+        {
+          "instance_id": "P127_TPR_07",
+          "track": "turan_paley_ramsey",
+          "n": 18,
+          "r": 4,
+          "paley_q": 53
+        },
+        {
+          "instance_id": "P127_TPR_08",
+          "track": "turan_paley_ramsey",
+          "n": 20,
+          "r": 5,
+          "paley_q": 61
+        },
+        {
+          "instance_id": "P127_TPR_09",
+          "track": "turan_paley_ramsey",
+          "n": 22,
+          "r": 2,
+          "paley_q": 73
+        },
+        {
+          "instance_id": "P127_TPR_10",
+          "track": "turan_paley_ramsey",
+          "n": 24,
+          "r": 3,
+          "paley_q": 89
+        },
+        {
+          "instance_id": "P127_TPR_11",
+          "track": "turan_paley_ramsey",
+          "n": 26,
+          "r": 4,
+          "paley_q": 97
+        },
+        {
+          "instance_id": "P127_TPR_12",
+          "track": "turan_paley_ramsey",
+          "n": 28,
+          "r": 5,
+          "paley_q": 101
+        },
+        {
+          "instance_id": "P127_TPR_13",
+          "track": "turan_paley_ramsey",
+          "n": 30,
+          "r": 2,
+          "paley_q": 109
+        },
+        {
+          "instance_id": "P127_TPR_14",
+          "track": "turan_paley_ramsey",
+          "n": 32,
+          "r": 3,
+          "paley_q": 113
+        },
+        {
+          "instance_id": "P127_TPR_15",
+          "track": "turan_paley_ramsey",
+          "n": 34,
+          "r": 4,
+          "paley_q": 137
+        },
+        {
+          "instance_id": "P127_TPR_16",
+          "track": "turan_paley_ramsey",
+          "n": 36,
+          "r": 5,
+          "paley_q": 149
+        },
+        {
+          "instance_id": "P127_TPR_17",
+          "track": "turan_paley_ramsey",
+          "n": 38,
+          "r": 2,
+          "paley_q": 157
+        },
+        {
+          "instance_id": "P127_TPR_18",
+          "track": "turan_paley_ramsey",
+          "n": 40,
+          "r": 3,
+          "paley_q": 173
+        },
+        {
+          "instance_id": "P127_TPR_19",
+          "track": "turan_paley_ramsey",
+          "n": 42,
+          "r": 4,
+          "paley_q": 181
+        },
+        {
+          "instance_id": "P127_TPR_20",
+          "track": "turan_paley_ramsey",
+          "n": 44,
+          "r": 5,
+          "paley_q": 193
+        },
+        {
+          "instance_id": "P127_TPR_21",
+          "track": "turan_paley_ramsey",
+          "n": 46,
+          "r": 2,
+          "paley_q": 197
+        },
+        {
+          "instance_id": "P127_TPR_22",
+          "track": "turan_paley_ramsey",
+          "n": 48,
+          "r": 3,
+          "paley_q": 229
+        },
+        {
+          "instance_id": "P127_TPR_23",
+          "track": "turan_paley_ramsey",
+          "n": 50,
+          "r": 4,
+          "paley_q": 233
+        },
+        {
+          "instance_id": "P127_TPR_24",
+          "track": "turan_paley_ramsey",
+          "n": 52,
+          "r": 5,
+          "paley_q": 241
+        },
+        {
+          "instance_id": "P127_TPR_25",
+          "track": "turan_paley_ramsey",
+          "n": 54,
+          "r": 2,
+          "paley_q": 257
+        }
+      ]
+    },
+    "zarankiewicz_kst": {
+      "name": "Zarankiewicz K_{2,2}-free cherry bounds and PG(2, q) incidence saturation",
+      "instances_count": 25,
+      "instances": [
+        {
+          "instance_id": "P127_ZKT_01",
+          "track": "zarankiewicz_kst",
+          "m": 6,
+          "n": 6,
+          "q_plane": 2
+        },
+        {
+          "instance_id": "P127_ZKT_02",
+          "track": "zarankiewicz_kst",
+          "m": 9,
+          "n": 9,
+          "q_plane": 3
+        },
+        {
+          "instance_id": "P127_ZKT_03",
+          "track": "zarankiewicz_kst",
+          "m": 12,
+          "n": 12,
+          "q_plane": 5
+        },
+        {
+          "instance_id": "P127_ZKT_04",
+          "track": "zarankiewicz_kst",
+          "m": 15,
+          "n": 15,
+          "q_plane": 7
+        },
+        {
+          "instance_id": "P127_ZKT_05",
+          "track": "zarankiewicz_kst",
+          "m": 18,
+          "n": 18,
+          "q_plane": 11
+        },
+        {
+          "instance_id": "P127_ZKT_06",
+          "track": "zarankiewicz_kst",
+          "m": 21,
+          "n": 21,
+          "q_plane": 2
+        },
+        {
+          "instance_id": "P127_ZKT_07",
+          "track": "zarankiewicz_kst",
+          "m": 24,
+          "n": 24,
+          "q_plane": 3
+        },
+        {
+          "instance_id": "P127_ZKT_08",
+          "track": "zarankiewicz_kst",
+          "m": 27,
+          "n": 27,
+          "q_plane": 5
+        },
+        {
+          "instance_id": "P127_ZKT_09",
+          "track": "zarankiewicz_kst",
+          "m": 30,
+          "n": 30,
+          "q_plane": 7
+        },
+        {
+          "instance_id": "P127_ZKT_10",
+          "track": "zarankiewicz_kst",
+          "m": 33,
+          "n": 33,
+          "q_plane": 11
+        },
+        {
+          "instance_id": "P127_ZKT_11",
+          "track": "zarankiewicz_kst",
+          "m": 36,
+          "n": 36,
+          "q_plane": 2
+        },
+        {
+          "instance_id": "P127_ZKT_12",
+          "track": "zarankiewicz_kst",
+          "m": 39,
+          "n": 39,
+          "q_plane": 3
+        },
+        {
+          "instance_id": "P127_ZKT_13",
+          "track": "zarankiewicz_kst",
+          "m": 42,
+          "n": 42,
+          "q_plane": 5
+        },
+        {
+          "instance_id": "P127_ZKT_14",
+          "track": "zarankiewicz_kst",
+          "m": 45,
+          "n": 45,
+          "q_plane": 7
+        },
+        {
+          "instance_id": "P127_ZKT_15",
+          "track": "zarankiewicz_kst",
+          "m": 48,
+          "n": 48,
+          "q_plane": 11
+        },
+        {
+          "instance_id": "P127_ZKT_16",
+          "track": "zarankiewicz_kst",
+          "m": 51,
+          "n": 51,
+          "q_plane": 2
+        },
+        {
+          "instance_id": "P127_ZKT_17",
+          "track": "zarankiewicz_kst",
+          "m": 54,
+          "n": 54,
+          "q_plane": 3
+        },
+        {
+          "instance_id": "P127_ZKT_18",
+          "track": "zarankiewicz_kst",
+          "m": 57,
+          "n": 57,
+          "q_plane": 5
+        },
+        {
+          "instance_id": "P127_ZKT_19",
+          "track": "zarankiewicz_kst",
+          "m": 60,
+          "n": 60,
+          "q_plane": 7
+        },
+        {
+          "instance_id": "P127_ZKT_20",
+          "track": "zarankiewicz_kst",
+          "m": 63,
+          "n": 63,
+          "q_plane": 11
+        },
+        {
+          "instance_id": "P127_ZKT_21",
+          "track": "zarankiewicz_kst",
+          "m": 66,
+          "n": 66,
+          "q_plane": 2
+        },
+        {
+          "instance_id": "P127_ZKT_22",
+          "track": "zarankiewicz_kst",
+          "m": 69,
+          "n": 69,
+          "q_plane": 3
+        },
+        {
+          "instance_id": "P127_ZKT_23",
+          "track": "zarankiewicz_kst",
+          "m": 72,
+          "n": 72,
+          "q_plane": 5
+        },
+        {
+          "instance_id": "P127_ZKT_24",
+          "track": "zarankiewicz_kst",
+          "m": 75,
+          "n": 75,
+          "q_plane": 7
+        },
+        {
+          "instance_id": "P127_ZKT_25",
+          "track": "zarankiewicz_kst",
+          "m": 78,
+          "n": 78,
+          "q_plane": 11
+        }
+      ]
+    },
+    "roth_salem_spencer": {
+      "name": "Roth 3-AP-free extremal sets, Salem-Spencer base-3 sets, and r_3(N) bounds",
+      "instances_count": 25,
+      "instances": [
+        {
+          "instance_id": "P127_RSS_01",
+          "track": "roth_salem_spencer",
+          "n_horizon": 5,
+          "k_digits": 2
+        },
+        {
+          "instance_id": "P127_RSS_02",
+          "track": "roth_salem_spencer",
+          "n_horizon": 7,
+          "k_digits": 3
+        },
+        {
+          "instance_id": "P127_RSS_03",
+          "track": "roth_salem_spencer",
+          "n_horizon": 9,
+          "k_digits": 4
+        },
+        {
+          "instance_id": "P127_RSS_04",
+          "track": "roth_salem_spencer",
+          "n_horizon": 11,
+          "k_digits": 5
+        },
+        {
+          "instance_id": "P127_RSS_05",
+          "track": "roth_salem_spencer",
+          "n_horizon": 13,
+          "k_digits": 2
+        },
+        {
+          "instance_id": "P127_RSS_06",
+          "track": "roth_salem_spencer",
+          "n_horizon": 15,
+          "k_digits": 3
+        },
+        {
+          "instance_id": "P127_RSS_07",
+          "track": "roth_salem_spencer",
+          "n_horizon": 17,
+          "k_digits": 4
+        },
+        {
+          "instance_id": "P127_RSS_08",
+          "track": "roth_salem_spencer",
+          "n_horizon": 19,
+          "k_digits": 5
+        },
+        {
+          "instance_id": "P127_RSS_09",
+          "track": "roth_salem_spencer",
+          "n_horizon": 21,
+          "k_digits": 2
+        },
+        {
+          "instance_id": "P127_RSS_10",
+          "track": "roth_salem_spencer",
+          "n_horizon": 23,
+          "k_digits": 3
+        },
+        {
+          "instance_id": "P127_RSS_11",
+          "track": "roth_salem_spencer",
+          "n_horizon": 25,
+          "k_digits": 4
+        },
+        {
+          "instance_id": "P127_RSS_12",
+          "track": "roth_salem_spencer",
+          "n_horizon": 27,
+          "k_digits": 5
+        },
+        {
+          "instance_id": "P127_RSS_13",
+          "track": "roth_salem_spencer",
+          "n_horizon": 29,
+          "k_digits": 2
+        },
+        {
+          "instance_id": "P127_RSS_14",
+          "track": "roth_salem_spencer",
+          "n_horizon": 31,
+          "k_digits": 3
+        },
+        {
+          "instance_id": "P127_RSS_15",
+          "track": "roth_salem_spencer",
+          "n_horizon": 33,
+          "k_digits": 4
+        },
+        {
+          "instance_id": "P127_RSS_16",
+          "track": "roth_salem_spencer",
+          "n_horizon": 35,
+          "k_digits": 5
+        },
+        {
+          "instance_id": "P127_RSS_17",
+          "track": "roth_salem_spencer",
+          "n_horizon": 37,
+          "k_digits": 2
+        },
+        {
+          "instance_id": "P127_RSS_18",
+          "track": "roth_salem_spencer",
+          "n_horizon": 39,
+          "k_digits": 3
+        },
+        {
+          "instance_id": "P127_RSS_19",
+          "track": "roth_salem_spencer",
+          "n_horizon": 41,
+          "k_digits": 4
+        },
+        {
+          "instance_id": "P127_RSS_20",
+          "track": "roth_salem_spencer",
+          "n_horizon": 43,
+          "k_digits": 5
+        },
+        {
+          "instance_id": "P127_RSS_21",
+          "track": "roth_salem_spencer",
+          "n_horizon": 45,
+          "k_digits": 2
+        },
+        {
+          "instance_id": "P127_RSS_22",
+          "track": "roth_salem_spencer",
+          "n_horizon": 47,
+          "k_digits": 3
+        },
+        {
+          "instance_id": "P127_RSS_23",
+          "track": "roth_salem_spencer",
+          "n_horizon": 49,
+          "k_digits": 4
+        },
+        {
+          "instance_id": "P127_RSS_24",
+          "track": "roth_salem_spencer",
+          "n_horizon": 51,
+          "k_digits": 5
+        },
+        {
+          "instance_id": "P127_RSS_25",
+          "track": "roth_salem_spencer",
+          "n_horizon": 53,
+          "k_digits": 2
+        }
+      ]
+    },
+    "erdos_gyarfas_chromatic": {
+      "name": "Erd\u0151s-Gy\u00e1rf\u00e1s power-of-2 cycle existence, Dirac bounds, and chromatic sandwich",
+      "instances_count": 25,
+      "instances": [
+        {
+          "instance_id": "P127_EGC_01",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "q3",
+          "index": 0
+        },
+        {
+          "instance_id": "P127_EGC_02",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "petersen",
+          "index": 1
+        },
+        {
+          "instance_id": "P127_EGC_03",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_6_2",
+          "index": 2
+        },
+        {
+          "instance_id": "P127_EGC_04",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_8_3",
+          "index": 3
+        },
+        {
+          "instance_id": "P127_EGC_05",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "paley_5",
+          "index": 4
+        },
+        {
+          "instance_id": "P127_EGC_06",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "q3",
+          "index": 5
+        },
+        {
+          "instance_id": "P127_EGC_07",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "petersen",
+          "index": 6
+        },
+        {
+          "instance_id": "P127_EGC_08",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_6_2",
+          "index": 7
+        },
+        {
+          "instance_id": "P127_EGC_09",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_8_3",
+          "index": 8
+        },
+        {
+          "instance_id": "P127_EGC_10",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "paley_5",
+          "index": 9
+        },
+        {
+          "instance_id": "P127_EGC_11",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "q3",
+          "index": 10
+        },
+        {
+          "instance_id": "P127_EGC_12",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "petersen",
+          "index": 11
+        },
+        {
+          "instance_id": "P127_EGC_13",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_6_2",
+          "index": 12
+        },
+        {
+          "instance_id": "P127_EGC_14",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_8_3",
+          "index": 13
+        },
+        {
+          "instance_id": "P127_EGC_15",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "paley_5",
+          "index": 14
+        },
+        {
+          "instance_id": "P127_EGC_16",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "q3",
+          "index": 15
+        },
+        {
+          "instance_id": "P127_EGC_17",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "petersen",
+          "index": 16
+        },
+        {
+          "instance_id": "P127_EGC_18",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_6_2",
+          "index": 17
+        },
+        {
+          "instance_id": "P127_EGC_19",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_8_3",
+          "index": 18
+        },
+        {
+          "instance_id": "P127_EGC_20",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "paley_5",
+          "index": 19
+        },
+        {
+          "instance_id": "P127_EGC_21",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "q3",
+          "index": 20
+        },
+        {
+          "instance_id": "P127_EGC_22",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "petersen",
+          "index": 21
+        },
+        {
+          "instance_id": "P127_EGC_23",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_6_2",
+          "index": 22
+        },
+        {
+          "instance_id": "P127_EGC_24",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "turan_8_3",
+          "index": 23
+        },
+        {
+          "instance_id": "P127_EGC_25",
+          "track": "erdos_gyarfas_chromatic",
+          "graph_type": "paley_5",
+          "index": 24
+        }
+      ]
+    }
+  },
+  "checksum": "2fc1d2c09be896c05fdd2396e92c9fd26919930ac84a42d745ffa8fc458892d3"
+}

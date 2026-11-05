@@ -1,0 +1,101 @@
+{
+  "budgets_sec": [
+    0.4,
+    0.8
+  ],
+  "comparison": {
+    "Classic-GP": {
+      "completed_runs": 20,
+      "mean_complexity": 6.0,
+      "mean_cvps": 44561.890873095625,
+      "mean_hidden_mse": 11.05409927368164,
+      "median_hidden_mse": 8.68596172332764,
+      "success_rate": 0.5,
+      "total_runs": 20
+    },
+    "Classical-SR": {
+      "completed_runs": 20,
+      "mean_complexity": 6.0,
+      "mean_cvps": 26116.527336271258,
+      "mean_hidden_mse": 3.9130647490056724e-13,
+      "median_hidden_mse": 3.913064749005673e-13,
+      "success_rate": 1.0,
+      "total_runs": 20
+    },
+    "EvoByte": {
+      "completed_runs": 20,
+      "mean_complexity": 5.2,
+      "mean_cvps": 4799.521463293107,
+      "mean_hidden_mse": 0.9786504719908017,
+      "median_hidden_mse": 3.197442310920451e-14,
+      "success_rate": 0.8,
+      "total_runs": 20
+    },
+    "PySR-Adapter": {
+      "completed_runs": 0,
+      "mean_complexity": 0.0,
+      "mean_cvps": 0.0,
+      "mean_hidden_mse": Infinity,
+      "median_hidden_mse": Infinity,
+      "success_rate": 0.0,
+      "total_runs": 20
+    },
+    "Random": {
+      "completed_runs": 20,
+      "mean_complexity": 5.45,
+      "mean_cvps": 4204.96272683719,
+      "mean_hidden_mse": 36.41719174979401,
+      "median_hidden_mse": 22.28440044174396,
+      "success_rate": 0.5,
+      "total_runs": 20
+    }
+  },
+  "elapsed_sec": 64.69590192800388,
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu0": {
+      "compute_capability": "8.9",
+      "multi_processor_count": 24,
+      "name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "total_memory_MB": 7805
+    },
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130",
+    "vram_telemetry": {
+      "allocated_mb": 0.0,
+      "cuda_available": true,
+      "device_name": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "free_mb": 7701.75,
+      "max_allocated_mb": 0.0,
+      "max_reserved_mb": 0.0,
+      "reserved_mb": 0.0,
+      "total_mb": 7805.56
+    }
+  },
+  "max_vram_peak_mb": 2.72,
+  "methods": [
+    "Random",
+    "Classic-GP",
+    "Classical-SR",
+    "PySR-Adapter",
+    "EvoByte"
+  ],
+  "seeds": [
+    42,
+    101,
+    202,
+    303,
+    404
+  ],
+  "suite": "P155-honest-baselines",
+  "target_keys": [
+    "x_plus_1",
+    "x2_3x_7"
+  ],
+  "total_trials": 100
+}

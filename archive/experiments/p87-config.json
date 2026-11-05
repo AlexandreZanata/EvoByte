@@ -1,0 +1,12 @@
+{
+  "alpha": 0.05,
+  "max_baseline_y_steps": 1000,
+  "max_coord": 1000000000000,
+  "min_decisive_instances": 15,
+  "note": "P87 blind confirmation of structured Diophantine divisor sieve and integer divisibility lemmas on 50 large prime instances (10^5 <= n <= 10^7) under Holm FWER control (alpha=0.05).",
+  "phase": "P87",
+  "require_clean_tree": true,
+  "seed": 42,
+  "split_path": "experiments/p87-blind-split.json",
+  "split_sha256": "26fc33e282ec611855fd26c4e33442d9c34d19d9e47e50d1da3985a486c33219"
+}

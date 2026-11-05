@@ -1,0 +1,11 @@
+{
+  "phase": "P91",
+  "budget_sec": 300.0,
+  "min_theorems": 50,
+  "modulus": 840,
+  "k_count": 5,
+  "project_dir": "lean_proofs",
+  "output_dir": "lean_proofs/Generated",
+  "seed": 42,
+  "require_clean_tree": true
+}

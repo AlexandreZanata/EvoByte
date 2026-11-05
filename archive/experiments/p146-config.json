@@ -1,0 +1,12 @@
+{
+  "phase": "P146",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "generated_dir": "lean_proofs/Generated",
+  "min_theorems": 80,
+  "expected_sha256": "6210635445047478b61cc0bcfa4e72639867f93cfd9e6afd7342446e9b6ef872",
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P146 accelerated Diophantine quadratic sieve for Schinzel resistant classes baseline audit in Lean 4."
+}

@@ -1,0 +1,143 @@
+{
+  "billed_costs": {
+    "learned_dist_training_sec": 0.10900485999809462,
+    "neural_peak_vram_mb": 17.203125,
+    "neural_training_sec": 0.7527832310006488
+  },
+  "corpus": {
+    "chains_extracted": 3663,
+    "corpus_hash": "dfdc6c9d514be3959031ec1deec303d9be613829c73b35d79ea77c4ad22694ef",
+    "n_hidden_sealed": 199,
+    "n_train_rows": 923,
+    "n_val_rows": 197,
+    "operator_histogram": {
+      "ADD": 1195,
+      "DIV": 674,
+      "MUL": 1623,
+      "POW": 0,
+      "SUB": 682
+    },
+    "source": "openai/gsm8k (test split)"
+  },
+  "device": "cuda",
+  "git_commit": "6acf1e622bb0",
+  "manifest_sha256": "c54e083009dd59c52404ac98c0756c3dac25f21dd489375355c85cb2608a2a86",
+  "models": {
+    "learned_distributor": {
+      "parameters": 0,
+      "training_time_sec": 0.10900485999809462
+    },
+    "neural_proposer": {
+      "epochs": 3,
+      "final_loss": 9.728412628173828,
+      "parameters": 27440,
+      "training_peak_vram_mb": 17.203125,
+      "training_time_sec": 0.7527832310006488
+    }
+  },
+  "phase": "p23-math-specialist-pilot",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "6acf1e622bb05c400b6efe13fd24b498ca9b3e66",
+    "config": {
+      "budgets": "10s,1m",
+      "scale_factor": 0.05,
+      "seeds": [
+        42,
+        101,
+        202,
+        303,
+        404
+      ],
+      "targets": [
+        "target_linear",
+        "target_poly",
+        "target_div",
+        "target_scaled",
+        "target_quad"
+      ]
+    },
+    "config_hash": "cc69af7703506a87",
+    "dataset_hashes": {
+      "gsm8k-test": "dfdc6c9d514be395"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "?? benchmarks/math_specialist.py\n?? experiments/p23-pilot.json\n?? experiments/p23-raw.json\n?? tests/test_math_specialist.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 8,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/math_specialist.py",
+      "--pilot",
+      "--seeds",
+      "5",
+      "--scale-budgets",
+      "0.05",
+      "--output",
+      "experiments/p23-pilot.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [
+    {
+      "path": "experiments/p23-raw.json",
+      "sha256": "1522850c794adbdeccc7084c7f8b84775dec1f92e83f5863569a74244b0b8d43"
+    }
+  ],
+  "ruling": {
+    "decision": "DROP",
+    "rationale": "Neural proposer imposes -1.2% throughput penalty and training overhead without surpassing pure genetic search on time-to-quality. ADR-0010 confirmed; specialist proposal line cleanly dropped without touching production genetic core.",
+    "throughput_penalty_pct": -1.166384604570463
+  },
+  "status": "PASS",
+  "summary_table": {
+    "genetic": {
+      "billed_training_sec": 0.0,
+      "effective_billed_cvps": 8764.840748560971,
+      "median_best_mse": 2.2338309288024902,
+      "median_search_cvps": 9813.744961887476,
+      "median_time_to_match_sec": 2.618469324999751,
+      "success_rate": 0.22
+    },
+    "hybrid": {
+      "billed_training_sec": 0.7527832310006488,
+      "effective_billed_cvps": 9021.44229006668,
+      "median_best_mse": 2.3785629272460938,
+      "median_search_cvps": 10547.584795072271,
+      "median_time_to_match_sec": 1.5766649395009154,
+      "success_rate": 0.24
+    },
+    "learned_dist": {
+      "billed_training_sec": 0.10900485999809462,
+      "effective_billed_cvps": 8756.225490822317,
+      "median_best_mse": 1.8035714626312256,
+      "median_search_cvps": 10464.361692831693,
+      "median_time_to_match_sec": 2.0179546840008697,
+      "success_rate": 0.22
+    },
+    "neural": {
+      "billed_training_sec": 0.7527832310006488,
+      "effective_billed_cvps": 8569.950597429577,
+      "median_best_mse": 2.0874617099761963,
+      "median_search_cvps": 9928.210972254741,
+      "median_time_to_match_sec": 1.9322727079998003,
+      "success_rate": 0.22
+    }
+  },
+  "timestamp": "2026-09-30T13:28:42.304193+00:00"
+}

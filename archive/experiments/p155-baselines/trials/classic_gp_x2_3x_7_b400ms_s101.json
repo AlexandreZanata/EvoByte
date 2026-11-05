@@ -1,0 +1,20 @@
+{
+  "budget_sec": 0.4,
+  "candidates_total": 18450,
+  "cvps": 46073.636764391544,
+  "expression": "GP_tree(size=7)",
+  "extrap_mse": 39.09523010253906,
+  "hidden_mse": 17.371923446655273,
+  "method": "Classic-GP",
+  "program_size": 7,
+  "seed": 101,
+  "status": "completed",
+  "success": false,
+  "suite": "Level-A",
+  "synthesized": false,
+  "target": "x2_3x_7",
+  "time_sec": 0.4004459229981876,
+  "timestamp": "2026-10-21T01:19:17.641054+00:00",
+  "train_mse": 17.597885131835938,
+  "vram_peak_mb": 0.0
+}

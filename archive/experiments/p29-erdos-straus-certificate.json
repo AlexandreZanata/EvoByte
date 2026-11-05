@@ -1,0 +1,46 @@
+{
+  "bounded_statement": "Find exact positive integer solutions (x, y, z) for nominated prime instances n in {1009, 10007, 100003} with search bound M <= 10^9.",
+  "certificate_hash": "12cf4ad1faae8d62a13317f3416abfd3a4c91e54ac466ff319e157e5a60ab8a6",
+  "certificate_type": "integer_exact_certificate",
+  "classification": "rediscovery",
+  "classification_rationale": "Verified exact integer solution found via GPU filtering and certified by arbitrary-precision integer arithmetic. Matches known instances in the literature (Mordell 1967, Elsholtz & Tao 2013). Per P29 Discovery Criterion, classified as 'rediscovery'.",
+  "conjecture_statement": "For every integer n >= 2, the equation 4/n = 1/x + 1/y + 1/z has positive integer solutions.",
+  "exact_algebraic_evidence": {
+    "equation": "4*x*y*z == n*(x*y + y*z + x*z)",
+    "lhs": "170066121441100544",
+    "residual": 0,
+    "rhs": "170066121441100544",
+    "verified": true
+  },
+  "independent_reproduction": {
+    "details": {
+      "lhs": "170066121441100544",
+      "n": 1009,
+      "residual": 0,
+      "rhs": "170066121441100544",
+      "verified_exact": true,
+      "x": 253,
+      "y": 85096,
+      "z": 1974822872
+    },
+    "reproduction_hash": "4e1801ad2d7a1df00195087bb0333dd71586fa7ce73bdd8e312e5dcecf2212dd",
+    "reproduction_time_sec": 2.326399999219575e-05,
+    "status": "PASS"
+  },
+  "literature_citations": [
+    "Erd\u0151s, P. (1948). Some problems on unit fractions.",
+    "Mordell, L. J. (1967). Diophantine Equations (Academic Press).",
+    "Elsholtz, C., & Tao, T. (2013). Counting the number of solutions to the Erd\u0151s-Straus equation on unit fractions. J. Aust. Math. Soc."
+  ],
+  "problem_id": "erdos-straus",
+  "solution_data": {
+    "x": 253,
+    "y": 85096,
+    "z": 1974822872
+  },
+  "target_instance": {
+    "n": 1009
+  },
+  "timestamp": "2026-10-01T15:55:41.088262+00:00",
+  "title": "Erd\u0151s-Straus Diophantine Decomposition"
+}

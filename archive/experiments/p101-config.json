@@ -1,0 +1,12 @@
+{
+  "a_values": [4],
+  "budget_sec": 3600.0,
+  "horizons": [10, 20, 50, 100],
+  "min_theorems": 40,
+  "note": "P101 solution moments asymptotics and divisor bounds in Lean 4. Verifies Lagrange-Cauchy moment domination identities, Cauchy-Schwarz variance positivity, exact rational harmonic numbers and squared divergence, cumulative divisor growth, and empirical first and second moment lower bounds with zero sorry.",
+  "output_dir": "lean_proofs/Generated",
+  "phase": "P101",
+  "project_dir": "lean_proofs",
+  "require_clean_tree": true,
+  "seed": 42
+}

@@ -1,0 +1,20 @@
+{
+  "corpus_manifest": "experiments/p35-training-corpus.json",
+  "coverage": "grammar-defined only: Horner degree<=3 / expression trees depth<=3 over bank rationals",
+  "domain": [-3.0, 3.0],
+  "note": "Complete frozen configuration. No codec change, no OPCODE_VERSION bump, no interpreter fork; announced coverage is the defined grammar only. No TBD values.",
+  "phase": "P49",
+  "profile": "p49-compact-polynomial",
+  "profile_pins": {
+    "allowed_ops": [0, 1, 2, 3, 15],
+    "const_table_sha256": "28eb132ede7832fece864bb34bc614f6239ac02ab6b2eb6cc7bbeffdebbd87b7",
+    "opcode_version": 0,
+    "output_register": 7,
+    "profile_revision": 0,
+    "program_bytes": 64,
+    "registers": 8,
+    "word_count": 16
+  },
+  "roundtrip_samples": 64,
+  "seed": 7
+}

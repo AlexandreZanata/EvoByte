@@ -1,0 +1,13 @@
+{
+  "phase": "P156",
+  "targets": ["x_plus_1", "x2_3x_7"],
+  "budgets": ["0.4s", "0.8s"],
+  "seeds": [42, 101, 202, 303, 404],
+  "methods": ["Random", "Classic-GP", "Classical-SR", "PySR-Adapter", "EvoByte"],
+  "source_trials_dir": "experiments/p155-baselines/trials",
+  "min_trials": 10,
+  "min_extrap_rate": 0.70,
+  "max_explosion_rate": 0.05,
+  "output_dir": "experiments/p156-generalization",
+  "require_clean_tree": true
+}

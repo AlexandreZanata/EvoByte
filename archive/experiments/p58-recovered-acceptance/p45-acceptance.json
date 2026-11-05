@@ -1,0 +1,142 @@
+{
+  "budgets": "requested 60s x2 + 600s x1 wall-clock at scale 1.0; observed per tier",
+  "claim_scope": "full-pipeline envelope at real budgets; no hour-stability claim",
+  "counters": {
+    "cells_60s": 2,
+    "cells_60s_ok": 2,
+    "long_tier_ok": true
+  },
+  "dirty": "M benchmarks/gpu_limits.py\n M benchmarks/science_matrix.py\n M tests/test_gpu_limits.py\n?? experiments/p45-config.json\n?? experiments/p45-run.sh",
+  "driver": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+  "elapsed_sec": 725.0946453050019,
+  "envelope_600s": {
+    "batch_policy": {
+      "decisions": [
+        "approved doubling to 512 for future runs (peak 2MB x2.2 < usable 6127MB)"
+      ],
+      "final_batch": 512
+    },
+    "stages_per_sec": {
+      "evolve_per_sec": 17224.777144833053,
+      "filter_per_sec": 10970.898222552492,
+      "filter_valid_fraction": 1.0,
+      "generation_per_sec": 21500.435975931938,
+      "select_per_sec": 12233.253430986697,
+      "verify_exact_fraction_probe": 0.0,
+      "verify_per_sec": 93.74122640484568
+    },
+    "tiers": [
+      {
+        "alloc_growth_mb": 0.84228515625,
+        "batch": 256,
+        "checkpoints": [
+          "/tmp/evobyte-p45-t4m10bdq/envelope-raw/p45-31279-pid1527847-42/ckpt-g5179.pt",
+          "/tmp/evobyte-p45-t4m10bdq/envelope-raw/p45-31279-pid1527847-42/ckpt-g10674.pt",
+          "/tmp/evobyte-p45-t4m10bdq/envelope-raw/p45-31279-pid1527847-42/ckpt-g15091.pt",
+          "/tmp/evobyte-p45-t4m10bdq/envelope-raw/p45-31279-pid1527847-42/ckpt-g16786.pt",
+          "/tmp/evobyte-p45-t4m10bdq/envelope-raw/p45-31279-pid1527847-42/ckpt-g18998.pt"
+        ],
+        "counter_check": true,
+        "distinct_verified_shas": 3,
+        "evaluated": 4863488,
+        "generations": 18998,
+        "observed_sec": 600.104708386003,
+        "peak_alloc_mb": 2.22021484375,
+        "requested_sec": 600,
+        "seed": 42,
+        "status": "ok",
+        "trace_records": 2048,
+        "tracing": true,
+        "verified": 1898,
+        "verified_exact": 1898
+      }
+    ],
+    "verdict": "ACCEPTED"
+  },
+  "hardware": {
+    "cpu": "x86_64",
+    "cuda_available": true,
+    "cuda_version": "13.0",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "gpu_mem_MB": 7805,
+    "numpy": "2.4.6",
+    "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+    "os": "Linux 7.1.5-76070105-generic",
+    "python": "3.12.2",
+    "threads_omp": null,
+    "threads_torch": 8,
+    "torch": "2.14.0+cu130"
+  },
+  "limitations": [
+    "No 3600s confirmation run; hour-stability is not claimed.",
+    "VRAM headroom accounts coarsely for other processes (nvidia-smi snapshots)."
+  ],
+  "matrix_60s": {
+    "stages_per_sec": {
+      "evolve_per_sec": 4553.906529659483,
+      "filter_per_sec": 2176.735109568432,
+      "filter_valid_fraction": 1.0,
+      "generation_per_sec": 14134.50060623238,
+      "select_per_sec": 4208.709510021289,
+      "verify_exact_fraction_probe": 0.0,
+      "verify_per_sec": 12.021780051308681
+    },
+    "tiers": [
+      {
+        "alloc_growth_mb": 0.42138671875,
+        "batch": 256,
+        "checkpoints": [],
+        "counter_check": true,
+        "distinct_verified_shas": 1,
+        "evaluated": 446976,
+        "generations": 1746,
+        "observed_sec": 60.03246990199841,
+        "peak_alloc_mb": 1.46923828125,
+        "requested_sec": 60,
+        "seed": 42,
+        "status": "ok",
+        "trace_records": 0,
+        "tracing": false,
+        "verified": 173,
+        "verified_exact": 173
+      },
+      {
+        "alloc_growth_mb": 0.0,
+        "batch": 256,
+        "checkpoints": [],
+        "counter_check": true,
+        "distinct_verified_shas": 1,
+        "evaluated": 802304,
+        "generations": 3134,
+        "observed_sec": 60.03165685500062,
+        "peak_alloc_mb": 1.46923828125,
+        "requested_sec": 60,
+        "seed": 143,
+        "status": "ok",
+        "trace_records": 2048,
+        "tracing": true,
+        "verified": 313,
+        "verified_exact": 313
+      }
+    ],
+    "verdict": "ACCEPTED"
+  },
+  "package_versions": {
+    "cuda": "13.0",
+    "numpy": "2.4.6",
+    "python": "3.12.2",
+    "torch": "2.14.0+cu130"
+  },
+  "phase": "P45",
+  "resolved_config": {
+    "acceptance_phase": "P45",
+    "config_path": "experiments/p45-config.json",
+    "config_sha256": "3d89521d2a7966b605af34fd56d0159fc56574c07a5457dc1d0f63469f9e7b9c"
+  },
+  "revision": "f9a76ef8982e37c28fb3f5c112ce47553763f936",
+  "run_id": "6bf53d7cc1cf259b",
+  "seeds_rng": "fixed seed 42 (+101 per cell); deterministic rebuilds, not bit-compared",
+  "selected_tracing": true,
+  "selection_rule": "600s tier runs the 60s tracing mode with most verified_exact (tie breaks toward tracing=true for fuller evidence); requires all 60s cells ok, else the long tier is skipped and the verdict is MIXED",
+  "verdict": "ACCEPTED"
+}

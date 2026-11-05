@@ -1,0 +1,227 @@
+{
+  "adversarial_rejection_suite": [
+    {
+      "description": "Arithmetic chain expression 2+2 claiming target 5.0",
+      "fixture_id": "adv_corpus_wrong_arithmetic",
+      "rejected": true,
+      "rejection_reason": "mismatch: 4.0 != 5.0",
+      "tested_track": "EXECUTE"
+    },
+    {
+      "description": "Symbolic differentiation claiming d/dx(x^2) == 3x",
+      "fixture_id": "adv_corpus_corrupted_derivative",
+      "rejected": true,
+      "rejection_reason": "derivative_mismatch: diff=-x",
+      "tested_track": "FIND"
+    },
+    {
+      "description": "Symbolic integration claiming int(cos(x)) == x^2",
+      "fixture_id": "adv_corpus_corrupted_antiderivative",
+      "rejected": true,
+      "rejection_reason": "ftc_antiderivative_mismatch: diff=2*x - cos(x)",
+      "tested_track": "FIND"
+    },
+    {
+      "description": "Polynomial expansion with false linear coefficient",
+      "fixture_id": "adv_corpus_corrupted_polynomial",
+      "rejected": true,
+      "rejection_reason": "polynomial_expansion_mismatch: diff=-2*x",
+      "tested_track": "FIND"
+    },
+    {
+      "description": "Natural-language word problem without formal witness claiming verified status",
+      "fixture_id": "adv_corpus_unsupported_natural_language",
+      "rejected": true,
+      "rejection_reason": "reference_only_unsupported_natural_language",
+      "tested_track": "FIND"
+    }
+  ],
+  "device": "cuda",
+  "elapsed_sec": 1.402225603000261,
+  "families_breakdown": {
+    "algebra_numeric": {
+      "total": 4,
+      "unsupported": 4,
+      "verified": 0
+    },
+    "arithmetic_chain": {
+      "total": 4281,
+      "unsupported": 0,
+      "verified": 4281
+    },
+    "arithmetic_word_problem": {
+      "total": 1319,
+      "unsupported": 1319,
+      "verified": 0
+    },
+    "combinatorics_numeric": {
+      "total": 17,
+      "unsupported": 17,
+      "verified": 0
+    },
+    "first_order_ode": {
+      "total": 50,
+      "unsupported": 0,
+      "verified": 50
+    },
+    "geometry_numeric": {
+      "total": 10,
+      "unsupported": 10,
+      "verified": 0
+    },
+    "inequalities_numeric": {
+      "total": 8,
+      "unsupported": 8,
+      "verified": 0
+    },
+    "number_theory_numeric": {
+      "total": 25,
+      "unsupported": 25,
+      "verified": 0
+    },
+    "polynomial_arithmetic": {
+      "total": 50,
+      "unsupported": 0,
+      "verified": 50
+    },
+    "symbolic_differentiation": {
+      "total": 50,
+      "unsupported": 0,
+      "verified": 50
+    },
+    "symbolic_integration": {
+      "total": 50,
+      "unsupported": 0,
+      "verified": 50
+    }
+  },
+  "independent_verification_summary": {
+    "accepted_false_positives": 0,
+    "adversarial_fixtures_rejected": 5,
+    "adversarial_fixtures_tested": 5,
+    "soundness_gate_passed": true,
+    "total_denominator": 5864,
+    "unsupported_items_count": 1383,
+    "unsupported_pct": 23.585,
+    "unsupported_policy": "Unsupported natural-language statements remain reference_only/out_of_scope, excluded from verified-solver accuracy and published with the full denominator.",
+    "verification_failures": 0,
+    "verified_coverage_pct": 76.415,
+    "verified_items_count": 4481
+  },
+  "manifest_sha256": "9dcdcdd298dbda695f3dc183824ba2fcfcf97cb7e4abdba6f40336568efcd0d8",
+  "manifest_version": "1.0",
+  "numeric_gpu_reduction": {
+    "cpu_l2": 4144307.5,
+    "cpu_sec": 1.2433521630000541,
+    "cpu_sum": 20069064.0,
+    "gpu_l2": 4144307.639046944,
+    "gpu_sec": 0.15500143000008393,
+    "gpu_sum": 20069063.67015252,
+    "n_numeric_points": 5281,
+    "oom_events": 0,
+    "parity_l2_ok": true,
+    "parity_sum_ok": true
+  },
+  "open_problems_certificates": {
+    "audit_summary": {
+      "accepted_false_positives": 0,
+      "adversarial_fixtures_rejected": 8,
+      "adversarial_fixtures_tested": 8,
+      "historical_certificates_audited": 1,
+      "historical_reclassified": 1,
+      "soundness_gate_passed": true,
+      "strict_certificates_generated": 3
+    },
+    "historical_reclassified": 1,
+    "linked_report": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/experiments/p31-certificates.json",
+    "strict_certificates": [
+      "diophantine-quintuple",
+      "erdos-straus",
+      "taxicab"
+    ]
+  },
+  "phase": "p31-verifier-certificates",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "26bb8ad68429f691582c1735daebdee0840e8987",
+    "config": {
+      "device": "cuda",
+      "seed": 42,
+      "split_manifest": "/home/iiii/PESSOAL-PROJETOS-ALEXANDRE/EvoByte/experiments/p30-splits.json"
+    },
+    "config_hash": "37f1a508a0cebb7b",
+    "dataset_hashes": {
+      "snapshot": "27344a5ea12417f2",
+      "split_manifest": "646c71aa4e2f5b59"
+    },
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M benchmarks/math_corpus.py\n M benchmarks/open_problems.py\n M docs/phases/P31-verifier-certificates.md\n M tests/test_math_corpus.py\n M tests/test_open_problems.py\n?? experiments/p31-certificates.json\n?? experiments/p31-verification.json",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 10,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/math_corpus.py",
+      "--verify-independent",
+      "--split-manifest",
+      "experiments/p30-splits.json",
+      "--certificate-report",
+      "experiments/p31-certificates.json",
+      "--output",
+      "experiments/p31-verification.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [],
+  "splits_breakdown": {
+    "final_test": {
+      "total_items": 62,
+      "unsupported_reference_items": 26,
+      "verified_coverage_pct": 58.065,
+      "verified_items": 36
+    },
+    "train": {
+      "total_items": 4922,
+      "unsupported_reference_items": 1156,
+      "verified_coverage_pct": 76.514,
+      "verified_items": 3766
+    },
+    "val": {
+      "total_items": 880,
+      "unsupported_reference_items": 201,
+      "verified_coverage_pct": 77.159,
+      "verified_items": 679
+    }
+  },
+  "status": "PASS",
+  "timestamp": "2026-10-01T17:16:29.607551+00:00",
+  "tracks": {
+    "EXECUTE": {
+      "coverage_pct": 100.0,
+      "method": "ast_guarded_arithmetic",
+      "total": 4281,
+      "verified": 4281
+    },
+    "FIND": {
+      "coverage_pct": 12.634,
+      "total": 1583,
+      "unsupported_natural_language": 1383,
+      "verified": 200,
+      "verified_symbolic_proofs": 200
+    }
+  }
+}

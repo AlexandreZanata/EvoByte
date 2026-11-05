@@ -1,0 +1,10 @@
+{
+  "phase": "P89",
+  "budget_sec": 300.0,
+  "min_theorems": 30,
+  "project_dir": "lean_proofs",
+  "output_dir": "lean_proofs/Generated",
+  "tactic_module": "lean_proofs/Tactic/Diophantine.lean",
+  "seed": 42,
+  "require_clean_tree": true
+}

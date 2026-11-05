@@ -1,0 +1,12 @@
+{
+  "phase": "P157",
+  "targets": ["x2_3x_7"],
+  "seeds": [42, 101, 202, 303, 404],
+  "pop_size": 100,
+  "max_generations": 10,
+  "min_cascade_speedup": 2.0,
+  "min_early_term_speedup": 1.05,
+  "min_gpu_speedup": 1.0,
+  "output_dir": "experiments/p157-ablations",
+  "require_clean_tree": true
+}

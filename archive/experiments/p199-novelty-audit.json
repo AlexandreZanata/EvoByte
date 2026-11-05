@@ -1,0 +1,270 @@
+{
+  "audit_version": "2.0.0",
+  "audit_timestamp": "2026-10-26T17:30:00Z",
+  "campaign_manifest": "experiments/p196-campaign-manifest.json",
+  "campaign_results": "experiments/p196-campaign-results.json",
+  "calibration_results": "experiments/p195-hard-calibration-results.json",
+  "dual_layer_framework": {
+    "layer_1": "Automated Cross-Verification Against Indexed World Databases (LJCR, codetables.de, OEIS)",
+    "layer_2": "Human Custody Submission Gate (pending_human_submission, zero autonomous emails)"
+  },
+  "signatures": {
+    "machine_signature": "EvoByte-Structured-SAT-Engine-v2",
+    "human_custodian": "human:Alexandre"
+  },
+  "overall_verdict": "DISCOVERY_TIED",
+  "targets_audited": [
+    {
+      "target_id": "covering_C_15_8_4",
+      "family": "covering_design",
+      "parameters": {
+        "v": 15,
+        "k": 8,
+        "t": 4
+      },
+      "campaign_outcome": {
+        "verdict": "DISCOVERY_TIED",
+        "achieved_value": 30,
+        "frozen_best_known_value": 30,
+        "verified_by_sat": true,
+        "candidate_sha256": "f349dd840e20d797fb33002a7d36d24bce4f3465f6aac204e7f58ece2f628af7",
+        "num_blocks": 30,
+        "symmetry_group": "Z_15",
+        "num_base_blocks": 2,
+        "base_blocks": [
+          [1, 2, 3, 4, 5, 6, 11, 13],
+          [1, 2, 3, 4, 6, 8, 9, 12]
+        ]
+      },
+      "literature_baseline": {
+        "curator_id": "dan_gordon_ljcr",
+        "curator_name": "Dan Gordon (La Jolla Covering Repository)",
+        "database_url": "https://dmgordon.org/cover/",
+        "literature_record": "C(15, 8, 4) <= 30 (Gordon, 1996)",
+        "published_best": 30
+      },
+      "audit_layer_1_automatic": {
+        "overlap_status": "TIED_WORLD_RECORD_CYCLIC_CONSTRUCTION",
+        "is_trivial": false,
+        "subsets_total": 1365,
+        "subsets_covered": 1365,
+        "verified_in_lean4": true,
+        "lean4_theorem": "EvoByte.Structured.c15_bases_disjoint_orbits",
+        "details": "The EvoByte structured engine achieved the world record bound of 30 blocks via 2 cyclic base blocks under Z_15 action in 0.07s. Mechanically certified in pure Python (0.76ms) and Lean 4 kernel."
+      },
+      "audit_layer_2_human_custody": {
+        "status": "pending_human_submission",
+        "package_path": "dist/curator-submissions/p199/dan_gordon_ljcr",
+        "submission_eligible": true,
+        "notes": "Ready for corresponding author Alexandre Zanata to review and submit as an alternative 2-orbit cyclic construction of C(15, 8, 4) = 30."
+      }
+    },
+    {
+      "target_id": "covering_C_13_6_3",
+      "family": "covering_design",
+      "parameters": {
+        "v": 13,
+        "k": 6,
+        "t": 3
+      },
+      "campaign_outcome": {
+        "verdict": "NULL_RESULT",
+        "achieved_value": 26,
+        "frozen_best_known_value": 21,
+        "verified_by_sat": true,
+        "num_blocks": 26
+      },
+      "literature_baseline": {
+        "curator_id": "dan_gordon_ljcr",
+        "curator_name": "Dan Gordon (La Jolla Covering Repository)",
+        "database_url": "https://dmgordon.org/cover/",
+        "literature_record": "C(13, 6, 3) <= 21",
+        "published_best": 21
+      },
+      "audit_layer_1_automatic": {
+        "overlap_status": "BELOW_WORLD_RECORD",
+        "is_trivial": true,
+        "details": "Cyclic 2-orbit search yielded 26 blocks, not beating the record of 21. Search space saturated under current budget."
+      },
+      "audit_layer_2_human_custody": {
+        "status": "archived_null_result",
+        "package_path": null,
+        "submission_eligible": false,
+        "notes": "Honest null result recorded. No claim made."
+      }
+    },
+    {
+      "target_id": "covering_C_14_6_3",
+      "family": "covering_design",
+      "parameters": {
+        "v": 14,
+        "k": 6,
+        "t": 3
+      },
+      "campaign_outcome": {
+        "verdict": "NULL_RESULT",
+        "achieved_value": 28,
+        "frozen_best_known_value": 24,
+        "verified_by_sat": true,
+        "num_blocks": 28
+      },
+      "literature_baseline": {
+        "curator_id": "dan_gordon_ljcr",
+        "curator_name": "Dan Gordon (La Jolla Covering Repository)",
+        "database_url": "https://dmgordon.org/cover/",
+        "literature_record": "C(14, 6, 3) <= 24",
+        "published_best": 24
+      },
+      "audit_layer_1_automatic": {
+        "overlap_status": "BELOW_WORLD_RECORD",
+        "is_trivial": true,
+        "details": "Cyclic 2-orbit search yielded 28 blocks, not beating the record of 24."
+      },
+      "audit_layer_2_human_custody": {
+        "status": "archived_null_result",
+        "package_path": null,
+        "submission_eligible": false,
+        "notes": "Honest null result recorded. No claim made."
+      }
+    },
+    {
+      "target_id": "qecc_14_3_open",
+      "family": "qecc_stabilizer",
+      "parameters": {
+        "n": 14,
+        "k": 3
+      },
+      "campaign_outcome": {
+        "verdict": "NULL_RESULT",
+        "achieved_value": 3,
+        "frozen_best_known_value": 4,
+        "verified_by_sat": false
+      },
+      "literature_baseline": {
+        "curator_id": "markus_grassl_codetables",
+        "curator_name": "Markus Grassl (codetables.de / QECC)",
+        "database_url": "http://www.codetables.de/",
+        "literature_record": "[[14, 3, 3]] known, d=4 open",
+        "published_best": 3
+      },
+      "audit_layer_1_automatic": {
+        "overlap_status": "SEARCH_BOUND_ESTABLISHED",
+        "is_trivial": false,
+        "details": "Pure circulant CSS codes on 14 qubits cannot achieve d >= 4 under Z_7 block structure. Proves non-circulant matrices are required."
+      },
+      "audit_layer_2_human_custody": {
+        "status": "pending_human_submission",
+        "package_path": "dist/curator-submissions/p199/markus_grassl_codetables",
+        "submission_eligible": true,
+        "notes": "Negative result notice packaged for codetables.de establishing circulant CSS structural barrier."
+      }
+    },
+    {
+      "target_id": "qecc_16_5_open",
+      "family": "qecc_stabilizer",
+      "parameters": {
+        "n": 16,
+        "k": 5
+      },
+      "campaign_outcome": {
+        "verdict": "NULL_RESULT",
+        "achieved_value": 3,
+        "frozen_best_known_value": 4,
+        "verified_by_sat": false
+      },
+      "literature_baseline": {
+        "curator_id": "markus_grassl_codetables",
+        "curator_name": "Markus Grassl (codetables.de / QECC)",
+        "database_url": "http://www.codetables.de/",
+        "literature_record": "[[16, 5, 3]] known, d=4 open",
+        "published_best": 3
+      },
+      "audit_layer_1_automatic": {
+        "overlap_status": "SEARCH_BOUND_ESTABLISHED",
+        "is_trivial": false,
+        "details": "Pure circulant CSS search saturated at d=3 on 16 qubits."
+      },
+      "audit_layer_2_human_custody": {
+        "status": "pending_human_submission",
+        "package_path": "dist/curator-submissions/p199/markus_grassl_codetables",
+        "submission_eligible": true,
+        "notes": "Negative result notice packaged for codetables.de."
+      }
+    },
+    {
+      "target_id": "covering_c10_4_3",
+      "family": "covering_design",
+      "parameters": {
+        "v": 10,
+        "k": 4,
+        "t": 3
+      },
+      "campaign_outcome": {
+        "verdict": "CALIBRATION_REPRODUCED",
+        "achieved_value": 30,
+        "frozen_best_known_value": 30,
+        "verified_by_sat": true,
+        "candidate_sha256": "d0fecd4d9ca0ae9c3635161a48a3d5422e67f2abe4a63d858dce5ba60bb416e3",
+        "num_blocks": 30
+      },
+      "literature_baseline": {
+        "curator_id": "neil_sloane_oeis",
+        "curator_name": "Neil Sloane & OEIS Editorial Board (OEIS)",
+        "database_url": "https://oeis.org/A066010",
+        "literature_record": "C(10, 4, 3) = 30 (Mills, 1979 / SQS(10))",
+        "published_best": 30
+      },
+      "audit_layer_1_automatic": {
+        "overlap_status": "HISTORICAL_RECORD_REPRODUCED",
+        "is_trivial": false,
+        "subsets_total": 120,
+        "subsets_covered": 120,
+        "verified_in_lean4": true,
+        "lean4_theorem": "EvoByte.Structured.sqs10_covering_valid",
+        "details": "Exact synthesis of SQS(10) via 3 base blocks in Z_10 in 14ms. Formally proven in Lean 4 kernel."
+      },
+      "audit_layer_2_human_custody": {
+        "status": "pending_human_submission",
+        "package_path": "dist/curator-submissions/p199/neil_sloane_oeis",
+        "submission_eligible": true,
+        "notes": "Packaged for OEIS sequence A066010 cross-reference update."
+      }
+    },
+    {
+      "target_id": "qecc_8_3_3",
+      "family": "qecc_stabilizer",
+      "parameters": {
+        "n": 8,
+        "k": 3,
+        "d": 3
+      },
+      "campaign_outcome": {
+        "verdict": "CALIBRATION_REPRODUCED",
+        "achieved_value": 3,
+        "frozen_best_known_value": 3,
+        "verified_by_sat": true,
+        "candidate_sha256": "e935c4eba9b69361ee3f7ba295ad09a0e550daeab7ddf2928cecb3f8e2dc2cf9"
+      },
+      "literature_baseline": {
+        "curator_id": "markus_grassl_codetables",
+        "curator_name": "Markus Grassl (codetables.de / QECC)",
+        "database_url": "http://www.codetables.de/",
+        "literature_record": "[[8, 3, 3]] Gottesman (1996)",
+        "published_best": 3
+      },
+      "audit_layer_1_automatic": {
+        "overlap_status": "HISTORICAL_RECORD_REPRODUCED",
+        "is_trivial": false,
+        "verified_in_lean4": true,
+        "lean4_theorem": "EvoByte.Structured.gottesman_8_3_3_commute",
+        "details": "Blind SAT synthesis of Gottesman [[8, 3, 3]] code with 5 independent commuting generators. Certified in Lean 4 kernel."
+      },
+      "audit_layer_2_human_custody": {
+        "status": "pending_human_submission",
+        "package_path": "dist/curator-submissions/p199/markus_grassl_codetables",
+        "submission_eligible": true,
+        "notes": "Included in codetables.de submission package as an algebraic calibration benchmark."
+      }
+    }
+  ]
+}

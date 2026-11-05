@@ -1,0 +1,12 @@
+{
+  "phase": "P115",
+  "acceptance_phase": "P115",
+  "seed": 42,
+  "device": "cpu",
+  "project_dir": "lean_proofs",
+  "lean_file": "lean_proofs/Generated/AdditiveEnergyTheorems.lean",
+  "min_theorems": 60,
+  "verify_lake": true,
+  "require_clean_tree": true,
+  "note": "P115 additive energy, Cauchy-Schwarz, Plunnecke-Ruzsa, and Balog-Szemeredi-Gowers theorems in Lean 4 with zero sorry."
+}

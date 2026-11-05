@@ -1,0 +1,12 @@
+{
+  "ablation_id": 5,
+  "component_removed": "Tunable Slots + Local Search",
+  "keep_or_drop": "KEEP",
+  "mean_cvps": 2092.9678701352805,
+  "mean_extrap_mse": 11008.203128444742,
+  "mean_hidden_mse": 125.7013621014759,
+  "name": "No Constant Optimizer",
+  "ruling_rationale": "Discrete bank cannot fit arbitrary continuous coefficients; local optimizer essential.",
+  "speedup_ratio": 1.0,
+  "success_rate": 0.0
+}

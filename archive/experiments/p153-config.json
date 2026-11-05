@@ -1,0 +1,11 @@
+{
+  "phase": "P153",
+  "seed": 42,
+  "device": "cuda",
+  "expected_gpu_substr": "RTX 4060",
+  "min_vram_mb": 6000,
+  "targets": ["x2_3x_7", "x_plus_1"],
+  "budgets": ["0.05s", "0.10s"],
+  "execute_per_budget": true,
+  "require_clean_tree": true
+}

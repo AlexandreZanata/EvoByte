@@ -1,0 +1,18 @@
+{
+  "phase": "P107",
+  "acceptance_phase": "P107",
+  "seed": 42,
+  "device": "cpu",
+  "max_epochs": 10,
+  "batch_size": 16,
+  "lr": 0.001,
+  "d_model": 256,
+  "num_layers": 4,
+  "instance_count": 40,
+  "min_speedup_vs_naive": 1.5,
+  "min_reduction_pct": 30.0,
+  "max_params": 5000000,
+  "vram_cap_mb": 100.0,
+  "require_clean_tree": true,
+  "allow_dirty": false
+}

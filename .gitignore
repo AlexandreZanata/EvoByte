@@ -4,9 +4,9 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
+/build/
 develop-eggs/
-dist/
+/dist/
 downloads/
 eggs/
 .eggs/
@@ -45,8 +45,18 @@ htmlcov/
 .coverage.*
 
 # Lean / Lake
-.lake/
+/.lake/
+
+# Voluminous experiment runs and checkpoints (new project)
+runs/
+campaigns/
+checkpoints/
+*.events.jsonl
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Ensure archive/ directory is completely tracked
+!/archive/
+!/archive/**

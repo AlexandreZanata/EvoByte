@@ -1,0 +1,161 @@
+<HTML>
+<HEAD>
+<TITLE>Bounds on the minimum distance of quantum codes</TITLE>
+<link rel="SHORTCUT ICON" href="MG.ico" /> 
+<link rel="stylesheet" type="text/css" href="codetables.css">
+</HEAD>
+<BODY>
+
+<H2>Bounds on the minimum distance of quantum codes</H2>
+
+<H3>Bounds on quantum codes [[n,k,d]]<sub>q</sub></H3>
+
+<P><B>Bounds &amp; construction of a quantum code [[n,k,d]]<sub>q</sub></B></P>
+<FORM ACTION="../QECC.php" METHOD="GET">
+<TABLE>
+<TR>
+  <TD>local dimensions:</TD>
+  <TD COLSPAN=2 NOWRAP>
+  <input type=radio NAME="q" VALUE=4 CHECKED>q=2</input>
+  <input type=radio NAME="q" VALUE=9>q=3</input>
+  <input type=radio NAME="q" VALUE=16>q=4</input>
+  <input type=radio NAME="q" VALUE=25>q=5</input>
+  <input type=radio NAME="q" VALUE=49>q=7</input>
+  <input type=radio NAME="q" VALUE=64>q=8</input>
+  </TD>
+</TR>
+<TR>
+  <TD>length:</TD>
+  <TD><EM>n= </EM><INPUT NAME="n" size=4 maxlength=3></INPUT></TD>
+  <TD><EM>1&le;n&le;256,100,100,100,100,100</EM></TD>
+</TR>
+<TR>
+  <TD>dimension: </TD>
+  <TD><EM>k= </EM><INPUT NAME="k" size=4 maxlength=3></INPUT></TD>
+  <TD><EM>0&le;k&le;n</EM></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT COLSPAN=3>
+<INPUT type="submit" value="lookup"></INPUT>
+</TD>
+</TR>
+</TABLE>
+</FORM>
+
+
+<P><B>Complete tables with bounds on quantum codes [[n,k,d]]<sub>q</sub></B></P>
+<TABLE>
+<TR>
+<TD>
+  <FORM target="qubit" style="display:inline-block" ACTION="Tables_color.php" METHOD="GET">
+  <input type=hidden NAME="q"  VALUE="4">
+  <input type=hidden NAME="n0" VALUE="1">
+  <input type=hidden NAME="n1" VALUE="256">
+  <input type=hidden NAME="k0" VALUE="0">
+  <input type=hidden NAME="k1" VALUE="256">
+  <input type=submit value="q=2"></input>
+  </FORM>
+</TD<TD>
+  <FORM target="qutrit" style="display:inline-block" ACTION="Tables_color.php" METHOD="GET">
+  <input type=hidden NAME="q"  VALUE="9">
+  <input type=hidden NAME="n0" VALUE="1">
+  <input type=hidden NAME="n1" VALUE="100">
+  <input type=hidden NAME="k0" VALUE="0">
+  <input type=hidden NAME="k1" VALUE="100">
+  <input type=submit value="q=3"></input>
+  </FORM>
+</TD<TD>
+  <FORM target="ququad" style="display:inline-block" ACTION="Tables_color.php" METHOD="GET">
+  <input type=hidden NAME="q"  VALUE="16">
+  <input type=hidden NAME="n0" VALUE="1">
+  <input type=hidden NAME="n1" VALUE="100">
+  <input type=hidden NAME="k0" VALUE="0">
+  <input type=hidden NAME="k1" VALUE="100">
+  <input type=submit value="q=4"></input>
+  </FORM>
+</TD<TD>
+  <FORM target="ququint" style="display:inline-block" ACTION="Tables_color.php" METHOD="GET">
+  <input type=hidden NAME="q"  VALUE="25">
+  <input type=hidden NAME="n0" VALUE="1">
+  <input type=hidden NAME="n1" VALUE="100">
+  <input type=hidden NAME="k0" VALUE="0">
+  <input type=hidden NAME="k1" VALUE="100">
+  <input type=submit value="q=5"></input>
+  </FORM>
+</TD<TD>
+  <FORM target="qusept" style="display:inline-block" ACTION="Tables_color.php" METHOD="GET">
+  <input type=hidden NAME="q"  VALUE="49">
+  <input type=hidden NAME="n0" VALUE="1">
+  <input type=hidden NAME="n1" VALUE="100">
+  <input type=hidden NAME="k0" VALUE="0">
+  <input type=hidden NAME="k1" VALUE="100">
+  <input type=submit value="q=7"></input>
+  </FORM>
+</TD<TD>
+  <FORM target="quotct" style="display:inline-block" ACTION="Tables_color.php" METHOD="GET">
+  <input type=hidden NAME="q"  VALUE="64">
+  <input type=hidden NAME="n0" VALUE="1">
+  <input type=hidden NAME="n1" VALUE="100">
+  <input type=hidden NAME="k0" VALUE="0">
+  <input type=hidden NAME="k1" VALUE="100">
+  <input type=submit value="q=8"></input>
+  </FORM>
+</TD</TD>
+</TR>
+</TABLE>
+
+
+<P><B>Tables with bounds on quantum codes [[n,k,d]]<sub>q</sub></B></P>
+<FORM ACTION="Tables_color.php" METHOD="GET">
+<TABLE>
+<TR>
+  <TD>local dimension:</TD>
+  <TD COLSPAN=4>
+  <input type=radio NAME="q" VALUE=4 CHECKED>q=2</input>
+  <input type=radio NAME="q" VALUE=9>q=3</input>
+  <input type=radio NAME="q" VALUE=16>q=4</input>
+  <input type=radio NAME="q" VALUE=25>q=5</input>
+  <input type=radio NAME="q" VALUE=49>q=7</input>
+  <input type=radio NAME="q" VALUE=64>q=8</input>
+  </TD>
+</TR>
+<TR>
+  <TD>length:</TD>
+  <TD><EM>n<SUB>min</SUB>= </EM><INPUT NAME="n0" size=4 maxlength=3></INPUT></TD>
+  <TD><EM>n<SUB>max</SUB>= </EM><INPUT NAME="n1" size=4 maxlength=3></INPUT></TD>
+  <TD><EM>1&le;n&le;256,100,100,100,100,100</EM></TD>
+</TR>
+<TR>
+  <TD>dimension: </TD>
+  <TD><EM>k<SUB>min</SUB>= </EM><INPUT NAME="k0" size=4 maxlength=3></INPUT></TD>
+  <TD><EM>k<SUB>max</SUB>= </EM><INPUT NAME="k1" size=4 maxlength=3></INPUT></TD>
+  <TD><EM>0&le;k&le;256,100,100,100,100,100</EM></TD>
+</TR>
+<TR>
+<TD ALIGN=RIGHT COLSPAN=4>
+<INPUT type="submit" value="lookup"></INPUT>
+</TD>
+</TR>
+</TABLE>
+</FORM>
+
+<HR>
+<A class="tab" target="_parent" HREF="../index.html">Homepage</A> | 
+<A class="tab" HREF="index.html">New Query</A> | 
+<A class="tab" HREF="mailto:codes [at] codetables.de">Contact</A>
+<HR>
+<SMALL>
+<ADDRESS>
+This page is maintained by 
+<A target="mg" HREF="http://www.markus-grassl.de/index.html">Markus Grassl</A>
+ (<A HREF="mailto:codes@codetables.de">codes@codetables.de</A>).
+<!-- HHMTS START -->
+Last change: 23.05.2024
+<!-- HHMTS END -->
+</ADDRESS>
+</SMALL>
+<HR>
+
+
+</BODY>
+</HTML>

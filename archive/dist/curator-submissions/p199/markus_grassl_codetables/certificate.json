@@ -1,0 +1,39 @@
+{
+  "candidate": {
+    "generators": [
+      "YYXYYYYY",
+      "ZYYYIXXI",
+      "IYZZZYZI",
+      "IYYIXZYX",
+      "ZXXZIIZY"
+    ]
+  },
+  "certificate_type": "qecc_stabilizer",
+  "certificate_version": "2.0.0",
+  "metadata": {
+    "distance_info": {
+      "d": 3,
+      "k": 3,
+      "logical": "ZXXIIIII",
+      "n": 8
+    },
+    "generator": "EvoByte-Structured-SAT-Engine",
+    "literature_record": "Gottesman (1996) [[8, 3, 3]] stabilizer code",
+    "source_phase": "P195",
+    "stabilizer_info": {
+      "k": 3,
+      "n": 8,
+      "rank": 5
+    },
+    "timestamp": "2026-10-26T17:19:27Z"
+  },
+  "parameters": {
+    "claimed_d": 3,
+    "k": 3,
+    "n": 8,
+    "num_generators": 5
+  },
+  "sha256_checksum": "e935c4eba9b69361ee3f7ba295ad09a0e550daeab7ddf2928cecb3f8e2dc2cf9",
+  "target_id": "qecc_8_3_3",
+  "verdict": "CALIBRATION_REPRODUCED"
+}

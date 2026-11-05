@@ -1,0 +1,406 @@
+{
+  "aggregates_by_arm": {
+    "amplitude-distribution": {
+      "mean_cvps": 605.2166397598606,
+      "mean_distinct_expressions": 28.4,
+      "mean_held_out_mse": 1928.4738037109375,
+      "std_cvps": 11.261224564287637,
+      "std_distinct_expressions": 3.7202150475476548,
+      "std_held_out_mse": 210.33636454227394
+    },
+    "genetic": {
+      "mean_cvps": 1317.5980222004364,
+      "mean_distinct_expressions": 39.0,
+      "mean_held_out_mse": 592.9670959472656,
+      "std_cvps": 50.862649539039104,
+      "std_distinct_expressions": 3.40587727318528,
+      "std_held_out_mse": 582.5315244346256
+    },
+    "learned-dist": {
+      "mean_cvps": 593.8470806277819,
+      "mean_distinct_expressions": 28.0,
+      "mean_held_out_mse": 1452.531428527832,
+      "std_cvps": 24.158123250863696,
+      "std_distinct_expressions": 6.387487769068525,
+      "std_held_out_mse": 835.2480293289452
+    },
+    "uniform": {
+      "mean_cvps": 557.3419664767613,
+      "mean_distinct_expressions": 24.8,
+      "mean_held_out_mse": 1499.1518249511719,
+      "std_cvps": 90.2599813485192,
+      "std_distinct_expressions": 7.332121111929345,
+      "std_held_out_mse": 725.079769976162
+    }
+  },
+  "comparisons": {
+    "distinct_expressions_ratio_vs_uniform": 1.1451612903225805,
+    "mean_distinct_expressions": {
+      "amplitude": 28.4,
+      "genetic": 39.0,
+      "learned": 28.0,
+      "uniform": 24.8
+    },
+    "mean_held_out_mse": {
+      "amplitude": 1928.4738037109375,
+      "genetic": 592.9670959472656,
+      "learned": 1452.531428527832,
+      "uniform": 1499.1518249511719
+    },
+    "mse_improvement_vs_uniform_pct": -28.63765841553432
+  },
+  "elapsed_sec": 12.123871077012154,
+  "hypothesis": {
+    "literature_check": {
+      "novelty_boundary": "Application of Q-bit rotation to linear register bytecode instruction-slot distributions under fixed V0 interpreter constraints; inspiration is classical distribution dynamics, not quantum execution or quantum speedup.",
+      "prior_art": [
+        {
+          "citation": "Han & Kim (2002), Quantum-inspired Evolutionary Algorithm with a New Termination Criterion, H-epsilon Gate, and Two-Phase Scheme, IEEE TEVC 6(6): 527-535",
+          "mechanism": "Q-bit angle representation and rotation gate update"
+        },
+        {
+          "citation": "arXiv:quant-ph/0610105, Quantum-inspired evolutionary algorithm for solving combinatorial problems",
+          "mechanism": "Theoretical analysis of classical sampling distributions parameterized by quantum state amplitudes"
+        }
+      ]
+    },
+    "name": "amplitude-distribution",
+    "preregistration_hash": "93deba1d3e283f5ae5dbadcbe70c381653b2348804c9acab677375f1be9bfb40",
+    "preregistration_spec": "HYPOTHESIS: amplitude-distribution\nPREREGISTRATION DATE: 2026-10-01\nEQUATIONS:\n1. Q-bit State: |psi_jk> = alpha_jk |0> + beta_jk |1>, with alpha_jk^2 + beta_jk^2 = 1.\n   Parametrization: alpha_jk = cos(theta_jk), beta_jk = sin(theta_jk), theta_jk in [0.01*pi, 0.49*pi].\n2. Selection Probability: P(opcode=k at slot j) = sin^2(theta_jk) / sum_m sin^2(theta_jm).\n3. Quantum Rotation Gate:\n   For best candidate opcode k*:\n   theta_jk* <- min(theta_jk* + Delta_theta, 0.49*pi)\n   theta_jk  <- max(theta_jk - Delta_theta / (N_ops - 1), 0.01*pi) for k != k*\n   where Delta_theta = 0.05*pi.\nMECHANISM: GPU-resident theta tensor updated via elite feedback; batched multinomial sampling.\nPREDICTION: Under equal wall-clock budget and identical problem sets, amplitude-distribution\nsampling discovers lower held-out MSE (or >= 15% higher distinct behavioral expressions)\nrelative to uniform random search, while remaining competitive with classical crossover-based genetic evolution.\nFALSIFICATION THRESHOLD:\nDelta_MSE_vs_uniform <= 0.0 and distinct_expression_ratio < 1.15.\nCONTROLS: uniform, learned-dist, genetic.\nEVALUATION: 5 independent seeds, train/held-out split on x^2 + 3x + 7."
+  },
+  "manifest_sha256": "1bc22e05faabe5313730a55f5a0d768d0f328cd0d19bef8091c52146f575d9a6",
+  "per_seed_runs": [
+    {
+      "amplitude-distribution": {
+        "arm": "amplitude-distribution",
+        "best_bytecode_hex": "0d0107050d0606040302000407010204060605030f0505030e0002000703000009020102070002010f0707040a0700000f0702070f07070a080306050f06020d",
+        "best_disassembly": "MIN r1, r7, 0x05 ; MIN r6, r6, 0x04 ; MUL r2, r0, 0x04 ; EXP r1, r2, 0x04 ; COS r6, r5, 0x03 ; CSEL r5, r5, 0x03 ; MAX r0, r2, 0x00 ; EXP r3, r0, 0x00 ; POW r2, r1, 0x02 ; EXP r0, r2, 0x01 ; CSEL r7, r7, 0x04 ; ABS r7, r0, 0x00 ; CSEL r7, r2, 0x07 ; CSEL r7, r7, 0x0a ; LOG r3, r6, 0x05 ; CSEL r6, r2, 0x0d",
+        "best_train_mse": 1216.085693359375,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 28,
+        "evals_per_sec": 611.9786903386424,
+        "held_out_mse": 1759.98974609375,
+        "iterations": 4,
+        "wall_clock_sec": 0.6536175300134346
+      },
+      "genetic": {
+        "arm": "genetic",
+        "best_bytecode_hex": "000000000c0000070000000000000000050407010000000003070000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "best_disassembly": "NEG r0, r0, 0x07 ; SIN r4, r7, 0x01 ; MUL r7, r0, 0x00",
+        "best_train_mse": 306.71240234375,
+        "candidates_evaluated": 700,
+        "distinct_byte_programs": 596,
+        "distinct_expressions": 40,
+        "evals_per_sec": 1363.6887780129969,
+        "held_out_mse": 363.76397705078125,
+        "iterations": 7,
+        "wall_clock_sec": 0.5133136029908201
+      },
+      "learned-dist": {
+        "arm": "learned-dist",
+        "best_bytecode_hex": "0f0500070b040600010105000b03060104000401070302000d020002010004050f010305070502050000000009060205030407030b0300020500000601070105",
+        "best_disassembly": "CSEL r5, r0, 0x07 ; SQRT r4, r6, 0x00 ; ADD r1, r5, 0x00 ; SQRT r3, r6, 0x01 ; DIV r0, r4, 0x01 ; EXP r3, r2, 0x00 ; MIN r2, r0, 0x02 ; ADD r0, r4, 0x05 ; CSEL r1, r3, 0x05 ; EXP r5, r2, 0x05 ; POW r6, r2, 0x05 ; MUL r4, r7, 0x03 ; SQRT r3, r0, 0x02 ; SIN r0, r0, 0x06 ; ADD r7, r1, 0x05",
+        "best_train_mse": 1844.3780517578125,
+        "candidates_evaluated": 300,
+        "distinct_byte_programs": 300,
+        "distinct_expressions": 24,
+        "evals_per_sec": 548.1468925005905,
+        "held_out_mse": 2537.6162109375,
+        "iterations": 3,
+        "wall_clock_sec": 0.5472985509986756
+      },
+      "seed": 42,
+      "uniform": {
+        "arm": "uniform",
+        "best_bytecode_hex": "01010400020301070c04010504030103060206030702070003000706040101040d030507000000000e020100030700060f070707080307040d05020502020507",
+        "best_disassembly": "ADD r1, r4, 0x00 ; SUB r3, r1, 0x07 ; NEG r4, r1, 0x05 ; DIV r3, r1, 0x03 ; COS r2, r6, 0x03 ; EXP r2, r7, 0x00 ; MUL r0, r7, 0x06 ; DIV r1, r1, 0x04 ; MIN r3, r5, 0x07 ; MAX r2, r1, 0x00 ; MUL r7, r0, 0x06 ; CSEL r7, r7, 0x07 ; LOG r3, r7, 0x04 ; MIN r5, r2, 0x05 ; SUB r2, r5, 0x07",
+        "best_train_mse": 1568.1173095703125,
+        "candidates_evaluated": 200,
+        "distinct_byte_programs": 200,
+        "distinct_expressions": 15,
+        "evals_per_sec": 378.72256206316666,
+        "held_out_mse": 2204.93115234375,
+        "iterations": 2,
+        "wall_clock_sec": 0.5280910619912902
+      }
+    },
+    {
+      "amplitude-distribution": {
+        "arm": "amplitude-distribution",
+        "best_bytecode_hex": "070707020f00030803030501050002000101060107070004010104040505040603050401010006000105070501000501070605070b0200010101030607070607",
+        "best_disassembly": "EXP r7, r7, 0x02 ; CSEL r0, r3, 0x08 ; MUL r3, r5, 0x01 ; SIN r0, r2, 0x00 ; ADD r1, r6, 0x01 ; EXP r7, r0, 0x04 ; ADD r1, r4, 0x04 ; SIN r5, r4, 0x06 ; MUL r5, r4, 0x01 ; ADD r0, r6, 0x00 ; ADD r5, r7, 0x05 ; ADD r0, r5, 0x01 ; EXP r6, r5, 0x07 ; SQRT r2, r0, 0x01 ; ADD r1, r3, 0x06 ; EXP r7, r6, 0x07",
+        "best_train_mse": 2191.58154296875,
+        "candidates_evaluated": 300,
+        "distinct_byte_programs": 300,
+        "distinct_expressions": 23,
+        "evals_per_sec": 599.093886072508,
+        "held_out_mse": 1649.7696533203125,
+        "iterations": 3,
+        "wall_clock_sec": 0.5007562370010419
+      },
+      "genetic": {
+        "arm": "genetic",
+        "best_bytecode_hex": "0f06070500f7000002050606000000000000000000000000000000000000000001070306000000000c0206030f0706070000000000000000000000000000b200",
+        "best_disassembly": "CSEL r6, r7, 0x05 ; SUB r5, r6, 0x06 ; ADD r7, r3, 0x06 ; NEG r2, r6, 0x03 ; CSEL r7, r6, 0x07",
+        "best_train_mse": 2307.2041015625,
+        "candidates_evaluated": 700,
+        "distinct_byte_programs": 618,
+        "distinct_expressions": 43,
+        "evals_per_sec": 1241.9807476580513,
+        "held_out_mse": 1749.877197265625,
+        "iterations": 7,
+        "wall_clock_sec": 0.563615822000429
+      },
+      "learned-dist": {
+        "arm": "learned-dist",
+        "best_bytecode_hex": "03060303000000000b030403030102010d0406010707060609040007010500020f0205060e040506010400010b06070004050504040502070102050003070500",
+        "best_disassembly": "MUL r6, r3, 0x03 ; SQRT r3, r4, 0x03 ; MUL r1, r2, 0x01 ; MIN r4, r6, 0x01 ; EXP r7, r6, 0x06 ; POW r4, r0, 0x07 ; ADD r5, r0, 0x02 ; CSEL r2, r5, 0x06 ; MAX r4, r5, 0x06 ; ADD r4, r0, 0x01 ; SQRT r6, r7, 0x00 ; DIV r5, r5, 0x04 ; DIV r5, r2, 0x07 ; ADD r2, r5, 0x00 ; MUL r7, r5, 0x00",
+        "best_train_mse": 49.95844650268555,
+        "candidates_evaluated": 300,
+        "distinct_byte_programs": 300,
+        "distinct_expressions": 19,
+        "evals_per_sec": 592.3829422738634,
+        "held_out_mse": 48.877967834472656,
+        "iterations": 3,
+        "wall_clock_sec": 0.5064291669987142
+      },
+      "seed": 59,
+      "uniform": {
+        "arm": "uniform",
+        "best_bytecode_hex": "070502050c0207000a030303070300010b07030409060705060103070a0003060d0105000d0402030f01070f0d03040006040705060005000706040100000000",
+        "best_disassembly": "EXP r5, r2, 0x05 ; NEG r2, r7, 0x00 ; ABS r3, r3, 0x03 ; EXP r3, r0, 0x01 ; SQRT r7, r3, 0x04 ; POW r6, r7, 0x05 ; COS r1, r3, 0x07 ; ABS r0, r3, 0x06 ; MIN r1, r5, 0x00 ; MIN r4, r2, 0x03 ; CSEL r1, r7, 0x0f ; MIN r3, r4, 0x00 ; COS r4, r7, 0x05 ; COS r0, r5, 0x00 ; EXP r6, r4, 0x01",
+        "best_train_mse": 1070.2672119140625,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 27,
+        "evals_per_sec": 605.2381644226324,
+        "held_out_mse": 1071.028076171875,
+        "iterations": 4,
+        "wall_clock_sec": 0.6608968560030917
+      }
+    },
+    {
+      "amplitude-distribution": {
+        "arm": "amplitude-distribution",
+        "best_bytecode_hex": "0d0106050000000009060404030405050d0101010a0600000b0102010c070406060503040606020605070506000000000a07000605040704030104040b030502",
+        "best_disassembly": "MIN r1, r6, 0x05 ; POW r6, r4, 0x04 ; MUL r4, r5, 0x05 ; MIN r1, r1, 0x01 ; ABS r6, r0, 0x00 ; SQRT r1, r2, 0x01 ; NEG r7, r4, 0x06 ; COS r5, r3, 0x04 ; COS r6, r2, 0x06 ; SIN r7, r5, 0x06 ; ABS r7, r0, 0x06 ; SIN r4, r7, 0x04 ; MUL r1, r4, 0x04 ; SQRT r3, r5, 0x02",
+        "best_train_mse": 2102.49072265625,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 32,
+        "evals_per_sec": 619.2146120806938,
+        "held_out_mse": 2256.25146484375,
+        "iterations": 4,
+        "wall_clock_sec": 0.6459795880073216
+      },
+      "genetic": {
+        "arm": "genetic",
+        "best_bytecode_hex": "01020300000000000e04070103070000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "best_disassembly": "ADD r2, r3, 0x00 ; MAX r4, r7, 0x01 ; MUL r7, r0, 0x00",
+        "best_train_mse": 324.3342590332031,
+        "candidates_evaluated": 700,
+        "distinct_byte_programs": 597,
+        "distinct_expressions": 38,
+        "evals_per_sec": 1315.3452405571861,
+        "held_out_mse": 343.97625732421875,
+        "iterations": 7,
+        "wall_clock_sec": 0.532179672998609
+      },
+      "learned-dist": {
+        "arm": "learned-dist",
+        "best_bytecode_hex": "07040501050600000d020502060706050f00040301030207040207040d0500010e02050106070203010305030a01040307030706010501030707050407040405",
+        "best_disassembly": "EXP r4, r5, 0x01 ; SIN r6, r0, 0x00 ; MIN r2, r5, 0x02 ; COS r7, r6, 0x05 ; CSEL r0, r4, 0x03 ; ADD r3, r2, 0x07 ; DIV r2, r7, 0x04 ; MIN r5, r0, 0x01 ; MAX r2, r5, 0x01 ; COS r7, r2, 0x03 ; ADD r3, r5, 0x03 ; ABS r1, r4, 0x03 ; EXP r3, r7, 0x06 ; ADD r5, r1, 0x03 ; EXP r7, r5, 0x04 ; EXP r4, r4, 0x05",
+        "best_train_mse": 1127.601806640625,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 33,
+        "evals_per_sec": 609.3903657938308,
+        "held_out_mse": 1138.45166015625,
+        "iterations": 4,
+        "wall_clock_sec": 0.6563937050086679
+      },
+      "seed": 76,
+      "uniform": {
+        "arm": "uniform",
+        "best_bytecode_hex": "07030102070306050a0700020d0203020701010704000101070602070c03040603010406060400050d03050402050601090507050b0103000300070606020104",
+        "best_disassembly": "EXP r3, r1, 0x02 ; EXP r3, r6, 0x05 ; ABS r7, r0, 0x02 ; MIN r2, r3, 0x02 ; EXP r1, r1, 0x07 ; DIV r0, r1, 0x01 ; EXP r6, r2, 0x07 ; NEG r3, r4, 0x06 ; MUL r1, r4, 0x06 ; COS r4, r0, 0x05 ; MIN r3, r5, 0x04 ; SUB r5, r6, 0x01 ; POW r5, r7, 0x05 ; SQRT r1, r3, 0x00 ; MUL r0, r7, 0x06 ; COS r2, r1, 0x04",
+        "best_train_mse": 2102.49072265625,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 29,
+        "evals_per_sec": 605.9532917261986,
+        "held_out_mse": 2256.25146484375,
+        "iterations": 4,
+        "wall_clock_sec": 0.6601168860070175
+      }
+    },
+    {
+      "amplitude-distribution": {
+        "arm": "amplitude-distribution",
+        "best_bytecode_hex": "060401070b060206090304020a020007030003060c010505080403010504040109060304030606020e010206090501000d060203080606010101050101070106",
+        "best_disassembly": "COS r4, r1, 0x07 ; SQRT r6, r2, 0x06 ; POW r3, r4, 0x02 ; ABS r2, r0, 0x07 ; MUL r0, r3, 0x06 ; NEG r1, r5, 0x05 ; LOG r4, r3, 0x01 ; SIN r4, r4, 0x01 ; POW r6, r3, 0x04 ; MUL r6, r6, 0x02 ; MAX r1, r2, 0x06 ; POW r5, r1, 0x00 ; MIN r6, r2, 0x03 ; LOG r6, r6, 0x01 ; ADD r1, r5, 0x01 ; ADD r7, r1, 0x06",
+        "best_train_mse": 2394.186279296875,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 26,
+        "evals_per_sec": 586.7670932728536,
+        "held_out_mse": 2005.15576171875,
+        "iterations": 4,
+        "wall_clock_sec": 0.6817014869884588
+      },
+      "genetic": {
+        "arm": "genetic",
+        "best_bytecode_hex": "0503060602020006020006030207020700000000000000000000000000000000000000000000000000000000001d000000000000000000000000000003070207",
+        "best_disassembly": "SIN r3, r6, 0x06 ; SUB r2, r0, 0x06 ; SUB r0, r6, 0x03 ; SUB r7, r2, 0x07 ; MUL r7, r2, 0x07",
+        "best_train_mse": 377.57965087890625,
+        "candidates_evaluated": 700,
+        "distinct_byte_programs": 596,
+        "distinct_expressions": 41,
+        "evals_per_sec": 1285.619736256246,
+        "held_out_mse": 335.5101623535156,
+        "iterations": 7,
+        "wall_clock_sec": 0.544484484998975
+      },
+      "learned-dist": {
+        "arm": "learned-dist",
+        "best_bytecode_hex": "0406070002050303010301070b020007090503050504010401070000070101010c0007020e030107070301020000000003010505070703010902050304010207",
+        "best_disassembly": "DIV r6, r7, 0x00 ; SUB r5, r3, 0x03 ; ADD r3, r1, 0x07 ; SQRT r2, r0, 0x07 ; POW r5, r3, 0x05 ; SIN r4, r1, 0x04 ; ADD r7, r0, 0x00 ; EXP r1, r1, 0x01 ; NEG r0, r7, 0x02 ; MAX r3, r1, 0x07 ; EXP r3, r1, 0x02 ; MUL r1, r5, 0x05 ; EXP r7, r3, 0x01 ; POW r2, r5, 0x03 ; DIV r1, r2, 0x07",
+        "best_train_mse": 1968.3345947265625,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 37,
+        "evals_per_sec": 616.2106486055286,
+        "held_out_mse": 1624.3284912109375,
+        "iterations": 4,
+        "wall_clock_sec": 0.6491286719974596
+      },
+      "seed": 93,
+      "uniform": {
+        "arm": "uniform",
+        "best_bytecode_hex": "0c07060003020402030207070d03020102020502010504030c0600060b0105030a0400000f02000d090007030a00030202050400050605020d06020501070406",
+        "best_disassembly": "NEG r7, r6, 0x00 ; MUL r2, r4, 0x02 ; MUL r2, r7, 0x07 ; MIN r3, r2, 0x01 ; SUB r2, r5, 0x02 ; ADD r5, r4, 0x03 ; NEG r6, r0, 0x06 ; SQRT r1, r5, 0x03 ; ABS r4, r0, 0x00 ; CSEL r2, r0, 0x0d ; POW r0, r7, 0x03 ; ABS r0, r3, 0x02 ; SUB r5, r4, 0x00 ; SIN r6, r5, 0x02 ; MIN r6, r2, 0x05 ; ADD r7, r4, 0x06",
+        "best_train_mse": 1954.212646484375,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 35,
+        "evals_per_sec": 618.412180659136,
+        "held_out_mse": 1629.358154296875,
+        "iterations": 4,
+        "wall_clock_sec": 0.6468177899951115
+      }
+    },
+    {
+      "amplitude-distribution": {
+        "arm": "amplitude-distribution",
+        "best_bytecode_hex": "0d0306060c05050007040501030004060f0503010b0101050203030701070007090602060f01030e0700010402020407020703000a070100080505000d040007",
+        "best_disassembly": "MIN r3, r6, 0x06 ; NEG r5, r5, 0x00 ; EXP r4, r5, 0x01 ; MUL r0, r4, 0x06 ; CSEL r5, r3, 0x01 ; SQRT r1, r1, 0x05 ; SUB r3, r3, 0x07 ; ADD r7, r0, 0x07 ; POW r6, r2, 0x06 ; CSEL r1, r3, 0x0e ; EXP r0, r1, 0x04 ; SUB r2, r4, 0x07 ; SUB r7, r3, 0x00 ; ABS r7, r1, 0x00 ; LOG r5, r5, 0x00 ; MIN r4, r0, 0x07",
+        "best_train_mse": 2637.22216796875,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 33,
+        "evals_per_sec": 609.0289170346057,
+        "held_out_mse": 1971.202392578125,
+        "iterations": 4,
+        "wall_clock_sec": 0.6567832639993867
+      },
+      "genetic": {
+        "arm": "genetic",
+        "best_bytecode_hex": "02020605040206000000000000263200060101050102000603070200000000000000000000008300000000a80000000000000000030507020000000001070700",
+        "best_disassembly": "SUB r2, r6, 0x05 ; DIV r2, r6, 0x00 ; COS r1, r1, 0x05 ; ADD r2, r0, 0x06 ; MUL r7, r2, 0x00 ; MUL r5, r7, 0x02 ; ADD r7, r7, 0x00",
+        "best_train_mse": 208.91799926757812,
+        "candidates_evaluated": 700,
+        "distinct_byte_programs": 608,
+        "distinct_expressions": 33,
+        "evals_per_sec": 1381.3556085177013,
+        "held_out_mse": 171.7078857421875,
+        "iterations": 7,
+        "wall_clock_sec": 0.5067485850013327
+      },
+      "learned-dist": {
+        "arm": "learned-dist",
+        "best_bytecode_hex": "0c060501050501010b0500060a040000030201060f040203080104050e0401040c0006000704000103020006090703070e0401050f0707070c04040203000207",
+        "best_disassembly": "NEG r6, r5, 0x01 ; SIN r5, r1, 0x01 ; SQRT r5, r0, 0x06 ; ABS r4, r0, 0x00 ; MUL r2, r1, 0x06 ; CSEL r4, r2, 0x03 ; LOG r1, r4, 0x05 ; MAX r4, r1, 0x04 ; NEG r0, r6, 0x00 ; EXP r4, r0, 0x01 ; MUL r2, r0, 0x06 ; POW r7, r3, 0x07 ; MAX r4, r1, 0x05 ; CSEL r7, r7, 0x07 ; NEG r4, r4, 0x02 ; MUL r0, r2, 0x07",
+        "best_train_mse": 2568.65087890625,
+        "candidates_evaluated": 400,
+        "distinct_byte_programs": 400,
+        "distinct_expressions": 27,
+        "evals_per_sec": 603.1045539650966,
+        "held_out_mse": 1913.3828125,
+        "iterations": 4,
+        "wall_clock_sec": 0.6632349190040259
+      },
+      "seed": 110,
+      "uniform": {
+        "arm": "uniform",
+        "best_bytecode_hex": "020603000407000603010500050307060903060506040104050605030f04000c0307000004010704010600040a010705000000000c0100000105010708010500",
+        "best_disassembly": "SUB r6, r3, 0x00 ; DIV r7, r0, 0x06 ; MUL r1, r5, 0x00 ; SIN r3, r7, 0x06 ; POW r3, r6, 0x05 ; COS r4, r1, 0x04 ; SIN r6, r5, 0x03 ; CSEL r4, r0, 0x0c ; MUL r7, r0, 0x00 ; DIV r1, r7, 0x04 ; ADD r6, r0, 0x04 ; ABS r1, r7, 0x05 ; NEG r1, r0, 0x00 ; ADD r5, r1, 0x07 ; LOG r1, r5, 0x00",
+        "best_train_mse": 397.2980651855469,
+        "candidates_evaluated": 300,
+        "distinct_byte_programs": 300,
+        "distinct_expressions": 18,
+        "evals_per_sec": 578.3836335126723,
+        "held_out_mse": 334.1902770996094,
+        "iterations": 3,
+        "wall_clock_sec": 0.5186868760065408
+      }
+    }
+  ],
+  "phase": "p27-qrand-hypotheses",
+  "provenance": {
+    "clean_tree": false,
+    "commit": "f943b656955f0eaae52edc5572304b3ec9dca913",
+    "config": {
+      "budget_sec": 0.5,
+      "hypothesis": "amplitude-distribution",
+      "pop_size": 100,
+      "seeds_count": 5
+    },
+    "config_hash": "d7be0a44ddd0e6f2",
+    "dataset_hashes": {},
+    "device_actual": "cuda",
+    "device_requested": "cuda",
+    "git_status": "M docs/phases/P27-qrand-hypotheses.md\n?? benchmarks/qrand_ab.py\n?? experiments/p27-qrand-amplitude-distribution.json\n?? tests/test_qrand_ab.py",
+    "hardware": {
+      "cpu": "x86_64",
+      "cuda_available": true,
+      "cuda_version": "13.0",
+      "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+      "gpu_mem_MB": 7805,
+      "numpy": "2.4.6",
+      "nvidia_smi": "NVIDIA GeForce RTX 4060 Laptop GPU, 580.173.02, 8188 MiB",
+      "os": "Linux 7.1.5-76070105-generic",
+      "python": "3.12.2",
+      "threads_omp": null,
+      "threads_torch": 10,
+      "torch": "2.14.0+cu130"
+    },
+    "opcode_version": 0,
+    "python_argv": [
+      "benchmarks/qrand_ab.py",
+      "--hypothesis",
+      "amplitude-distribution",
+      "--seeds",
+      "5",
+      "--output",
+      "experiments/p27-qrand-amplitude-distribution.json"
+    ],
+    "seed_numpy": 42,
+    "seed_torch_cpu": 42,
+    "seed_torch_cuda": 42
+  },
+  "raw_artifacts": [],
+  "status": "complete",
+  "timestamp": "2026-10-01T15:14:35.198587+00:00",
+  "timing": {
+    "budget_sec": 600.0,
+    "compute_sec": 0.00030840799445286393,
+    "elapsed_sec": 12.096838035999099,
+    "overshoot_sec": 0.0,
+    "setup_sec": 6.7689979914575815e-06,
+    "verification_sec": 1.261010766029358e-06,
+    "warmup_sec": 12.096521597995888
+  },
+  "verdict": "FALSIFIED_NULL",
+  "verdict_summary": "Amplitude-distribution sampling did not exceed the preregistered falsification threshold (MSE gain <= 0 or distinct expression ratio < 1.15). Null result recorded."
+}

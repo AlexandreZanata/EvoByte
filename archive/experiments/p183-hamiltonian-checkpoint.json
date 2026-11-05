@@ -1,0 +1,395 @@
+{
+  "phase": "P183",
+  "manifest_hash": "7702893b7b9ee5e0987064416b97068baa32da2b97e706256c2bef6264d0a390",
+  "trials_completed": 12,
+  "trials": [
+    {
+      "lattice_id": "j1j2_mg",
+      "size_label": "pequeno-exato",
+      "n_qubits": 6,
+      "seed": 42,
+      "conserved_search": {
+        "evaluations": 120,
+        "elapsed_s": 0.391726460999962,
+        "candidate": [
+          "-0.5000*Z0 Z1",
+          "+0.5000*Z0 Z1"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.1598197289995369,
+        "energy_discovered": -5.914232150878127,
+        "energy_exact": -8.999999999999996,
+        "energy_error": 3.0857678491218694,
+        "fidelity": 0.357073747369369,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_mg",
+      "size_label": "pequeno-exato",
+      "n_qubits": 6,
+      "seed": 101,
+      "conserved_search": {
+        "evaluations": 60,
+        "elapsed_s": 0.21318298099959065,
+        "candidate": [
+          "+0.5000*X1",
+          "-0.5000*X1"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.133511369000189,
+        "energy_discovered": -6.236067977499791,
+        "energy_exact": -8.999999999999996,
+        "energy_error": 2.7639320225002058,
+        "fidelity": 0.4736067977499788,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_mg",
+      "size_label": "pequeno-exato",
+      "n_qubits": 6,
+      "seed": 202,
+      "conserved_search": {
+        "evaluations": 240,
+        "elapsed_s": 1.5808027160001075,
+        "candidate": [
+          "-0.5000*X5",
+          "+0.5000*X5"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.3845501890000378,
+        "energy_discovered": -5.9931807585689,
+        "energy_exact": -8.999999999999996,
+        "energy_error": 3.0068192414310966,
+        "fidelity": 0.34687613706879866,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_mg",
+      "size_label": "alvo",
+      "n_qubits": 8,
+      "seed": 42,
+      "conserved_search": {
+        "evaluations": 90,
+        "elapsed_s": 3.562037830999543,
+        "candidate": [
+          "-0.5000*Z4",
+          "+0.5000*Z4"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.2771321119998902,
+        "energy_discovered": -6.828427124746192,
+        "energy_exact": -12.000000000000005,
+        "energy_error": 5.171572875253814,
+        "fidelity": 0.18213834764831865,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_mg",
+      "size_label": "alvo",
+      "n_qubits": 8,
+      "seed": 101,
+      "conserved_search": {
+        "evaluations": 60,
+        "elapsed_s": 2.618579346999468,
+        "candidate": [
+          "+0.5000*X2",
+          "-0.5000*X2"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.19442516299932322,
+        "energy_discovered": -6.201472338219243,
+        "energy_exact": -12.000000000000005,
+        "energy_error": 5.798527661780763,
+        "fidelity": 1.4120845197605587e-37,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_mg",
+      "size_label": "alvo",
+      "n_qubits": 8,
+      "seed": 202,
+      "conserved_search": {
+        "evaluations": 450,
+        "elapsed_s": 16.307412758999817,
+        "candidate": [
+          "-1.0000*I",
+          "-0.5000*I"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_SCALAR_IDENTITY",
+          "frobenius_norm": 24.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.12044897400028276,
+        "energy_discovered": -6.164247938460212,
+        "energy_exact": -12.000000000000005,
+        "energy_error": 5.835752061539793,
+        "fidelity": 0.11842611051849158,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_spiral",
+      "size_label": "pequeno-exato",
+      "n_qubits": 6,
+      "seed": 42,
+      "conserved_search": {
+        "evaluations": 150,
+        "elapsed_s": 0.5093376949998856,
+        "candidate": [
+          "-0.5000*Z0 Z1",
+          "+0.5000*Z0 Z1"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.12106613000014477,
+        "energy_discovered": -6.372281323269013,
+        "energy_exact": -9.504794067944713,
+        "energy_error": 3.1325127446757,
+        "fidelity": 0.39510769089609526,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_spiral",
+      "size_label": "pequeno-exato",
+      "n_qubits": 6,
+      "seed": 101,
+      "conserved_search": {
+        "evaluations": 60,
+        "elapsed_s": 0.20465461700041487,
+        "candidate": [
+          "+0.5000*X1",
+          "-0.5000*X1"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.12497548800001823,
+        "energy_discovered": -6.154655434133741,
+        "energy_exact": -9.504794067944713,
+        "energy_error": 3.350138633810972,
+        "fidelity": 0.39492192479364674,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_spiral",
+      "size_label": "pequeno-exato",
+      "n_qubits": 6,
+      "seed": 202,
+      "conserved_search": {
+        "evaluations": 600,
+        "elapsed_s": 1.7860520799995356,
+        "candidate": [
+          "-0.5000*X0",
+          "-0.5000*I"
+        ],
+        "commutator_error": 14.142135623730951,
+        "verification": {
+          "verified": false,
+          "is_conserved": false,
+          "is_known_sz": false,
+          "frobenius_norm": 5.656854249492381,
+          "distance_from_identity": 4.0,
+          "commutator_error": 14.142135623730951,
+          "overlap_with_total_sz": 0.0,
+          "reason": "NON_COMMUTING"
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.12108290399919497,
+        "energy_discovered": -6.848217077589487,
+        "energy_exact": -9.504794067944713,
+        "energy_error": 2.6565769903552265,
+        "fidelity": 0.6407533580944543,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_spiral",
+      "size_label": "alvo",
+      "n_qubits": 8,
+      "seed": 42,
+      "conserved_search": {
+        "evaluations": 90,
+        "elapsed_s": 2.875686238000526,
+        "candidate": [
+          "-0.5000*Z4",
+          "+0.5000*Z4"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.12304377899999963,
+        "energy_discovered": -7.701472338219242,
+        "energy_exact": -12.77044189911709,
+        "energy_error": 5.068969560897848,
+        "fidelity": 0.20781218022223574,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_spiral",
+      "size_label": "alvo",
+      "n_qubits": 8,
+      "seed": 101,
+      "conserved_search": {
+        "evaluations": 60,
+        "elapsed_s": 1.9455150249996223,
+        "candidate": [
+          "+0.5000*X2",
+          "-0.5000*X2"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_ZERO_OPERATOR",
+          "frobenius_norm": 0.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.16185126599975774,
+        "energy_discovered": -7.061552812808831,
+        "energy_exact": -12.77044189911709,
+        "energy_error": 5.708889086308259,
+        "fidelity": 0.17865303503558286,
+        "success": false
+      },
+      "anomaly_detected": false
+    },
+    {
+      "lattice_id": "j1j2_spiral",
+      "size_label": "alvo",
+      "n_qubits": 8,
+      "seed": 202,
+      "conserved_search": {
+        "evaluations": 450,
+        "elapsed_s": 15.503627240000242,
+        "candidate": [
+          "-1.0000*I",
+          "-0.5000*I"
+        ],
+        "commutator_error": 0.0,
+        "verification": {
+          "verified": false,
+          "reason": "TRIVIAL_SCALAR_IDENTITY",
+          "frobenius_norm": 24.0,
+          "distance_from_identity": 0.0,
+          "commutator_error": 0.0
+        }
+      },
+      "ground_search": {
+        "evaluations": 600,
+        "elapsed_s": 0.13585464100015088,
+        "energy_discovered": -6.641336115655366,
+        "energy_exact": -12.77044189911709,
+        "energy_error": 6.129105783461724,
+        "fidelity": 0.1280805050198559,
+        "success": false
+      },
+      "anomaly_detected": false
+    }
+  ],
+  "updated_at": 1792949550.8189251
+}

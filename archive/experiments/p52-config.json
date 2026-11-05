@@ -1,0 +1,17 @@
+{
+  "controls": ["x**2 + 3*x + 7", "x**2 - 1"],
+  "corpus_manifest": "experiments/p52-certified-data.json",
+  "device": "cpu",
+  "domain": [-3.0, 3.0],
+  "error_threshold": 0.0001,
+  "minimums": {
+    "train_groups": 32,
+    "train_positives": 256,
+    "val_groups": 8,
+    "val_positives": 64
+  },
+  "negative_reasons": ["invalid_execution", "false_certificate", "wrong_domain"],
+  "note": "Complete frozen configuration. 100% positives rechecked exactly; splits group/item/canonical disjoint; final test unopened; teacher cap one real hour. Unmet minimums yield INCONCLUSIVE (P53 blocked, P54 baselines allowed). No TBD values.",
+  "phase": "P52",
+  "teacher_cap_sec": 3600.0
+}
