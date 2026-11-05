@@ -1,0 +1,8 @@
+# Pinned development dependencies for EvoByte F1
+# Python: 3.12.2
+# Generated on: 2026-11-05
+iniconfig==2.0.0
+packaging==24.0
+pluggy==1.4.0
+pytest==9.0.3
+setuptools==69.2.0
