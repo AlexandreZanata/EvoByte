@@ -75,8 +75,9 @@ linear ou da ideia de orientar busca com aprendizado.
 
 ## Pendências antes dos congelamentos
 
-- F0: revisor conferir os números usados no manifesto contra R2/R3 e registrar
-  URL, data, versão, seção e hash do extrato bibliográfico armazenado localmente.
+- F0: conferência concluída em F00-T01. Extrato bibliográfico auditado e armazenado em
+  `reports/sources/girth-ge-5-v1.md` (SHA-256: `d2c90be9e40b9bddfded8fc46dbbe699971e43ba831605f8553c6f608be678c5`),
+  confirmando os 9 tamanhos planejados contra R1, R2 e R3 (incluindo 24:54, 28:68, 32:85).
 - F3: verificar se `local_manual` representa uma referência suficientemente
   competente; documentar limitações frente ao algoritmo completo de R4.
 - F5: reconferir as fontes se houver mudança de n, regra ou objetivo. Não estender
