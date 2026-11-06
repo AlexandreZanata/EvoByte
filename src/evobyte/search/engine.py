@@ -1,9 +1,9 @@
 """Motor construtivo interrompível para referências não aprendidas.
 
-O laço parte do grafo vazio, adiciona ações da máscara legal até maximalidade e
-reinicia enquanto houver tempo, preservando a melhor construção observada. O
-motor não certifica resultados; a certificação usa o contrato existente.
-Contrato em docs/03-architecture-and-contracts.md.
+O laço parte do grafo vazio, adiciona ações da máscara legal até maximalidade e,
+conforme a configuração, reinicia ou perturba a construção atual. O melhor
+candidato é sempre preservado. O motor não certifica resultados; a certificação
+usa o contrato existente. Contrato em docs/03-architecture-and-contracts.md.
 """
 
 from __future__ import annotations
@@ -30,9 +30,11 @@ class SearchError(ValueError):
 
 @dataclass(frozen=True)
 class SearchConfig:
-    """Configuração mínima do motor construtivo."""
+    """Configuração do motor: construtiva ou local com perturbação."""
 
     n: int
+    k_max: int = 0
+    stagnation_limit: int | None = None
 
     def __post_init__(self) -> None:
         if type(self.n) is not int or self.n < 1:
@@ -40,6 +42,29 @@ class SearchConfig:
                 "n deve ser inteiro estrito >= 1",
                 "INVALID_CONFIG",
             )
+        if type(self.k_max) is not int or self.k_max < 0:
+            raise SearchError(
+                "k_max deve ser inteiro estrito >= 0",
+                "INVALID_CONFIG",
+            )
+        if self.k_max == 0:
+            if self.stagnation_limit is not None:
+                raise SearchError(
+                    "stagnation_limit deve ser None no modo construtivo",
+                    "INVALID_CONFIG",
+                )
+        elif (
+            type(self.stagnation_limit) is not int
+            or self.stagnation_limit < 1
+        ):
+            raise SearchError(
+                "stagnation_limit deve ser inteiro estrito >= 1 no modo local",
+                "INVALID_CONFIG",
+            )
+
+    @property
+    def local(self) -> bool:
+        return self.k_max > 0
 
 
 @dataclass(frozen=True)
@@ -50,6 +75,7 @@ class SearchOutcome:
     best_m: int
     constructions: int
     restarts: int
+    perturbations: int
     actions_added: int
     legal_mask_queries: int
     elapsed_seconds: float
@@ -64,6 +90,7 @@ class SearchOutcome:
             "best_candidate": self.best_candidate.payload,
             "constructions": self.constructions,
             "restarts": self.restarts,
+            "perturbations": self.perturbations,
             "actions_added": self.actions_added,
             "legal_mask_queries": self.legal_mask_queries,
             "elapsed_seconds": self.elapsed_seconds,
@@ -85,6 +112,30 @@ def _with_edge(candidate: Candidate, action: tuple[int, int]) -> Candidate:
     return create_candidate(n=candidate.payload["n"], edges=edges)
 
 
+def _perturb(
+    candidate: Candidate,
+    k_max: int,
+    rng: Any,
+) -> tuple[Candidate, list[list[int]]]:
+    edges = [list(edge) for edge in candidate.payload["edges"]]
+    if not edges:
+        return candidate, []
+
+    count = rng.randint(1, min(k_max, len(edges)))
+    removed = rng.sample(edges, count)
+    removed_keys = {tuple(sorted(edge)) for edge in removed}
+    remaining = [
+        edge
+        for edge in edges
+        if tuple(sorted(edge)) not in removed_keys
+    ]
+    reduced = create_candidate(
+        n=candidate.payload["n"],
+        edges=remaining,
+    )
+    return reduced, removed
+
+
 def _action_for_event(action: Any) -> Any:
     if isinstance(action, (list, tuple)):
         return list(action)
@@ -97,14 +148,31 @@ def run_search(
     budget: Budget,
     rng: Any,
     emit: EventEmitter | None = None,
+    *,
+    perturbation_rng: Any | None = None,
 ) -> SearchOutcome:
-    """Executa o laço construtivo até o Budget ou até não haver ações."""
+    """Executa o laço até o Budget ou até não haver ações.
+
+    Com ``k_max=0`` o motor reinicia em maximalidade. Com ``k_max>0`` ele remove
+    de 1 até ``k_max`` arestas, preenche novamente e reinicia após
+    ``stagnation_limit`` ciclos sem melhora do melhor ``m``.
+    """
     if not isinstance(config, SearchConfig):
         raise SearchError("config deve ser SearchConfig", "INVALID_CONFIG")
     if not isinstance(budget, Budget):
         raise SearchError("budget deve ser uma instância de Budget", "INVALID_BUDGET")
     if not hasattr(selector, "select") or not callable(selector.select):
         raise SearchError("selector deve expor select()", "INVALID_SELECTOR")
+
+    removal_rng = perturbation_rng if perturbation_rng is not None else rng
+    if config.local and (
+        not hasattr(removal_rng, "randint")
+        or not hasattr(removal_rng, "sample")
+    ):
+        raise SearchError(
+            "perturbation_rng deve expor randint() e sample()",
+            "INVALID_PERTURBATION_RNG",
+        )
 
     n = config.n
     candidate = create_candidate(n=n, edges=[])
@@ -113,8 +181,11 @@ def run_search(
     best_is_maximal = False
     constructions = 0
     restarts = 0
+    perturbations = 0
     actions_added = 0
     legal_mask_queries = 0
+    stagnation = 0
+    improved_since_fill = False
     stopped_reason = "budget"
 
     _emit(
@@ -122,6 +193,8 @@ def run_search(
         {
             "event": "start",
             "n": n,
+            "k_max": config.k_max,
+            "stagnation_limit": config.stagnation_limit,
             "best_m": 0,
             "elapsed_seconds": budget.elapsed_seconds(),
         },
@@ -133,7 +206,8 @@ def run_search(
 
         if not legal_actions:
             constructions += 1
-            improved = candidate.m > best_m or (
+            strict_improvement = candidate.m > best_m
+            improved = strict_improvement or (
                 candidate.m == best_m and not best_is_maximal
             )
             if improved:
@@ -150,6 +224,8 @@ def run_search(
                         "elapsed_seconds": budget.elapsed_seconds(),
                     },
                 )
+            if strict_improvement:
+                improved_since_fill = True
             _emit(
                 emit,
                 {
@@ -168,14 +244,55 @@ def run_search(
                 stopped_reason = "budget"
                 break
 
-            candidate = create_candidate(n=n, edges=[])
-            restarts += 1
+            if not config.local:
+                candidate = create_candidate(n=n, edges=[])
+                restarts += 1
+                _emit(
+                    emit,
+                    {
+                        "event": "restart",
+                        "reason": "maximality",
+                        "construction": constructions + 1,
+                        "best_m": best_m,
+                        "stagnation": 0,
+                        "elapsed_seconds": budget.elapsed_seconds(),
+                    },
+                )
+                continue
+
+            if improved_since_fill:
+                stagnation = 0
+            else:
+                stagnation += 1
+            improved_since_fill = False
+
+            if stagnation >= config.stagnation_limit:
+                candidate = create_candidate(n=n, edges=[])
+                restarts += 1
+                _emit(
+                    emit,
+                    {
+                        "event": "restart",
+                        "reason": "stagnation",
+                        "construction": constructions + 1,
+                        "best_m": best_m,
+                        "stagnation": stagnation,
+                        "elapsed_seconds": budget.elapsed_seconds(),
+                    },
+                )
+                stagnation = 0
+                continue
+
+            candidate, removed = _perturb(candidate, config.k_max, removal_rng)
+            perturbations += 1
             _emit(
                 emit,
                 {
-                    "event": "restart",
-                    "construction": constructions + 1,
-                    "best_m": best_m,
+                    "event": "perturbation",
+                    "removed": removed,
+                    "removed_count": len(removed),
+                    "m": candidate.m,
+                    "stagnation": stagnation,
                     "elapsed_seconds": budget.elapsed_seconds(),
                 },
             )
@@ -226,6 +343,7 @@ def run_search(
             best = candidate
             best_m = candidate.m
             best_is_maximal = False
+            improved_since_fill = True
             _emit(
                 emit,
                 {
@@ -247,6 +365,7 @@ def run_search(
         best_m=best_m,
         constructions=constructions,
         restarts=restarts,
+        perturbations=perturbations,
         actions_added=actions_added,
         legal_mask_queries=legal_mask_queries,
         elapsed_seconds=elapsed_seconds,
@@ -262,6 +381,7 @@ def run_search(
             "best_m": best_m,
             "construction": constructions,
             "restarts": restarts,
+            "perturbations": perturbations,
             "actions_added": actions_added,
             "legal_mask_queries": legal_mask_queries,
             "elapsed_seconds": elapsed_seconds,
