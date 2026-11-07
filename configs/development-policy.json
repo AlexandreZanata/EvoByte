@@ -1,0 +1,344 @@
+{
+  "schema_version": 1,
+  "campaign_id": "development-policy",
+  "status": "FROZEN",
+  "protocol_version": "P0-development-v1",
+  "protocol_sha256": "3811a92fc15ecf4584edb604dbb26225a0915ba60d801ad41a128e7d4764ede7",
+  "absolute_wall_cap_s": 300000,
+  "reserved_wall_s": 960,
+  "planned_max_experimental_launches": 16,
+  "quotas_s": {
+    "development": 960
+  },
+  "schedule": [
+    {
+      "run_id": "dev-policy-b2-n8-local_linear",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_linear",
+      "n": 8,
+      "seed_block": 2,
+      "derived_seeds": {
+        "initialization": 200841,
+        "data": 200842,
+        "completion": 200843,
+        "search": 200844,
+        "perturbation": 200845
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "ridge_lambda": 1.0
+      }
+    },
+    {
+      "run_id": "dev-policy-b2-n10-local_linear",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_linear",
+      "n": 10,
+      "seed_block": 2,
+      "derived_seeds": {
+        "initialization": 201041,
+        "data": 201042,
+        "completion": 201043,
+        "search": 201044,
+        "perturbation": 201045
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "ridge_lambda": 1.0
+      }
+    },
+    {
+      "run_id": "dev-policy-b2-n12-local_linear",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_linear",
+      "n": 12,
+      "seed_block": 2,
+      "derived_seeds": {
+        "initialization": 201241,
+        "data": 201242,
+        "completion": 201243,
+        "search": 201244,
+        "perturbation": 201245
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "ridge_lambda": 1.0
+      }
+    },
+    {
+      "run_id": "dev-policy-b2-n16-local_linear",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_linear",
+      "n": 16,
+      "seed_block": 2,
+      "derived_seeds": {
+        "initialization": 201641,
+        "data": 201642,
+        "completion": 201643,
+        "search": 201644,
+        "perturbation": 201645
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "ridge_lambda": 1.0
+      }
+    },
+    {
+      "run_id": "dev-policy-b2-n8-local_untrained",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_untrained",
+      "n": 8,
+      "seed_block": 2,
+      "derived_seeds": {
+        "initialization": 200851,
+        "data": 200852,
+        "completion": 200853,
+        "search": 200854,
+        "perturbation": 200855
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50
+      }
+    },
+    {
+      "run_id": "dev-policy-b2-n10-local_untrained",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_untrained",
+      "n": 10,
+      "seed_block": 2,
+      "derived_seeds": {
+        "initialization": 201051,
+        "data": 201052,
+        "completion": 201053,
+        "search": 201054,
+        "perturbation": 201055
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50
+      }
+    },
+    {
+      "run_id": "dev-policy-b2-n12-local_untrained",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_untrained",
+      "n": 12,
+      "seed_block": 2,
+      "derived_seeds": {
+        "initialization": 201251,
+        "data": 201252,
+        "completion": 201253,
+        "search": 201254,
+        "perturbation": 201255
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50
+      }
+    },
+    {
+      "run_id": "dev-policy-b2-n16-local_untrained",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_untrained",
+      "n": 16,
+      "seed_block": 2,
+      "derived_seeds": {
+        "initialization": 201651,
+        "data": 201652,
+        "completion": 201653,
+        "search": 201654,
+        "perturbation": 201655
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50
+      }
+    },
+    {
+      "run_id": "dev-policy-b3-n8-local_linear",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_linear",
+      "n": 8,
+      "seed_block": 3,
+      "derived_seeds": {
+        "initialization": 300841,
+        "data": 300842,
+        "completion": 300843,
+        "search": 300844,
+        "perturbation": 300845
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "ridge_lambda": 1.0
+      }
+    },
+    {
+      "run_id": "dev-policy-b3-n10-local_linear",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_linear",
+      "n": 10,
+      "seed_block": 3,
+      "derived_seeds": {
+        "initialization": 301041,
+        "data": 301042,
+        "completion": 301043,
+        "search": 301044,
+        "perturbation": 301045
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "ridge_lambda": 1.0
+      }
+    },
+    {
+      "run_id": "dev-policy-b3-n12-local_linear",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_linear",
+      "n": 12,
+      "seed_block": 3,
+      "derived_seeds": {
+        "initialization": 301241,
+        "data": 301242,
+        "completion": 301243,
+        "search": 301244,
+        "perturbation": 301245
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "ridge_lambda": 1.0
+      }
+    },
+    {
+      "run_id": "dev-policy-b3-n16-local_linear",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_linear",
+      "n": 16,
+      "seed_block": 3,
+      "derived_seeds": {
+        "initialization": 301641,
+        "data": 301642,
+        "completion": 301643,
+        "search": 301644,
+        "perturbation": 301645
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "ridge_lambda": 1.0
+      }
+    },
+    {
+      "run_id": "dev-policy-b3-n8-local_untrained",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_untrained",
+      "n": 8,
+      "seed_block": 3,
+      "derived_seeds": {
+        "initialization": 300851,
+        "data": 300852,
+        "completion": 300853,
+        "search": 300854,
+        "perturbation": 300855
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50
+      }
+    },
+    {
+      "run_id": "dev-policy-b3-n10-local_untrained",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_untrained",
+      "n": 10,
+      "seed_block": 3,
+      "derived_seeds": {
+        "initialization": 301051,
+        "data": 301052,
+        "completion": 301053,
+        "search": 301054,
+        "perturbation": 301055
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50
+      }
+    },
+    {
+      "run_id": "dev-policy-b3-n12-local_untrained",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_untrained",
+      "n": 12,
+      "seed_block": 3,
+      "derived_seeds": {
+        "initialization": 301251,
+        "data": 301252,
+        "completion": 301253,
+        "search": 301254,
+        "perturbation": 301255
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50
+      }
+    },
+    {
+      "run_id": "dev-policy-b3-n16-local_untrained",
+      "stage": "development",
+      "wall_limit_s": 60,
+      "max_attempts": 1,
+      "method": "local_untrained",
+      "n": 16,
+      "seed_block": 3,
+      "derived_seeds": {
+        "initialization": 301651,
+        "data": 301652,
+        "completion": 301653,
+        "search": 301654,
+        "perturbation": 301655
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50
+      }
+    }
+  ],
+  "frozen_manifest_sha256": "c991ce46720e429fe43eeb59eb36a25fd7b5ebfca9d22330f3304e62a26e34e0"
+}

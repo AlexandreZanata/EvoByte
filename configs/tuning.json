@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "campaign_id": "tuning-manual",
+  "status": "FROZEN",
+  "protocol_version": "P0-development-v1",
+  "protocol_sha256": "3811a92fc15ecf4584edb604dbb26225a0915ba60d801ad41a128e7d4764ede7",
+  "absolute_wall_cap_s": 300000,
+  "reserved_wall_s": 9600,
+  "planned_max_experimental_launches": 16,
+  "quotas_s": {
+    "tuning": 9600
+  },
+  "schedule": [
+    {
+      "run_id": "tune-m-k1-S50-p5-n18",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 18,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10001834,
+        "perturbation": 10001835
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "p": 0.5
+      }
+    },
+    {
+      "run_id": "tune-m-k1-S50-p5-n20",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 20,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10002034,
+        "perturbation": 10002035
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "p": 0.5
+      }
+    },
+    {
+      "run_id": "tune-m-k1-S50-p10-n18",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 18,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10001834,
+        "perturbation": 10001835
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "p": 1.0
+      }
+    },
+    {
+      "run_id": "tune-m-k1-S50-p10-n20",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 20,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10002034,
+        "perturbation": 10002035
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 50,
+        "p": 1.0
+      }
+    },
+    {
+      "run_id": "tune-m-k1-S200-p5-n18",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 18,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10001834,
+        "perturbation": 10001835
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 200,
+        "p": 0.5
+      }
+    },
+    {
+      "run_id": "tune-m-k1-S200-p5-n20",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 20,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10002034,
+        "perturbation": 10002035
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 200,
+        "p": 0.5
+      }
+    },
+    {
+      "run_id": "tune-m-k1-S200-p10-n18",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 18,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10001834,
+        "perturbation": 10001835
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 200,
+        "p": 1.0
+      }
+    },
+    {
+      "run_id": "tune-m-k1-S200-p10-n20",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 20,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10002034,
+        "perturbation": 10002035
+      },
+      "method_parameters": {
+        "k_max": 1,
+        "stagnation_limit": 200,
+        "p": 1.0
+      }
+    },
+    {
+      "run_id": "tune-m-k3-S50-p5-n18",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 18,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10001834,
+        "perturbation": 10001835
+      },
+      "method_parameters": {
+        "k_max": 3,
+        "stagnation_limit": 50,
+        "p": 0.5
+      }
+    },
+    {
+      "run_id": "tune-m-k3-S50-p5-n20",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 20,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10002034,
+        "perturbation": 10002035
+      },
+      "method_parameters": {
+        "k_max": 3,
+        "stagnation_limit": 50,
+        "p": 0.5
+      }
+    },
+    {
+      "run_id": "tune-m-k3-S50-p10-n18",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 18,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10001834,
+        "perturbation": 10001835
+      },
+      "method_parameters": {
+        "k_max": 3,
+        "stagnation_limit": 50,
+        "p": 1.0
+      }
+    },
+    {
+      "run_id": "tune-m-k3-S50-p10-n20",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 20,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10002034,
+        "perturbation": 10002035
+      },
+      "method_parameters": {
+        "k_max": 3,
+        "stagnation_limit": 50,
+        "p": 1.0
+      }
+    },
+    {
+      "run_id": "tune-m-k3-S200-p5-n18",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 18,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10001834,
+        "perturbation": 10001835
+      },
+      "method_parameters": {
+        "k_max": 3,
+        "stagnation_limit": 200,
+        "p": 0.5
+      }
+    },
+    {
+      "run_id": "tune-m-k3-S200-p5-n20",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 20,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10002034,
+        "perturbation": 10002035
+      },
+      "method_parameters": {
+        "k_max": 3,
+        "stagnation_limit": 200,
+        "p": 0.5
+      }
+    },
+    {
+      "run_id": "tune-m-k3-S200-p10-n18",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 18,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10001834,
+        "perturbation": 10001835
+      },
+      "method_parameters": {
+        "k_max": 3,
+        "stagnation_limit": 200,
+        "p": 1.0
+      }
+    },
+    {
+      "run_id": "tune-m-k3-S200-p10-n20",
+      "stage": "tuning",
+      "wall_limit_s": 600,
+      "max_attempts": 1,
+      "method": "local_manual",
+      "n": 20,
+      "seed_block": 100,
+      "derived_seeds": {
+        "search": 10002034,
+        "perturbation": 10002035
+      },
+      "method_parameters": {
+        "k_max": 3,
+        "stagnation_limit": 200,
+        "p": 1.0
+      }
+    }
+  ],
+  "frozen_manifest_sha256": "c01eeb6722955a57a799b30a385556d636e8a3c5ab984f81c25d88165410857b"
+}
